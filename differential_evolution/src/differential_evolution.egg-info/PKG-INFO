@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: differential-evolution
+Version: 1.0.0
+Summary: A short description of my package
+Home-page: https://github.com/yourusername/my_package
+Author: Gazmend Alia
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.10
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+
+A longer description of my package
+
