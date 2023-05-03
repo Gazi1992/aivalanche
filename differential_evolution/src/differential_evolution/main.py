@@ -16,37 +16,48 @@ Inputs:
     mutation_factor ->
     recombination_factor ->
     init_pop ->
+    init_pop_out_of_range_param ->
     defaults_in_init_pop ->
     adaptive_boundaries ->
+    plot_trial_metric_evolution_period ->
+    plot_survivor_metric_evolution_period ->
+    plot_parameter_evolution_period ->
 '''
 
 #%% Imports
 import pandas as pd
 import numpy as np
 from pyDOE import lhs
-from differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, unscale_parameter, scale_parameter
+from differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
+from differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution
+
 
 #%% differential_evolution class
 
 class differential_evolution:
     def __init__(self,
-                 eval_func: callable = None,                    # function that is used for the evaluation of the fittness of the parameter sets
-                 eval_func_args: dict = {},                     # extra arguments to pass to the evaluation function 
-                 callback_after_first_iter: callable = None,    # callback that is called after the first iteration
-                 callback_after_each_iter: callable = None,     # callback that is called after each iteration
-                 callback_after_last_iter: callable = None,     # callback that is called after the last iteration
-                 parameters: pd.DataFrame = None,               # the parameters to be optimized
-                 pop_size: int = 100,                           # number of parameter sets that are evaluated in each iteration
-                 opt_min_or_max: str = 'min',                   # either search for the 'min' or 'max'
-                 max_iterations: int = 1000,                    # when that many iterations are done, optimization stops
-                 metric_threshold: float = 0,                   # when this threshold is reached, optimization stops  
-                 max_iter_without_improvement: int = 50,        # when no improvement is seem in that many iterations, optimization stops
-                 mutation_factor: float = 0.8,                  # the scaling factor during mutation
-                 recombination_factor: float = 0.9,             # the factor used during trials generation
-                 init_pop: pd.DataFrame = None,                 # initial population to be used in the first iteration of the optimization
-                 init_pop_out_of_range_param: str = 'keep',     # what to do with the parameters of the initial population that are out of range; either 'keep' as is or replace with 'random' value
-                 defaults_in_init_pop: bool = False,            # when true, then use the default values of the parameters in the initial population
-                 adaptive_boundaries: bool = False):            # when true, expand boundaries of a parameter if the optimizer is concentrated on the edges of the parameter range
+                 eval_func: callable = None,                            # function that is used for the evaluation of the fittness of the parameter sets
+                 eval_func_args: dict = {},                             # extra arguments to pass to the evaluation function 
+                 callback_after_first_iter: callable = None,            # callback that is called after the first iteration
+                 callback_after_each_iter: callable = None,             # callback that is called after each iteration
+                 callback_after_last_iter: callable = None,             # callback that is called after the last iteration
+                 parameters: pd.DataFrame = None,                       # the parameters to be optimized
+                 pop_size: int = 100,                                   # number of parameter sets that are evaluated in each iteration
+                 opt_min_or_max: str = 'min',                           # either search for the 'min' or 'max'
+                 max_iterations: int = 1000,                            # when that many iterations are done, optimization stops
+                 metric_threshold: float = 0,                           # when this threshold is reached, optimization stops  
+                 max_iter_without_improvement: int = 50,                # when no improvement is seem in that many iterations, optimization stops
+                 mutation_factor: float = 0.8,                          # the scaling factor during mutation
+                 recombination_factor: float = 0.9,                     # the factor used during trials generation
+                 init_pop: pd.DataFrame = None,                         # initial population to be used in the first iteration of the optimization
+                 init_pop_out_of_range_param: str = 'keep',             # what to do with the parameters of the initial population that are out of range; either 'keep' as is or replace with 'random' value
+                 defaults_in_init_pop: bool = False,                    # when true, then use the default values of the parameters in the initial population
+                 adaptive_boundaries: bool = False,                     # when true, expand boundaries of a parameter if the optimizer is concentrated on the edges of the parameter range
+                 plot_trial_metric_evolution_period: int = None,        # plot trial metric evolution when iteration is a multiple of this factor
+                 plot_survivor_metric_evolution_period: int = None,     # plot trial metric evolution when iteration is a multiple of this factor
+                 plot_parameter_evolution_period: int = None,           # plot parameter evolution when iteration is a multiple of this factor
+                 ):
+        
         
         self.eval_func = eval_func
         self.eval_func_args = eval_func_args
@@ -65,6 +76,9 @@ class differential_evolution:
         self.init_pop_out_of_range_param = init_pop_out_of_range_param
         self.defaults_in_init_pop = defaults_in_init_pop
         self.adaptive_boundaries = adaptive_boundaries
+        self.plot_trial_metric_evolution_period = plot_trial_metric_evolution_period if plot_trial_metric_evolution_period is not None and plot_trial_metric_evolution_period > 0 else None
+        self.plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period if plot_survivor_metric_evolution_period is not None and plot_survivor_metric_evolution_period > 0 else None
+        self.plot_parameter_evolution_period = plot_parameter_evolution_period if plot_parameter_evolution_period is not None  and plot_parameter_evolution_period > 0 else None
         
         self.iter = 0
         self.is_stop_criteria_reached = False
@@ -85,31 +99,65 @@ class differential_evolution:
 
     # Run the optimization loop.
     def run_optimization(self):
-        self.prepare_first_iter() # Prepare for the first iteration
+        self.prepare_first_iter()                               # Prepare for the first iteration
         
         # stay in the loop as long as the stop criteria is not reached
         while not self.is_stop_criteria_reached:
-            parameters = self.get_trials() # get the trials
-            responses = self.eval_func(self.iter, parameters, **self.eval_func_args) # run the evaluation function
-            self.save_metrics(responses['metrics']) # save the metrics
+            parameters = self.get_trials_unscaled()             # get the trials_unscaled
+            responses = self.eval_func(iteration = self.iter,
+                                       parameters = parameters,
+                                       **self.eval_func_args)   # run the evaluation function
+            self.save_metrics(responses['metrics'])             # save the metrics
+            
+            self.determine_survivors()                          # determine the survivors
+            self.determine_best()                               # determine the best parameters and best metric
+            self.update_history_trials()                        # append the trials to the history trials
+            
+            # plot trial metric evolution
+            if self.plot_trial_metric_evolution_period is not None and self.iter % self.plot_trial_metric_evolution_period == 0:
+                plot_metric_evolution(iterations = self.history['trials']['iter'],
+                                      metrics = self.history['trials']['trial_metric'])
+                
+            # plot parameter evolution
+            if self.plot_parameter_evolution_period is not None and self.iter % self.plot_parameter_evolution_period == 0:
+                plot_parameter_evolution(parameters = self.parameter_names, data = np.array(self.history['trials']['trial_normed'].tolist()))
+            
+            
+            # plot survivor metric evolution
+            if self.plot_survivor_metric_evolution_period is not None and self.iter % self.plot_survivor_metric_evolution_period == 0:    
+                all_survivors = self.get_all_survivors()
+                plot_metric_evolution(iterations = all_survivors['iter'],
+                                      metrics = all_survivors['survivor_metric'])
             
             # Run the callback
             if self.iter == 1:
                 if self.callback_after_first_iter is not None:
-                    self.callback_after_first_iter(self.iter, parameters, responses, **self.eval_func_args)
+                    self.callback_after_first_iter(parameters = parameters,
+                                                   responses = responses,
+                                                   iteration = self.iter,
+                                                   best_parameters = self.best_unscaled,
+                                                   best_metric = self.best_metric,
+                                                   **self.eval_func_args)
             else:
                 if self.callback_after_each_iter is not None:
-                    self.callback_after_each_iter(self.iter, parameters, responses, **self.eval_func_args)
+                    self.callback_after_each_iter(parameters = parameters,
+                                                  responses = responses,
+                                                  iteration = self.iter,
+                                                  best_parameters = self.best_unscaled,
+                                                  best_metric = self.best_metric,
+                                                  **self.eval_func_args)
             
             # Determine survivor and best, update history and generate new trials
             self.prepare_next_iter()
         
         # once the stop criteria is reached
-        self.iter -= 1
         self.show_final_result()
         if self.callback_after_last_iter is not None:
-            self.callback_after_last_iter(self.iter, parameters, responses)
-    
+            self.callback_after_last_iter(iteration = self.iter,
+                                          best_parameters = self.best_unscaled,
+                                          best_metric = self.best_metric,
+                                          **self.eval_func_args)
+            
     
     # Print the final result
     def show_final_result(self):
@@ -132,7 +180,8 @@ class differential_evolution:
         elif self.iter_no_improvement > self.max_iter_without_improvement:
             self.is_stop_criteria_reached = True
             self.stop_reason = "Maximum number of iterations without improvement reached"
-        elif self.iter == self.max_iterations:
+        elif self.iter > self.max_iterations:
+            self.iter -= 1
             self.is_stop_criteria_reached = True
             self.stop_reason = "Maximum number of iterations reached"
         else:
@@ -161,9 +210,6 @@ class differential_evolution:
     def prepare_next_iter(self):
         if self.adaptive_boundaries:
             self.set_boundaries()
-        self.determine_survivors()
-        self.determine_best()
-        self.update_history_trials()
         self.iter += 1
         self.targets_normed = self.survivors_normed
         self.targets = self.survivors
@@ -204,12 +250,40 @@ class differential_evolution:
     
     
     # Get the trials as a list of dictionaries
-    def get_trials(self):
+    def get_trials_unscaled(self):
         new_trials = []
         for values in self.trials_unscaled:
             tmp = {key: val for key, val in zip(self.parameter_names, values)}
             new_trials.append(tmp)
         return new_trials
+    
+    
+    # Get all survivors
+    def get_all_survivors(self):
+        data = []
+        for row_idx, row in self.history['trials'].iterrows():
+            if row_idx < self.pop_size:
+                data.append(row.tolist())
+            else:
+                if self.opt_min_or_max == 'max':
+                    if row['trial_metric'] > data[row_idx - self.pop_size][-1]:
+                        data.append(row.tolist())
+                    else:
+                        temp = data[row_idx - self.pop_size].copy()
+                        temp[0] = row['iter']
+                        data.append(temp)
+                else:
+                    if row['trial_metric'] < data[row_idx - self.pop_size][-1]:
+                        data.append(row.tolist())
+                    else:
+                        temp = data[row_idx - self.pop_size].copy()
+                        temp[0] = row['iter']
+                        data.append(temp)
+        
+        all_survivors = pd.DataFrame(columns = ['iter', 'survivor_normed', 'survivor', 'survivor_unscaled', 'survivor_metric'],
+                                     data = data)
+
+        return all_survivors
     
     
     # Get best parameters as a dictionary
@@ -224,7 +298,7 @@ class differential_evolution:
         dice = np.array(dice).reshape(-1,3)
         
         # get random members
-        temp = self.targets_normed[dice].reshape(-1,self.nr_parameters,3)
+        temp = self.targets_normed[dice].reshape(-1,3,self.nr_parameters)
         rand_mem_1 = temp[:,0,:]
         rand_mem_2 = temp[:,1,:]
         rand_mem_3 = temp[:,2,:]
@@ -300,7 +374,6 @@ class differential_evolution:
                 self.init_pop['transform'] = init_pop_transforms
                 
                 for member in init_pop_member_names:
-                    print(member)
                     self.init_pop[f"{member}_scaled"] = self.init_pop.apply(lambda row: scale_parameter(row, member), axis = 1)
                 
                 # keep only the scaled members
@@ -311,33 +384,31 @@ class differential_evolution:
                 # determine indices to replace in the donors array
                 for i in range(init_pop_nr_members):
                     for j in range(init_pop_nr_parameters):
-                        print(i, j)
                         self.donors[i, init_pop_parameter_indices[j]] = init_pop_values[i,j]
                 
-                # norm the donors
+                # norm all the donors
                 self.donors_normed = np.apply_along_axis(func1d = norm_member,
                                                          axis = 1,
                                                          arr = self.donors,
                                                          minimum = self.boundaries_min,
-                                                         maximum = self.boundaries_max) # norm all the donors
+                                                         maximum = self.boundaries_max)
  
             # if the default values are used in the initial population.
             if self.defaults_in_init_pop:
                 
                 # use default values in initial population only if the given init_pop has less members than poo_size
-                if self.pop_size > init_pop_nr_members:
-                    default_values = np.array(self.parameters['value_scaled']).reshape(1,-1)
-                    self.donors[-1] = default_values
+                if self.init_pop is None or self.pop_size > init_pop_nr_members:
+                    self.donors[-1] = np.array(self.parameters['value_scaled']).reshape(1,-1)
 
         else:
-            self.donors_normed = self.generate_mutations() # Generate mutations for each target
+            self.donors_normed = self.generate_mutations()                      # Generate mutations for each target
             self.donors = np.apply_along_axis(func1d = unnorm_member,
-                                             axis = 1,
-                                             arr = self.donors_normed,
-                                             minimum = self.boundaries_min,
-                                             maximum = self.boundaries_max) # Unnorm all the donors
+                                              axis = 1,
+                                              arr = self.donors_normed,
+                                              minimum = self.boundaries_min,
+                                              maximum = self.boundaries_max)    # Unnorm all the donors
             
-        self.donors_unscaled = self.get_unscaled_arr(self.donors)
+        self.donors_unscaled = self.get_unscaled_arr(self.donors)               # Unscale the donors, i.e. transform the log and neglog
               
         
     # Generate a trial for each target-donor pair
@@ -363,7 +434,7 @@ class differential_evolution:
             self.survivors_unscaled = self.trials_unscaled
             self.survivors_metric = self.trials_metric
         else:
-           mask = (self.trials_metric < self.targets_metric if self.opt_min_or_max == 'min' else self.trials_metric > self.targets_metric)
+           mask = (self.trials_metric > self.targets_metric if self.opt_min_or_max == 'max' else self.trials_metric < self.targets_metric)
            self.survivors_metric = np.where(mask, self.trials_metric, self.targets_metric)
            self.survivors_normed = np.where(mask.reshape(-1,1), self.trials_normed, self.targets_normed)
            self.survivors = np.where(mask.reshape(-1,1), self.trials, self.targets)
