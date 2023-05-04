@@ -53,6 +53,10 @@ class differential_evolution:
                  init_pop_out_of_range_param: str = 'keep',             # what to do with the parameters of the initial population that are out of range; either 'keep' as is or replace with 'random' value
                  defaults_in_init_pop: bool = False,                    # when true, then use the default values of the parameters in the initial population
                  adaptive_boundaries: bool = False,                     # when true, expand boundaries of a parameter if the optimizer is concentrated on the edges of the parameter range
+                 adaptive_boundaries_edge_threshold: float = 0.05,      # closer than this distance from the edge is considered as on the edge
+                 adaptive_boundaries_pop_quantitle: float = 0.5,        # when this quantile of the population is on the edge, the boundary is extended
+                 adaptive_boundaries_extention: float = 0.1,            # how much is the min or max extended when the a parameter is considered on the edge
+                 adaptive_boundaries_check_period: int = 10,            # check for adaptive boundaries periodically each that much iterations
                  plot_trial_metric_evolution_period: int = None,        # plot trial metric evolution when iteration is a multiple of this factor
                  plot_survivor_metric_evolution_period: int = None,     # plot trial metric evolution when iteration is a multiple of this factor
                  plot_parameter_evolution_period: int = None,           # plot parameter evolution when iteration is a multiple of this factor
@@ -64,18 +68,27 @@ class differential_evolution:
         self.callback_after_first_iter = callback_after_first_iter
         self.callback_after_each_iter = callback_after_each_iter
         self.callback_after_last_iter = callback_after_last_iter
+        
         self.parameters = parameters
         self.pop_size = pop_size
         self.opt_min_or_max = opt_min_or_max
+        self.mutation_factor = mutation_factor
+        self.recombination_factor = recombination_factor        
+        
         self.max_iterations = max_iterations
         self.metric_threshold = metric_threshold
         self.max_iter_without_improvement = max_iter_without_improvement
-        self.mutation_factor = mutation_factor
-        self.recombination_factor = recombination_factor
+        
         self.init_pop = init_pop
         self.init_pop_out_of_range_param = init_pop_out_of_range_param
         self.defaults_in_init_pop = defaults_in_init_pop
+        
         self.adaptive_boundaries = adaptive_boundaries
+        self.adaptive_boundaries_edge_threshold = adaptive_boundaries_edge_threshold
+        self.adaptive_boundaries_pop_quantitle = adaptive_boundaries_pop_quantitle
+        self.adaptive_boundaries_extention = adaptive_boundaries_extention
+        self.adaptive_boundaries_check_period = adaptive_boundaries_check_period
+        
         self.plot_trial_metric_evolution_period = plot_trial_metric_evolution_period if plot_trial_metric_evolution_period is not None and plot_trial_metric_evolution_period > 0 else None
         self.plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period if plot_survivor_metric_evolution_period is not None and plot_survivor_metric_evolution_period > 0 else None
         self.plot_parameter_evolution_period = plot_parameter_evolution_period if plot_parameter_evolution_period is not None  and plot_parameter_evolution_period > 0 else None
@@ -88,9 +101,7 @@ class differential_evolution:
         self.nr_parameters = self.parameters.shape[0]
         self.parameter_names = self.parameters['name'].tolist()
         self.parameters_transform_list = self.parameters['transform'].tolist()
-        
-        self.boundaries_changed = False   
-        
+                
         self.history = {'parameters': self.parameters,
                         'trials': pd.DataFrame(columns = ['iter', 'trial_normed', 'trial', 'trial_unscaled', 'trial_metric']),
                         'bests': pd.DataFrame(columns = ['iter', 'best_normed', 'best', 'best_unscaled', 'best_metric']),
@@ -208,14 +219,14 @@ class differential_evolution:
     
     # Prepare next iteration
     def prepare_next_iter(self):
-        if self.adaptive_boundaries:
-            self.set_boundaries()
         self.iter += 1
         self.targets_normed = self.survivors_normed
         self.targets = self.survivors
         self.targets_unscaled = self.survivors_unscaled
         self.targets_metric = self.survivors_metric
         self.set_is_stop_criteria_reached()
+        if self.adaptive_boundaries:
+            self.set_boundaries()
         self.generate_donors()
         self.generate_trials()
     
@@ -229,9 +240,30 @@ class differential_evolution:
             self.boundaries_range = self.boundaries_max - self.boundaries_min
             self.update_history_boundaries()
         else:
-            if self.adaptive_boundaries:
-                print('kot')
-                self.update_history_boundaries()
+            if self.adaptive_boundaries and self.iter % self.adaptive_boundaries_check_period == 0:
+                # get the quantile values for each parameter according to adaptive_boundaries_pop_quantitle
+                quantile_values = np.quantile(self.survivors_normed, self.adaptive_boundaries_pop_quantitle, axis = 0)
+                
+                # determin all the parameters, where the quantile value is on the edge
+                min_mask = quantile_values < self.adaptive_boundaries_edge_threshold
+                max_mask = quantile_values > 1 - self.adaptive_boundaries_edge_threshold
+                
+                # if there is some parameter on the edge, then update the respective boundaries
+                if True in min_mask or True in max_mask:
+                    self.boundaries_min[min_mask] = self.boundaries_min[min_mask] - self.adaptive_boundaries_extention * self.boundaries_range[min_mask]
+                    self.boundaries_max[max_mask] = self.boundaries_max[max_mask] + self.adaptive_boundaries_extention * self.boundaries_range[max_mask]
+                    self.boundaries_range = self.boundaries_max - self.boundaries_min
+                    self.boundaries = np.vstack((self.boundaries_min, self.boundaries_max))
+                    
+                    # renorm the targets based on the new boundaries
+                    self.targets_normed = np.apply_along_axis(func1d = norm_member,
+                                                              axis = 1,
+                                                              arr = self.targets,
+                                                              minimum = self.boundaries_min,
+                                                              maximum = self.boundaries_max)    
+                    
+                    # save the new boundaries in the history
+                    self.update_history_boundaries()
     
     
     # Get unscaled array

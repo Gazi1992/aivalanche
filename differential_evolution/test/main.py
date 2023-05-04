@@ -4,7 +4,13 @@ from differential_evolution.main import differential_evolution
 from utils import evaluate_quadratic_3_variables, evaluate_beale_2_variables, evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_beale, plot_sin_sqrt
 
 #%% Function selector
-function = evaluate_quadratic_4_variables
+function = evaluate_quadratic_3_variables
+adaptive_boundaries = False
+init_pop = None
+init_pop_out_of_range_param = 'keep'
+defaults_in_init_pop = False
+plot_parameter_evolution_period = None
+plot_survivor_metric_evolution_period = None
 
 
 #%% Declare callbacks
@@ -47,18 +53,20 @@ if function == evaluate_quadratic_3_variables:
     params = {}
     params['name'] = ['x', 'y', 'z']
     params['min'] = [-100, 1e-15, -10]
-    params["max"] = [100, 100, 200]
+    params["max"] = [-10, 100, 200]
     params["default"] = [0, 1e-10, 0]
     params['scale'] = ['lin', 'log', 'lin']
     parameters = pd.DataFrame(params)
     
     init_pop_columns = ['name', 'member_1', 'member_2', 'member_3']
     init_pop_data = []
-    init_pop_data.append(['x', 10, 10, 5])
-    init_pop_data.append(['y', 10, 10, 5])
-    init_pop_data.append(['z', 10, 300, 100])
+    init_pop_data.append(['x', 10, 10, 10])
+    init_pop_data.append(['y', 10, 10, 1e-15])
+    init_pop_data.append(['z', 10, 300, 0])
     init_pop = pd.DataFrame(columns = init_pop_columns, data = init_pop_data)
     init_pop = pd.DataFrame(init_pop)
+    
+    adaptive_boundaries = True
 
 elif function == evaluate_beale_2_variables:
 
@@ -70,7 +78,6 @@ elif function == evaluate_beale_2_variables:
     params['scale'] = ['lin', 'log']
     parameters = pd.DataFrame(params)
     
-    init_pop = None
     
 elif function == evaluate_quadratic_4_variables:
     
@@ -90,6 +97,7 @@ elif function == evaluate_quadratic_4_variables:
     init_pop_data.append(['w', 10, 300, 100])
     init_pop = pd.DataFrame(columns = init_pop_columns, data = init_pop_data)
     init_pop = pd.DataFrame(init_pop)
+    init_pop = None
 
 elif function == evaluate_sin_sqrt_2_variables:
 
@@ -101,8 +109,6 @@ elif function == evaluate_sin_sqrt_2_variables:
     params['scale'] = ['lin', 'log']
     parameters = pd.DataFrame(params)
     
-    init_pop = None
-
 
 #%% Initialize and run the optimization
 diff_evolution = differential_evolution(parameters = parameters,
@@ -116,10 +122,11 @@ diff_evolution = differential_evolution(parameters = parameters,
                                         max_iterations = 500,
                                         max_iter_without_improvement = 50,
                                         init_pop = init_pop,
-                                        init_pop_out_of_range_param = 'random',
-                                        defaults_in_init_pop = False,
-                                        plot_parameter_evolution_period = 20,
-                                        plot_survivor_metric_evolution_period = None)
+                                        init_pop_out_of_range_param = init_pop_out_of_range_param,
+                                        defaults_in_init_pop = defaults_in_init_pop,
+                                        plot_parameter_evolution_period = plot_parameter_evolution_period,
+                                        plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
+                                        adaptive_boundaries = adaptive_boundaries)
 
 diff_evolution.run_optimization()
 
