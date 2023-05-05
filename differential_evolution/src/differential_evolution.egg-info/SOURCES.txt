@@ -1,9 +1,0 @@
-setup.py
-src/differential_evolution/__init__.py
-src/differential_evolution/main.py
-src/differential_evolution/utils.py
-src/differential_evolution.egg-info/PKG-INFO
-src/differential_evolution.egg-info/SOURCES.txt
-src/differential_evolution.egg-info/dependency_links.txt
-src/differential_evolution.egg-info/requires.txt
-src/differential_evolution.egg-info/top_level.txt
