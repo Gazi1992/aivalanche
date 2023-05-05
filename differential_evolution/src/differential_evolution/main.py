@@ -54,7 +54,7 @@ class differential_evolution:
                  defaults_in_init_pop: bool = False,                    # when true, then use the default values of the parameters in the initial population
                  adaptive_boundaries: bool = False,                     # when true, expand boundaries of a parameter if the optimizer is concentrated on the edges of the parameter range
                  adaptive_boundaries_edge_threshold: float = 0.05,      # closer than this distance from the edge is considered as on the edge
-                 adaptive_boundaries_pop_quantitle: float = 0.5,        # when this quantile of the population is on the edge, the boundary is extended
+                 adaptive_boundaries_pop_quantitle: float = 0.7,        # when this quantile of the population is on the edge, the boundary is extended
                  adaptive_boundaries_extention: float = 0.1,            # how much is the min or max extended when the a parameter is considered on the edge
                  adaptive_boundaries_check_period: int = 10,            # check for adaptive boundaries periodically each that much iterations
                  plot_trial_metric_evolution_period: int = None,        # plot trial metric evolution when iteration is a multiple of this factor
@@ -167,6 +167,7 @@ class differential_evolution:
             self.callback_after_last_iter(iteration = self.iter,
                                           best_parameters = self.best_unscaled,
                                           best_metric = self.best_metric,
+                                          history = self.history,
                                           **self.eval_func_args)
             
     
@@ -242,11 +243,12 @@ class differential_evolution:
         else:
             if self.adaptive_boundaries and self.iter % self.adaptive_boundaries_check_period == 0:
                 # get the quantile values for each parameter according to adaptive_boundaries_pop_quantitle
-                quantile_values = np.quantile(self.survivors_normed, self.adaptive_boundaries_pop_quantitle, axis = 0)
+                quantile_values_min = np.quantile(self.survivors_normed, self.adaptive_boundaries_pop_quantitle, axis = 0)
+                quantile_values_max = np.quantile(self.survivors_normed, 1 - self.adaptive_boundaries_pop_quantitle, axis = 0)
                 
                 # determin all the parameters, where the quantile value is on the edge
-                min_mask = quantile_values < self.adaptive_boundaries_edge_threshold
-                max_mask = quantile_values > 1 - self.adaptive_boundaries_edge_threshold
+                min_mask = quantile_values_min < self.adaptive_boundaries_edge_threshold
+                max_mask = quantile_values_max > 1 - self.adaptive_boundaries_edge_threshold
                 
                 # if there is some parameter on the edge, then update the respective boundaries
                 if True in min_mask or True in max_mask:

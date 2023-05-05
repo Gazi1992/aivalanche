@@ -41,8 +41,10 @@ def callbac_after_each_iter(parameters: dict = None,
 def callbac_after_last_iter(iteration: int = None,
                             best_parameters: dict = None,
                             best_metric: float = None,
+                            history: dict = None,
                             **kwargs):
     print(f'Optimization completed after {iteration} iterations.')
+    print(f"history: {history}")
     print(f"kwargs: {kwargs}")
 
 
