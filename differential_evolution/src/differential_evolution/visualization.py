@@ -35,7 +35,7 @@ def plot_parameter_evolution(parameters: list = None, data: np.array = None):
                 ax.set_position([idx * param_hist_width, param_hist_bottomY, param_hist_width, param_hist_height])
                 hist, edges = np.histogram(data[:,idx], bins = 500, range = (0,1))
                 plt.sca(ax)
-                plt.imshow(np.atleast_2d(hist).T, extent = [0,1,0,1], aspect = "auto", origin = 'lower')
+                plt.imshow(np.atleast_2d(hist).T, extent = [0,1,0,1], aspect = "auto", origin = 'lower', cmap = 'jet')
                 ax.set_xticks([])
                 ax.set_yticks([])
                 if idx == int(nr_plots / 2):

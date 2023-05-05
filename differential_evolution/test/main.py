@@ -1,7 +1,8 @@
 #%% Imports
 import pandas as pd
-from differential_evolution.main import differential_evolution
-from utils import evaluate_quadratic_3_variables, evaluate_beale_2_variables, evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_beale, plot_sin_sqrt
+from differential_evolution.optimizer import differential_evolution
+from utils import evaluate_quadratic_3_variables, evaluate_beale_2_variables, \
+                  evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_sin_sqrt
 
 #%% Function selector
 function = evaluate_quadratic_3_variables
@@ -9,7 +10,7 @@ adaptive_boundaries = False
 init_pop = None
 init_pop_out_of_range_param = 'keep'
 defaults_in_init_pop = False
-plot_parameter_evolution_period = None
+plot_parameter_evolution_period = 2
 plot_survivor_metric_evolution_period = None
 
 
@@ -49,7 +50,6 @@ def callbac_after_last_iter(iteration: int = None,
 
 
 #%% Select function
-
 if function == evaluate_quadratic_3_variables:
     
     params = {}

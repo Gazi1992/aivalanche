@@ -6,4 +6,4 @@ Description: differential_evolution package is efficient for optimizations in hi
 
 __version__ = '1.0.0'
 
-from .main import differential_evolution
+from .optimizer import differential_evolution

@@ -1,10 +1,8 @@
 #%% Imports
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.style import context
 from matplotlib import cm
-from matplotlib.ticker import LinearLocator
 
 
 #%% Quadratic function - min at (0, 0, 0)
@@ -46,7 +44,7 @@ def plot_beale(parameters: dict = None):
         Z = beale_2_variables(X, Y)
         
         # Plot the surface.
-        surf = ax.plot_surface(X, Y, Z, cmap = cm.coolwarm, linewidth = 0, antialiased = False)
+        ax.plot_surface(X, Y, Z, cmap = cm.coolwarm, linewidth = 0, antialiased = False)
         
         plt.show()
 
