@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = 'differential_evolution',
+    name = 'reference_data',
     version = '1.0.0',
     author = 'Gazmend Alia',
     description = 'A short description of my package',
@@ -19,7 +19,6 @@ setup(
     install_requires = [
         'numpy',
         'pandas',
-        'pyDOE',
         ],
     python_requires='>=3.6',
 )
