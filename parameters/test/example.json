@@ -1,0 +1,12 @@
+[
+    {"name": "par_1", "min": -10, "default": 2, "max": 10, "mode": "variable", "scale": "lin"},
+    {"name": "par_2", "min": -100, "default": 20, "max": 100, "mode": "variable", "scale": "lin"},
+    {"name": "par_3", "min": 1e-3, "default": 100, "max": 1e10, "mode": "variable", "scale": "log"},
+    {"name": "par_4", "min": -10, "default": 0, "max": 10, "mode": "fixed", "scale": "lin"},
+    {"name": "par_5", "min": 100, "default": 5, "max": 10, "mode": "variable", "scale": "lin"},
+    {"name": "par_6", "min": -10, "default": 2, "max": 110, "mode": "variable", "scale": "log"},
+    {"name": "par_7", "min": -10, "default": 2, "max": 10, "mode": "variable", "scale": "lin"},
+    {"name": "par_8", "min": -10, "default": 2, "max": 10, "mode": "variable", "scale": "log"},
+    {"name": "par_9", "min": -10, "default": 2, "max": 10, "mode": "variable", "scale": "lin"},
+    {"name": "par_10", "min": -10, "default": 2, "max": 10, "mode": "variable", "scale": "lin"}
+]

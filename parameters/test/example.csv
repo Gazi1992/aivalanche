@@ -1,0 +1,11 @@
+name,min,default,max,mode,scale
+par_1,-10,2,10,variable,lin
+par_2,-100,20,1000,fixed,lin
+par_3,1e-3,1e4,1e10,variable,log
+par_4,-10,2,10,variable,lin
+par_5,-100,2,10,fixed,lin
+par_6,-10,3,10,variable,log
+par_7,-10,4,10,variable,lin
+par_8,-10,5,10,variable,log
+par_9,-100,6,10,variable,lin
+par_10,-10,7,100,variable,lin
