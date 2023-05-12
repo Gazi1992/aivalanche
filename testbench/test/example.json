@@ -1,0 +1,16 @@
+[
+    {
+        "name": "nmos output characteristic",
+        "testbench_type": ["nmos_ids_vds_vgs", "nmos_id_vd_vg"],
+        "simulation_type": "dc",
+        "circuit": [
+            {"role": "input", "name": "vgs", "type": "v", "nodes": ["g", "s"], "default": 0},
+            {"role": "input", "name": "vds", "type": "v", "nodes": ["d", "s"], "default": 0},
+            {"role": "input", "name": "vbs", "type": "v", "nodes": ["b", "s"], "default": 0},
+            {"role": "output", "name": "ids", "type": "i"},
+        ]
+    },
+   
+
+
+]
