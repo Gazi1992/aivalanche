@@ -14,9 +14,12 @@ import os
 import subprocess
 import time
 import shlex
+from simulation.ngspice.parser import parse_results
+from simulation.ngspice.visualization import plot_results
+import shutil
 
 
-#%% differential_evolution class
+#%% simulator class
 
 class simulator:
     def __init__(self, timeout: int = 30):
@@ -24,15 +27,25 @@ class simulator:
     
         
     # Simulate one .cir file
-    def simulate_single_file(self, file_path: str = None, results_dir: str = None,
-                             extract_results: bool = False, timeout: int = None):
+    def simulate_single_file(self, file_path: str = None, results_dir: str = None, timeout: int = None,
+                             device: str = 'mosfet', simulation_type: str = 'output_characteristic',
+                             extract_results: bool = False, plot: bool = False):
         if file_path is not None:
+            
+            file_name = os.path.basename(file_path)
+            
             if results_dir is None:
                 results_dir = os.path.dirname(file_path)
+            
+            # copy the file to the results directory
+            new_file_path = os.path.join(results_dir, file_name)
+            if file_path != new_file_path:
+                shutil.copy(file_path, new_file_path)
+                
             if timeout is None:
                 timeout = self.timeout
         
-            command = f'ngspice {file_path}' # command that runs ngspice
+            command = f'ngspice {new_file_path}' # command that runs ngspice
             
             # start the simulation in a new subprocess
             try:
@@ -40,7 +53,7 @@ class simulator:
             except FileNotFoundError:
                 print(f'{file_path} not found')
             
-            # 
+            # poll the simulation status
             try:
                  start_time = time.time()
                  while time.time() - start_time <= timeout:
@@ -57,6 +70,20 @@ class simulator:
                  print('Ngspice simulation timeout.')
                  process.kill()
                  raise e
+            
+            # parse the results file
+            if extract_results:
+                results_file_path = os.path.join(results_dir, 'results.txt')
+                results = parse_results(file_path = results_file_path, device = device, simulation_type = simulation_type)
+                
+                # plot the results
+                if plot:
+                    plot_results(device = device, simulation_type = simulation_type, data = results)
+                
+                return results
+                
+            return None
+                    
             
 
     def simulate_multiple_files(self, files_paths: list[str] = None):

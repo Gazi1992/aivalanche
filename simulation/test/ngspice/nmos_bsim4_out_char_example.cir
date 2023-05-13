@@ -16,10 +16,10 @@ vs s 0 dc 0
 vb b 0 dc 0
 
 .control
-dc vds 0 3.5 0.05 vgs 3.5 0.5 -0.5
+dc vds 0 3.5 0.05 vgs 3.5 0 -0.5
 set wr_vecnames
 set wr_singlescale
-wrdata Result.txt i(vs) v(d) v(g)
+wrdata results.txt i(vs) v(d,s) v(g,s)
 .endc
 
 .end
