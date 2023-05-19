@@ -1,0 +1,42 @@
+
+.include dut.cir
+
+******************************* dut testbench 1 *******************************
+v_vds_1 d_1 0 0.5
+e_vgs_1 g_1 0 v_sweep 0 1
+v_vs_1 s_1 0 0
+v_vbs_1 b_1 0 0
+x_1 d_1 g_1 s_1 b_1 dut l=5e-6 w=10e-6 vth0=0.01
+*******************************************************************************
+
+******************************* dut testbench 2 *******************************
+v_vds_2 d_2 0 1
+e_vgs_2 g_2 0 v_sweep 0 1
+v_vs_2 s_2 0 0
+v_vbs_2 b_2 0 0
+x_2 d_2 g_2 s_2 b_2 dut l=10e-6 w=10e-5 tnom=50
+*******************************************************************************
+
+v_sweep v_sweep 0 0
+
+******************************* save data to file *****************************
+.control
+dc v_sweep 0 3.5 0.05
+
+let ids_1 = i(v_vs_1)
+let vds_1 = v(d_1,s_1)
+let vgs_1 = v(g_1,s_1)
+let vbs_1 = v(b_1,s_1)
+
+let ids_2 = i(v_vs_2)
+let vds_2 = v(d_2,s_2)
+let vgs_2 = v(g_2,s_2)
+let vbs_2 = v(b_2,s_2)
+
+set wr_vecnames
+set wr_singlescale
+wrdata transfer_characteristic_results.txt ids_1 vds_1 vgs_1 vbs_1 ids_2 vds_2 vgs_2 vbs_2
+.endc
+*******************************************************************************
+
+.end

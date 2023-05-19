@@ -1,0 +1,25 @@
+
+.include dut.cir
+
+******************************* dut testbench 1 *******************************
+e_v_1 p_1 0 v_sweep 0 1
+x_1 p_1 n_1 dut is=1e-9 rs=10
+v_meas n_1 0 0
+*******************************************************************************
+
+v_sweep v_sweep 0 0
+
+******************************* save data to file *****************************
+.control
+dc v_sweep 0 3.5 0.05
+
+let id_1 = i(v_meas)
+let vd_1 = v(p_1)
+
+set wr_vecnames
+set wr_singlescale
+wrdata diode_characteristic_results.txt id_1 vd_1
+.endc
+*******************************************************************************
+
+.end

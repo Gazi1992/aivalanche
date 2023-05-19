@@ -68,6 +68,7 @@ class parser:
             curve_info = []
             for group_idx, group in enumerate(self.raw_data['data']):
                 self.validate_group(group)
+                
                 temp_group_dict = {
                         'group_id': group_idx,
                         'group_type': group['group_type'],
@@ -78,8 +79,13 @@ class parser:
                         'extra_var_name': group['extra_var_name'] if 'extra_var_name' in group else np.nan,
                         'group_weight': group['group_weight'] if 'group_weight' in group else 1
                 }
+                
                 for key, val in group['operating_conditions'].items():
                     temp_group_dict[key] = val
+                
+                for key, val in group['instance_parameters'].items():
+                    temp_group_dict[key] = val
+                    
                 group_info.append(temp_group_dict)
                 
                 # ge the data for each curve of the group

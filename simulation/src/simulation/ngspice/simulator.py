@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import json
 import os
-import subprocess
+from subprocess import Popen, PIPE, TimeoutExpired
 import time
 import shlex
 from simulation.ngspice.parser import parse_results
@@ -27,9 +27,9 @@ class simulator:
     
         
     # Simulate one .cir file
-    def simulate_single_file(self, file_path: str = None, results_dir: str = None, timeout: int = None,
-                             device: str = 'mosfet', simulation_type: str = 'output_characteristic',
-                             extract_results: bool = False, plot: bool = False):
+    def simulate_single_file(self, file_path: str = None, results_dir: str = None, results_file_name: str = 'results.txt',
+                             timeout: int = None, device: str = 'mosfet', characteristic_type: str = 'output_characteristic',
+                             extract_results: bool = False):
         if file_path is not None:
             
             file_name = os.path.basename(file_path)
@@ -49,7 +49,7 @@ class simulator:
             
             # start the simulation in a new subprocess
             try:
-                process = subprocess.Popen(shlex.split(command), stdout = subprocess.DEVNULL, cwd = results_dir)
+                process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE, cwd = results_dir)
             except FileNotFoundError:
                 print(f'{file_path} not found')
             
@@ -57,28 +57,31 @@ class simulator:
             try:
                  start_time = time.time()
                  while time.time() - start_time <= timeout:
+                     out, err = process.communicate()
                      exit_code = process.poll()
                      if exit_code is not None: # process ended
+                         print(out.decode())
+                         print(err.decode())
                          break
                  else:
-                     raise subprocess.TimeoutExpired(cmd = command, timeout = timeout)
+                     raise TimeoutExpired(cmd = command, timeout = timeout)
             except KeyboardInterrupt:
                  print('Keyboard interrupt.')
                  process.terminate()
                  raise KeyboardInterrupt()
-            except subprocess.TimeoutExpired as e:
+            except TimeoutExpired as e:
                  print('Ngspice simulation timeout.')
                  process.kill()
                  raise e
             
             # parse the results file
             if extract_results:
-                results_file_path = os.path.join(results_dir, 'results.txt')
-                results = parse_results(file_path = results_file_path, device = device, simulation_type = simulation_type)
+                results_file_path = os.path.join(results_dir, results_file_name)
+                results = parse_results(file_path = results_file_path, device = device, characteristic_type = characteristic_type)
                 
                 # plot the results
-                if plot:
-                    plot_results(device = device, simulation_type = simulation_type, data = results)
+                # if plot:
+                #     plot_results(device = device, characteristic_type = characteristic_type, data = results)
                 
                 return results
                 

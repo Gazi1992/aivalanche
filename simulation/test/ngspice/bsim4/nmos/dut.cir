@@ -1,0 +1,29 @@
+
+.param version_default = 4.8
+.param level_default = 54
+.param l_default = 10e-6
+.param w_default = 10e-6
+.param temp_default = 25
+
+
+.subckt dut d g s b
+* instance parameters
++ l=l_default
++ w=w_default
++ TNOM = 25
+* model parameters
++ vth0=0.5
+
+
+.model nch nmos version=version_default level=level_default
+* instance parameters
++ l = l_default
++ w = w_default
+* model parameters
++ vth0 = vth0
++ TNOM = TNOM
+
+
+m1 d g s b nch
+
+.ends
