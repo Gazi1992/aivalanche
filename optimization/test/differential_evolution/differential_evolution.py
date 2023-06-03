@@ -1,8 +1,8 @@
 #%% Imports
 import pandas as pd
-from optimization import differential_evolution
-from utils import evaluate_quadratic_3_variables, evaluate_beale_2_variables, \
-                  evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_sin_sqrt
+from optimization.differential_evolution import Differential_evolution
+from optimization.test_functions import evaluate_quadratic_3_variables, evaluate_beale_2_variables, \
+                                        evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_sin_sqrt
 
 #%% Function selector
 function = evaluate_quadratic_3_variables
@@ -113,7 +113,7 @@ elif function == evaluate_sin_sqrt_2_variables:
     
 
 #%% Initialize and run the optimization
-diff_evolution = differential_evolution(parameters = parameters,
+diff_evolution = Differential_evolution(parameters = parameters,
                                         eval_func = function,
                                         eval_func_args = {'extra_arg': 'extra_arg_test'},
                                         callback_after_first_iter = callbac_after_first_iter,

@@ -28,13 +28,13 @@ Inputs:
 import pandas as pd
 import numpy as np
 from pyDOE import lhs
-from optimization.differential_evolution_utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
-from optimization.differential_evolution_visualization import plot_metric_evolution, plot_parameter_evolution
+from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
+from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution
 
 
 #%% differential_evolution class
 
-class differential_evolution:
+class Differential_evolution:
     def __init__(self,
                  eval_func: callable = None,                            # function that is used for the evaluation of the fittness of the parameter sets
                  eval_func_args: dict = {},                             # extra arguments to pass to the evaluation function 

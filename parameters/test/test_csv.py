@@ -1,12 +1,14 @@
 #%% Imports
-from parameters.parser import parser
+from parameters import Parameters
 
 file = 'example.csv'
 
 # initialize the parser
-parameters_parser = parser(file)
-var_parameters = parameters_parser.variable_parameters
-fixed_parameters = parameters_parser.fixed_parameters
+parameters = Parameters(file)
+var_parameters = parameters.variable_parameters
+fixed_parameters = parameters.fixed_parameters
+
+rand_params = parameters.generate_random_parameters()
 
 
 

@@ -6,5 +6,3 @@ Description: the optimization package contains many the optimization algorithms:
 """
 
 __version__ = '1.0.0'
-
-from .differential_evolution import differential_evolution

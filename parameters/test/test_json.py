@@ -1,11 +1,11 @@
 #%% Imports
-from parameters.parser import parser
+from parameters import Parameters
 
 file = 'example.json'
 
 # initialize the parser
-parameters_parser = parser(file)
-var_parameters = parameters_parser.variable_parameters
-fixed_parameters = parameters_parser.fixed_parameters
+parameters = Parameters(file)
+var_parameters = parameters.variable_parameters
+fixed_parameters = parameters.fixed_parameters
 
 

@@ -6,4 +6,4 @@ Description: reference_data package is used for parsing the reference data to pa
 
 __version__ = '1.0.0'
 
-from .parser import parser
+from .Reference_data import Reference_data

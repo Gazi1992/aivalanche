@@ -5,5 +5,3 @@ Description: testbench package is used for parsing and creating testbench and si
 """
 
 __version__ = '1.0.0'
-
-from .parser import parser

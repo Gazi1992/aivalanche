@@ -14,7 +14,7 @@ import json
 
 #%% differential_evolution class
 
-class parser:
+class Reference_data:
     def __init__(self,
                  file: str = None, # the path of the reference data file
                ):
@@ -91,14 +91,25 @@ class parser:
                 # ge the data for each curve of the group
                 for curve_idx, curve in enumerate(group['curves']):
                     self.validate_curve(curve)
+
+                    # Zip the x and y values
+                    combined = list(zip(curve['x_values'], curve['y_values']))
+                    
+                    # Sort the combined list based on the values in x
+                    sorted_combined = sorted(combined, key = lambda x: x[0])
+                    
+                    # Unzip the sorted list to retrieve the ordered A and B
+                    sorted_x, sorted_y = zip(*sorted_combined)
+                    
                     curve_info.append(
                         {
                             'group_id': group_idx,
                             'curve_id': curve_idx,
-                            'x_value': curve['x_value'],
-                            'y_value': curve['y_value'],
+                            'x_values': np.array(sorted_x),
+                            'y_values': np.array(sorted_y),
                             'extra_var_value': curve['extra_var_value'] if 'extra_var_value' in curve else np.nan,
-                            'curve_weight': curve['curve_weight'] if 'curve_weight' in curve else 1
+                            'curve_weight': curve['curve_weight'] if 'curve_weight' in curve else 1,
+                            'curve_length': len(sorted_y)
                         }
                     )
                     
@@ -125,8 +136,7 @@ class parser:
         elif 'y_name' not in keys:
             self.error_parsing = "\nError parsing reference data.\n"
             self.error_parsing += "Each group has to have y_name.\n"
-            self.error_parsing += f"Error happened at group: {group}.\n"  
-            
+            self.error_parsing += f"Error happened at group: {group}.\n"
         if self.error_parsing is not None:
             raise key_missing_exception(self.error_parsing)
         
@@ -134,13 +144,13 @@ class parser:
     # validate that a curve has the necessary elements    
     def validate_curve(self, curve):
         keys = curve.keys()
-        if 'x_value' not in keys:
+        if 'x_values' not in keys:
             self.error_parsing = "\nError parsing reference data.\n"
-            self.error_parsing += "Each curve has to have x_value.\n"
+            self.error_parsing += "Each curve has to have x_values.\n"
             self.error_parsing += f"Error happened at curve: {curve}.\n"
-        elif 'y_value' not in keys:
+        elif 'y_values' not in keys:
             self.error_parsing = "\nError parsing reference data.\n"
-            self.error_parsing += "Each curve has to have y_value.\n"
+            self.error_parsing += "Each curve has to have y_values.\n"
             self.error_parsing += f"Error happened at curve: {curve}.\n"
 
             

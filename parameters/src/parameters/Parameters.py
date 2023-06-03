@@ -10,32 +10,32 @@ Inputs:
 import pandas as pd
 import numpy as np
 import json
-
+import random
 
 #%% differential_evolution class
 
-class parser:
+class Parameters:
     def __init__(self,
                  file: str = None, # the path of the reference data file
                ):
         
         self.file = file
-        self.parameters = pd.DataFrame()
+        self.all_parameters = pd.DataFrame()
         self.error_parsing = None
         
         self.parse_file()
             
     @property
     def fixed_parameters(self):
-        return self.parameters[self.parameters['mode'] == 'fixed']
+        return self.all_parameters[self.all_parameters['mode'] == 'fixed']
 
     @property
     def variable_parameters(self):
-        return self.parameters[self.parameters['mode'] == 'variable']
+        return self.all_parameters[self.all_parameters['mode'] == 'variable']
     
     @property
     def nr_parameters(self):
-        return len(self.parameters.index)
+        return len(self.all_parameters.index)
     
     # Set file and parse the file
     def set_file(self, file: str = None):
@@ -57,26 +57,42 @@ class parser:
         with open(self.file) as json_file:
             self.raw_data = json.load(json_file)           
             
-            self.parameters = pd.DataFrame.from_dict(self.raw_data)
+            self.all_parameters = pd.DataFrame.from_dict(self.raw_data)
             
-            if 'scale' not in self.parameters.columns:
-                self.parameters['scale'] = 'lin'
+            if 'scale' not in self.all_parameters.columns:
+                self.all_parameters['scale'] = 'lin'
             
-            if 'mode' not in self.parameters.columns:
-                self.parameters['mode'] = 'variable'
+            if 'mode' not in self.all_parameters.columns:
+                self.all_parameters['mode'] = 'variable'
     
     
     # Convert csv file to pandas dataframe
     def parse_csv(self):
         self.raw_data = pd.read_csv(filepath_or_buffer = self.file, comment = '#') 
-        self.parameters = self.raw_data
+        self.all_parameters = self.raw_data
         
-        if 'scale' not in self.parameters.columns:
-            self.parameters['scale'] = 'lin'
+        if 'scale' not in self.all_parameters.columns:
+            self.all_parameters['scale'] = 'lin'
         
-        if 'mode' not in self.parameters.columns:
-            self.parameters['mode'] = 'variable'        
+        if 'mode' not in self.all_parameters.columns:
+            self.all_parameters['mode'] = 'variable'
+            
+            
+    # Generate random parameters
+    def generate_random_parameters(self):
+        return self.all_parameters.set_index('name').apply(self.generate_random_number, axis=1).to_dict()
+       
         
+    # Get default parameters
+    def get_default_parameters(self):
+        return self.all_parameters.set_index('name')['default'].to_dict()
+        
+
+    def generate_random_number(self, row):
+        if row['mode'] == 'fixed':
+            return row['default']
+        else:
+            return random.uniform(row['min'], row['max'])
         
         
         
