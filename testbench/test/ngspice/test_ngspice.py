@@ -26,7 +26,15 @@ testbench_compiler = Ngspice_testbench_compiler(testbenches_file = testbenches_f
                                                 reference_data = data,
                                                 dut_file = 'dut.cir',
                                                 dut_name = 'dut',
-                                                model_parameters={'vth0': 0.1, 'ua': 10})
+                                                model_parameters={'vth0': -0.1, 'ua': 10})
 
 testbench_compiler.create_testbenches()
+
+for index, file in testbench_compiler.files.iterrows():
+    print(file['contents'])
+
+testbench_compiler.modify_model_parameters(parameters = {'vth0': -10, 'ua': 20, 'kot_1': 30,'kot_2': 30}, add_new_parameters = False)
+
+for index, file in testbench_compiler.files.iterrows():
+    print(file['contents'])
 

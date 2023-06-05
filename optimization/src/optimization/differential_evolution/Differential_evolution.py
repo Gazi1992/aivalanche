@@ -37,7 +37,7 @@ from optimization.differential_evolution.visualization import plot_metric_evolut
 class Differential_evolution:
     def __init__(self,
                  eval_func: callable = None,                            # function that is used for the evaluation of the fittness of the parameter sets
-                 eval_func_args: dict = {},                             # extra arguments to pass to the evaluation function 
+                 eval_func_args: dict = None,                           # extra arguments to pass to the evaluation function 
                  callback_after_first_iter: callable = None,            # callback that is called after the first iteration
                  callback_after_each_iter: callable = None,             # callback that is called after each iteration
                  callback_after_last_iter: callable = None,             # callback that is called after the last iteration
@@ -64,7 +64,7 @@ class Differential_evolution:
         
         
         self.eval_func = eval_func
-        self.eval_func_args = eval_func_args
+        self.eval_func_args = {} if eval_func_args is None else eval_func_args
         self.callback_after_first_iter = callback_after_first_iter
         self.callback_after_each_iter = callback_after_each_iter
         self.callback_after_last_iter = callback_after_last_iter
@@ -110,7 +110,9 @@ class Differential_evolution:
 
     # Run the optimization loop.
     def run_optimization(self):
-        self.prepare_first_iter()                               # Prepare for the first iteration
+        
+        # Prepare for the first iteration
+        self.prepare_first_iter()
         
         # stay in the loop as long as the stop criteria is not reached
         while not self.is_stop_criteria_reached:
@@ -165,6 +167,7 @@ class Differential_evolution:
         self.show_final_result()
         if self.callback_after_last_iter is not None:
             self.callback_after_last_iter(iteration = self.iter,
+                                          responses = responses,
                                           best_parameters = self.best_unscaled,
                                           best_metric = self.best_metric,
                                           history = self.history,
@@ -478,7 +481,7 @@ class Differential_evolution:
     # Determine the best parameters and metric
     def determine_best(self):
         # Get the index of the best survivor
-        self.best_index = np.argmin(self.survivors_metric) if self.opt_min_or_max == 'min' else np.argmax(self.survivors_metric)
+        self.best_index = np.argmax(self.survivors_metric) if self.opt_min_or_max == 'max' else np.argmin(self.survivors_metric)
         
         # Reset iter_no_improvement if a better solution is found.
         if self.iter > 1:

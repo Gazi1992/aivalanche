@@ -13,33 +13,16 @@ class Cost_function:
                  ):
                 
         self.parts = parts
+        self.validate_parts()
+        
+        
+    def validate_parts(self):
         if self.parts is None:
-            self.parts = [
-                {
-                    'id': 'out_char_lin',
-                    'group_types': ['ids_vds_vgs'],
-                    'metric_type': 'rmse',
-                    'weight': 1,
-                    'norm': True,
-                    'transform': 'lin',
-                    'extra_args': {}
-                },
-                {
-                    'id': 'out_char_log',
-                    'group_types': ['ids_vds_vgs'],
-                    'metric_type': 'rmse',
-                    'weight': 1,
-                    'norm': True,
-                    'transform': 'log',
-                    'extra_args': {}
-                },
-            ]
-            
-        self.initialize_error_metric()
+            raise parts_missing('ERROR! Parts are missing. You need to provide a list of dicts, where each dict needs to have an id, group_types and metric_type.')
 
 
-    # Initialize the error metric dictionary
-    def initialize_error_metric(self):
+    # Reset the error metric dictionary
+    def reset_error_metric(self):
         self.error_metric = {}
         for part in self.parts:
             self.error_metric[part['id']] = None
@@ -53,6 +36,8 @@ class Cost_function:
             error_metric = raise_exception('no_data_exception')
             self.error_metric['total'] = error_metric
             return self.error_metric
+        
+        self.reset_error_metric()
         
         # Copy the data to not modify the original dataframe
         self.data = data.copy()
@@ -73,13 +58,16 @@ class Cost_function:
                                                        transform = part['transform'],
                                                        **part['extra_args'])
             self.error_metric[part['id']] = part_error_metric
-            if  self.error_metric['total'] is None:
+            if self.error_metric['total'] is None:
                 self.error_metric['total'] = part_error_metric
             else:
                 self.error_metric['total'] += part_error_metric
         
         
         return self.error_metric
-    
-    
-    
+
+
+#%% custom exception class for missing optimizer
+class parts_missing(Exception):
+    def __init__(self, message):
+        print(message)

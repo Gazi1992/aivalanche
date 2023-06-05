@@ -1,7 +1,7 @@
-NO_DATA_ERROR = 9e10
-NO_GROUP_ERROR = 8e10
-PART_FAILED_ERROR = 7e10
-HUGE_ERROR = 1e10
+SIMULATION_FAILED_ERROR = 9e10
+NO_DATA_ERROR           = 8e10
+NO_GROUP_ERROR          = 7e10
+PART_FAILED_ERROR       = 6e10
 
 
 #%% Wrapper of exceptions
@@ -52,8 +52,19 @@ class failed_error_metric_exception(Exception):
             print(f'returning PART_FAILED_ERROR: {PART_FAILED_ERROR}')
         
         self.error_metric = PART_FAILED_ERROR
-    
-    
+
+
+#%% custom exception class for failing simulation calculation
+class simulation_failed_exception(Exception):
+    def __init__(self, message: str = None):
+        
+        if message is not None:
+            print(message)
+        else:
+            print('ERROR: Simulation failed!')
+            print(f'returning SIMULATION_FAILED_ERROR: {SIMULATION_FAILED_ERROR}')
+        
+        self.error_metric = SIMULATION_FAILED_ERROR    
     
     
     

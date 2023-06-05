@@ -89,13 +89,16 @@ class Ngspice_simulator:
             return None
         
         
-    def simulate_testbenches(self, testbenches: Ngspice_testbench_compiler = None, timeout: int = None, extract_results: bool = False, reference_data: pd.DataFrame = None):
+    def simulate_testbenches(self, testbenches: Ngspice_testbench_compiler = None, timeout: int = None, extract_results: bool = False,
+                             reference_data: pd.DataFrame = None, delete_files: bool = True, print_output: bool = True):
         if testbenches is not None:
             testbenches.write_simulation_files()
             results = self.simulate_multiple_files(files = testbenches.files,
                                                    timeout = timeout,
                                                    extract_results = extract_results,
-                                                   reference_data = reference_data)
+                                                   reference_data = reference_data,
+                                                   delete_files = delete_files,
+                                                   print_output = print_output)
             if reference_data is not None:
                 results = self.combine_simulation_with_reference_data(reference_data = reference_data, simulation_results = results)
             return results
@@ -106,7 +109,11 @@ class Ngspice_simulator:
     This will simulate all the files provided in the files dataframe. It should have the following columns:
         simulation_type, simulation_file_path, simulation_file_name, results_dir
     '''
-    def simulate_multiple_files(self, files: pd.DataFrame = None, timeout: int = None, extract_results: bool = False, reference_data: pd.DataFrame = None):
+    def simulate_multiple_files(self, files: pd.DataFrame = None, timeout: int = None, extract_results: bool = False,
+                                reference_data: pd.DataFrame = None, delete_files: bool = True, print_output: bool = True):
+        
+        results = None
+        
         if files is not None:
             
             if timeout is None:
@@ -140,12 +147,13 @@ class Ngspice_simulator:
                         break # all simulations finished succesfully
                 else:
                     raise TimeoutExpired(cmd = command, timeout = timeout)
-                    
-                for index, exit_code in enumerate(exit_codes):
-                    if exit_code is not None: # process ended
-                        out, err = all_processes[index].communicate()
-                        print(out.decode())
-                        print(err.decode())
+                
+                if print_output:
+                    for index, exit_code in enumerate(exit_codes):
+                        if exit_code is not None: # process ended
+                            out, err = all_processes[index].communicate()
+                            print(out.decode())
+                            print(err.decode())
                         
             except KeyboardInterrupt:
                  print('Keyboard interrupt.')
@@ -165,10 +173,23 @@ class Ngspice_simulator:
                                                                             x_name = file['x_name'] if reference_data is not None else None,
                                                                             y_name = file['y_name'] if reference_data is not None else None)
                 results.append(temp_results_compact)
+                    
+        # Delete the results files
+        if delete_files:
+            all_dirs = set(files['results_dir'])
+            for directory in all_dirs:
+                for filename in os.listdir(directory):
+                    file_path = os.path.join(directory, filename)
+                    try:
+                        if os.path.isfile(file_path) or os.path.islink(file_path):
+                            os.unlink(file_path)
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path)
+                    except Exception as e:
+                        print('Failed to delete %s. Reason: %s' % (file_path, e))
+
             
-            return results
-            
-        return None
+        return results
         
         
     def combine_simulation_with_reference_data(self, reference_data: pd.DataFrame = None, simulation_results: list[pd.DataFrame] = None):

@@ -15,7 +15,7 @@ plot_survivor_metric_evolution_period = None
 
 
 #%% Declare callbacks
-def callbac_after_first_iter(parameters: dict = None,
+def callback_after_first_iter(parameters: dict = None,
                              responses: dict = None,
                              iteration: int = None,
                              best_parameters: dict = None,
@@ -26,7 +26,7 @@ def callbac_after_first_iter(parameters: dict = None,
     print(f'Responses: {responses}')
     print(f"kwargs: {kwargs}")
     
-def callbac_after_each_iter(parameters: dict = None,
+def callback_after_each_iter(parameters: dict = None,
                             responses: dict = None,
                             iteration: int = None,
                             best_parameters: dict = None,
@@ -39,7 +39,8 @@ def callbac_after_each_iter(parameters: dict = None,
         plot_sin_sqrt(parameters = parameters)
 
     
-def callbac_after_last_iter(iteration: int = None,
+def callback_after_last_iter(iteration: int = None,
+                            responses: dict = None,
                             best_parameters: dict = None,
                             best_metric: float = None,
                             history: dict = None,
@@ -116,9 +117,9 @@ elif function == evaluate_sin_sqrt_2_variables:
 diff_evolution = Differential_evolution(parameters = parameters,
                                         eval_func = function,
                                         eval_func_args = {'extra_arg': 'extra_arg_test'},
-                                        callback_after_first_iter = callbac_after_first_iter,
-                                        callback_after_each_iter = callbac_after_each_iter,
-                                        callback_after_last_iter = callbac_after_last_iter,
+                                        callback_after_first_iter = callback_after_first_iter,
+                                        callback_after_each_iter = callback_after_each_iter,
+                                        callback_after_last_iter = callback_after_last_iter,
                                         pop_size = 20,
                                         metric_threshold = -10,
                                         max_iterations = 500,

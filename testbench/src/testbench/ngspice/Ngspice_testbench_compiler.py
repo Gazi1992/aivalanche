@@ -1,10 +1,10 @@
 #%% Imports
-import pandas as pd
-import numpy as np
 import json
 import re
 import tempfile
 import os
+import pandas as pd
+import numpy as np
 from testbench.ngspice.utils import is_equidistant, get_curve_index, get_instance_parameters_for_curve, write_contents_to_file
 
 
@@ -296,14 +296,7 @@ class Ngspice_testbench_compiler():
         file_contents += "********** Start of control section **********\n"
         file_contents += ".control\n\n"
         
-        if self.model_parameters is not None:
-            file_contents += "** Change model parameters.\n"
-            for key, value in self.model_parameters.items():
-                if value < 0:
-                    file_contents += f"alterparam {self.dut_name} {key} = 1*{value}\n"
-                else:
-                    file_contents += f"alterparam {self.dut_name} {key} = {value}\n"
-            file_contents += "reset\n\n"
+        file_contents += self.add_model_parameters_to_file()
         
         file_contents += "** Write the header of the results file.\n"
         file_contents += f"echo \"{','.join(all_measure_variables)}\" > {results_file_path}\n\n"
@@ -384,14 +377,7 @@ class Ngspice_testbench_compiler():
         file_contents += "********** Start of control section **********\n"
         file_contents += ".control\n\n"
         
-        if self.model_parameters is not None:
-            file_contents += "** Change model parameters.\n"
-            for key, value in self.model_parameters.items():
-                if value < 0:
-                    file_contents += f"alterparam {self.dut_name} {key} = 1*{value}\n"
-                else:
-                    file_contents += f"alterparam {self.dut_name} {key} = {value}\n"
-            file_contents += "reset\n\n"
+        file_contents += self.add_model_parameters_to_file()
         
         file_contents += "** Run the simulation.\n"
         file_contents += "run\n\n"
@@ -425,4 +411,52 @@ class Ngspice_testbench_compiler():
         self.files = pd.concat([self.files, new_file])
     
         
+    def add_model_parameters_to_file(self):
+        model_parameters_part = "** Model parameters start\n"
+        
+        if self.model_parameters is not None:
+            for key, value in self.model_parameters.items():
+                if value < 0:
+                    model_parameters_part += f"alterparam {self.dut_name} {key} = 1*{value}\n"
+                else:
+                    model_parameters_part += f"alterparam {self.dut_name} {key} = {value}\n"
+            model_parameters_part += "reset\n"
+        
+        model_parameters_part += "** Model parameters end\n\n"
+        
+        return model_parameters_part
     
+    
+    # Modify the model parameters that exist in the files
+    def modify_model_parameters(self, parameters: dict = None, add_new_parameters: bool = True):
+        self.files['contents'] = self.files.apply(lambda row: self.modify_model_parameters_per_file(row, parameters, add_new_parameters), axis = 1)
+        
+    
+    # Modify the parameters in a single file
+    def modify_model_parameters_per_file(self, file: pd.Series = None, parameters: dict = None, add_new_parameters: bool = True):
+        contents = file['contents']
+        
+        for key, value in parameters.items():
+            # pattern = r'(alterparam dut ' + key + r' = )[\d.]+'
+            pattern = r'(alterparam dut ' + key + r' = )(.*?)(?=\n)'
+            if re.search(pattern, contents):
+                # Parameter exists, perform substitution
+                def replace_value(match):
+                    if value < 0:
+                        return match.group(1) + '1*' + str(value)
+                    else:
+                        return match.group(1) + str(value)
+               
+                contents = re.sub(pattern, replace_value, contents, flags = re.DOTALL)
+
+            else:
+                if add_new_parameters:
+                    # Parameter does not exist, add it after "** Model parameters start"
+                    new_parameter = '** Model parameters start\n'
+                    if value < 0:
+                        new_parameter += f'alterparam dut {key} = 1*{value}\n'
+                    else:
+                        new_parameter += f'alterparam dut {key} = {value}\n'
+                    contents = contents.replace('** Model parameters start\n', new_parameter)
+            
+        return contents
