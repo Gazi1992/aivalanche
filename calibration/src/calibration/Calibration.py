@@ -139,14 +139,14 @@ class Calibration:
         
         # # Write the simulation values in a file
         # write_reference_data_to_file(data = results,
-        #                              file_path = 'test.json',
-        #                              x_values = 'x_values_simulation',
-        #                              y_values = 'y_values_simulation',
-        #                              operating_conditions = ['temp', 'vbs', 'vds', 'vgs', 'frequency'],
-        #                              instance_parameters = ['w', 'l', 'm'],
-        #                              title = "nmos example",
-        #                              description = "this dataset serves as an example of the json data format for an nmos transistor",
-        #                              device_type = "mosfet")
+        #                               file_path = 'test.json',
+        #                               x_values = 'x_values_simulation',
+        #                               y_values = 'y_values_simulation',
+        #                               operating_conditions = ['temp', 'vbs', 'vds', 'vgs', 'frequency'],
+        #                               instance_parameters = ['w', 'l', 'm'],
+        #                               title = "nmos example",
+        #                               description = "this dataset serves as an example of the json data format for an nmos transistor",
+        #                               device_type = "mosfet")
 
         # Plot the data
         if plot:

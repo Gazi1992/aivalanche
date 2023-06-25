@@ -13,6 +13,11 @@ def calculate_error_metric(data: pd.DataFrame = None, parameters: pd.DataFrame =
         # Get only the groups included in the group_type
         groups = filter_groups(all_groups = data, relevant_groups = group_types)
         
+        # Check if a simulation failed
+        if any(groups['simulation_status'] == 'failed'):
+            error_metric = raise_exception('simulation_failed_exception', None, group_types)
+            return error_metric
+        
         # If no output characteristic present, then raise an error
         if len(groups.index) <= 0:
             error_metric = raise_exception('no_group_exception', None, group_types)
@@ -30,8 +35,8 @@ def calculate_error_metric(data: pd.DataFrame = None, parameters: pd.DataFrame =
             error_metric = calculate_rmse(groups)
         else:
             error_metric = 0
-            
-            
+
+
         return error_metric
     
     except Exception:

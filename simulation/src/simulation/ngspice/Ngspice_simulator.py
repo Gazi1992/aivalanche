@@ -142,7 +142,6 @@ class Ngspice_simulator:
             try:
                 start_time = time.time()
                 while time.time() - start_time <= timeout:
-                    
                     exit_codes = [process.poll() for process in all_processes]
                     if not any([exit_code is None for exit_code in exit_codes]):
                         break # all simulations finished succesfully
@@ -163,7 +162,8 @@ class Ngspice_simulator:
             except TimeoutExpired as e:
                  print('Ngspice simulation timeout.')
                  [process.kill() for process in all_processes]
-                 raise e
+                 # raise e
+                 pass
         
         # parse the results file
         if extract_results:
@@ -208,11 +208,28 @@ class Ngspice_simulator:
         reference_data['y_values_simulation'] = combined_results['y_values']
         
         reference_data.reset_index(inplace = True)
-          
+        
+        # Check the simulation validity
+        reference_data[['simulation_status', 'simulation_status_message']] = reference_data.apply(lambda row: self.check_simulation_validity(row), axis=1, result_type = 'expand')
+
         return reference_data
         
         
+    def check_simulation_validity(self, row):
+        status = 'success'
+        message = 'success'
+        if len(row['y_values']) != len(row['y_values_simulation']):
+            status = 'failed'
+            message = 'simulation data not the same length as reference data'
+        elif all(np.isnan(row['y_values_simulation'])):
+            status = 'failed'
+            message = 'all simulation data is NaN'
+        elif any(np.isnan(row['y_values_simulation'])):
+            status = 'failed'
+            message = 'at least one value in simulation data is NaN'
         
+        return status, message
+    
         
         
         

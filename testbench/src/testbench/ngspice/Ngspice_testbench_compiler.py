@@ -88,11 +88,11 @@ class Ngspice_testbench_compiler():
                 return 'dc_sweep', curve['x_values'][0], curve['x_values'][-1], round(curve['x_values'][1]-curve['x_values'][0], 10)
             else:
                 return 'dc_list', None, None, None
-        elif testbench['simulation_type'] == 'ac':
+        elif testbench['simulation_type'] == 'ac_point':
             if is_equidistant(curve['x_values']):
-                return 'ac_sweep', curve['x_values'][0], curve['x_values'][-1], round(curve['x_values'][1]-curve['x_values'][0], 10)
+                return 'ac_point_dc_sweep', curve['x_values'][0], curve['x_values'][-1], round(curve['x_values'][1]-curve['x_values'][0], 10)
             else:
-                return 'ac_list', None, None, None
+                return 'ac_point_dc_list', None, None, None
         else:
             return None, None, None, None
 
@@ -112,11 +112,11 @@ class Ngspice_testbench_compiler():
                 data_split_2 = split_1.groupby(['x_values', 'testbench_type'], dropna = False)
                 for (x_values, testbench_type), split_2 in data_split_2:
                     self.set_file_id_for_split(split_2)
-            elif simulation_type == 'ac_sweep':
+            elif simulation_type == 'ac_point_dc_sweep':
                 data_split_2 = split_1.groupby(['start', 'stop', 'step', 'testbench_type'], dropna = False)
                 for (start, stop, step, testbench_type), split_2 in data_split_2:
                     self.set_file_id_for_split(split_2)
-            elif simulation_type == 'ac_list':
+            elif simulation_type == 'ac_point_dc_list':
                 data_split_2 = split_1.groupby(['x_values', 'testbench_type'], dropna = False)
                 for (x_values, testbench_type), split_2 in data_split_2:
                     self.set_file_id_for_split(split_2)
@@ -284,10 +284,10 @@ class Ngspice_testbench_compiler():
                 self.build_file_dc_sweep(split)
             elif simulation_type == 'dc_list':
                 self.build_file_dc_list(split)
-            elif simulation_type == 'ac_sweep':
-                self.build_file_ac_sweep(split)
-            elif simulation_type == 'ac_list':
-                self.build_file_ac_list(split)
+            elif simulation_type == 'ac_point_dc_sweep':
+                self.build_file_ac_point_dc_sweep(split)
+            elif simulation_type == 'ac_point_dc_list':
+                self.build_file_ac_point_dc_list(split)
 
     # Build file for dc_sweep simulations.        
     def build_file_dc_sweep(self, curves):
@@ -459,15 +459,15 @@ class Ngspice_testbench_compiler():
 
 
     # Build file for ac_sweep simulations.
-    def build_file_ac_sweep(self, curves):
+    def build_file_ac_point_dc_sweep(self, curves):
         file_id = curves.iloc[0]['file_id']
         simulation_type = curves.iloc[0]['simulation_type']
         x_name = curves.iloc[0]['x_name']
         y_name = curves.iloc[0]['y_name']
         results_dir = self.working_directory
-        simulation_file_name = f'ac_sweep_{file_id}.cir'
+        simulation_file_name = f'ac_point_dc_sweep_{file_id}.cir'
         simulation_file_path = os.path.join(results_dir, simulation_file_name)
-        results_file_name = f'ac_sweep_{file_id}.csv'
+        results_file_name = f'ac_point_dc_sweep_{file_id}.csv'
         results_file_path = os.path.join(results_dir, results_file_name)
         all_save_variables = list(set(sum(curves['save_variables'].tolist(), [])))
         all_output_variables = list(set(sum(curves['output_variables'].tolist(), [])))
@@ -551,16 +551,16 @@ class Ngspice_testbench_compiler():
 
 
     # Build file for ac_list simulations.
-    def build_file_ac_list(self, curves):
+    def build_file_ac_point_dc_list(self, curves):
         file_id = curves.iloc[0]['file_id']
         simulation_type = curves.iloc[0]['simulation_type']
         x_name = curves.iloc[0]['x_name']
         y_name = curves.iloc[0]['y_name']
         values_list = ' '.join([str(val) for val in curves.iloc[0]['x_values']])
         results_dir = self.working_directory
-        simulation_file_name = f'ac_list_{file_id}.cir'
+        simulation_file_name = f'ac_point_dc_list_{file_id}.cir'
         simulation_file_path = os.path.join(results_dir, simulation_file_name)
-        results_file_name = f'ac_list_{file_id}.csv'
+        results_file_name = f'ac_point_dc_list_{file_id}.csv'
         results_file_path = os.path.join(results_dir, results_file_name)
         all_save_variables = list(set(sum(curves['save_variables'].tolist(), [])))
         all_output_variables = list(set(sum(curves['output_variables'].tolist(), [])))

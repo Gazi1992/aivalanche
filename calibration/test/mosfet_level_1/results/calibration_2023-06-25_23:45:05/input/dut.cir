@@ -1,0 +1,79 @@
+********** MOSFET LEVEL 1 NMOS TEMPLATE **********
+
+.subckt dut d g s b
+********** instance parameters **********
++ l = 10e-6
++ w = 10e-6
++ m = 1
+********** model parameters **********
++ vto = 0.5
++ kp = 2e-5
++ gamma = 0.1
++ phi = 0.6
++ rd = 0.2
++ rs = 0.1
++ cbd = 1e-16
++ cbs = 1e-16
++ is = 1e-14
++ pb = 0.8
++ cgso = 2e-11
++ cgdo = 1e-11
++ cgbo = 1e-12
++ rsh = 1
++ cj = 1e-4
++ mj = 0.5
++ cjsw = 1e-10
++ mjsw = 0.33
++ tox = 1e-7
++ nsub = 4e15
++ nss = 1e10
++ nfs = 1e10
++ tpg = 1
++ xj = 1e-10
++ ld = 1e-10
++ uo = 600
++ vmax = 2e4
++ kf = 1e-25
++ af = 1
++ fc = 0.5
+
+.model nch nmos level=1
+* model parameters
++ vto = 'vto'
++ kp = 'kp'
++ gamma = 'gamma'
++ phi = 'phi'
++ rd = 'rd'
++ rs = 'rs'
++ cbd = 'cbd'
++ cbs = 'cbs'
++ is = 'is'
++ pb = 'pb'
++ cgso = 'cgso'
++ cgdo = 'cgdo'
++ cgbo = 'cgbo'
++ rsh = 'rsh'
++ cj = 'cj'
++ mj = 'mj'
++ cjsw = 'cjsw'
++ mjsw = 'mjsw'
++ tox = 'tox'
++ nsub = 'nsub'
++ nss = 'nss'
++ nfs = 'nfs'
++ tpg = 'tpg'
++ xj = 'xj'
++ ld = 'ld'
++ uo = 'uo'
++ vmax = 'vmax'
++ kf = 'kf'
++ af = 'af'
++ fc = 'fc'
+
+
+m1 d g s b nch
++ l = l
++ w = w
++ m = m
+
+.ends

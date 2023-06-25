@@ -30,6 +30,7 @@ def parse_dc_sweep(file_path: str = None, compact: bool = False, rename_variable
         # the first column is to be ignores because it is the repetition of some other column
         columns = temp[0][1:]                                                       # first line has the columns names
         data = np.array(temp[1:]).astype(float)[:,1:]                               # the other lines have the values
+        # data = np.where(data == 'NAN', np.nan, data)                                # replace NAN whith numpy.nan
         
         # save all the data
         results_extended = pd.DataFrame(columns = columns, data = data)
@@ -48,7 +49,7 @@ def parse_dc_sweep(file_path: str = None, compact: bool = False, rename_variable
 # parse dc_list results file
 def parse_dc_list(file_path: str = None, compact: bool = False, rename_variables: dict = None):
     try:
-        results_extended = pd.read_csv(filepath_or_buffer = file_path)
+        results_extended = pd.read_csv(filepath_or_buffer = file_path, na_values = 'NAN')
         if rename_variables is not None:
             results_extended.rename(columns = rename_variables, inplace = True)
         
@@ -64,19 +65,19 @@ def parse_dc_list(file_path: str = None, compact: bool = False, rename_variables
 
 
 # parse ac_sweep results file
-def parse_ac_sweep(file_path: str = None, compact: bool = False, rename_variables: dict = None):
-    return parse_ac(file_path = file_path, compact = compact, rename_variables = rename_variables)
+def parse_ac_point_dc_sweep(file_path: str = None, compact: bool = False, rename_variables: dict = None):
+    return parse_ac_point(file_path = file_path, compact = compact, rename_variables = rename_variables)
 
 
 # parse ac_list results file
-def parse_ac_list(file_path: str = None, compact: bool = False, rename_variables: dict = None):
-    return parse_ac(file_path = file_path, compact = compact, rename_variables = rename_variables)
+def parse_ac_point_dc_list(file_path: str = None, compact: bool = False, rename_variables: dict = None):
+    return parse_ac_point(file_path = file_path, compact = compact, rename_variables = rename_variables)
 
     
 # parse ac results file
-def parse_ac(file_path: str = None, compact: bool = False, rename_variables: dict = None):
+def parse_ac_point(file_path: str = None, compact: bool = False, rename_variables: dict = None):
     try:
-        results_extended = pd.read_csv(filepath_or_buffer = file_path)
+        results_extended = pd.read_csv(filepath_or_buffer = file_path, na_values = 'NAN')
         if rename_variables is not None:
             results_extended.rename(columns = rename_variables, inplace = True)
         

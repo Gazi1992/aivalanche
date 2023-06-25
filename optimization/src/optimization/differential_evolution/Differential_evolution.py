@@ -585,10 +585,10 @@ class Differential_evolution:
     def write_population_to_file(self, file_path: str = None):
         if file_path is not None:
             try:
-                # Convert the dictionary to a DataFrame
-                df = pd.DataFrame(columns = ['name'], data = self.parameter_names)
-                df[[f'member_{i+1}' for i in range(self.pop_size)]] = self.survivors_unscaled.T.tolist()
-                
+                # Convert the dictionary to a DataFrame                
+                df = pd.DataFrame(data = self.survivors_unscaled.T.tolist(), columns = [f'member_{i+1}' for i in range(self.pop_size)])
+                df.insert(loc = 0, column = 'name', value = self.parameter_names)
+                                
                 if file_path.split('.')[-1] == 'csv':
                     df.to_csv(file_path, index = False)
                 elif file_path.split('.')[-1] == 'json':
@@ -598,8 +598,8 @@ class Differential_evolution:
                 print('ERROR on write_best_parameters_to_file:')
                 print(e)
                 pass
-        
-    
+
+
     def update_results_dir(self, new_results_dir: str = None):
         self.results_dir = new_results_dir
         

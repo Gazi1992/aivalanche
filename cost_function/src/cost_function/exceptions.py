@@ -47,7 +47,7 @@ class failed_error_metric_exception(Exception):
         if message is not None:
             print(message)
         else:
-            print('ERROR: No group found for the following types:')
+            print('ERROR: Failed to calculate the error metric for the following types:')
             print(group_types)
             print(f'returning PART_FAILED_ERROR: {PART_FAILED_ERROR}')
         
@@ -56,12 +56,13 @@ class failed_error_metric_exception(Exception):
 
 #%% custom exception class for failing simulation calculation
 class simulation_failed_exception(Exception):
-    def __init__(self, message: str = None):
+    def __init__(self, message: str = None, group_types: list[str] = None):
         
         if message is not None:
             print(message)
         else:
             print('ERROR: Simulation failed!')
+            print(group_types)
             print(f'returning SIMULATION_FAILED_ERROR: {SIMULATION_FAILED_ERROR}')
         
         self.error_metric = SIMULATION_FAILED_ERROR    
