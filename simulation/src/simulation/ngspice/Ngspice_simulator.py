@@ -26,11 +26,12 @@ from testbench.ngspice import Ngspice_testbench_compiler
 class Ngspice_simulator:
     def __init__(self, timeout: int = 30):
         self.timeout = timeout
-    
-        
+
+
     # Simulate one .cir file
     def simulate_single_file(self, file_path: str = None, results_dir: str = None, results_file_name: str = 'results.txt',
-                             timeout: int = None, simulation_type: str = 'dc_sweep', extract_results: bool = False):
+                             timeout: int = None, simulation_type: str = 'dc_sweep',
+                             extract_results: bool = False, compact: bool = False, rename_variables: dict = None):
         if file_path is not None:
             
             file_name = os.path.basename(file_path)
@@ -78,7 +79,8 @@ class Ngspice_simulator:
             # parse the results file
             if extract_results:
                 results_file_path = os.path.join(results_dir, results_file_name)
-                results = parse_results(file_path = results_file_path, simulation_type = simulation_type)
+                results = parse_results(file_path = results_file_path, simulation_type = simulation_type,
+                                        compact = compact, rename_variables = rename_variables)
                 
                 # plot the results
                 # if plot:
@@ -87,29 +89,28 @@ class Ngspice_simulator:
                 return results
                 
             return None
-        
-        
-    def simulate_testbenches(self, testbenches: Ngspice_testbench_compiler = None, timeout: int = None, extract_results: bool = False,
+
+
+    def simulate_testbenches(self, testbenches: Ngspice_testbench_compiler = None, timeout: int = None,
+                             extract_results: bool = False, compact: bool = False, rename_variables: dict = None,
                              reference_data: pd.DataFrame = None, delete_files: bool = True, print_output: bool = True):
         if testbenches is not None:
             testbenches.write_simulation_files()
-            results = self.simulate_multiple_files(files = testbenches.files,
-                                                   timeout = timeout,
-                                                   extract_results = extract_results,
-                                                   reference_data = reference_data,
-                                                   delete_files = delete_files,
-                                                   print_output = print_output)
+            results = self.simulate_multiple_files(files = testbenches.files, timeout = timeout,
+                                                   extract_results = extract_results, compact = compact, rename_variables = rename_variables,
+                                                   reference_data = reference_data, delete_files = delete_files, print_output = print_output)
             if reference_data is not None:
                 results = self.combine_simulation_with_reference_data(reference_data = reference_data, simulation_results = results)
             return results
         return None
-                    
-            
+
+
     '''
     This will simulate all the files provided in the files dataframe. It should have the following columns:
         simulation_type, simulation_file_path, simulation_file_name, results_dir
     '''
-    def simulate_multiple_files(self, files: pd.DataFrame = None, timeout: int = None, extract_results: bool = False,
+    def simulate_multiple_files(self, files: pd.DataFrame = None, timeout: int = None,
+                                extract_results: bool = False, compact: bool = False, rename_variables: dict = None,
                                 reference_data: pd.DataFrame = None, delete_files: bool = True, print_output: bool = True):
         
         results = None
@@ -168,11 +169,15 @@ class Ngspice_simulator:
         if extract_results:
             results = []
             for index, file in files.iterrows():
-                temp_results_extended, temp_results_compact = parse_results(file_path = file['results_file_path'],
-                                                                            simulation_type = file['simulation_type'],
-                                                                            x_name = file['x_name'] if reference_data is not None else None,
-                                                                            y_name = file['y_name'] if reference_data is not None else None)
-                results.append(temp_results_compact)
+                rename_variables = file['rename_variables'] if 'rename_variables' in file else rename_variables
+                temp_results = parse_results(file_path = file['results_file_path'],
+                                             simulation_type = file['simulation_type'],
+                                             compact = compact,
+                                             rename_variables = rename_variables,
+                                             x_name = file['x_name'] if reference_data is not None else None,
+                                             y_name = file['y_name'] if reference_data is not None else None)                    
+                
+                results.append(temp_results)
                     
         # Delete the results files
         if delete_files:
@@ -188,10 +193,9 @@ class Ngspice_simulator:
                     except Exception as e:
                         print('Failed to delete %s. Reason: %s' % (file_path, e))
 
-            
         return results
-        
-        
+
+
     def combine_simulation_with_reference_data(self, reference_data: pd.DataFrame = None, simulation_results: list[pd.DataFrame] = None):
         reference_data = reference_data.copy()
         reference_data['x_values_simulation'] = None

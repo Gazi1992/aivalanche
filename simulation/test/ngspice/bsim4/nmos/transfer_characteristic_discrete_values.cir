@@ -44,6 +44,24 @@ foreach val $values_list
     echo "$&ids_1,$&vgs_1,$&vds_1,$&vbs_1,$&ids_2,$&vgs_2,$&vds_2,$&vbs_2" >> transfer_characteristic_discrete_values_results.csv
 end
 
+*compose values_list values 0.2 10
+*let kot = vector(length(values_list))
+*echo $&kot >> transfer_characteristic_discrete_values_results.csv
+*let i = 0
+*
+*set tmp = ""
+*
+*foreach val $&values_list
+*    alter v_sweep $val
+*    op
+*    let kot[i] = i(v_vs_1)
+*    let i = i + 1
+*    appendvector tmp "123\n"
+*end
+*
+*echo $tmp
+*echo $&kot >> transfer_characteristic_discrete_values_results.csv
+
 .endc
 *******************************************************************************
 

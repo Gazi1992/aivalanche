@@ -18,12 +18,13 @@ if test_bsim4_nmos_output_characteristic:
     results_file_name = 'output_characteristic_results.txt'
     
     sim = Ngspice_simulator()
-    res_extended, res_compact = sim.simulate_single_file(file_path = sim_file_path,
-                                                         extract_results = True,
-                                                         results_file_name = results_file_name,
-                                                         simulation_type = 'dc_sweep')
+    results = sim.simulate_single_file(file_path = sim_file_path,
+                                       extract_results = True,
+                                       compact = True,
+                                       results_file_name = results_file_name,
+                                       simulation_type = 'dc_sweep')
     
-    for idx, row in res_compact.iterrows():
+    for idx, row in results.iterrows():
         plot_mosfet_output_characteristic(row)
 
 
@@ -35,12 +36,13 @@ if test_bsim4_nmos_transfer_characteristic:
     results_file_name = 'transfer_characteristic_results.txt'
     
     sim = Ngspice_simulator()
-    res_extended, res_compact = sim.simulate_single_file(file_path = sim_file_path,
-                                                         extract_results = True,
-                                                         results_file_name = results_file_name,
-                                                         simulation_type = 'dc_sweep')
+    results = sim.simulate_single_file(file_path = sim_file_path,
+                                       extract_results = True,
+                                       compact = True,
+                                       results_file_name = results_file_name,
+                                       simulation_type = 'dc_sweep')
     
-    for idx, row in res_compact.iterrows():
+    for idx, row in results.iterrows():
         plot_mosfet_transfer_characteristic(row)
 
 
@@ -52,12 +54,13 @@ if test_diode_characteristic:
     results_file_name = 'diode_characteristic_results.txt'
     
     sim = Ngspice_simulator()
-    res_extended, res_compact = sim.simulate_single_file(file_path = sim_file_path,
-                                                         extract_results = True,
-                                                         results_file_name = results_file_name,
-                                                         simulation_type = 'dc_sweep')
+    results = sim.simulate_single_file(file_path = sim_file_path,
+                                       extract_results = True,
+                                       compact = True,
+                                       results_file_name = results_file_name,
+                                       simulation_type = 'dc_sweep')
     
-    for idx, row in res_compact.iterrows():
+    for idx, row in results.iterrows():
         plot_diode_characteristic(row)
 
 
@@ -69,12 +72,13 @@ if test_bsim4_nmos_transfer_characteristic_dicrete_values:
     results_file_name = 'transfer_characteristic_discrete_values_results.csv'
     
     sim = Ngspice_simulator()
-    res_extended, res_compact = sim.simulate_single_file(file_path = sim_file_path,
-                                                         extract_results = True,
-                                                         results_file_name = results_file_name,
-                                                         simulation_type = 'dc_list')
+    results = sim.simulate_single_file(file_path = sim_file_path,
+                                       extract_results = True,
+                                       compact = True,
+                                       results_file_name = results_file_name,
+                                       simulation_type = 'dc_list')
     
-    for idx, row in res_compact.iterrows():
+    for idx, row in results.iterrows():
         plot_mosfet_transfer_characteristic(row)
         
         

@@ -5,7 +5,7 @@ from testbench.ngspice import Ngspice_testbench_compiler
 
 
 #%% get a reference data dataframe
-ref_data_file = 'nmos_output_transfer.json'
+ref_data_file = 'nmos_ref_data_example.json'
 
 # initialize the parser
 ref_data = Reference_data(ref_data_file)
@@ -20,7 +20,7 @@ data = ref_data.data
 
 
 #%% build testbenches for all the rows of the dataframe
-testbenches_file = 'testbenches_example.json'
+testbenches_file = 'testbenches.json'
 
 testbench_compiler = Ngspice_testbench_compiler(testbenches_file = testbenches_file,
                                                 reference_data = data,

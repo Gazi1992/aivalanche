@@ -2,12 +2,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.style import context
-
+import os
 
 #%% Plot metric evolution
 def plot_metric_evolution(iterations: np.array = None,
                           metrics: np.array = None,
-                          y_scale: str = 'log'):
+                          y_scale: str = 'log',
+                          save_dir: str = None):
     if iterations is not None and metrics is not None:
         with context('seaborn-v0_8-bright'):
             figure, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(8, 4.5))
@@ -17,20 +18,29 @@ def plot_metric_evolution(iterations: np.array = None,
             ax.set_ylabel('Metrics')
             ax.set_yscale(y_scale)
             ax.grid(which = 'both', axis = 'both')
-            plt.show()
+            if save_dir is not None:
+                try:
+                    figure.savefig(os.path.join(save_dir, 'metric_evolution.png'))
+                except Exception as e:
+                    print('Error saving figure.')
+                    print(e)
+                    plt.show()
+                plt.close(figure)
+            else:
+                plt.show()
             
 
 #%% Plot parameter evolution
-def plot_parameter_evolution(parameters: list = None, data: np.array = None):
+def plot_parameter_evolution(parameters: list = None, data: np.array = None, save_dir: str = None):
     if parameters is None or data is not None:
         nr_plots = len(parameters)
         param_hist_width = 1 / nr_plots
         param_hist_height = 0.85
         param_hist_bottomY = 0.1
         with context('seaborn-v0_8-bright'):
-            fig = plt.figure(figsize = (max(nr_plots * 0.2, 8), 4.5))
+            figure = plt.figure(figsize = (max(nr_plots * 0.2, 8), 4.5))
             for idx, param in enumerate(parameters):
-                ax = fig.add_subplot()
+                ax = figure.add_subplot()
                 ax.set_position([idx * param_hist_width, param_hist_bottomY, param_hist_width, param_hist_height])
                 hist, edges = np.histogram(data[:,idx], bins = 500, range = (0,1))
                 plt.sca(ax)
@@ -44,7 +54,17 @@ def plot_parameter_evolution(parameters: list = None, data: np.array = None):
                     ax.set_xlabel(param, rotation = 'vertical')
                 else:
                     ax.set_xlabel(param)
-            plt.show()
+            
+            if save_dir is not None:
+                try:
+                    figure.savefig(os.path.join(save_dir, 'parameter_evolution.png'))
+                except Exception as e:
+                    print('Error saving figure.')
+                    print(e)
+                    plt.show()
+                plt.close(figure)
+            else:
+                plt.show()
             
             
             

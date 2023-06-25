@@ -28,6 +28,7 @@ Inputs:
 import pandas as pd
 import numpy as np
 from pyDOE import lhs
+import os
 from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
 from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution
 
@@ -41,6 +42,7 @@ class Differential_evolution:
                  callback_after_first_iter: callable = None,            # callback that is called after the first iteration
                  callback_after_each_iter: callable = None,             # callback that is called after each iteration
                  callback_after_last_iter: callable = None,             # callback that is called after the last iteration
+                 callback_after_better_solution_found: callable = None, # callback that is called after finding a better solution
                  parameters: pd.DataFrame = None,                       # the parameters to be optimized
                  pop_size: int = 100,                                   # number of parameter sets that are evaluated in each iteration
                  opt_min_or_max: str = 'min',                           # either search for the 'min' or 'max'
@@ -60,6 +62,7 @@ class Differential_evolution:
                  plot_trial_metric_evolution_period: int = None,        # plot trial metric evolution when iteration is a multiple of this factor
                  plot_survivor_metric_evolution_period: int = None,     # plot trial metric evolution when iteration is a multiple of this factor
                  plot_parameter_evolution_period: int = None,           # plot parameter evolution when iteration is a multiple of this factor
+                 results_dir: str = None,                               # directory where to save the results
                  ):
         
         
@@ -68,6 +71,7 @@ class Differential_evolution:
         self.callback_after_first_iter = callback_after_first_iter
         self.callback_after_each_iter = callback_after_each_iter
         self.callback_after_last_iter = callback_after_last_iter
+        self.callback_after_better_solution_found = callback_after_better_solution_found
         
         self.parameters = parameters
         self.pop_size = pop_size
@@ -80,6 +84,9 @@ class Differential_evolution:
         self.max_iter_without_improvement = max_iter_without_improvement
         
         self.init_pop = init_pop
+        if isinstance(self.init_pop, str):
+            if self.init_pop.split('.')[-1] == 'csv':
+                self.init_pop = pd.read_csv(filepath_or_buffer = self.init_pop)
         self.init_pop_out_of_range_param = init_pop_out_of_range_param
         self.defaults_in_init_pop = defaults_in_init_pop
         
@@ -92,6 +99,7 @@ class Differential_evolution:
         self.plot_trial_metric_evolution_period = plot_trial_metric_evolution_period if plot_trial_metric_evolution_period is not None and plot_trial_metric_evolution_period > 0 else None
         self.plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period if plot_survivor_metric_evolution_period is not None and plot_survivor_metric_evolution_period > 0 else None
         self.plot_parameter_evolution_period = plot_parameter_evolution_period if plot_parameter_evolution_period is not None  and plot_parameter_evolution_period > 0 else None
+        self.results_dir = results_dir
         
         self.iter = 0
         self.is_stop_criteria_reached = False
@@ -107,6 +115,10 @@ class Differential_evolution:
                         'bests': pd.DataFrame(columns = ['iter', 'best_normed', 'best', 'best_unscaled', 'best_metric']),
                         'boundaries': pd.DataFrame(columns = ['iter', 'boundaries_min', 'boundaries_max'])} 
         
+        self.best_metric = None
+        self.best_unscaled = None
+        self.best = None
+        self.best_normed = None
 
     # Run the optimization loop.
     def run_optimization(self):
@@ -116,15 +128,17 @@ class Differential_evolution:
         
         # stay in the loop as long as the stop criteria is not reached
         while not self.is_stop_criteria_reached:
-            parameters = self.get_trials_unscaled()             # get the trials_unscaled
-            responses = self.eval_func(iteration = self.iter,
-                                       parameters = parameters,
-                                       **self.eval_func_args)   # run the evaluation function
-            self.save_metrics(responses['metrics'])             # save the metrics
+            parameters = self.get_trials_unscaled()                                 # get the trials_unscaled
+            extra_arguments = {'iteration': self.iter,                              # extra arguments to give to the evaluation function
+                               'best_metric': self.best_metric,
+                               'best_parameters': self.best_unscaled,
+                               **self.eval_func_args}
+            responses = self.eval_func(parameters = parameters, **extra_arguments)  # run the evaluation function
+            self.save_metrics(responses['metrics'])                                 # save the metrics
             
-            self.determine_survivors()                          # determine the survivors
-            self.determine_best()                               # determine the best parameters and best metric
-            self.update_history_trials()                        # append the trials to the history trials
+            self.determine_survivors()                                              # determine the survivors
+            self.determine_best()                                                   # determine the best parameters and best metric
+            self.update_history_trials()                                            # append the trials to the history trials
             
             # plot trial metric evolution
             if self.plot_trial_metric_evolution_period is not None and self.iter % self.plot_trial_metric_evolution_period == 0:
@@ -133,14 +147,17 @@ class Differential_evolution:
                 
             # plot parameter evolution
             if self.plot_parameter_evolution_period is not None and self.iter % self.plot_parameter_evolution_period == 0:
-                plot_parameter_evolution(parameters = self.parameter_names, data = np.array(self.history['trials']['trial_normed'].tolist()))
+                plot_parameter_evolution(parameters = self.parameter_names,
+                                         data = np.array(self.history['trials']['trial_normed'].tolist()),
+                                         save_dir = self.results_dir)
             
             
             # plot survivor metric evolution
             if self.plot_survivor_metric_evolution_period is not None and self.iter % self.plot_survivor_metric_evolution_period == 0:    
                 all_survivors = self.get_all_survivors()
                 plot_metric_evolution(iterations = all_survivors['iter'],
-                                      metrics = all_survivors['survivor_metric'])
+                                      metrics = all_survivors['survivor_metric'],
+                                      save_dir = self.results_dir)
             
             # Run the callback
             if self.iter == 1:
@@ -158,9 +175,23 @@ class Differential_evolution:
                                                   iteration = self.iter,
                                                   best_parameters = self.best_unscaled,
                                                   best_metric = self.best_metric,
+                                                  better_solution_found = self.better_solution_found,
                                                   **self.eval_func_args)
             
-            # Determine survivor and best, update history and generate new trials
+            if self.better_solution_found:
+                if self.results_dir is not None:
+                    if not os.path.exists(self.results_dir):
+                        os.makedirs(self.results_dir)
+                    self.write_best_parameters_to_file(file_path = os.path.join(self.results_dir, 'best_parameters.csv'))
+                    self.write_population_to_file(file_path = os.path.join(self.results_dir, 'last_population.csv'))
+                    
+                if self.callback_after_better_solution_found is not None:
+                    self.callback_after_better_solution_found(iteration = self.iter,
+                                                              responses = responses,
+                                                              best_parameters = self.best_unscaled,
+                                                              best_metric = self.best_metric,
+                                                              **self.eval_func_args)
+            # Update history and generate new trials
             self.prepare_next_iter()
         
         # once the stop criteria is reached
@@ -201,13 +232,13 @@ class Differential_evolution:
             self.stop_reason = "Maximum number of iterations reached"
         else:
             self.is_stop_criteria_reached = False
-    
-    
+
+
     # Save metrics
     def save_metrics(self, metrics):
         self.trials_metric = np.array(metrics)
-        
-    
+
+
     # Prepare first iteration
     def prepare_first_iter(self):
         self.iter_no_improvement = 0
@@ -219,8 +250,8 @@ class Differential_evolution:
         self.targets_metric = np.full((self.pop_size), None)
         self.generate_donors()
         self.generate_trials()
-    
-    
+
+
     # Prepare next iteration
     def prepare_next_iter(self):
         self.iter += 1
@@ -233,8 +264,8 @@ class Differential_evolution:
             self.set_boundaries()
         self.generate_donors()
         self.generate_trials()
-    
-    
+
+
     # Calculate the boundaries for each parameter
     def set_boundaries(self):
         if(self.iter == 1):
@@ -269,8 +300,8 @@ class Differential_evolution:
                     
                     # save the new boundaries in the history
                     self.update_history_boundaries()
-    
-    
+
+
     # Get unscaled array
     def get_unscaled_arr(self, arr):
         temp = np.copy(arr)
@@ -487,8 +518,11 @@ class Differential_evolution:
         if self.iter > 1:
             if(self.survivors_metric[self.best_index] == self.best_metric):
                 self.iter_no_improvement += 1
+                self.better_solution_found = False
             else:
                 self.iter_no_improvement = 0
+                self.better_solution_found = True
+                
         
         # If a better solution was found or it is the first iteration, then update best.
         if self.iter == 1 or self.iter_no_improvement == 0:
@@ -497,6 +531,7 @@ class Differential_evolution:
             self.best_unscaled = self.survivors_unscaled[self.best_index]
             self.best_metric = self.survivors_metric[self.best_index]
             self.update_history_bests()
+            self.better_solution_found = True
                 
 
     # Update the history trials
@@ -530,29 +565,43 @@ class Differential_evolution:
                                                self.boundaries_max.tolist()]])
         self.history['boundaries'] = pd.concat([self.history['boundaries'], new_boundaries]).reset_index(drop = True)
             
+    
+    def write_best_parameters_to_file(self, file_path: str = None):
+        if file_path is not None:
+            try:
+                df = pd.DataFrame({'name': self.parameter_names, 'value': self.best_unscaled})
+                
+                if file_path.split('.')[-1] == 'csv':
+                    df.to_csv(file_path, index = False)
+                elif file_path.split('.')[-1] == 'json':
+                    df.to_json(file_path, orient = 'records', indent = 4)
+                
+            except Exception as e:
+                print('ERROR on write_best_parameters_to_file:')
+                print(e)
+                pass
             
-            
-            
-            
+    
+    def write_population_to_file(self, file_path: str = None):
+        if file_path is not None:
+            try:
+                # Convert the dictionary to a DataFrame
+                df = pd.DataFrame(columns = ['name'], data = self.parameter_names)
+                df[[f'member_{i+1}' for i in range(self.pop_size)]] = self.survivors_unscaled.T.tolist()
+                
+                if file_path.split('.')[-1] == 'csv':
+                    df.to_csv(file_path, index = False)
+                elif file_path.split('.')[-1] == 'json':
+                    df.to_json(file_path, orient = 'columns', indent = 4)
+                
+            except Exception as e:
+                print('ERROR on write_best_parameters_to_file:')
+                print(e)
+                pass
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    
+    def update_results_dir(self, new_results_dir: str = None):
+        self.results_dir = new_results_dir
         
         
         

@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import json
+import re
 
 
 # Chech if an array data are equally distant from each other 
@@ -25,7 +26,13 @@ def get_instance_parameters_for_curve(testbench, curve):
     return instance_parameters
 
 
-#
+# Write the contents to a file
 def write_contents_to_file(file):
     with open(file['simulation_file_path'], 'w') as f:
         f.write(file['contents'])
+        
+
+def extract_between_tags(string):
+    pattern = r"<<(.*?)>>"
+    matches = re.findall(pattern, string)
+    return matches

@@ -7,35 +7,27 @@
     31     374  .model model nmos level={level} version={version} binunit={binunit} paramchk={paramchk} mobmod={mobmod} capmod={capmod} rdsmod={rdsmod} igcmod={igcmod} igbmod={igbmod} rbodymod={rbodymod} trnqsmod={trnqsmod} acnqsmod={acnqsmod} fnoimod={fnoimod} tnoimod={tnoimod} diomod={diomod} tempmod={tempmod} permod={permod} geomod={geomod} rgeomod={rgeomod} rgatemod={rgatemod} wpemod={wpemod} lmin={lmin} lmax={lmax} wmin={wmin} wmax={wmax} epsrox={epsrox} toxe={toxe} toxp={toxp} toxm={toxm} xj={xj} gamma1={gamma1} gamma2={gamma2} ndep={ndep} nsub={nsub} ngate={ngate} nsd={nsd} vbx={vbx} xt={xt} rsh={rsh} rshg={rshg} phin={phin} wint={wint} wl={wl} wln={wln} ww={ww} wwn={wwn} wwl={wwl} lint={lint} ll={ll} lln={lln} lw={lw} lwn={lwn} lwl={lwl} llc={llc} lwc={lwc} lwlc={lwlc} wlc={wlc} wwc={wwc} wwlc={wwlc} dwg={dwg} dwb={dwb} xl={xl} xw={xw} dmcg={dmcg} dmci={dmci} dmdg={dmdg} dmcgt={dmcgt} dwj={dwj} xgw={xgw} xgl={xgl} ngcon={ngcon} vth0={vth0} vfb={vfb} k1={k1} k2={k2} w0={w0} lpe0={lpe0} lpeb={lpeb} vbm={vbm} dvtp0={dvtp0} dvtp1={dvtp1} dvt0={dvt0} dvt1={dvt1} dvt2={dvt2} dvt0w={dvt0w} dvt1w={dvt1w} dvt2w={dvt2w} vfbsdoff={vfbsdoff} u0={u0} ua={ua} ub={ub} uc={uc} ud={ud} up={up} lp={lp} eu={eu} a0={a0} ags={ags} b0={b0} b1={b1} a1={a1} a2={a2} rdw={rdw} rdswmin={rdswmin} rdwmin={rdwmin} rsw={rsw} rswmin={rswmin} prwb={prwb} prwg={prwg} wr={wr} voff={voff} voffl={voffl} minv={minv} nfactor={nfactor} eta0={eta0} etab={etab} dsub={dsub} cit={cit} cdsc={cdsc} cdscb={cdscb} cdscd={cdscd} pdiblc1={pdiblc1} pdiblc2={pdiblc2} pdiblcb={pdiblcb} drout={drout} pscbe1={pscbe1} pscbe2={pscbe2} pvag={pvag} delta={delta} fprout={fprout} pdits={pdits} pditsl={pditsl} pditsd={pditsd} lambda={lambda} vtl={vtl} lc={lc} xn={xn} alpha0={alpha0} alpha1={alpha1} beta0={beta0} aigbacc={aigbacc} bigbacc={bigbacc} cigbacc={cigbacc} nigbacc={nigbacc} aigbinv={aigbinv} bigbinv={bigbinv} cigbinv={cigbinv} eigbinv={eigbinv} nigbinv={nigbinv} aigc={aigc} bigc={bigc} cigc={cigc} aigsd={aigsd} bigsd={bigsd} cigsd={cigsd} dlcig={dlcig} nigc={nigc} poxedge={poxedge} pigcd={pigcd} ntox={ntox} toxref={toxref} agidl={agidl} bgidl={bgidl} cgidl={cgidl} egidl={egidl} xpart={xpart} cgso={cgso} cgdo={cgdo} cgbo={cgbo} ckappas={ckappas} ckappad={ckappad} cf={cf} clc={clc} cle={cle} dlc={dlc} dwc={dwc} vfbcv={vfbcv} noff={noff} voffcv={voffcv} acde={acde} moin={moin} cgsl={cgsl} cgdl={cgdl} ijthsrev={ijthsrev} ijthdrev={ijthdrev} ijthsfwd={ijthsfwd} ijthdfwd={ijthdfwd} xjbvs={xjbvs} xjbvd={xjbvd} bvs={bvs} bvd={bvd} jss={jss} jsd={jsd} jsws={jsws} jswd={jswd} jswgs={jswgs} jswgd={jswgd} jtss={jtss} jtsd={jtsd} jtssws={jtssws} jtsswd={jtsswd} jtsswgs={jtsswgs} jtsswgd={jtsswgd} njts={njts} njtssw={njtssw} njtsswg={njtsswg} xtss={xtss} xtsd={xtsd} xtssws={xtssws} xtsswd={xtsswd} xtsswgs={xtsswgs} xtsswgd={xtsswgd} vtss={vtss} vtsd={vtsd} vtssws={vtssws} vtsswd={vtsswd} vtsswgs={vtsswgs} vtsswgd={vtsswgd} tnjts={tnjts} tnjtssw={tnjtssw} tnjtsswg={tnjtsswg} cjs={cjs} cjd={cjd} mjs={mjs} mjd={mjd} mjsws={mjsws} mjswd={mjswd} cjsws={cjsws} cjswd={cjswd} cjswgs={cjswgs} cjswgd={cjswgd} mjswgs={mjswgs} mjswgd={mjswgd} pbs={pbs} pbd={pbd} pbsws={pbsws} pbswd={pbswd} pbswgs={pbswgs} pbswgd={pbswgd} tnom={tnom} ute={ute} kt1={kt1} kt1l={kt1l} kt2={kt2} ua1={ua1} ub1={ub1} uc1={uc1} ud1={ud1} at={at} prt={prt} njs={njs} njd={njd} xtis={xtis} xtid={xtid} tpb={tpb} tpbsw={tpbsw} tpbswg={tpbswg} tcj={tcj} tcjsw={tcjsw} tcjswg={tcjswg} tvoff={tvoff} tvfbsdoff={tvfbsdoff} saref={saref} sbref={sbref} wlod={wlod} ku0={ku0} kvsat={kvsat} kvth0={kvth0} tku0={tku0} llodku0={llodku0} wlodku0={wlodku0} llodvth={llodvth} wlodvth={wlodvth} lku0={lku0} wku0={wku0} pku0={pku0} lkvth0={lkvth0} wkvth0={wkvth0} pkvth0={pkvth0} stk2={stk2} lodk2={lodk2} steta0={steta0} lodeta0={lodeta0} web={web} wec={wec} kvth0we={kvth0we} k2we={k2we} ku0we={ku0we} scref={scref} vsat={vsat} pvsat={vsat*bin_pvsat*(lmin*wmin)} rdsw={rdsw} prdsw={rdsw*bin_prdsw*(lmin*wmin)} pclm={pclm} ppclm={pclm*bin_ppclm*(lmin*wmin)} keta={keta} lketa={keta*bin_lketa*lmin} wketa={keta*bin_wketa*wmin} pketa={keta*bin_pketa*(lmin*wmin)} k3={k3} wk3={k3*bin_wk3*wmin} k3b={k3b} wk3b={k3b*bin_wk3b*wmin}
     32     375  m1 d g s b model w={w} l={l} nf={nf} m={mult} sa={sa} sb={sb} sc={sc} sca={sca} scb={scb} scc={scc} ad={ad} pd={pd} as={as} ps={ps} nrs={nrs} nrd={nrd}
     33     376  .ends
-     5     379  v_vgs_1 g_1 0 0.5
-     6     380  e_vds_1 d_1 0 v_sweep 0 1
-     7     381  v_vs_1 s_1 0 0
-     8     382  v_vbs_1 b_1 0 0
-     9     383  x_1 d_1 g_1 s_1 b_1 dut 10e-1 5e-6 25 1 1 1 1 1 1e-12 1e-6 1e-12 1e-6 1 1 54 4.8 1 0 0 2 0 0 0 0 0 0 1 0 1 2 1 0 0 0 0 1e-4 1 3.9 3e-9 2.8e-9 3e-9 1e-7 1.2 0.2 1.7e17 6e16 1e23 1e20 {-42} 1.55e-7 0 0.1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.5 {-1} 0.5 {-0.0186} 0 0 1e-7 1.74e-7 0 {-3} 5e-7 0 2.2 0.53 {-0.032} 0 5.3 {-0.032} 0 0.05 1e-9 1e-18 {-4.65e-11} 0 0 1e-7 1.67 8e4 1 0 0 0 {-0.047} 0 1 200 0 100 0 100 0 0 0 1 {-0.08} 0 0 1 0.08 {-0.07} 0.56 0 2.4e-4 0 0 0.5 0.39 8.6e-3 0 0.56 5e9 5e-6 0 0.01 0 1e-3 1 0 0 0 0 3 0 0 15 0.43 0.054 0.075 1 0.05 0 6e-3 1.1 3 0.054 0.054 0.075 0.43 0.054 0.075 5e-9 1 1 1 1 3e-9 0 2.3e9 0.5 0.8 0 5e-11 5e-11 1e-12 0.6 0.6 5e-11 1e-7 0.6 0 0 {-1} 1 0 1 15 1e-10 1e-10 0.1 0.1 0.1 0.1 1 1 10 10 1e-4 1e-4 1e-14 1e-14 1e-13 1e-14 0 0 0 0 0 0 20 20 20 0.02 0.02 0.02 0.02 0.02 0.02 10 10 10 10 10 10 0 0 0 5e-4 5e-4 0.5 0.5 0.33 0.33 1e-10 1e-10 5e-10 5e-10 0.33 0.33 0.8 0.8 0.8 0.8 0.8 0.8 25 {-1.5} {-0.11} 0 0.022 6.71e-3 {-3.35e-3} 4.1e-3 0 8.13e-3 0 1 1 3 3 0 0 0 0 0 0 0 0 1e-6 1e-6 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1e-6 0.28e-6 0.22e-6 0 0 0 0 0 1 0 0 {saref} {sbref} {scref}
-    13     386  v_vgs_2 g_2 0 1
-    14     387  e_vds_2 d_2 0 v_sweep 0 1
-    15     388  v_vs_2 s_2 0 0
-    16     389  v_vbs_2 b_2 0 0
-    17     390  x_2 d_2 g_2 s_2 b_2 dut 10e-6 10e-6 25 1 1 1 1 1 1e-12 1e-6 1e-12 1e-6 1 1 54 4.8 1 0 0 2 0 0 0 0 0 0 1 0 1 2 1 0 0 0 0 1e-4 1 3.9 3e-9 2.8e-9 3e-9 1e-7 1.2 0.2 1.7e17 6e16 1e23 1e20 {-42} 1.55e-7 0 0.1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.5 {-1} 0.5 {-0.0186} 0 0 1e-7 1.74e-7 0 {-3} 5e-7 0 2.2 0.53 {-0.032} 0 5.3 {-0.032} 0 0.05 1e-9 1e-18 {-4.65e-11} 0 0 1e-7 1.67 8e4 1 0 0 0 {-0.047} 0 1 200 0 100 0 100 0 0 0 1 {-0.08} 0 0 1 0.08 {-0.07} 0.56 0 2.4e-4 0 0 0.5 0.39 8.6e-3 0 0.56 5e9 5e-6 0 0.01 0 1e-3 1 0 0 0 0 3 0 0 15 0.43 0.054 0.075 1 0.05 0 6e-3 1.1 3 0.054 0.054 0.075 0.43 0.054 0.075 5e-9 1 1 1 1 3e-9 0 2.3e9 0.5 0.8 0 5e-11 5e-11 1e-12 0.6 0.6 5e-11 1e-7 0.6 0 0 {-1} 1 0 1 15 1e-10 1e-10 0.1 0.1 0.1 0.1 1 1 10 10 1e-4 1e-4 1e-14 1e-14 1e-13 1e-14 0 0 0 0 0 0 20 20 20 0.02 0.02 0.02 0.02 0.02 0.02 10 10 10 10 10 10 0 0 0 5e-4 5e-4 0.5 0.5 0.33 0.33 1e-10 1e-10 5e-10 5e-10 0.33 0.33 0.8 0.8 0.8 0.8 0.8 0.8 25 {-1.5} {-0.11} 0 0.022 6.71e-3 {-3.35e-3} 4.1e-3 0 8.13e-3 0 1 1 3 3 0 0 0 0 0 0 0 0 1e-6 1e-6 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1e-6 0.28e-6 0.22e-6 0 0 0 0 0 0 0 0 {saref} {sbref} {scref}
-    20     392  v_sweep v_sweep 0 0
-    21     393  .dc v_sweep 0 3.5 0.05
-    24     395  .control
-    26     396  alterparam dut vth0=0.8
-    27     397  reset
-    29     398  run
-    31     399  let ids_1=i(v_vs_1)
-    32     400  let vds_1=v(d_1,s_1)
-    33     401  let vgs_1=v(g_1,s_1)
-    34     402  let vbs_1=v(b_1,s_1)
-    36     403  let ids_2=i(v_vs_2)
-    37     404  let vds_2=v(d_2,s_2)
-    38     405  let vgs_2=v(g_2,s_2)
-    39     406  let vbs_2=v(b_2,s_2)
-    41     407  set wr_vecnames
-    42     408  set wr_singlescale
-    43     409  wrdata output_characteristic_results.txt ids_1 vds_1 vgs_1 vbs_1 ids_2 vds_2 vgs_2 vbs_2
-    44     410  .endc
-    48     413  .end
+     5     379  vgs_ac_1 g_1 g_1_ac dc 0 ac 1
+     6     380  egs_1 g_1_ac 0 v_sweep 0 1
+     7     381  vds_1 d_1 0 0
+     8     382  vs_1 s_1 0 0
+     9     383  vbs_1 b_1 0 0
+    10     384  x_1 d_1 g_1 s_1 b_1 dut 10e-1 5e-6 25 1 1 1 1 1 1e-12 1e-6 1e-12 1e-6 1 1 54 4.8 1 0 0 2 0 0 0 0 0 0 1 0 1 2 1 0 0 0 0 1e-4 1 3.9 3e-9 2.8e-9 3e-9 1e-7 1.2 0.2 1.7e17 6e16 1e23 1e20 {-42} 1.55e-7 0 0.1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.5 {-1} 0.5 {-0.0186} 0 0 1e-7 1.74e-7 0 {-3} 5e-7 0 2.2 0.53 {-0.032} 0 5.3 {-0.032} 0 0.05 1e-9 1e-18 {-4.65e-11} 0 0 1e-7 1.67 8e4 1 0 0 0 {-0.047} 0 1 200 0 100 0 100 0 0 0 1 {-0.08} 0 0 1 0.08 {-0.07} 0.56 0 2.4e-4 0 0 0.5 0.39 8.6e-3 0 0.56 5e9 5e-6 0 0.01 0 1e-3 1 0 0 0 0 3 0 0 15 0.43 0.054 0.075 1 0.05 0 6e-3 1.1 3 0.054 0.054 0.075 0.43 0.054 0.075 5e-9 1 1 1 1 3e-9 0 2.3e9 0.5 0.8 0 5e-11 5e-11 1e-12 0.6 0.6 5e-11 1e-7 0.6 0 0 {-1} 1 0 1 15 1e-10 1e-10 0.1 0.1 0.1 0.1 1 1 10 10 1e-4 1e-4 1e-14 1e-14 1e-13 1e-14 0 0 0 0 0 0 20 20 20 0.02 0.02 0.02 0.02 0.02 0.02 10 10 10 10 10 10 0 0 0 5e-4 5e-4 0.5 0.5 0.33 0.33 1e-10 1e-10 5e-10 5e-10 0.33 0.33 0.8 0.8 0.8 0.8 0.8 0.8 25 {-1.5} {-0.11} 0 0.022 6.71e-3 {-3.35e-3} 4.1e-3 0 8.13e-3 0 1 1 3 3 0 0 0 0 0 0 0 0 1e-6 1e-6 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1e-6 0.28e-6 0.22e-6 0 0 0 0 0 0 0 0 {saref} {sbref} {scref}
+    13     386  v_sweep v_sweep 0 dc 0
+    16     388  .control
+    18     389  echo "v(g_1),cgd,cgs,cgb,cgg" > cgg_characteristic_results.csv
+    21     391  compose values_list start=-0.5 stop=3.5 step=0.05
+    22     392  foreach val $&values_list
+    23     393  alter v_sweep $val
+    24     394  ac lin 1 10k 10k
+    26     395  let cgd=abs(imag(i(vds_1)))/2*pi*10000
+    27     396  let cgs=abs(imag(i(vs_1)))/2*pi*10000
+    28     397  let cgb=abs(imag(i(vbs_1)))/2*pi*10000
+    29     398  let cgg=(abs(imag(i(vds_1))) + abs(imag(i(vbs_1))) + abs(imag(i(vs_1))))/2*pi*10000
+    31     399  echo "$val,$&cgd,$&cgs,$&cgb,$&cgg" >> cgg_characteristic_results.csv
+    32     400  end
+    34     401  .endc
+    38     404  .end
 
 ****************** complete deck ***************
 
@@ -417,38 +409,29 @@
     33     376  .ends
      2     377  *end of: dut1.cir
      4     378  ******************************* dut testbench 1 *******************************
-     5     379  v_vgs_1 g_1 0 0.5
-     6     380  e_vds_1 d_1 0 v_sweep 0 1
-     7     381  v_vs_1 s_1 0 0
-     8     382  v_vbs_1 b_1 0 0
-     9     383  x_1 d_1 g_1 s_1 b_1 dut 10e-1 5e-6 25 1 1 1 1 1 1e-12 1e-6 1e-12 1e-6 1 1 54 4.8 1 0 0 2 0 0 0 0 0 0 1 0 1 2 1 0 0 0 0 1e-4 1 3.9 3e-9 2.8e-9 3e-9 1e-7 1.2 0.2 1.7e17 6e16 1e23 1e20 {-42} 1.55e-7 0 0.1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.5 {-1} 0.5 {-0.0186} 0 0 1e-7 1.74e-7 0 {-3} 5e-7 0 2.2 0.53 {-0.032} 0 5.3 {-0.032} 0 0.05 1e-9 1e-18 {-4.65e-11} 0 0 1e-7 1.67 8e4 1 0 0 0 {-0.047} 0 1 200 0 100 0 100 0 0 0 1 {-0.08} 0 0 1 0.08 {-0.07} 0.56 0 2.4e-4 0 0 0.5 0.39 8.6e-3 0 0.56 5e9 5e-6 0 0.01 0 1e-3 1 0 0 0 0 3 0 0 15 0.43 0.054 0.075 1 0.05 0 6e-3 1.1 3 0.054 0.054 0.075 0.43 0.054 0.075 5e-9 1 1 1 1 3e-9 0 2.3e9 0.5 0.8 0 5e-11 5e-11 1e-12 0.6 0.6 5e-11 1e-7 0.6 0 0 {-1} 1 0 1 15 1e-10 1e-10 0.1 0.1 0.1 0.1 1 1 10 10 1e-4 1e-4 1e-14 1e-14 1e-13 1e-14 0 0 0 0 0 0 20 20 20 0.02 0.02 0.02 0.02 0.02 0.02 10 10 10 10 10 10 0 0 0 5e-4 5e-4 0.5 0.5 0.33 0.33 1e-10 1e-10 5e-10 5e-10 0.33 0.33 0.8 0.8 0.8 0.8 0.8 0.8 25 {-1.5} {-0.11} 0 0.022 6.71e-3 {-3.35e-3} 4.1e-3 0 8.13e-3 0 1 1 3 3 0 0 0 0 0 0 0 0 1e-6 1e-6 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1e-6 0.28e-6 0.22e-6 0 0 0 0 0 1 0 0 {saref} {sbref} {scref}
-    10     384  *******************************************************************************
-    12     385  ******************************* dut testbench 2 *******************************
-    13     386  v_vgs_2 g_2 0 1
-    14     387  e_vds_2 d_2 0 v_sweep 0 1
-    15     388  v_vs_2 s_2 0 0
-    16     389  v_vbs_2 b_2 0 0
-    17     390  x_2 d_2 g_2 s_2 b_2 dut 10e-6 10e-6 25 1 1 1 1 1 1e-12 1e-6 1e-12 1e-6 1 1 54 4.8 1 0 0 2 0 0 0 0 0 0 1 0 1 2 1 0 0 0 0 1e-4 1 3.9 3e-9 2.8e-9 3e-9 1e-7 1.2 0.2 1.7e17 6e16 1e23 1e20 {-42} 1.55e-7 0 0.1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.5 {-1} 0.5 {-0.0186} 0 0 1e-7 1.74e-7 0 {-3} 5e-7 0 2.2 0.53 {-0.032} 0 5.3 {-0.032} 0 0.05 1e-9 1e-18 {-4.65e-11} 0 0 1e-7 1.67 8e4 1 0 0 0 {-0.047} 0 1 200 0 100 0 100 0 0 0 1 {-0.08} 0 0 1 0.08 {-0.07} 0.56 0 2.4e-4 0 0 0.5 0.39 8.6e-3 0 0.56 5e9 5e-6 0 0.01 0 1e-3 1 0 0 0 0 3 0 0 15 0.43 0.054 0.075 1 0.05 0 6e-3 1.1 3 0.054 0.054 0.075 0.43 0.054 0.075 5e-9 1 1 1 1 3e-9 0 2.3e9 0.5 0.8 0 5e-11 5e-11 1e-12 0.6 0.6 5e-11 1e-7 0.6 0 0 {-1} 1 0 1 15 1e-10 1e-10 0.1 0.1 0.1 0.1 1 1 10 10 1e-4 1e-4 1e-14 1e-14 1e-13 1e-14 0 0 0 0 0 0 20 20 20 0.02 0.02 0.02 0.02 0.02 0.02 10 10 10 10 10 10 0 0 0 5e-4 5e-4 0.5 0.5 0.33 0.33 1e-10 1e-10 5e-10 5e-10 0.33 0.33 0.8 0.8 0.8 0.8 0.8 0.8 25 {-1.5} {-0.11} 0 0.022 6.71e-3 {-3.35e-3} 4.1e-3 0 8.13e-3 0 1 1 3 3 0 0 0 0 0 0 0 0 1e-6 1e-6 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1e-6 0.28e-6 0.22e-6 0 0 0 0 0 0 0 0 {saref} {sbref} {scref}
-    18     391  *******************************************************************************
-    20     392  v_sweep v_sweep 0 0
-    21     393  .dc v_sweep 0 3.5 0.05
-    23     394  ******************************* save data to file *****************************
-    24     395  .control
-    26     396  alterparam dut vth0=0.8
-    27     397  reset
-    29     398  run
-    31     399  let ids_1=i(v_vs_1)
-    32     400  let vds_1=v(d_1,s_1)
-    33     401  let vgs_1=v(g_1,s_1)
-    34     402  let vbs_1=v(b_1,s_1)
-    36     403  let ids_2=i(v_vs_2)
-    37     404  let vds_2=v(d_2,s_2)
-    38     405  let vgs_2=v(g_2,s_2)
-    39     406  let vbs_2=v(b_2,s_2)
-    41     407  set wr_vecnames
-    42     408  set wr_singlescale
-    43     409  wrdata output_characteristic_results.txt ids_1 vds_1 vgs_1 vbs_1 ids_2 vds_2 vgs_2 vbs_2
-    44     410  .endc
-    45     411  *******************************************************************************
-    47     412  *end
-    48     413  .end
+     5     379  vgs_ac_1 g_1 g_1_ac dc 0 ac 1
+     6     380  egs_1 g_1_ac 0 v_sweep 0 1
+     7     381  vds_1 d_1 0 0
+     8     382  vs_1 s_1 0 0
+     9     383  vbs_1 b_1 0 0
+    10     384  x_1 d_1 g_1 s_1 b_1 dut 10e-1 5e-6 25 1 1 1 1 1 1e-12 1e-6 1e-12 1e-6 1 1 54 4.8 1 0 0 2 0 0 0 0 0 0 1 0 1 2 1 0 0 0 0 1e-4 1 3.9 3e-9 2.8e-9 3e-9 1e-7 1.2 0.2 1.7e17 6e16 1e23 1e20 {-42} 1.55e-7 0 0.1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0.5 {-1} 0.5 {-0.0186} 0 0 1e-7 1.74e-7 0 {-3} 5e-7 0 2.2 0.53 {-0.032} 0 5.3 {-0.032} 0 0.05 1e-9 1e-18 {-4.65e-11} 0 0 1e-7 1.67 8e4 1 0 0 0 {-0.047} 0 1 200 0 100 0 100 0 0 0 1 {-0.08} 0 0 1 0.08 {-0.07} 0.56 0 2.4e-4 0 0 0.5 0.39 8.6e-3 0 0.56 5e9 5e-6 0 0.01 0 1e-3 1 0 0 0 0 3 0 0 15 0.43 0.054 0.075 1 0.05 0 6e-3 1.1 3 0.054 0.054 0.075 0.43 0.054 0.075 5e-9 1 1 1 1 3e-9 0 2.3e9 0.5 0.8 0 5e-11 5e-11 1e-12 0.6 0.6 5e-11 1e-7 0.6 0 0 {-1} 1 0 1 15 1e-10 1e-10 0.1 0.1 0.1 0.1 1 1 10 10 1e-4 1e-4 1e-14 1e-14 1e-13 1e-14 0 0 0 0 0 0 20 20 20 0.02 0.02 0.02 0.02 0.02 0.02 10 10 10 10 10 10 0 0 0 5e-4 5e-4 0.5 0.5 0.33 0.33 1e-10 1e-10 5e-10 5e-10 0.33 0.33 0.8 0.8 0.8 0.8 0.8 0.8 25 {-1.5} {-0.11} 0 0.022 6.71e-3 {-3.35e-3} 4.1e-3 0 8.13e-3 0 1 1 3 3 0 0 0 0 0 0 0 0 1e-6 1e-6 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1e-6 0.28e-6 0.22e-6 0 0 0 0 0 0 0 0 {saref} {sbref} {scref}
+    11     385  *******************************************************************************
+    13     386  v_sweep v_sweep 0 dc 0
+    15     387  ******************************* save data to file *****************************
+    16     388  .control
+    18     389  echo "v(g_1),cgd,cgs,cgb,cgg" > cgg_characteristic_results.csv
+    20     390  ** start the simulation loop.
+    21     391  compose values_list start=-0.5 stop=3.5 step=0.05
+    22     392  foreach val $&values_list
+    23     393  alter v_sweep $val
+    24     394  ac lin 1 10k 10k
+    26     395  let cgd=abs(imag(i(vds_1)))/2*pi*10000
+    27     396  let cgs=abs(imag(i(vs_1)))/2*pi*10000
+    28     397  let cgb=abs(imag(i(vbs_1)))/2*pi*10000
+    29     398  let cgg=(abs(imag(i(vds_1))) + abs(imag(i(vbs_1))) + abs(imag(i(vs_1))))/2*pi*10000
+    31     399  echo "$val,$&cgd,$&cgs,$&cgb,$&cgg" >> cgg_characteristic_results.csv
+    32     400  end
+    34     401  .endc
+    35     402  *******************************************************************************
+    37     403  *end
+    38     404  .end

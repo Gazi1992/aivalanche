@@ -52,9 +52,13 @@ def calculate_rmse(groups: pd.DataFrame = None):
     
     groups = groups.copy()
     
-    groups['temp_error_metric'] = groups.apply(lambda row: np.nansum((row['group_weight'] * row['curve_weight'] * (row['y_values'] - row['y_values_simulation'])) ** 2), axis = 1)
+    groups['total_weight'] = groups['group_weight'] * groups['curve_weight']
     
-    return np.sqrt(np.sum(groups['temp_error_metric']) / np.sum(groups['curve_length']))
+    groups['error_metric_not_weighted'] = groups.apply(lambda row: np.sqrt(np.nansum((row['y_values'] - row['y_values_simulation']) ** 2) / row['curve_length']), axis = 1)
+    
+    groups['error_metric_weighted'] = groups['error_metric_not_weighted'] * groups['total_weight']
+    
+    return np.sum(groups['error_metric_weighted']) / np.sum(groups['total_weight'])
 
 
 #%% Apply transformation to the y_values and y_values_simulation

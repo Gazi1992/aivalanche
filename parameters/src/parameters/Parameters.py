@@ -86,15 +86,23 @@ class Parameters:
     # Get default parameters
     def get_default_parameters(self):
         return self.all_parameters.set_index('name')['default'].to_dict()
-        
 
+    
+    # Generate a random number
     def generate_random_number(self, row):
         if row['mode'] == 'fixed':
             return row['default']
         else:
             return random.uniform(row['min'], row['max'])
-        
-        
+    
+    
+    # Write parameters to file
+    def write_parameters_to_file(self, file_path: str = None):
+        if self.file.split('.')[-1] == 'json':
+            self.all_parameters.to_json(path_or_buf = file_path, orient = 'records')
+        elif self.file.split('.')[-1] == 'csv':
+            self.all_parameters.to_csv(path_or_buf = file_path, index = False)
+
         
         
         

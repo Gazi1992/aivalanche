@@ -5,10 +5,10 @@ import tempfile
 import os
 import pandas as pd
 import numpy as np
-from testbench.ngspice.utils import is_equidistant, get_curve_index, get_instance_parameters_for_curve, write_contents_to_file
+from testbench.ngspice.utils import is_equidistant, get_curve_index, get_instance_parameters_for_curve, write_contents_to_file, extract_between_tags
 
 
-#%% 
+#%% Ngspice_testbench_compiler is used to create all the simulation files.
 class Ngspice_testbench_compiler():
     
     def __init__(self,
@@ -40,7 +40,7 @@ class Ngspice_testbench_compiler():
         self.parse_testbenches_file()        
         self.determine_simulation_type()
         self.determine_file_id()
-        self.build_circuit_and_measure_blocks()
+        self.build_circuit_and_results()
         self.build_files()
         
         
@@ -85,12 +85,14 @@ class Ngspice_testbench_compiler():
         
         if testbench['simulation_type'] == 'dc':
             if is_equidistant(curve['x_values']):
-                return 'dc_sweep', curve['x_values'][0], curve['x_values'][-1], curve['x_values'][1]-curve['x_values'][0]
+                return 'dc_sweep', curve['x_values'][0], curve['x_values'][-1], round(curve['x_values'][1]-curve['x_values'][0], 10)
             else:
                 return 'dc_list', None, None, None
         elif testbench['simulation_type'] == 'ac':
-            return None, None, None, None
-            # return 'ac', None, None, None
+            if is_equidistant(curve['x_values']):
+                return 'ac_sweep', curve['x_values'][0], curve['x_values'][-1], round(curve['x_values'][1]-curve['x_values'][0], 10)
+            else:
+                return 'ac_list', None, None, None
         else:
             return None, None, None, None
 
@@ -103,15 +105,21 @@ class Ngspice_testbench_compiler():
         data_split_1 = self.reference_data.groupby(['temp', 'simulation_type'], dropna = False)
         for (temp, simulation_type), split_1 in data_split_1:
             if simulation_type == 'dc_sweep':
-                data_split_2 = split_1.groupby(['start', 'stop', 'step'], dropna = False)
-                for (start, stop, step), split_2 in data_split_2:
+                data_split_2 = split_1.groupby(['start', 'stop', 'step', 'testbench_type'], dropna = False)
+                for (start, stop, step, testbench_type), split_2 in data_split_2:
                     self.set_file_id_for_split(split_2)
             elif simulation_type == 'dc_list':
-                data_split_2 = split_1.groupby(['x_values'], dropna = False)
-                for (x_values), split_2 in data_split_2:
+                data_split_2 = split_1.groupby(['x_values', 'testbench_type'], dropna = False)
+                for (x_values, testbench_type), split_2 in data_split_2:
                     self.set_file_id_for_split(split_2)
-
-   
+            elif simulation_type == 'ac_sweep':
+                data_split_2 = split_1.groupby(['start', 'stop', 'step', 'testbench_type'], dropna = False)
+                for (start, stop, step, testbench_type), split_2 in data_split_2:
+                    self.set_file_id_for_split(split_2)
+            elif simulation_type == 'ac_list':
+                data_split_2 = split_1.groupby(['x_values', 'testbench_type'], dropna = False)
+                for (x_values, testbench_type), split_2 in data_split_2:
+                    self.set_file_id_for_split(split_2)
 
     # For each split, set the file_id
     def set_file_id_for_split(self, split):
@@ -150,13 +158,16 @@ class Ngspice_testbench_compiler():
 
 
     # Build circuit and measure blocks
-    def build_circuit_and_measure_blocks(self):      
-        self.reference_data['circuit'] = self.reference_data.apply(lambda row: self.build_circuit_block_for_curve(row), axis = 1)
-        self.reference_data[['measure', 'measure_variables']] = self.reference_data.apply(lambda row: self.build_measure_block_for_curve(row), axis = 1, result_type = 'expand')        
+    def build_circuit_and_results(self):      
+        self.reference_data['circuit'] = self.reference_data.apply(lambda row: self.build_circuit_for_curve(row), axis = 1)
+        self.reference_data[['save_variables',
+                             'rename_variables',
+                             'calculate_variables',
+                             'output_variables']] = self.reference_data.apply(lambda row: self.build_results_for_curve(row), axis = 1, result_type = 'expand')        
         
-    
+
     # Build circuit block for one curve
-    def build_circuit_block_for_curve(self, curve) -> str:
+    def build_circuit_for_curve(self, curve) -> str:
         testbench = self.get_testbench_by_type(curve['testbench_type'])
         if testbench is None:
             return None
@@ -194,7 +205,7 @@ class Ngspice_testbench_compiler():
             elif param in curve:
                 circuit = circuit.replace(f'<<{param}>>', str(curve[param]))
             else:
-                print('ERROR: {param} not found in the curve, but is defined in the testbench.')
+                print(f'ERROR: {param} not found in the curve, but is defined in the testbench.')
                 print(f'curve: {curve}')
                 print(f'testbench: {testbench}')
                 return None
@@ -203,21 +214,43 @@ class Ngspice_testbench_compiler():
 
     
     # Build measure block for one curve
-    def build_measure_block_for_curve(self, curve):
+    def build_results_for_curve(self, curve):
         testbench = self.get_testbench_by_type(curve['testbench_type'])
         if testbench is None:
             return None
         
-        if 'measure' not in testbench:
-            print('ERROR: No measure defined for the following testbench:')
+        if 'results' not in testbench:
+            print('ERROR: No results defined for the following testbench:')
             print(testbench)
             return None
         
-        measure_variables = [key.replace('<<index>>', curve['curve_index']) for key, value in testbench['measure'].items()]
-
-        measure_template = '\n'.join([f'let {key} = {value}' for key, value in testbench['measure'].items()])
-        measure = measure_template.replace('<<index>>', curve['curve_index'])
-        return measure, measure_variables
+        save_variables = None
+        if "save" in testbench['results']:
+            save_variables = [item.replace('<<index>>', curve['curve_index']) for item in testbench['results']['save']]
+        
+        output_variables = save_variables
+        if "output" in testbench['results']:
+            output_variables = [item.replace('<<index>>', curve['curve_index']) for item in testbench['results']['output']]
+        
+        rename_variables = None
+        if 'rename' in testbench['results']:
+            rename_variables = {key.replace('<<index>>', curve['curve_index']): value.replace('<<index>>', curve['curve_index']) for key, value in testbench['results']['rename'].items()}
+        
+        calculate_variables = None
+        if 'calculate' in testbench['results']:
+            calculate_variables = {key.replace('<<index>>', curve['curve_index']): value.replace('<<index>>', curve['curve_index']) for key, value in testbench['results']['calculate'].items()}
+            for key, value in calculate_variables.items():
+                to_replace = extract_between_tags(value)
+                for item in to_replace:
+                    try:
+                        calculate_variables[key] = value.replace(f'<<{item}>>', str(curve[item]))
+                    except Exception as e:
+                        print(e)
+                        print(f'ERROR trying to replace the value for {item} in the testbench.')
+                        print(testbench)
+                        return None
+        
+        return save_variables, rename_variables, calculate_variables, output_variables
     
     
     # Get testbench by type
@@ -242,30 +275,35 @@ class Ngspice_testbench_compiler():
         self.files = pd.DataFrame(columns = ['file_id', 'simulation_type', 'nr_testbenches',
                                              'contents', 'x_name', 'y_name',
                                              'simulation_file_name', 'simulation_file_path',
-                                             'results_dir', 'results_file_name', 'results_file_path'])
+                                             'results_dir', 'results_file_name', 'results_file_path',
+                                             'save_variables', 'output_variables', 'rename_variables', 'calculate_variables'])
         data_split = self.reference_data.groupby('file_id')
         for file_id, split in data_split:
             simulation_type = split.iloc[0]['simulation_type']
-            if simulation_type == 'dc_list':
+            if simulation_type == 'dc_sweep':
+                self.build_file_dc_sweep(split)
+            elif simulation_type == 'dc_list':
                 self.build_file_dc_list(split)
-            elif simulation_type == 'dc_sweep':
-                self.build_file_dc_sweep(split)            
+            elif simulation_type == 'ac_sweep':
+                self.build_file_ac_sweep(split)
+            elif simulation_type == 'ac_list':
+                self.build_file_ac_list(split)
 
-
-    # Build file for dc_list simulations.
-    def build_file_dc_list(self, curves):
+    # Build file for dc_sweep simulations.        
+    def build_file_dc_sweep(self, curves):
         file_id = curves.iloc[0]['file_id']
         simulation_type = curves.iloc[0]['simulation_type']
         x_name = curves.iloc[0]['x_name']
         y_name = curves.iloc[0]['y_name']
-        values_list = ' '.join([str(val) for val in curves.iloc[0]['x_values']])
         results_dir = self.working_directory
-        simulation_file_name = f'dc_list_{file_id}.cir'
+        simulation_file_name = f'dc_sweep_{file_id}.cir'
         simulation_file_path = os.path.join(results_dir, simulation_file_name)
-        results_file_name = f'dc_list_{file_id}.csv'
+        results_file_name = f'dc_sweep_{file_id}.csv'
         results_file_path = os.path.join(results_dir, results_file_name)
-        all_measure_variables = sum(curves['measure_variables'].tolist(), [])
-        
+        all_save_variables = list(set(sum(curves['save_variables'].tolist(), [])))
+        all_output_variables = list(set(sum(curves['output_variables'].tolist(), [])))
+        all_rename_variables = {k: v for var in curves['rename_variables'] for k, v in var.items()}
+
         if 'temp' in curves:
             temp = curves.iloc[0]['temp']
         else:
@@ -298,20 +336,16 @@ class Ngspice_testbench_compiler():
         
         file_contents += self.add_model_parameters_to_file()
         
-        file_contents += "** Write the header of the results file.\n"
-        file_contents += f"echo \"{','.join(all_measure_variables)}\" > {results_file_path}\n\n"
+        file_contents += "** Declare the vectors to save.\n"
+        file_contents += f"save {' '.join(all_save_variables)}\n\n"
         
-        file_contents += "** Start the simulation loop.\n"
-        file_contents += f"set values_list = ( {values_list} )\n"
-        file_contents += "foreach val $values_list\n"
-        file_contents += "alter v_sweep $val\n"
-        file_contents += "op\n"
-        for index, curve in curves.iterrows():
-            file_contents += curve['measure']
-            file_contents += "\n"
+        file_contents += "** Run the dc sweep analysis.\n"
+        file_contents += f"dc v_sweep {curve['start']} {curve['stop']} {curve['step']}\n"
         
-        file_contents += f"echo \"{','.join(['$&' + var for var in all_measure_variables])}\" >> {results_file_path}\n"
-        file_contents += "end\n\n"
+        file_contents += "\n** Save the output to file.\n"
+        file_contents += "set wr_vecnames\n"
+        file_contents += "set wr_singlescale\n"
+        file_contents += f"wrdata {results_file_path} {' '.join(all_output_variables)}\n\n"
 
         file_contents += ".endc\n"
         file_contents += "********** End of control section **********\n\n"
@@ -328,24 +362,31 @@ class Ngspice_testbench_compiler():
                                  'simulation_file_path': [simulation_file_path],
                                  'results_dir': [results_dir],
                                  'results_file_name': [results_file_name],
-                                 'results_file_path': [results_file_path]})
+                                 'results_file_path': [results_file_path],
+                                 'save_variables': [all_save_variables],
+                                 'output_variables': [all_output_variables],
+                                 'rename_variables': [all_rename_variables],
+                                 'calculate_variables': [None]})
         
         self.files = pd.concat([self.files, new_file])
-
-
-    # Build file for dc_sweep simulations.        
-    def build_file_dc_sweep(self, curves):
+    
+    
+    # Build file for dc_list simulations.
+    def build_file_dc_list(self, curves):
         file_id = curves.iloc[0]['file_id']
         simulation_type = curves.iloc[0]['simulation_type']
         x_name = curves.iloc[0]['x_name']
         y_name = curves.iloc[0]['y_name']
+        values_list = ' '.join([str(val) for val in curves.iloc[0]['x_values']])
         results_dir = self.working_directory
-        simulation_file_name = f'dc_sweep_{file_id}.cir'
+        simulation_file_name = f'dc_list_{file_id}.cir'
         simulation_file_path = os.path.join(results_dir, simulation_file_name)
-        results_file_name = f'dc_sweep_{file_id}.csv'
+        results_file_name = f'dc_list_{file_id}.csv'
         results_file_path = os.path.join(results_dir, results_file_name)
-        all_measure_variables = sum(curves['measure_variables'].tolist(), [])
-        
+        all_save_variables = list(set(sum(curves['save_variables'].tolist(), [])))
+        all_output_variables = list(set(sum(curves['output_variables'].tolist(), [])))
+        all_rename_variables = {k: v for var in curves['rename_variables'] for k, v in var.items()}
+
         if 'temp' in curves:
             temp = curves.iloc[0]['temp']
         else:
@@ -371,25 +412,27 @@ class Ngspice_testbench_compiler():
         file_contents += "\n** End testbenches\n\n"
         
         file_contents += "* Declare the v_sweep, which will change during the simulation.\n"
-        file_contents += "v_sweep v_sweep 0 0\n"
-        file_contents += f".dc v_sweep {curve['start']} {curve['stop']} {curve['step']}\n\n"
+        file_contents += "v_sweep v_sweep 0 0\n\n"
         
         file_contents += "********** Start of control section **********\n"
         file_contents += ".control\n\n"
         
         file_contents += self.add_model_parameters_to_file()
         
-        file_contents += "** Run the simulation.\n"
-        file_contents += "run\n\n"
+        file_contents += "** Declare the vectors to save.\n"
+        file_contents += f"save {' '.join(all_save_variables)}\n\n"
         
-        for index, curve in curves.iterrows():
-            file_contents += curve['measure']
-            file_contents += "\n"
+        file_contents += "** Write the header of the results file.\n"
+        file_contents += f"echo \"{','.join(all_output_variables)}\" > {results_file_path}\n\n"
         
-        file_contents += "\n** Save the output to file.\n"
-        file_contents += "set wr_vecnames\n"
-        file_contents += "set wr_singlescale\n"
-        file_contents += f"wrdata {results_file_path} {' '.join(all_measure_variables)}\n\n"
+        file_contents += "** Start the simulation loop.\n"
+        file_contents += f"set values_list = ( {values_list} )\n"
+        file_contents += "foreach val $values_list\n"
+        file_contents += "    alter v_sweep $val\n"
+        file_contents += "    op\n"
+        
+        file_contents += f"    echo \"{','.join(['$&' + var for var in all_output_variables])}\" >> {results_file_path}\n"
+        file_contents += "end\n\n"
 
         file_contents += ".endc\n"
         file_contents += "********** End of control section **********\n\n"
@@ -406,11 +449,200 @@ class Ngspice_testbench_compiler():
                                  'simulation_file_path': [simulation_file_path],
                                  'results_dir': [results_dir],
                                  'results_file_name': [results_file_name],
-                                 'results_file_path': [results_file_path]})
+                                 'results_file_path': [results_file_path],
+                                 'save_variables': [all_save_variables],
+                                 'output_variables': [all_output_variables],
+                                 'rename_variables': [all_rename_variables],
+                                 'calculate_variables': [None]})
         
         self.files = pd.concat([self.files, new_file])
-    
+
+
+    # Build file for ac_sweep simulations.
+    def build_file_ac_sweep(self, curves):
+        file_id = curves.iloc[0]['file_id']
+        simulation_type = curves.iloc[0]['simulation_type']
+        x_name = curves.iloc[0]['x_name']
+        y_name = curves.iloc[0]['y_name']
+        results_dir = self.working_directory
+        simulation_file_name = f'ac_sweep_{file_id}.cir'
+        simulation_file_path = os.path.join(results_dir, simulation_file_name)
+        results_file_name = f'ac_sweep_{file_id}.csv'
+        results_file_path = os.path.join(results_dir, results_file_name)
+        all_save_variables = list(set(sum(curves['save_variables'].tolist(), [])))
+        all_output_variables = list(set(sum(curves['output_variables'].tolist(), [])))
+        all_rename_variables =  None if curves['rename_variables'].isnull().all() else {k: v for var in curves['rename_variables'][curves['rename_variables'].notnull()] for k, v in var.items()}
+        all_calculate_variables = None if curves['calculate_variables'].isnull().all() else {k: v for var in curves['calculate_variables'][curves['calculate_variables'].notnull()] for k, v in var.items()}
+
+        if 'temp' in curves:
+            temp = curves.iloc[0]['temp']
+        else:
+            temp = 27
+            
+        file_contents = "**********************************************************\n"
+        file_contents += "* THIS FILE IS GENERATED BY AIVALANCHE\n"
+        file_contents += f"* FILE ID: {file_id}\n"
+        file_contents += f"* SIMULATION TYPE: {simulation_type}\n"
+        file_contents += "**********************************************************\n\n"
         
+        file_contents += "* Define the temperature\n"
+        file_contents += f".TEMP {temp}\n\n"
+        
+        file_contents += "* Include the dut file\n"
+        file_contents += f".INCLUDE {self.dut_file}\n\n"
+        
+        file_contents += "** Start testbenches\n"
+        for index, curve in curves.iterrows():
+            file_contents += "\n"
+            file_contents += curve['circuit']
+            file_contents += "\n"
+        file_contents += "\n** End testbenches\n\n"
+        
+        file_contents += "* Declare the v_sweep, which will change during the simulation.\n"
+        file_contents += "v_sweep v_sweep 0 0\n\n"
+        
+        file_contents += "********** Start of control section **********\n"
+        file_contents += ".control\n\n"
+        
+        file_contents += self.add_model_parameters_to_file()
+        
+        file_contents += "** Declare the vectors to save.\n"
+        file_contents += f"save {' '.join(all_save_variables)}\n\n"
+        
+        file_contents += "** Write the header of the results file.\n"
+        file_contents += f"echo \"{x_name},{','.join(all_output_variables)}\" > {results_file_path}\n\n"
+        
+        file_contents += "** Start the simulation loop.\n"
+        file_contents += f"compose values_list start={curve['start']} stop={curve['stop']} step={curve['step']}\n"
+        file_contents += "foreach val $&values_list\n"
+        file_contents += "    alter v_sweep $val\n"
+        file_contents += f"    ac lin 1 {curve['frequency']} {curve['frequency']}\n\n"
+        
+        if all_calculate_variables is not None:
+            for key, value in all_calculate_variables.items():
+                file_contents += f"    let {key} = {value}\n"
+            file_contents += "\n"
+            
+        file_contents += f"    echo \"$val,{','.join(['$&' + var for var in all_output_variables])}\" >> {results_file_path}\n"
+        file_contents += "end\n\n"
+
+        file_contents += ".endc\n"
+        file_contents += "********** End of control section **********\n\n"
+
+        file_contents += ".end"
+        
+        new_file = pd.DataFrame({'file_id': [file_id],
+                                 'simulation_type': [simulation_type],
+                                 'nr_testbenches': [len(curves.index)],
+                                 'contents': [file_contents],
+                                 'x_name': x_name,
+                                 'y_name': y_name,
+                                 'simulation_file_name': [simulation_file_name],
+                                 'simulation_file_path': [simulation_file_path],
+                                 'results_dir': [results_dir],
+                                 'results_file_name': [results_file_name],
+                                 'results_file_path': [results_file_path],
+                                 'save_variables': [all_save_variables],
+                                 'output_variables': [all_output_variables],
+                                 'rename_variables': [all_rename_variables],
+                                 'calculate_variables': [all_calculate_variables]})
+        
+        self.files = pd.concat([self.files, new_file])
+
+
+    # Build file for ac_list simulations.
+    def build_file_ac_list(self, curves):
+        file_id = curves.iloc[0]['file_id']
+        simulation_type = curves.iloc[0]['simulation_type']
+        x_name = curves.iloc[0]['x_name']
+        y_name = curves.iloc[0]['y_name']
+        values_list = ' '.join([str(val) for val in curves.iloc[0]['x_values']])
+        results_dir = self.working_directory
+        simulation_file_name = f'ac_list_{file_id}.cir'
+        simulation_file_path = os.path.join(results_dir, simulation_file_name)
+        results_file_name = f'ac_list_{file_id}.csv'
+        results_file_path = os.path.join(results_dir, results_file_name)
+        all_save_variables = list(set(sum(curves['save_variables'].tolist(), [])))
+        all_output_variables = list(set(sum(curves['output_variables'].tolist(), [])))
+        all_rename_variables =  None if curves['rename_variables'].isnull().all() else {k: v for var in curves['rename_variables'][curves['rename_variables'].notnull()] for k, v in var.items()}
+        all_calculate_variables = None if curves['calculate_variables'].isnull().all() else {k: v for var in curves['calculate_variables'][curves['calculate_variables'].notnull()] for k, v in var.items()}
+
+        if 'temp' in curves:
+            temp = curves.iloc[0]['temp']
+        else:
+            temp = 27
+            
+        file_contents = "**********************************************************\n"
+        file_contents += "* THIS FILE IS GENERATED BY AIVALANCHE\n"
+        file_contents += f"* FILE ID: {file_id}\n"
+        file_contents += f"* SIMULATION TYPE: {simulation_type}\n"
+        file_contents += "**********************************************************\n\n"
+        
+        file_contents += "* Define the temperature\n"
+        file_contents += f".TEMP {temp}\n\n"
+        
+        file_contents += "* Include the dut file\n"
+        file_contents += f".INCLUDE {self.dut_file}\n\n"
+        
+        file_contents += "** Start testbenches\n"
+        for index, curve in curves.iterrows():
+            file_contents += "\n"
+            file_contents += curve['circuit']
+            file_contents += "\n"
+        file_contents += "\n** End testbenches\n\n"
+        
+        file_contents += "* Declare the v_sweep, which will change during the simulation.\n"
+        file_contents += "v_sweep v_sweep 0 0\n\n"
+        
+        file_contents += "********** Start of control section **********\n"
+        file_contents += ".control\n\n"
+        
+        file_contents += self.add_model_parameters_to_file()
+        
+        file_contents += "** Declare the vectors to save.\n"
+        file_contents += f"save {' '.join(all_save_variables)}\n\n"
+        
+        file_contents += "** Write the header of the results file.\n"
+        file_contents += f"echo \"{x_name},{','.join(all_output_variables)}\" > {results_file_path}\n\n"
+        
+        file_contents += "** Start the simulation loop.\n"
+        file_contents += f"set values_list = ( {values_list} )\n"
+        file_contents += "foreach val $values_list\n"
+        file_contents += "    alter v_sweep $val\n"
+        file_contents += f"    ac lin 1 {curve['frequency']} {curve['frequency']}\n\n"
+        
+        if all_calculate_variables is not None:
+            for key, value in all_calculate_variables.items():
+                file_contents += f"    let {key} = {value}\n"
+            file_contents += "\n"
+            
+        file_contents += f"    echo \"$val,{','.join(['$&' + var for var in all_output_variables])}\" >> {results_file_path}\n"
+        file_contents += "end\n\n"
+
+        file_contents += ".endc\n"
+        file_contents += "********** End of control section **********\n\n"
+
+        file_contents += ".end"
+        
+        new_file = pd.DataFrame({'file_id': [file_id],
+                                 'simulation_type': [simulation_type],
+                                 'nr_testbenches': [len(curves.index)],
+                                 'contents': [file_contents],
+                                 'x_name': x_name,
+                                 'y_name': y_name,
+                                 'simulation_file_name': [simulation_file_name],
+                                 'simulation_file_path': [simulation_file_path],
+                                 'results_dir': [results_dir],
+                                 'results_file_name': [results_file_name],
+                                 'results_file_path': [results_file_path],
+                                 'save_variables': [all_save_variables],
+                                 'output_variables': [all_output_variables],
+                                 'rename_variables': [all_rename_variables],
+                                 'calculate_variables': [all_calculate_variables]})
+        
+        self.files = pd.concat([self.files, new_file])
+        
+    
     def add_model_parameters_to_file(self):
         model_parameters_part = "** Model parameters start\n"
         
@@ -437,7 +669,6 @@ class Ngspice_testbench_compiler():
         contents = file['contents']
         
         for key, value in parameters.items():
-            # pattern = r'(alterparam dut ' + key + r' = )[\d.]+'
             pattern = r'(alterparam dut ' + key + r' = )(.*?)(?=\n)'
             if re.search(pattern, contents):
                 # Parameter exists, perform substitution
@@ -460,3 +691,33 @@ class Ngspice_testbench_compiler():
                     contents = contents.replace('** Model parameters start\n', new_parameter)
             
         return contents
+    
+    
+    # Remove model parameters
+    def remove_model_parameters(self):
+        self.files['contents'] = self.files.apply(lambda row: self.remove_model_parameters_per_file(row), axis = 1)
+
+    
+    # Remove model parameters per file
+    def remove_model_parameters_per_file(self, file: pd.Series = None):
+        contents = file['contents']
+        contents = re.sub(r'\*\* Model parameters start\n.*?\*\* Model parameters end\n', '', contents)
+        return contents
+    
+    
+    # Update working directory
+    def update_working_directory(self, new_working_dir: str = None):
+        self.working_directory = os.path.abspath(new_working_dir)
+        self.build_files()
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

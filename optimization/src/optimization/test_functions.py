@@ -11,8 +11,8 @@ def quadratic_3_variables(x, y, z):
     return f
 
 #%% Evaluation quadratic function
-def evaluate_quadratic_3_variables(iteration: int = None, parameters: dict = None, extra_arg: str = None ):
-    print(f"extra_arg: {extra_arg}")
+def evaluate_quadratic_3_variables(parameters: dict = None, **kwargs ):
+    print(f"extra_arg: {kwargs}")
     response = {'metrics': []}
     response['metrics'] = [quadratic_3_variables(item['x'], item['y'], item['z']) for item in parameters]
     return response
@@ -24,8 +24,8 @@ def beale_2_variables(x, y):
     return f
 
 #%% Evaluation beale function
-def evaluate_beale_2_variables(iteration: int = None, parameters: dict = None, extra_arg: str = None ):
-    print(f"extra_arg: {extra_arg}")
+def evaluate_beale_2_variables(parameters: dict = None, **kwargs):
+    print(f"extra_arg: {kwargs}")
     response = {'metrics': []}
     response['metrics'] = [beale_2_variables(item['x'], item['y']) for item in parameters]
     return response
@@ -55,8 +55,8 @@ def quadratic_4_variables(x, y, z, w):
     return f
 
 #%% Evaluation quadratic function
-def evaluate_quadratic_4_variables(iteration: int = None, parameters: dict = None, extra_arg: str = None ):
-    print(f"extra_arg: {extra_arg}")
+def evaluate_quadratic_4_variables(parameters: dict = None, **kwargs):
+    print(f"extra_arg: {kwargs}")
     response = {'metrics': []}
     response['metrics'] = [quadratic_4_variables(item['x'], item['y'], item['z'], item['w']) for item in parameters]
     return response
@@ -68,8 +68,8 @@ def sin_sqrt_2_variables(x, y):
     return f
 
 #%% Evaluation sin_sqrt function
-def evaluate_sin_sqrt_2_variables(iteration: int = None, parameters: dict = None, extra_arg: str = None ):
-    print(f"extra_arg: {extra_arg}")
+def evaluate_sin_sqrt_2_variables(parameters: dict = None, **kwargs):
+    print(f"extra_arg: {kwargs}")
     response = {'metrics': []}
     response['metrics'] = [sin_sqrt_2_variables(item['x'], item['y']) for item in parameters]
     return response

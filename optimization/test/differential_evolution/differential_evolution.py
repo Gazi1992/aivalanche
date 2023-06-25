@@ -31,6 +31,7 @@ def callback_after_each_iter(parameters: dict = None,
                             iteration: int = None,
                             best_parameters: dict = None,
                             best_metric: float = None,
+                            better_solution_found: bool = False,
                             **kwargs):
     print(f'Iteration {iteration} completed.')
     print(f'Best metric: {best_metric}.')
