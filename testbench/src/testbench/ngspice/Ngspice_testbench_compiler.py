@@ -701,7 +701,7 @@ class Ngspice_testbench_compiler():
     # Remove model parameters per file
     def remove_model_parameters_per_file(self, file: pd.Series = None):
         contents = file['contents']
-        contents = re.sub(r'\*\* Model parameters start\n.*?\*\* Model parameters end\n', '', contents)
+        contents = re.sub(r'\*\* Model parameters start\n.*?\*\* Model parameters end\n', '', contents, flags = re.DOTALL)
         return contents
     
     

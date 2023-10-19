@@ -1,0 +1,19 @@
+****************** complete mc deck ***************
+
+     0       0  **********************************************************
+     0       1  .param gmin=1e-12
+     0       2  .global gnd
+     0       3  .temp 120.0
+     0       4  .subckt dut p n params: area=1 m=1 is=1e-14 jsw=1e-15 n=1 rs=1e-6 bv=1e10 ibv=1e-3 nbv=1 ikf=1e-5 ikr=1e-5 jtun=0 jtunsw=0 ntun=30 xtitun=3 keg=1 isr=1e-14 nr=1 cjo=0 cjp=0 fc=0.5 fcs=0.5 mj=0.2 mjsw=0.33 vj=1 php=1 tt=0 lm=0 lp=0 wm=0 wp=0 xom=1e-6 xoi=1e-6 xm=0 xp=0 eg=1.11 tnom=27 trs1=5e-3 trs2=5e-4 tm1=0 tm2=0 ttt1=0 ttt2=0 xti=3 tlev=0 tlevc=0 cta=0 ctp=0 tcv=0 kf=0 af=1
+     0       5  .model diode d level=3 is={is} jsw={jsw} n={n} rs={rs} bv={bv} ibv={ibv} nbv={nbv} ikf={ikf} ikr={ikr} jtun={jtun} jtunsw={jtunsw} ntun={ntun} xtitun={xtitun} keg={keg} isr={isr} nr={nr} cjo={cjo} cjp={cjp} fc={fc} fcs={fcs} mj={mj} mjsw={mjsw} vj={vj} php={php} tt={tt} lm={lm} lp={lp} wm={wm} wp={wp} xom={xom} xoi={xoi} xm={xm} xp={xp} eg={eg} tnom={tnom} trs1={trs1} trs2={trs2} tm1={tm1} tm2={tm2} ttt1={ttt1} ttt2={ttt2} xti={xti} tlev={tlev} tlevc={tlevc} cta={cta} ctp={ctp} tcv={tcv} kf={kf} af={af}
+     0       6  d1 p n diode area={area} m={m}
+     0       7  .ends
+     0       8  e_v_0_2 p_0_2 0 v_sweep 0 1
+     0       9  v_meas_0_2 n_0_2 0 0
+     0      10  x_0_2 p_0_2 n_0_2 dut 2e-06 1.0  1.301988003655862e-19  5.2456790695993e-15  1.6721853351291618  0.1352820608747862  3.813323474245202e+18  9.134701331962986e-06  1.4074258070593935  3.821714605411962e-06  1.505498238739193e-05 0 0 30 3 1 1e-14 1 0 0 0.5 0.5 0.2 0.33 1 1 0 0 0 0 0 1e-6 1e-6 0 0 1.11 27  1*-0.005520461031660879  1*-0.000488663832858705 0 0 0 0 3 0 0 0 0 0 0 1
+     0      11  e_v_1_2 p_1_2 0 v_sweep 0 1
+     0      12  v_meas_1_2 n_1_2 0 0
+     0      13  x_1_2 p_1_2 n_1_2 dut 5e-07 1.0  1.301988003655862e-19  5.2456790695993e-15  1.6721853351291618  0.1352820608747862  3.813323474245202e+18  9.134701331962986e-06  1.4074258070593935  3.821714605411962e-06  1.505498238739193e-05 0 0 30 3 1 1e-14 1 0 0 0.5 0.5 0.2 0.33 1 1 0 0 0 0 0 1e-6 1e-6 0 0 1.11 27  1*-0.005520461031660879  1*-0.000488663832858705 0 0 0 0 3 0 0 0 0 0 0 1
+     0      14  v_sweep v_sweep 0 0
+     0      15  ********** end of control section **********
+     0      16  .end

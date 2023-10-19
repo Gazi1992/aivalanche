@@ -10,7 +10,7 @@ adaptive_boundaries = False
 init_pop = None
 init_pop_out_of_range_param = 'keep'
 defaults_in_init_pop = False
-plot_parameter_evolution_period = 2
+plot_parameter_evolution_period = 1
 plot_survivor_metric_evolution_period = None
 
 
@@ -70,7 +70,7 @@ if function == evaluate_quadratic_3_variables:
     init_pop = pd.DataFrame(columns = init_pop_columns, data = init_pop_data)
     init_pop = pd.DataFrame(init_pop)
     
-    adaptive_boundaries = True
+    adaptive_boundaries = False
 
 elif function == evaluate_beale_2_variables:
 

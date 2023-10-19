@@ -2,7 +2,7 @@
 .subckt dut p n
 
 ******* Junction DC parameters
-+ IS=1e-14 JSW=0 N=1 RS=0 BV=1e10 IBV=1e-3 NBV=1 IKF=0 IKR=0
++ IS=1e-14 JSW=1e-15 N=1 RS=0 BV=1e10 IBV=1e-3 NBV=1 IKF=0 IKR=0
 + JTUN=0 JTUNSW=0 NTUN=30 XTITUN=3 KEG=1 ISR=1e-14 NR=1
 
 ******* Junction capacitance parameters

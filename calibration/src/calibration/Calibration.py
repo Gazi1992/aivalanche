@@ -143,14 +143,14 @@ class Calibration:
         #                               x_values = 'x_values_simulation',
         #                               y_values = 'y_values_simulation',
         #                               operating_conditions = ['temp', 'vbs', 'vds', 'vgs', 'frequency'],
-        #                               instance_parameters = ['w', 'l', 'm'],
+        #                               instance_parameters = ['w', 'l', 'm', 'area'],
         #                               title = "nmos example",
         #                               description = "this dataset serves as an example of the json data format for an nmos transistor",
         #                               device_type = "mosfet")
 
         # Plot the data
         if plot:
-            plot_all_groups(results, extra_legend = ['w', 'l', 'vds', 'vgs', 'vbs'])
+            plot_all_groups(results, extra_legend = ['w', 'l', 'vds', 'vgs', 'vbs', 'm', 'area', 'temp'])
         
         # Calculate the error metric
         error_metric = self.cost_function.run(data = results, parameters = parameters)
@@ -190,6 +190,7 @@ class Calibration:
             except Exception:
                 e_m = raise_exception('simulation_failed_exception')
                 error_metric = {'total': e_m}
+                results = None
                 
             responses['error_metrics'].append(error_metric)
             responses['metrics'].append(error_metric['total'])
@@ -234,7 +235,7 @@ class Calibration:
     
             # Filter out non-numeric and non-string values
             for key, value in config_dict.items():
-                if isinstance(value, (int, str, float, dict)):
+                if isinstance(value, (int, str, float, dict, list, tuple)):
                     filtered_data[key] = value
             
             # Open a file in write mode

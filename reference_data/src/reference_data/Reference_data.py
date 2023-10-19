@@ -80,15 +80,17 @@ class Reference_data:
                         'group_weight': group['group_weight'] if 'group_weight' in group else 1
                 }
                 
-                for key, val in group['operating_conditions'].items():
-                    temp_group_dict[key] = val
+                if 'operating_conditions' in group:
+                    for key, val in group['operating_conditions'].items():
+                        temp_group_dict[key] = val
                 
-                for key, val in group['instance_parameters'].items():
-                    temp_group_dict[key] = val
+                if 'instance_parameters' in group:
+                    for key, val in group['instance_parameters'].items():
+                        temp_group_dict[key] = val
                     
                 group_info.append(temp_group_dict)
                 
-                # ge the data for each curve of the group
+                # get the data for each curve of the group
                 for curve_idx, curve in enumerate(group['curves']):
                     self.validate_curve(curve)
 
@@ -101,17 +103,22 @@ class Reference_data:
                     # Unzip the sorted list to retrieve the ordered A and B
                     sorted_x, sorted_y = zip(*sorted_combined)
                     
-                    curve_info.append(
-                        {
-                            'group_id': group_idx,
-                            'curve_id': curve_idx,
-                            'x_values': np.array(sorted_x),
-                            'y_values': np.array(sorted_y),
-                            'extra_var_value': curve['extra_var_value'] if 'extra_var_value' in curve else np.nan,
-                            'curve_weight': curve['curve_weight'] if 'curve_weight' in curve else 1,
-                            'curve_length': len(sorted_y)
-                        }
-                    )
+                    temp_curve_dict = {
+                        'group_id': group_idx,
+                        'curve_id': curve_idx,
+                        'x_values': np.array(sorted_x),
+                        'y_values': np.array(sorted_y),
+                        'extra_var_value': curve['extra_var_value'] if 'extra_var_value' in curve else np.nan,
+                        'curve_weight': curve['curve_weight'] if 'curve_weight' in curve else 1,
+                        'curve_length': len(sorted_y)
+                    }
+                    
+                    
+                    if 'temp' not in temp_group_dict:
+                        if temp_group_dict['extra_var_name'] == 'temp':
+                            temp_curve_dict['temp'] = temp_curve_dict['extra_var_value']
+                    
+                    curve_info.append(temp_curve_dict)
                     
             self.groups = pd.DataFrame.from_dict(data = group_info)
             self.curves = pd.DataFrame.from_dict(data = curve_info)

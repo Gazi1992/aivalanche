@@ -20,7 +20,7 @@ def plot_metric_evolution(iterations: np.array = None,
             ax.grid(which = 'both', axis = 'both')
             if save_dir is not None:
                 try:
-                    figure.savefig(os.path.join(save_dir, 'metric_evolution.png'))
+                    figure.savefig(os.path.join(save_dir, f'metric_evolution_{max(iterations)}.png'))
                 except Exception as e:
                     print('Error saving figure.')
                     print(e)
@@ -31,7 +31,7 @@ def plot_metric_evolution(iterations: np.array = None,
             
 
 #%% Plot parameter evolution
-def plot_parameter_evolution(parameters: list = None, data: np.array = None, save_dir: str = None):
+def plot_parameter_evolution(parameters: list = None, data: np.array = None, iteration: int = None, save_dir: str = None):
     if parameters is None or data is not None:
         nr_plots = len(parameters)
         param_hist_width = 1 / nr_plots
@@ -57,7 +57,7 @@ def plot_parameter_evolution(parameters: list = None, data: np.array = None, sav
             
             if save_dir is not None:
                 try:
-                    figure.savefig(os.path.join(save_dir, 'parameter_evolution.png'))
+                    figure.savefig(os.path.join(save_dir, f'parameter_evolution_{iteration}.png'))
                 except Exception as e:
                     print('Error saving figure.')
                     print(e)
@@ -67,8 +67,14 @@ def plot_parameter_evolution(parameters: list = None, data: np.array = None, sav
                 plt.show()
             
             
+# Plot histogram
+def plot_histogram(data: np.array = None):
+    plt.hist(data)
+    plt.xlabel('Value')
+    plt.ylabel('Frequency')
+    plt.title('Histogram')
+    plt.show()         
             
-            
-            
+
             
             

@@ -12,38 +12,44 @@ def parse_results(file_path: str = None, simulation_type: str = 'dc_sweep', comp
     if simulation_type is not None:
         function_name = f"parse_{simulation_type}"
         results = globals()[function_name](file_path = file_path, rename_variables = rename_variables, compact = compact)
-        if compact:
-            if x_name is not None:
-                results.rename(columns = {x_name: 'x_values'}, inplace = True)
-            if y_name is not None:
-                results.rename(columns = {y_name: 'y_values'}, inplace = True)
+        if results is not None:
+            if compact:
+                if x_name is not None:
+                    results.rename(columns = {x_name: 'x_values'}, inplace = True)
+                if y_name is not None:
+                    results.rename(columns = {y_name: 'y_values'}, inplace = True)
     
     return results
     
 
 # parse dc_sweep results file
 def parse_dc_sweep(file_path: str = None, compact: bool = False, rename_variables: dict = None):
-    with open(file_path, 'r') as f:
-        lines = f.readlines()                                                       # read the entire file
-        temp = [re.sub(r'\s+', ';', line.strip()).split(';') for line in lines]     # transform the strings into lists
-        
-        # the first column is to be ignores because it is the repetition of some other column
-        columns = temp[0][1:]                                                       # first line has the columns names
-        data = np.array(temp[1:]).astype(float)[:,1:]                               # the other lines have the values
-        # data = np.where(data == 'NAN', np.nan, data)                                # replace NAN whith numpy.nan
-        
-        # save all the data
-        results_extended = pd.DataFrame(columns = columns, data = data)
-
-        if rename_variables is not None:
-            results_extended.rename(columns = rename_variables, inplace = True)
-
-        if compact:
-            results_compact = convert_extended_results_to_compact(results_extended)     
-            return results_compact
-
-        return results_extended
-    return None
+    try:
+        with open(file_path, 'r') as f:
+            lines = f.readlines()                                                       # read the entire file
+            temp = [re.sub(r'\s+', ';', line.strip()).split(';') for line in lines]     # transform the strings into lists
+            
+            # the first column is to be ignores because it is the repetition of some other column
+            columns = temp[0][1:]                                                       # first line has the columns names
+            data = np.array(temp[1:]).astype(float)[:,1:]                               # the other lines have the values
+            # data = np.where(data == 'NAN', np.nan, data)                                # replace NAN whith numpy.nan
+            
+            # save all the data
+            results_extended = pd.DataFrame(columns = columns, data = data)
+    
+            if rename_variables is not None:
+                results_extended.rename(columns = rename_variables, inplace = True)
+    
+            if compact:
+                results_compact = convert_extended_results_to_compact(results_extended)     
+                return results_compact
+    
+            return results_extended        
+        return None
+    except FileNotFoundError:
+        print(f'Error! Results file {file_path} has not been generated.')
+        print('Returning None.')
+        return None
 
 
 # parse dc_list results file

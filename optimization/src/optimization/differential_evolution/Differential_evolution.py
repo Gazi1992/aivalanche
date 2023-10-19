@@ -30,7 +30,7 @@ import numpy as np
 from pyDOE import lhs
 import os
 from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
-from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution
+from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram
 
 
 #%% differential_evolution class
@@ -139,26 +139,7 @@ class Differential_evolution:
             self.determine_survivors()                                              # determine the survivors
             self.determine_best()                                                   # determine the best parameters and best metric
             self.update_history_trials()                                            # append the trials to the history trials
-            
-            # plot trial metric evolution
-            if self.plot_trial_metric_evolution_period is not None and self.iter % self.plot_trial_metric_evolution_period == 0:
-                plot_metric_evolution(iterations = self.history['trials']['iter'],
-                                      metrics = self.history['trials']['trial_metric'])
-                
-            # plot parameter evolution
-            if self.plot_parameter_evolution_period is not None and self.iter % self.plot_parameter_evolution_period == 0:
-                plot_parameter_evolution(parameters = self.parameter_names,
-                                         data = np.array(self.history['trials']['trial_normed'].tolist()),
-                                         save_dir = self.results_dir)
-            
-            
-            # plot survivor metric evolution
-            if self.plot_survivor_metric_evolution_period is not None and self.iter % self.plot_survivor_metric_evolution_period == 0:    
-                all_survivors = self.get_all_survivors()
-                plot_metric_evolution(iterations = all_survivors['iter'],
-                                      metrics = all_survivors['survivor_metric'],
-                                      save_dir = self.results_dir)
-            
+                        
             # Run the callback
             if self.iter == 1:
                 if self.callback_after_first_iter is not None:
@@ -191,6 +172,26 @@ class Differential_evolution:
                                                               best_parameters = self.best_unscaled,
                                                               best_metric = self.best_metric,
                                                               **self.eval_func_args)
+                    
+            # plot trial metric evolution
+            if self.plot_trial_metric_evolution_period is not None and self.iter % self.plot_trial_metric_evolution_period == 0:
+                plot_metric_evolution(iterations = self.history['trials']['iter'],
+                                      metrics = self.history['trials']['trial_metric'])
+                
+            # plot parameter evolution
+            if self.plot_parameter_evolution_period is not None and self.iter % self.plot_parameter_evolution_period == 0:
+                plot_parameter_evolution(parameters = self.parameter_names,
+                                         data = np.array(self.history['trials']['trial_normed'].tolist()),
+                                         iteration = self.iter,
+                                         save_dir = self.results_dir)
+            
+            # plot survivor metric evolution
+            if self.plot_survivor_metric_evolution_period is not None and self.iter % self.plot_survivor_metric_evolution_period == 0:    
+                all_survivors = self.get_all_survivors()
+                plot_metric_evolution(iterations = all_survivors['iter'],
+                                      metrics = all_survivors['survivor_metric'],
+                                      save_dir = self.results_dir)
+                
             # Update history and generate new trials
             self.prepare_next_iter()
         
@@ -373,12 +374,12 @@ class Differential_evolution:
 
         # calculate the donor
         donors_normed = (rand_mem_1
-                       + self.mutation_factor * (self.best_normed - rand_mem_1)
-                       + self.mutation_factor * (rand_mem_2 - rand_mem_3))
+                       + self.mutation_factor * (rand_mem_2 - rand_mem_3)
+                       + self.mutation_factor * (self.best_normed - rand_mem_1))
         
         # if donor goes beyond [0,1], then assign it a random value
         violation_mask = (donors_normed > 1) | (donors_normed < 0)
-        donors_normed[violation_mask] = np.random.rand()
+        donors_normed[violation_mask] = np.random.rand(np.sum(violation_mask))
         
         return donors_normed
     
@@ -386,7 +387,7 @@ class Differential_evolution:
     # Generate a recombination between the target and the donor
     def generate_recombinations(self):
         # get a random number for each parameter
-        dice = np.random.rand(self.pop_size, self.nr_parameters)        
+        dice = np.random.rand(self.pop_size, self.nr_parameters)
 
         # combine donor and target, getting the value from the donor whereever dice is less than the recombination_factor and from the target otheerwise
         trials_normed = np.where(dice < self.recombination_factor, self.donors_normed, self.targets_normed)
@@ -398,12 +399,12 @@ class Differential_evolution:
     def generate_donors(self):
         # In the first iteration generate donor at random.
         if(self.iter == 1):
-            self.donors_normed = lhs(self.nr_parameters, samples = self.pop_size) # Use latin-hyper-cube to generate the random samples
+            self.donors_normed = lhs(self.nr_parameters, samples = self.pop_size, criterion = 'maximin') # Use latin-hyper-cube to generate the random samples
             self.donors = np.apply_along_axis(func1d = unnorm_member,
-                                             axis = 1,
-                                             arr = self.donors_normed,
-                                             minimum = self.boundaries_min,
-                                             maximum = self.boundaries_max) # unnorm all the donors
+                                              axis = 1,
+                                              arr = self.donors_normed,
+                                              minimum = self.boundaries_min,
+                                              maximum = self.boundaries_max) # unnorm all the donors
             
             # If initial population is given, then incorporate it in the first donors.
             if self.init_pop is not None:

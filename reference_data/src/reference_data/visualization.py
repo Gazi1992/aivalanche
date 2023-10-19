@@ -17,7 +17,7 @@ def plot_group(group: pd.DataFrame = None, save_dir: str = None, extra_legend: l
         
         extra_legend_text = ''
         for item in extra_legend:
-            if item in group.columns and not pd.isnull(group.iloc[0][item]):
+            if item in group.columns and not pd.isnull(group.iloc[0][item]) and item != group.iloc[0]['extra_var_name']:
                 extra_legend_text += f"{item} = {group.iloc[0][item]}\n"
         
         with context('seaborn-v0_8-bright'):
