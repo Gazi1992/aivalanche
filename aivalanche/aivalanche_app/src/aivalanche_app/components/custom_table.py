@@ -7,25 +7,55 @@ from aivalanche_app.paths import ascending_icon_path, descending_icon_path, arro
 
 class CustomHeader(QHeaderView):
     def paintSection(self, painter, rect, logicalIndex):
+        # painter.save()
+
+        # # Get the section text
+        # section_text = self.model().headerData(logicalIndex, Qt.Horizontal)
+
+        # if section_text == 'include':
+        #     # Draw a checkbox next to the header text
+        #     checkbox = QCheckBox(self)
+        #     checkbox.setGeometry(rect.left(), rect.top(), 20, rect.height())
+        #     checkbox.setChecked(True)
+        #     checkbox.show()
+
+        #     # Adjust the text rect to the right of the checkbox
+        #     text_rect = rect.adjusted(25, 0, 0, 0)
+        #     super(CustomHeader, self).paintSection(painter, text_rect, logicalIndex)
+        # else:
+        #     # Draw the section text as usual
+        #     super(CustomHeader, self).paintSection(painter, rect, logicalIndex)
+
+        # painter.restore()
+        
         painter.save()
 
-        # Get the section text
-        section_text = self.model().headerData(logicalIndex, Qt.Horizontal)
-
-        if section_text == 'include':
-            # Draw a checkbox next to the header text
+        # Custom background gradient for the header
+        gradient = QBrush(QColor(100, 100, 255))
+        painter.fillRect(rect, gradient)
+        
+        # Set font for header text
+        font = self.font()
+        font.setBold(True)
+        self.setFont(font)
+        
+        # Determine section text
+        text = self.model().headerData(logicalIndex, Qt.Horizontal)
+        
+        if text == 'include':
+            # Draw a checkbox if the section text is 'include'
             checkbox = QCheckBox(self)
-            checkbox.setGeometry(rect.left(), rect.top(), 20, rect.height())
+            checkbox.setGeometry(rect.right() - 30, rect.top(), 30, rect.height())
             checkbox.setChecked(True)
+            checkbox.setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}")
             checkbox.show()
-
-            # Adjust the text rect to the right of the checkbox
-            text_rect = rect.adjusted(25, 0, 0, 0)
-            super(CustomHeader, self).paintSection(painter, text_rect, logicalIndex)
-        else:
-            # Draw the section text as usual
-            super(CustomHeader, self).paintSection(painter, rect, logicalIndex)
-
+            
+            # Adjust the rectangle for the header text
+            rect.setRight(rect.right() - 30)
+        
+        # Draw the header text
+        painter.drawText(rect.adjusted(10, 0, -10, 0), Qt.AlignLeft | Qt.AlignVCenter, text)
+        
         painter.restore()
         
 

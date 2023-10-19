@@ -64,6 +64,7 @@ THEME = {
         QComboBox:down-arrow { image: url(%s); width: 20px; }
         QComboBox:drop-down:button { border: none; width: 20px; padding-right: 5px }
         QTableView { background: transparent; alternate-background-color: red; border: 1px solid #062279; }
+        QHeaderView:section { padding: 2px 4px; }
     """ % arrow_down_icon_path,
     "header": """
         QWidget#search_bar { background-color: white; border-radius: 20; }
