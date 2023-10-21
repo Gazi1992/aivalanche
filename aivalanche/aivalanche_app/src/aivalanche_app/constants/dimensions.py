@@ -6,8 +6,6 @@ for m in get_monitors():
         SCREEN_WIDTH = m.width
         SCREEN_HEIGHT = m.height
         
-print(SCREEN_WIDTH)
-
 # Drawer
 DRAWER_WIDTH = 200
 DRAWER_LOGO_HEIGHT = 150
