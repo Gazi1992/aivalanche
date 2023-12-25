@@ -34,9 +34,7 @@ class my_calibration(QWidget):
         buttons_layout = h_layout()
         buttons_frame.setLayout(buttons_layout)
         layout.addWidget(buttons_frame)
-        
-        # layout.addLayout(buttons_layout)
-            
+                    
         # Reference data button    
         self.reference_data_button = icon_text_button(parent = self, text = 'Reference data', checkable = True, on_click = self.on_reference_data_click, button_height = CALIBRATION_TAB_BUTTON_HEIGHT, button_width = CALIBRATION_TAB_BUTTON_WIDTH)
         buttons_layout.addWidget(self.reference_data_button )

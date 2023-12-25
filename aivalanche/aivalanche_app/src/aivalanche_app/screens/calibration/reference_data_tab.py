@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QLabel, QComboBox, QTableWidget, QSplitter, QFileDialog
 from aivalanche_app.components.custom_layouts import h_layout, v_layout
+from aivalanche_app.components.custom_checkbox import custom_checkbox
 from aivalanche_app.data_store.store import store
 from aivalanche_app.paths import upload_icon_path
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
@@ -41,6 +42,10 @@ class reference_data_tab(QSplitter):
         load_data_layout.addWidget(load_data_button, 0)
         
         left_layout.addLayout(load_data_layout)
+        
+        # Add custom checkbox - test
+        checkbox = custom_checkbox(on_click = lambda x: print(x))
+        left_layout.addWidget(checkbox)
         
         # Create table
         self.table = custom_table(style = self.style)

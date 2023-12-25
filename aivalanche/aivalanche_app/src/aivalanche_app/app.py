@@ -12,5 +12,3 @@ else:
 window = home()    
 window.show()
 sys.exit(app.exec())
-
-

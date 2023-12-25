@@ -20,9 +20,7 @@ import shutil
 from testbench.ngspice import Ngspice_testbench_compiler
 
 
-
 #%% simulator class
-
 class Ngspice_simulator:
     def __init__(self, timeout: int = 30):
         self.timeout = timeout
