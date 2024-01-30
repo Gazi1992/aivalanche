@@ -26,8 +26,6 @@ class custom_checkbox(QCheckBox):
         
         self.checkbox_rect = QRect(0, 0, 0, 0)
         
-        self.setStyleSheet("background-color: red;")
-
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if not self.checkbox_pressed:
@@ -65,6 +63,7 @@ class custom_checkbox(QCheckBox):
                 self.update()
                 if self.on_click is not None:
                     self.on_click(self.checkbox_checked)
+                self.stateChanged.emit(self.checkbox_checked)
             elif self.checkbox_pressed:
                 self.checkbox_hovered = False
                 self.checkbox_pressed = False

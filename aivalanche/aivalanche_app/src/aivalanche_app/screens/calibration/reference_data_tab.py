@@ -43,9 +43,9 @@ class reference_data_tab(QSplitter):
         
         left_layout.addLayout(load_data_layout)
         
-        # Add custom checkbox - test
-        checkbox = custom_checkbox(on_click = lambda x: print(x))
-        left_layout.addWidget(checkbox)
+        # # Add custom checkbox - test
+        # checkbox = custom_checkbox(on_click = lambda x: print(x))
+        # left_layout.addWidget(checkbox)
         
         # Create table
         self.table = custom_table(style = self.style)

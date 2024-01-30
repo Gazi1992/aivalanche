@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
-from copy import deepcopy
-from PySide6.QtWidgets import QComboBox, QLineEdit, QApplication, QTableView, QStyledItemDelegate, QHeaderView, QStyle, QStyleOption, QCheckBox, QAbstractItemView, QTextEdit, QStyleOptionViewItem
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QRect, QItemSelection, QItemSelectionModel, QEvent
-from PySide6.QtGui import QColor, QPixmap, QPainter, QBrush, QFont, QLinearGradient, QPen, QMouseEvent
+from PySide6.QtWidgets import QLineEdit, QTableView, QStyledItemDelegate, QHeaderView, QStyle
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QRect, QItemSelection, QItemSelectionModel
+from PySide6.QtGui import QPalette, QColor, QPixmap, QPainter, QBrush, QFont, QLinearGradient, QPen, QMouseEvent
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.paths import ascending_icon_path, descending_icon_path, checkbox_checked_path, checkbox_unchecked_path
 from aivalanche_app.components.custom_checkbox import custom_checkbox
@@ -18,6 +17,13 @@ class item_delegate(QStyledItemDelegate):
         self.checkbox_width = 16
         self.checkbox_height = 16
         self.alternate_row_background_color = QColor(0, 0, 0, 25)
+    
+    
+    def commit_and_close_editor_checkbox(self, state):
+        editor = self.sender()
+        print('closing editor:', editor)
+        self.commitData.emit(editor)
+        # self.closeEditor.emit(editor)
         
     
     def createEditor(self, parent, option, index):
@@ -25,8 +31,9 @@ class item_delegate(QStyledItemDelegate):
             editor = QLineEdit(parent = parent)
             return editor
         elif self.parent().model().checkbox_data[index.column()]:
-            editor = custom_checkbox(parent = parent, state = index.data(Qt.DisplayRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
-            # editor.setStyleSheet("background-color: red;")
+            editor = custom_checkbox(parent = parent, state = index.data(Qt.EditRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
+            editor.stateChanged.connect(self.commit_and_close_editor_checkbox)
+            self.parent().model().last_opened_editor = editor
             return editor
         return super().createEditor(parent, option, index)
     
@@ -42,27 +49,59 @@ class item_delegate(QStyledItemDelegate):
     
     def setModelData(self, editor, model, index):
         if self.parent().model().edit_data[index.column()]:
-            model.setData(index, editor.text(), Qt.DisplayRole)
+            model.setData(index, editor.text(), Qt.EditRole)
         elif self.parent().model().checkbox_data[index.column()]:
-            model.setData(index, editor.checkbox_checked)
+            model.setData(index, editor.checkbox_checked, Qt.EditRole)
         else:
             super().setModelData(editor, model, index)
-            
+
     
     def paint(self, painter, option, index):
         rect = option.rect    
         model = index.model()
             
+        # Customize the selection color based on the column
+                
+        # column = index.column()
+        # if column == 0:
+        #     option.palette.setColor(QPalette.Highlight, QColor(255, 0, 0))  # Red selection
+        # elif column == 1:
+        #     option.palette.setColor(QPalette.Highlight, QColor(0, 255, 0))  # Green selection
+        # else:
+        #     # Default selection color
+        #     option.palette.setColor(QPalette.Highlight, QColor(0, 0, 255))  # Blue selection
+
         # If checkbox, then use the custom checkbox paint
         if model.checkbox_data[index.column()]:
-            editor = custom_checkbox(parent = self.parent(), state = index.data(Qt.DisplayRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
-            editor.paint(painter, rect)
+            if option.state & QStyle.State_Selected:
+                painter.fillRect(rect, QColor('white'))
+            editor = custom_checkbox(parent = self.parent(), state = index.data(Qt.EditRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
+            editor.paint(painter, rect)           
         else:        
-            super().paint(painter, option, index)
+            super().paint(painter, option, index)            
         
         # Set background color
         if index.row() % 2 == 1:
             painter.fillRect(rect, self.alternate_row_background_color)
+            
+            
+    def editorEvent(self, event, model, option, index):
+        if event.type() == QMouseEvent.MouseMove:
+            if index.isValid():
+                col = index.column()
+                if model.checkbox_data[col]:
+                    if index != model.last_mouse_move_index:
+                        model.last_mouse_move_index = index
+                        self.parent().setCurrentIndex(index)
+                        self.parent().edit(index)
+                        return True
+                else:
+                    if model.last_mouse_move_index is not None:
+                        model.last_mouse_move_index = None
+                        self.closeEditor.emit(model.last_opened_editor)
+                    
+        super().editorEvent(event, model, option, index)
+
 
 
 class table_horizontal_header(QHeaderView):
@@ -261,6 +300,10 @@ class table_horizontal_header(QHeaderView):
 class custom_table_model(QAbstractTableModel):
     def __init__(self, data = None, default_nr_col = 6, default_nr_row = 10, checkbox_columns = None, no_edit_columns = None):
         super().__init__()
+        
+        self.last_mouse_move_index = None
+        self.last_opened_editor = None
+        
         self.default_nr_col = default_nr_col
         self.default_nr_row = default_nr_row
         
@@ -283,7 +326,7 @@ class custom_table_model(QAbstractTableModel):
 
 
     def data(self, index, role = Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             result = self._data.iloc[index.row(), index.column()]
             if not isinstance(result, (bool, np.bool_)):
                 result = str(result)
@@ -292,7 +335,7 @@ class custom_table_model(QAbstractTableModel):
 
     
     def setData(self, index, value, role = Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             self._data.iloc[index.row(), index.column()] = value
             return True
         return super().setData(index, value, role)
@@ -312,6 +355,7 @@ class custom_table_model(QAbstractTableModel):
         self.initialize_checkboxes(checkbox_columns)
         self.initialize_checkbox_header_status()
         self.initialize_edit_data(no_edit_columns)
+        self.last_mouse_move_index = None
     
     
     def set_data(self, data = None):
@@ -380,7 +424,7 @@ class custom_table(QTableView):
         
         self.last_mouse_move_index = None
         self.current_editor = None
-
+        
     def update_data(self, data = None, checkbox_columns = None):
         self.model().layoutAboutToBeChanged.emit()
         self.model().initialize_table(data, checkbox_columns)
@@ -388,19 +432,19 @@ class custom_table(QTableView):
         self.model().layoutChanged.emit()
         
     
-    def mouseMoveEvent(self, event):
-        index = self.indexAt(event.pos())      
-        if index.isValid():
-            col = index.column()
-            if self.model().checkbox_data[col]:
-                if index != self.last_mouse_move_index:
-                    if self.last_mouse_move_index is not None:
-                        self.closePersistentEditor(self.last_mouse_move_index)
-                    self.last_mouse_move_index = index
-                    self.openPersistentEditor(self.last_mouse_move_index)
-            else:
-                if self.last_mouse_move_index is not None:
-                    self.closePersistentEditor(self.last_mouse_move_index)
-                    self.last_mouse_move_index = None
+    # def mouseMoveEvent(self, event):
+    #     index = self.indexAt(event.pos())      
+    #     if index.isValid():
+    #         col = index.column()
+    #         if self.model().checkbox_data[col]:
+    #             if index != self.last_mouse_move_index:
+    #                 if self.last_mouse_move_index is not None:
+    #                     self.closePersistentEditor(self.last_mouse_move_index)
+    #                 self.last_mouse_move_index = index
+    #                 self.openPersistentEditor(self.last_mouse_move_index)
+    #         else:
+    #             if self.last_mouse_move_index is not None:
+    #                 self.closePersistentEditor(self.last_mouse_move_index)
+    #                 self.last_mouse_move_index = None
 
-        super().mouseMoveEvent(event)
+    #     super().mouseMoveEvent(event)
