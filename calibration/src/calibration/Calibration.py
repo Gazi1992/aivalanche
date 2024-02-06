@@ -5,15 +5,17 @@ from reference_data.utils import write_reference_data_to_file
 from testbench.ngspice import Ngspice_testbench_compiler
 from parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
+from calibration.dask import init_dask, close_dask
 from simulation.ngspice import Ngspice_simulator
 from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
 from copy import deepcopy
 from datetime import datetime
+import dask
 import os
 import shutil
 import json
-
+import uuid
 
 #%% calibration class
 
@@ -27,8 +29,8 @@ class Calibration:
                  results_dir: str = None,
                  optimizer_config: dict = None,
                  simulator_config: dict = None,
-                 cost_function_config: dict = None
-                 ):
+                 cost_function_config: dict = None,
+                 use_dask: bool = False):
                 
         self.reference_data_file = reference_data_file
         self.parameters_file = parameters_file
@@ -40,6 +42,7 @@ class Calibration:
         self.optimizer_config = optimizer_config
         self.simulator_config = simulator_config
         self.cost_function_config = cost_function_config
+        self.use_dask = use_dask
         
         self.validate_simulator()
         self.validate_cost_function()
@@ -49,6 +52,9 @@ class Calibration:
         self.get_testbenches()
         self.get_simulator()
         self.get_cost_function()
+        
+        if self.use_dask:
+            self.cluster = init_dask()
 
         
     def validate_simulator(self):
@@ -117,17 +123,20 @@ class Calibration:
     def get_cost_function(self):
         if self.cost_function_config['type'] == 'default':
             self.cost_function = Cost_function(parts = self.cost_function_config['parts'])
-    
-
-    def run_single_simulation(self, parameters: dict = None, plot: bool = False,
-                              delete_files: bool = True, return_results: bool = False, print_output: bool = True):
+           
+        
+    def run_single_simulation(self, parameters: dict = None, plot: bool = False, delete_files: bool = True, print_output: bool = True):
+        
+        new_testbenches = deepcopy(self.testbenches)
+        
+        if self.use_dask:
+            temp_dir = os.path.join(self.simulation_files_path, str(uuid.uuid4()))
+            os.mkdir(temp_dir)
+            new_testbenches.update_working_directory(temp_dir)
         
         # If parameters are given, then create new testbenches
         if parameters is not None:
-            new_testbenches = deepcopy(self.testbenches)
             new_testbenches.modify_model_parameters(parameters)
-        else:
-            new_testbenches = self.testbenches
         
         # Simulate
         results = self.simulator.simulate_testbenches(testbenches = new_testbenches,
@@ -136,6 +145,9 @@ class Calibration:
                                                       reference_data = self.reference_data.data,
                                                       delete_files = delete_files,
                                                       print_output = print_output)
+        
+        if self.use_dask and delete_files:
+            shutil.rmtree(temp_dir)
         
         # # Write the simulation values in a file
         # write_reference_data_to_file(data = results,
@@ -151,14 +163,8 @@ class Calibration:
         # Plot the data
         if plot:
             plot_all_groups(results, extra_legend = ['w', 'l', 'vds', 'vgs', 'vbs', 'm', 'area', 'temp'])
-        
-        # Calculate the error metric
-        error_metric = self.cost_function.run(data = results, parameters = parameters)
-        
-        if return_results:
-            return error_metric, results
-        else:
-            return error_metric
+            
+        return results
 
 
     def run_no_parameter_simulation(self, plot: bool = False, delete_files: bool = False):
@@ -178,34 +184,42 @@ class Calibration:
         print(error_metric)
 
 
-    def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):     
+    def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):  
         responses = {'results': [], 'error_metrics': [], 'metrics': []}
-        for param in parameters:
-            try:
-                error_metric, results = self.run_single_simulation(parameters = param,
-                                                                   plot = False,
-                                                                   delete_files = True,
-                                                                   return_results = True,
-                                                                   print_output = False)
-            except Exception:
-                e_m = raise_exception('simulation_failed_exception')
-                error_metric = {'total': e_m}
-                results = None
-                
-            responses['error_metrics'].append(error_metric)
-            responses['metrics'].append(error_metric['total'])
-            responses['results'].append(results)                
+        if self.use_dask:
+            simulation_futures = [dask.delayed(self.run_single_simulation)(parameters = param, plot = False, delete_files = True, print_output = False) for param in parameters]
+            error_metric_futures = [dask.delayed(self.cost_function.run)(sim_res, param) for sim_res, param in zip(simulation_futures, parameters)]
+            error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
+            if len(error_metrics) == 1:
+                error_metrics = error_metrics[0]
+            responses['results'] = [item['data'] for item in error_metrics]
+            responses['error_metrics'] = [item['error_metric'] for item in error_metrics]
+            responses['metrics'] = [item['error_metric']['total'] for item in error_metrics]
+        else:
+            for param in parameters:
+                try:
+                    simulation_results = self.run_single_simulation(parameters = param, plot = False, delete_files = True, print_output = False)
+                    metric = self.cost_function.run(simulation_results, param)
+                except Exception:
+                    e_m = raise_exception('simulation_failed_exception')
+                    simulation_results = None
+                    metric = {'data': simulation_results, 'parameters': param, 'error_metric': {'total': e_m}}
+
+                responses['results'].append(metric['data'])
+                responses['error_metrics'].append(metric['error_metric'])
+                responses['metrics'].append(metric['error_metric']['total'])
                     
         return responses
-
-
+    
+    
     def calibrate(self):
         self.create_new_output_dir()
         self.validate_optimizer()
         self.get_optimizer()
         self.write_input_to_files()
         self.optimizer.run_optimization()
-        
+        if self.use_dask:
+            close_dask(self.cluster)
         
     def create_new_output_dir(self):
         timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")

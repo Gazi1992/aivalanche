@@ -9,14 +9,13 @@ Inputs:
 #%% Imports
 import pandas as pd
 import numpy as np
-import json
 import os
-from subprocess import Popen, PIPE, TimeoutExpired
 import time
 import shlex
+import shutil
+from subprocess import Popen, PIPE, TimeoutExpired
 from simulation.ngspice.parser import parse_results
 from simulation.ngspice.visualization import plot_results
-import shutil
 from testbench.ngspice import Ngspice_testbench_compiler
 
 

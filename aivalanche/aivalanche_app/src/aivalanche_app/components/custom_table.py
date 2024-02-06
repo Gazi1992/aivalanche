@@ -9,7 +9,7 @@ from aivalanche_app.components.custom_checkbox import custom_checkbox
 
 class item_delegate(QStyledItemDelegate):
     
-    def __init__(self, parent):
+    def __init__(self, parent, style):
         
         super().__init__(parent)
         
@@ -17,6 +17,7 @@ class item_delegate(QStyledItemDelegate):
         self.checkbox_width = 16
         self.checkbox_height = 16
         self.alternate_row_background_color = QColor(0, 0, 0, 25)
+        self.style = style
     
     
     def commit_and_close_editor_checkbox(self, state):
@@ -33,7 +34,6 @@ class item_delegate(QStyledItemDelegate):
         elif self.parent().model().checkbox_data[index.column()]:
             editor = custom_checkbox(parent = parent, state = index.data(Qt.EditRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
             editor.stateChanged.connect(self.commit_and_close_editor_checkbox)
-            self.parent().model().last_opened_editor = editor
             return editor
         return super().createEditor(parent, option, index)
     
@@ -59,22 +59,11 @@ class item_delegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         rect = option.rect    
         model = index.model()
-            
-        # Customize the selection color based on the column
-                
-        # column = index.column()
-        # if column == 0:
-        #     option.palette.setColor(QPalette.Highlight, QColor(255, 0, 0))  # Red selection
-        # elif column == 1:
-        #     option.palette.setColor(QPalette.Highlight, QColor(0, 255, 0))  # Green selection
-        # else:
-        #     # Default selection color
-        #     option.palette.setColor(QPalette.Highlight, QColor(0, 0, 255))  # Blue selection
 
         # If checkbox, then use the custom checkbox paint
         if model.checkbox_data[index.column()]:
             if option.state & QStyle.State_Selected:
-                painter.fillRect(rect, QColor('white'))
+                painter.fillRect(rect, QColor(self.style.MAIN_BACKGROUND_COLOR))
             editor = custom_checkbox(parent = self.parent(), state = index.data(Qt.EditRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
             editor.paint(painter, rect)           
         else:        
@@ -98,8 +87,7 @@ class item_delegate(QStyledItemDelegate):
                 else:
                     if model.last_mouse_move_index is not None:
                         model.last_mouse_move_index = None
-                        self.closeEditor.emit(model.last_opened_editor)
-                    
+                        
         super().editorEvent(event, model, option, index)
 
 
@@ -302,7 +290,6 @@ class custom_table_model(QAbstractTableModel):
         super().__init__()
         
         self.last_mouse_move_index = None
-        self.last_opened_editor = None
         
         self.default_nr_col = default_nr_col
         self.default_nr_row = default_nr_row
@@ -418,7 +405,7 @@ class custom_table(QTableView):
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
 
-        self.setItemDelegate(item_delegate(parent = self))
+        self.setItemDelegate(item_delegate(parent = self, style = style))
         
         self.setMouseTracking(True)
         

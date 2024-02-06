@@ -129,20 +129,25 @@ cost_function_config = {'type': 'default',
                             }
                         ]}
 
-calibration = Calibration(reference_data_file = reference_data_file,
-                          parameters_file = parameters_file,
-                          testbenches_file = testbenches_file,
-                          dut_file = dut_file,
-                          dut_name = dut_name,
-                          results_dir = results_dir,
-                          simulator_config = simulator_config,
-                          optimizer_config = optimizer_config,
-                          cost_function_config = cost_function_config)
+use_dask = True
 
-# calibration.run_no_parameter_simulation(plot = True)
+if __name__ == '__main__':
 
-calibration.run_default_simulation(plot = True, delete_files = True)
-
-# calibration.run_random_simulation(plot = True, delete_files = True)
-
-# calibration.calibrate()
+    calibration = Calibration(reference_data_file = reference_data_file,
+                              parameters_file = parameters_file,
+                              testbenches_file = testbenches_file,
+                              dut_file = dut_file,
+                              dut_name = dut_name,
+                              results_dir = results_dir,
+                              simulator_config = simulator_config,
+                              optimizer_config = optimizer_config,
+                              cost_function_config = cost_function_config,
+                              use_dask = use_dask)
+    
+    # calibration.run_no_parameter_simulation(plot = True)
+    
+    # calibration.run_default_simulation(plot = True, delete_files = True)
+    
+    # calibration.run_random_simulation(plot = True, delete_files = True)
+    
+    calibration.calibrate()

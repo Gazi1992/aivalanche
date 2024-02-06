@@ -25,6 +25,9 @@ class style():
         # Access the dictionary
         my_dict = my_dict_module.THEME
         
+        # Add extra variables
+        my_dict['MAIN_BACKGROUND_COLOR'] = my_dict_module.MAIN_BACKGROUND_COLOR
+        
         return my_dict
     
     def set_active_theme(self, active_theme: str = None):

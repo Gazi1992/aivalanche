@@ -661,7 +661,9 @@ class Ngspice_testbench_compiler():
     
     # Modify the model parameters that exist in the files
     def modify_model_parameters(self, parameters: dict = None, add_new_parameters: bool = True):
-        self.files['contents'] = self.files.apply(lambda row: self.modify_model_parameters_per_file(row, parameters, add_new_parameters), axis = 1)
+        self.model_parameters = parameters
+        self.build_files()
+        # self.files['contents'] = self.files.apply(lambda row: self.modify_model_parameters_per_file(row, parameters, add_new_parameters), axis = 1)
         
     
     # Modify the parameters in a single file

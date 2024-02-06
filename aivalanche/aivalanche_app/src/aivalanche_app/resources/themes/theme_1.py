@@ -1,9 +1,11 @@
 from aivalanche_app.paths import arrow_down_icon_path
 
+MAIN_BACKGROUND_COLOR = '#f2faff'
+
 THEME = {
     "home": """
-        QWidget { background-color: #f2faff; color: #062279 }
-    """,
+        QWidget { background-color: %s; color: #062279 }
+    """ % MAIN_BACKGROUND_COLOR,
     "drawer": """
         QFrame {background-color: white; }
         QPushButton { background-color: transparent; color: #000000; border: none; }

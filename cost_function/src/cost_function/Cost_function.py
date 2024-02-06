@@ -1,6 +1,7 @@
 #%% Imports
 import pandas as pd
 import numpy as np
+from copy import deepcopy
 from cost_function.utils import calculate_error_metric
 from cost_function.exceptions import raise_exception
 
@@ -30,26 +31,31 @@ class Cost_function:
         
     
     # Calculate the error metric
-    def run(self, data: pd.DataFrame = None, parameters: pd.DataFrame = None):
+    def run(self, data: pd.DataFrame = None, parameters: pd.DataFrame = None, overwrite: bool = False):
         # If no data is given, return HUGE_ERROR
         if data is None:
             error_metric = raise_exception('no_data_exception')
-            self.error_metric['total'] = error_metric
-            return self.error_metric
+            if overwrite:
+                self.error_metric['total'] = error_metric
+            return error_metric
         
-        self.reset_error_metric()
+        # initialize error_metric
+        error_metric = {}
+        for part in self.parts:
+            error_metric[part['id']] = None
+        error_metric['total'] = None
         
         # Copy the data to not modify the original dataframe
-        self.data = data.copy()
-        self.data['x_values'] = self.data['x_values'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
-        self.data['y_values'] = self.data['y_values'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
-        self.data['x_values_simulation'] = self.data['x_values_simulation'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
-        self.data['y_values_simulation'] = self.data['y_values_simulation'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
+        data_ = data.copy()
+        data_['x_values'] = data_['x_values'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
+        data_['y_values'] = data_['y_values'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
+        data_['x_values_simulation'] = data_['x_values_simulation'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
+        data_['y_values_simulation'] = data_['y_values_simulation'].apply(lambda x: np.array(x)) # Convert the x_values np arrays
 
         
         # Calculate the error_metric for each part
         for part in self.parts:                
-            part_error_metric = calculate_error_metric(data = self.data,
+            part_error_metric = calculate_error_metric(data = data_,
                                                        parameters = parameters,
                                                        group_types = part['group_types'],
                                                        metric_type = part['metric_type'],
@@ -57,14 +63,17 @@ class Cost_function:
                                                        norm = part['norm'],
                                                        transform = part['transform'],
                                                        **part['extra_args'])
-            self.error_metric[part['id']] = part_error_metric
-            if self.error_metric['total'] is None:
-                self.error_metric['total'] = part_error_metric
+            error_metric[part['id']] = part_error_metric
+            if error_metric['total'] is None:
+                error_metric['total'] = part_error_metric
             else:
-                self.error_metric['total'] += part_error_metric
+                error_metric['total'] += part_error_metric
         
+        if overwrite:
+            self.error_metric = error_metric
+            self.data = data_
         
-        return self.error_metric
+        return {'data': data, 'parameters': parameters, 'error_metric': error_metric}
 
 
 #%% custom exception class for missing optimizer
