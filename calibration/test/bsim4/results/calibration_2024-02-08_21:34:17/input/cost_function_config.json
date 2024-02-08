@@ -1,0 +1,57 @@
+{
+    "type": "default",
+    "parts": [
+        {
+            "id": "out_trans_char_lin",
+            "group_types": [
+                "ids_vds_vgs",
+                "ids_vgs_vbs"
+            ],
+            "metric_type": "rmse",
+            "weight": 1,
+            "norm": true,
+            "transform": "lin",
+            "extra_args": {}
+        },
+        {
+            "id": "out_trans_char_log",
+            "group_types": [
+                "ids_vds_vgs",
+                "ids_vgs_vbs"
+            ],
+            "metric_type": "rmse",
+            "weight": 1,
+            "norm": true,
+            "transform": "log",
+            "extra_args": {}
+        },
+        {
+            "id": "capacitor_char_lin",
+            "group_types": [
+                "cgd_vgs_vbs",
+                "cgs_vgs_vbs",
+                "cgb_vgs_vbs",
+                "cgg_vgs_vbs"
+            ],
+            "metric_type": "rmse",
+            "weight": 1,
+            "norm": true,
+            "transform": "lin",
+            "extra_args": {}
+        },
+        {
+            "id": "capacitor_char_log",
+            "group_types": [
+                "cgd_vgs_vbs",
+                "cgs_vgs_vbs",
+                "cgb_vgs_vbs",
+                "cgg_vgs_vbs"
+            ],
+            "metric_type": "rmse",
+            "weight": 1,
+            "norm": true,
+            "transform": "log",
+            "extra_args": {}
+        }
+    ]
+}

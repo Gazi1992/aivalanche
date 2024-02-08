@@ -215,7 +215,10 @@ class Ngspice_simulator:
     def check_simulation_validity(self, row):
         status = 'success'
         message = 'success'
-        if len(row['y_values']) != len(row['y_values_simulation']):
+        if  not isinstance(row['y_values_simulation'], list) and np.isnan(row['y_values_simulation']):
+            status = 'failed'
+            message = 'all simulation data is NaN'
+        elif len(row['y_values']) != len(row['y_values_simulation']):
             status = 'failed'
             message = 'simulation data not the same length as reference data'
         elif all(np.isnan(row['y_values_simulation'])):
@@ -226,7 +229,7 @@ class Ngspice_simulator:
             message = 'at least one value in simulation data is NaN'
         
         return status, message
-    
+
         
         
         

@@ -5,7 +5,7 @@ from reference_data.utils import write_reference_data_to_file
 from testbench.ngspice import Ngspice_testbench_compiler
 from parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
-from calibration.dask import init_dask, close_dask
+from calibration.custom_dask import init_dask, close_dask
 from simulation.ngspice import Ngspice_simulator
 from cost_function import Cost_function
 from cost_function.exceptions import raise_exception

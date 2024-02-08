@@ -75,4 +75,6 @@ class reference_data_tab(QSplitter):
     def load_reference_data(self, file):
         self.reference_data = Reference_data(file)
         self.reference_data.data.insert(0, 'include', True)
+        self.reference_data.data['plot'] = False
+        self.reference_data.data['calibrate'] = True
         self.table.update_data(self.reference_data.data)

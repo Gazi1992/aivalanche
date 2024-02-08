@@ -23,7 +23,9 @@ class item_delegate(QStyledItemDelegate):
     def commit_and_close_editor_checkbox(self, state):
         editor = self.sender()
         print('closing editor:', editor)
+        # self.parent().model().on_checkbox_click(index)
         self.commitData.emit(editor)
+
         # self.closeEditor.emit(editor)
         
     
@@ -32,8 +34,10 @@ class item_delegate(QStyledItemDelegate):
             editor = QLineEdit(parent = parent)
             return editor
         elif self.parent().model().checkbox_data[index.column()]:
-            editor = custom_checkbox(parent = parent, state = index.data(Qt.EditRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
+            editor = custom_checkbox(parent = parent, state = index.data(Qt.EditRole), on_click = lambda state: self.parent().model().on_checkbox_click(state, index),
+                                     checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
             editor.stateChanged.connect(self.commit_and_close_editor_checkbox)
+            # editor.stateChanged.connect(lambda state: self.commit_and_close_editor_checkbox(state, index))
             return editor
         return super().createEditor(parent, option, index)
     
@@ -390,6 +394,14 @@ class custom_table_model(QAbstractTableModel):
     
     def on_checkbox_header_click(self, index):
         self.checkbox_header_status[index] = not self.checkbox_header_status[index]
+        print('index: ', index)
+        print('status: ', self.checkbox_header_status[index])
+        print('column: ', self._data.columns[index])
+        
+        
+    def on_checkbox_click(self, state, index):
+        print('row: ', index.row(), 'column: ', index.column())
+        print('col: ', self._data.columns[index.column()])
 
 
 class custom_table(QTableView):

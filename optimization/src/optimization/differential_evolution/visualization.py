@@ -8,11 +8,16 @@ import os
 def plot_metric_evolution(iterations: np.array = None,
                           metrics: np.array = None,
                           y_scale: str = 'log',
+                          upper_threshold: float = 1e10,
+                          lower_threshold: float = 0,
                           save_dir: str = None):
     if iterations is not None and metrics is not None:
+        # iterations = np.array(iterations)
+        # metrics = np.array(metrics)
+        mask = (metrics > lower_threshold) & (metrics < upper_threshold)
         with context('seaborn-v0_8-bright'):
             figure, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(8, 4.5))
-            ax.scatter(iterations, metrics)
+            ax.scatter(iterations[mask], metrics[mask])
             ax.set_title('Metric evolution')
             ax.set_xlabel('Iterations')
             ax.set_ylabel('Metrics')
