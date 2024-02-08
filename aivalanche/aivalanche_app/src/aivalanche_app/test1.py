@@ -1,70 +1,64 @@
-import pandas as pd
+import pyqtgraph as pg
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QScrollArea
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTableView, QCheckBox, QStyledItemDelegate
+import numpy as np
 import sys
-from copy import deepcopy
-from PySide6.QtWidgets import QComboBox, QLineEdit, QApplication, QTableView, QStyledItemDelegate, QHeaderView, QStyle, QStyleOption, QCheckBox, QAbstractItemView, QTextEdit, QStyleOptionViewItem
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QRect, QItemSelection, QItemSelectionModel, QEvent
-from PySide6.QtGui import QColor, QPixmap, QPainter, QBrush, QFont, QLinearGradient, QPen, QMouseEvent, QStandardItemModel, QStandardItem
-from aivalanche_app.resources.themes.style import style
-from aivalanche_app.paths import ascending_icon_path, descending_icon_path, checkbox_checked_path, checkbox_unchecked_path
 
-
-class CustomComboBoxDelegate(QStyledItemDelegate):
-    def createEditor(self, parent, option, index):
-        if index.column() in [2, 4]:  # Specify columns where you want comboboxes
-            combo = QComboBox(parent)
-            combo.addItems(["Option 1", "Option 2", "Option 3"])  # Customize this list with your combobox options
-            return combo
-        return super().createEditor(parent, option, index)
-
-class CustomComboBoxModel(QStandardItemModel):
-    def __init__(self, data=None, checkbox_columns=None):
+class MyMainWindow(QMainWindow):
+    def __init__(self):
         super().__init__()
 
-        self.initialize_table(data, checkbox_columns)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
 
-    def initialize_table(self, data=None, checkbox_columns=None):
-        self.setColumnCount(len(data.columns))
-        self.setRowCount(len(data))
+        # Create a scroll area
+        scroll_area = QScrollArea()
+        central_widget.layout().addWidget(scroll_area)
 
-        for row in range(len(data)):
-            for col in range(len(data.columns)):
-                item = QStandardItem(data.iloc[row, col])
-                self.setItem(row, col, item)
+        # Create a widget to contain the GraphicsLayoutWidget
+        scroll_content = QWidget()
+        scroll_area.setWidget(scroll_content)
 
-    def setData(self, index, value, role=Qt.EditRole):
-        if role == Qt.EditRole:
-            self.itemFromIndex(index).setText(str(value))
-            return True
-        return super().setData(index, value, role)
+        # Create a grid layout with 100 rows and 2 columns
+        grid_layout = pg.GraphicsLayoutWidget()
+        scroll_content_layout = QVBoxLayout(scroll_content)
+        
+        # Wrap the GraphicsLayoutWidget in a QWidget
+        wrapper_widget = QWidget()
+        wrapper_layout = QVBoxLayout(wrapper_widget)
+        wrapper_layout.addWidget(grid_layout)
+        scroll_content_layout.addWidget(wrapper_widget)
 
-class custom_table(QTableView):
-    def __init__(self, data=None, style=None):
-        super().__init__()
+        # Example data for each plot
+        data_sets = [
+            (np.random.rand(100), np.random.rand(100)) for _ in range(100)
+        ]
 
-        # Set custom combobox delegate for all columns
-        delegate = CustomComboBoxDelegate(self)
-        self.setItemDelegate(delegate)
+        # Create and add scatter plots to the grid layout
+        for i in range(100):
+            plot_item = grid_layout.addPlot(row=i // 2, col=i % 2)
 
-        # Set header options
-        self.horizontalHeader().setStretchLastSection(True)  # Make columns stretch to the full width
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+            # Get the ViewBox associated with the PlotItem
+            view_box = plot_item.getViewBox()
 
-        # Create the custom model
-        self.setModel(CustomComboBoxModel(data))
+            # Set the background color of the ViewBox to be transparent
+            view_box.setBackgroundColor('w')  # 'w' stands for white; you can use 'w' for white or (0, 0, 0, 0) for transparent
 
-# Example usage:
-data = pd.DataFrame({'Column1': ['Option 1', 'Option 2', 'Option 3'],
-                     'Column2': ['Value 1', 'Value 2', 'Value 3'],
-                     'Column3': ['Option 1', 'Option 2', 'Option 3']})
+            # Set a fixed height for each plot (minimum height of 200 pixels)
+            plot_item.setMaximumHeight(200)
 
-if not QApplication.instance():
-    app = QApplication(sys.argv)
-else:
-    app = QApplication.instance()
+            scatter_plot = pg.ScatterPlotItem(x=data_sets[i][0], y=data_sets[i][1], size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 0, 120))
+            plot_item.addItem(scatter_plot)
+
+def main():
+    if not QApplication.instance():
+        app = QApplication(sys.argv)
+    else:
+        app = QApplication.instance()    
     
-table = custom_table(data)
-table.show()
+    window = MyMainWindow()
+    window.show()
+    sys.exit(app.exec())
 
-app.exec_()
-
+main()

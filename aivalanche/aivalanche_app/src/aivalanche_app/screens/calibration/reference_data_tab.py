@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QLabel, QComboBox, QTableWidget, QSplitter, QFileDialog
+from PySide6.QtWidgets import QWidget, QLabel, QComboBox, QTableWidget, QSplitter, QFileDialog, QScrollArea
 from aivalanche_app.components.custom_layouts import h_layout, v_layout
 from aivalanche_app.components.custom_checkbox import custom_checkbox
 from aivalanche_app.data_store.store import store
@@ -7,7 +7,15 @@ from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.custom_table import custom_table
 from reference_data import Reference_data
+import pyqtgraph as pg
+import numpy as np
+from PySide6.QtCore import Qt
 
+
+# Enable antialiasing for prettier plots
+pg.setConfigOptions(antialias=True)
+pg.setConfigOption('background', (0, 0, 0, 0))
+pg.setConfigOption('foreground', 'k')
 
 class reference_data_tab(QSplitter):
     
@@ -56,9 +64,37 @@ class reference_data_tab(QSplitter):
         right_layout = v_layout(spacing = 20)
         right_widget.setLayout(right_layout)
         
-        plots_text = QLabel('plots')
-        right_layout.addWidget(plots_text)
+        # Create a scroll area
+        scroll_area = QScrollArea()
+        scroll_area.setContentsMargins(0, 0, 0, 0)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        right_layout.addWidget(scroll_area)
         
+        # Create a widget to contain the GraphicsLayoutWidget
+        scroll_widget = QWidget(self)
+        scroll_layout = v_layout()
+        scroll_widget.setLayout(scroll_layout)
+        
+        # Create a grid layout with 100 rows and 2 columns
+        frame = pg.GraphicsLayoutWidget()
+        
+        scroll_area.setWidget(frame)
+        scroll_area.setWidgetResizable(True)
+                
+        # Example data for each plot
+        data_sets = [
+            (np.random.rand(100), np.random.rand(100)) for _ in range(100)
+        ]
+        
+        # Create and add scatter plots to the grid layout
+        for i in range(100):
+            plot_item = frame.addPlot(row=i // 2, col=i % 2)
+            plot_item.plot(x=data_sets[i][0], y=data_sets[i][1])
+            plot_item.setMinimumHeight(100)
+            # # plot_item.plot(x=data_sets[i][0], y=data_sets[i][1], pen=None, brush=(255, 0, 0, 120))
+            # scatter_plot = pg.ScatterPlotItem(x=data_sets[i][0], y=data_sets[i][1], size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 0, 120))
+            # plot_item.addItem(scatter_plot)
+                
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
         
