@@ -13,7 +13,9 @@ Inputs:
     max_iterations ->
     metric_threshold ->
     max_iter_without_improvement ->
-    mutation_factor ->
+    mutation_factor_1 ->
+    mutation_factor_2 ->
+    mutation_factor_3 ->
     recombination_factor ->
     init_pop ->
     init_pop_out_of_range_param ->
@@ -49,7 +51,9 @@ class Differential_evolution:
                  max_iterations: int = 1000,                            # when that many iterations are done, optimization stops
                  metric_threshold: float = 0,                           # when this threshold is reached, optimization stops  
                  max_iter_without_improvement: int = 50,                # when no improvement is seem in that many iterations, optimization stops
-                 mutation_factor: float = 0.8,                          # the scaling factor during mutation
+                 mutation_factor_1: float = 0.8,                        # the scaling factor for difference of the two random members
+                 mutation_factor_2: float = 0.8,                        # the scaling factor for difference of best and random member
+                 mutation_factor_3: float = 0,                          # the scaling factor for difference of current and random member
                  recombination_factor: float = 0.9,                     # the factor used during trials generation
                  init_pop: pd.DataFrame = None,                         # initial population to be used in the first iteration of the optimization
                  init_pop_out_of_range_param: str = 'keep',             # what to do with the parameters of the initial population that are out of range; either 'keep' as is or replace with 'random' value
@@ -59,9 +63,10 @@ class Differential_evolution:
                  adaptive_boundaries_pop_quantitle: float = 0.7,        # when this quantile of the population is on the edge, the boundary is extended
                  adaptive_boundaries_extention: float = 0.1,            # how much is the min or max extended when the a parameter is considered on the edge
                  adaptive_boundaries_check_period: int = 10,            # check for adaptive boundaries periodically each that much iterations
-                 plot_trial_metric_evolution_period: int = None,        # plot trial metric evolution when iteration is a multiple of this factor
-                 plot_survivor_metric_evolution_period: int = None,     # plot trial metric evolution when iteration is a multiple of this factor
-                 plot_parameter_evolution_period: int = None,           # plot parameter evolution when iteration is a multiple of this factor
+                 plot_trial_metric_evolution_period: int = None,        # plot trial metric evolution when iteration is a multiple of this number
+                 plot_survivor_metric_evolution_period: int = None,     # plot trial metric evolution when iteration is a multiple of this number
+                 plot_parameter_evolution_period: int = None,           # plot parameter evolution when iteration is a multiple of this number
+                 write_history_to_file_period: int = None,              # write the de history to file when iteration is a multiple of this number
                  results_dir: str = None,                               # directory where to save the results
                  ):
         
@@ -76,7 +81,9 @@ class Differential_evolution:
         self.parameters = parameters
         self.pop_size = pop_size
         self.opt_min_or_max = opt_min_or_max
-        self.mutation_factor = mutation_factor
+        self.mutation_factor_1 = mutation_factor_1
+        self.mutation_factor_2 = mutation_factor_2
+        self.mutation_factor_3 = mutation_factor_3
         self.recombination_factor = recombination_factor        
         
         self.max_iterations = max_iterations
@@ -96,9 +103,11 @@ class Differential_evolution:
         self.adaptive_boundaries_extention = adaptive_boundaries_extention
         self.adaptive_boundaries_check_period = adaptive_boundaries_check_period
         
-        self.plot_trial_metric_evolution_period = plot_trial_metric_evolution_period if plot_trial_metric_evolution_period is not None and plot_trial_metric_evolution_period > 0 else None
-        self.plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period if plot_survivor_metric_evolution_period is not None and plot_survivor_metric_evolution_period > 0 else None
-        self.plot_parameter_evolution_period = plot_parameter_evolution_period if plot_parameter_evolution_period is not None  and plot_parameter_evolution_period > 0 else None
+        self.plot_trial_metric_evolution_period = int(plot_trial_metric_evolution_period) if plot_trial_metric_evolution_period is not None and plot_trial_metric_evolution_period > 0 else None
+        self.plot_survivor_metric_evolution_period = int(plot_survivor_metric_evolution_period) if plot_survivor_metric_evolution_period is not None and plot_survivor_metric_evolution_period > 0 else None
+        self.plot_parameter_evolution_period = int(plot_parameter_evolution_period) if plot_parameter_evolution_period is not None  and plot_parameter_evolution_period > 0 else None
+        self.write_history_to_file_period = int(write_history_to_file_period) if results_dir is not None and write_history_to_file_period is not None and write_history_to_file_period > 0 else None
+        
         self.results_dir = results_dir
         
         self.iter = 0
@@ -191,8 +200,12 @@ class Differential_evolution:
                 plot_metric_evolution(iterations = all_survivors['iter'],
                                       metrics = all_survivors['survivor_metric'],
                                       save_dir = self.results_dir)
-                
-            # Update history and generate new trials
+            
+            # write the history to file
+            if self.write_history_to_file_period is not None and self.iter % self.write_history_to_file_period == 0:    
+                self.write_history_to_file(self.results_dir)
+            
+            # Generate new trials
             self.prepare_next_iter()
         
         # once the stop criteria is reached
@@ -361,10 +374,12 @@ class Differential_evolution:
     
     
     # Generate a mutation
-    def generate_mutations(self):        
-        # throw the dice to get 3 random intigers between 0 and pop_size-1
-        dice = [np.random.choice([j for j in range(self.pop_size) if j != i], size = (1, 3), replace = False) for i in range(self.pop_size)]
-        dice = np.array(dice).reshape(-1,3)
+    def generate_mutations(self, dice: np.array = None):
+        if dice is None:        
+            # throw the dice to get 3 random intigers between 0 and pop_size-1
+            # dice = [np.random.choice([j for j in range(self.pop_size) if j != i], size = (1, 3), replace = False) for i in range(self.pop_size)]
+            # dice = np.array(dice).reshape(-1,3)
+            dice = np.random.randint(self.pop_size, size = (self.pop_size, 3))            
         
         # get random members
         temp = self.targets_normed[dice].reshape(-1,3,self.nr_parameters)
@@ -374,20 +389,22 @@ class Differential_evolution:
 
         # calculate the donor
         donors_normed = (rand_mem_1
-                       + self.mutation_factor * (rand_mem_2 - rand_mem_3)
-                       + self.mutation_factor * (self.best_normed - rand_mem_1))
+                       + self.mutation_factor_1 * (rand_mem_2 - rand_mem_3)
+                       + self.mutation_factor_2 * (self.best_normed - rand_mem_1)
+                       + self.mutation_factor_3 * (self.best_normed - self.targets_normed))
         
         # if donor goes beyond [0,1], then assign it a random value
         violation_mask = (donors_normed > 1) | (donors_normed < 0)
         donors_normed[violation_mask] = np.random.rand(np.sum(violation_mask))
-        
+                
         return donors_normed
     
     
     # Generate a recombination between the target and the donor
-    def generate_recombinations(self):
+    def generate_recombinations(self, dice: np.array = None):
         # get a random number for each parameter
-        dice = np.random.rand(self.pop_size, self.nr_parameters)
+        if dice is None:
+            dice = np.random.rand(self.pop_size, self.nr_parameters)
 
         # combine donor and target, getting the value from the donor whereever dice is less than the recombination_factor and from the target otheerwise
         trials_normed = np.where(dice < self.recombination_factor, self.donors_normed, self.targets_normed)
@@ -470,7 +487,7 @@ class Differential_evolution:
                     self.donors[-1] = np.array(self.parameters['value_scaled']).reshape(1,-1)
 
         else:
-            self.donors_normed = self.generate_mutations()                      # Generate mutations for each target
+            self.donors_normed = self.generate_mutations()                      # Generate mutations for each target            
             self.donors = np.apply_along_axis(func1d = unnorm_member,
                                               axis = 1,
                                               arr = self.donors_normed,
@@ -478,23 +495,21 @@ class Differential_evolution:
                                               maximum = self.boundaries_max)    # Unnorm all the donors
             
         self.donors_unscaled = self.get_unscaled_arr(self.donors)               # Unscale the donors, i.e. transform the log and neglog
-              
-        
+     
     # Generate a trial for each target-donor pair
-    def generate_trials(self):
+    def generate_trials(self):       
         if self.iter == 1: # In the first iteration, trial is equal to donor, because there is no target.
             self.trials = self.donors
             self.trials_normed = self.donors_normed
         else:
             self.trials_normed = self.generate_recombinations()
             self.trials = np.apply_along_axis(func1d = unnorm_member,
-                                             axis = 1,
-                                             arr = self.trials_normed,
-                                             minimum = self.boundaries_min,
-                                             maximum = self.boundaries_max) # unnorm all the trials
+                                              axis = 1,
+                                              arr = self.trials_normed,
+                                              minimum = self.boundaries_min,
+                                              maximum = self.boundaries_max) # unnorm all the trials
         self.trials_unscaled = self.get_unscaled_arr(self.trials)
-        
-     
+
     # Determine the survivor for each target-trial pair
     def determine_survivors(self):
         if(self.iter == 1): # In the first iteration, there is no target, so survivor = trial
@@ -597,6 +612,21 @@ class Differential_evolution:
                 
             except Exception as e:
                 print('ERROR on write_best_parameters_to_file:')
+                print(e)
+                pass
+
+
+    def write_history_to_file(self, dir_path: str = None):
+        if dir_path is not None:
+            try:
+                trials_path = os.path.join(dir_path, 'trials.csv')                                                      # Get the trials history
+                temp = self.history['trials'][['iter', 'trial_unscaled', 'trial_metric']]                               # Get only the columns of interest.
+                temp = pd.concat([temp, temp['trial_unscaled'].apply(pd.Series)], axis=1)                               # Concatenate the original DataFrame with the exploded 'trial_unscaled' column
+                temp = temp.drop('trial_unscaled', axis=1)                                                              # Drop the original 'trial_unscaled' column
+                temp = temp.rename(columns = {i: self.parameter_names[i] for i in range(len(self.parameter_names))})    # Rename the columns using the dictionary
+                temp.to_csv(trials_path, index = False)                                                                 # Write to csv      
+            except Exception as e:
+                print('ERROR on write_history_to_file:')
                 print(e)
                 pass
 

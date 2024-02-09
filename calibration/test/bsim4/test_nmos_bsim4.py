@@ -52,7 +52,7 @@ def callback_after_better_solution_found(iteration: int = None,
     
     output_path = calibration.output_path
     
-    figures_path = os.path.join(output_path, 'figures')
+    figures_path = os.path.join(output_path, 'output', 'figures')
     if not os.path.exists(figures_path):
         os.mkdir(figures_path)
     
@@ -67,7 +67,7 @@ parameters_file = os.path.join(templates_bsim4_nmso_path, 'parameters.csv')
 testbenches_file = os.path.join(templates_bsim4_nmso_path, 'testbenches.json')
 dut_file = os.path.join(templates_bsim4_nmso_path, 'dut.cir')
 dut_name = 'dut'
-results_dir = 'results'
+results_dir = os.path.abspath('results')
 
 optimizer_config = {'type': 'differential_evolution',
                     'callback_after_first_iter': callback_after_first_iter,
@@ -84,6 +84,7 @@ optimizer_config = {'type': 'differential_evolution',
                     'defaults_in_init_pop': False,
                     'plot_parameter_evolution_period': 20,
                     'plot_survivor_metric_evolution_period': 20,
+                    'write_history_to_file_period': 20,
                     'results_dir': results_dir,
                     'adaptive_boundaries': False}
 

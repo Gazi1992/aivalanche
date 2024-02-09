@@ -116,6 +116,7 @@ class Calibration:
                                                     defaults_in_init_pop = self.optimizer_config['defaults_in_init_pop'],
                                                     plot_parameter_evolution_period = self.optimizer_config['plot_parameter_evolution_period'],
                                                     plot_survivor_metric_evolution_period = self.optimizer_config['plot_survivor_metric_evolution_period'],
+                                                    write_history_to_file_period = self.optimizer_config['write_history_to_file_period'],
                                                     results_dir = self.optimizer_config['results_dir'],
                                                     adaptive_boundaries = self.optimizer_config['adaptive_boundaries'])
     

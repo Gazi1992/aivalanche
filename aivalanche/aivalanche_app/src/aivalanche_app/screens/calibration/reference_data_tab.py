@@ -4,6 +4,7 @@ from aivalanche_app.components.custom_checkbox import custom_checkbox
 from aivalanche_app.data_store.store import store
 from aivalanche_app.paths import upload_icon_path
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
+from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.custom_table import custom_table
 from reference_data import Reference_data
@@ -67,36 +68,41 @@ class reference_data_tab(QSplitter):
         # Create a scroll area
         scroll_area = QScrollArea()
         scroll_area.setContentsMargins(0, 0, 0, 0)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         right_layout.addWidget(scroll_area)
-        
-        # Create a widget to contain the GraphicsLayoutWidget
-        scroll_widget = QWidget(self)
-        scroll_layout = v_layout()
-        scroll_widget.setLayout(scroll_layout)
         
         # Create a grid layout with 100 rows and 2 columns
         frame = pg.GraphicsLayoutWidget()
+        frame.setFixedHeight(10*500)
         
         scroll_area.setWidget(frame)
         scroll_area.setWidgetResizable(True)
                 
         # Example data for each plot
         data_sets = [
-            (np.random.rand(100), np.random.rand(100)) for _ in range(100)
+            (np.random.rand(100), np.random.rand(100)) for _ in range(20)
         ]
         
         # Create and add scatter plots to the grid layout
-        for i in range(100):
-            plot_item = frame.addPlot(row=i // 2, col=i % 2)
-            plot_item.plot(x=data_sets[i][0], y=data_sets[i][1])
-            plot_item.setMinimumHeight(100)
-            # # plot_item.plot(x=data_sets[i][0], y=data_sets[i][1], pen=None, brush=(255, 0, 0, 120))
-            # scatter_plot = pg.ScatterPlotItem(x=data_sets[i][0], y=data_sets[i][1], size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 0, 120))
-            # plot_item.addItem(scatter_plot)
-                
+        # for i in range(100):
+        #     plot_item = frame.addPlot(row=i // 2, col=i % 2)
+        #     plot_item.setContentsMargins(10, 10, 10, 10)
+        #     plot_item.setMinimumHeight(100)
+        #     plot_item.plot(x=data_sets[i][0], y=data_sets[i][1], pen = None, symbol='o', brush = (255, 0, 0, 120))
+
+        # Create and add scatter plots to the grid layout
+        for i in range(20):
+            custom_plot =  line_scatter_plot(data_x=data_sets[i][0], data_y=data_sets[i][1], title=f"Custom Plot {i}")
+            custom_plot.setContentsMargins(10, 10, 10, 10)
+            custom_plot.setMinimumHeight(500)        
+            frame.addItem(custom_plot, row=i // 2, col=i % 2)
+
         self.setStretchFactor(0, 0)
         self.setStretchFactor(1, 1)
+        
+    def toggle_log_y(self, plot_item, label):
+        plot_item.setLogMode(y=label.text() == "log_Y")
+        label.setText("linear" if label.text() == "log_Y" else "log_Y")
+
         
         
     def on_load_data_button_click(self):

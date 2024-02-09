@@ -31,6 +31,11 @@ ascending_icon_path = Path.joinpath(images_path, 'ascending_icon.png')
 descending_icon_path = Path.joinpath(images_path, 'descending_icon.png')
 checkbox_checked_path = Path.joinpath(images_path, 'checkbox_checked.png')
 checkbox_unchecked_path = Path.joinpath(images_path, 'checkbox_unchecked.png')
+home_icon_path = Path.joinpath(images_path, 'home_icon.png')
+log_x_icon_path = Path.joinpath(images_path, 'log_x_icon.png')
+log_y_icon_path = Path.joinpath(images_path, 'log_y_icon.png')
+lin_x_icon_path = Path.joinpath(images_path, 'lin_x_icon.png')
+lin_y_icon_path = Path.joinpath(images_path, 'lin_y_icon.png')
 
 
 
