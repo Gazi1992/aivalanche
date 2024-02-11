@@ -4,7 +4,6 @@ from cost_function.utils import norm_groups, filter_groups, scale_groups
 from cost_function.exceptions import no_data_exception
 
 
-
 #%% Calculate the error metric for the output characteristic of a mosfet transistor
 def mosfet_output_characteristic(data: pd.DataFrame = None, parameters: pd.DataFrame = None, metric_type: str = 'rmse',
                                  weight = 1, norm: bool = True, scale: str = 'lin', **kwargs):

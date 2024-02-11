@@ -1,6 +1,5 @@
 #%% Imports
-import pandas as pd
-import numpy as np
+import pandas as pd, numpy as np
 from cost_function.exceptions import raise_exception
 
 

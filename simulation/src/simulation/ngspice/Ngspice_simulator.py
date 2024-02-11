@@ -7,12 +7,7 @@ Inputs:
 '''
 
 #%% Imports
-import pandas as pd
-import numpy as np
-import os
-import time
-import shlex
-import shutil
+import pandas as pd, numpy as np, os, time, shlex, shutil
 from subprocess import Popen, PIPE, TimeoutExpired
 from simulation.ngspice.parser import parse_results
 from simulation.ngspice.visualization import plot_results

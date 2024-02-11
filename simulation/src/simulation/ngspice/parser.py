@@ -1,7 +1,5 @@
-#%% Imports
-import pandas as pd
-import numpy as np
-import re
+# Imports
+import pandas as pd, numpy as np, re
 
 
 # parse results

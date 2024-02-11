@@ -1,5 +1,4 @@
 #%% Imports
-import numpy as np
 from reference_data import Reference_data
 from cost_function import Cost_function
 

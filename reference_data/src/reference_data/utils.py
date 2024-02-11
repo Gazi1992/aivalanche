@@ -1,7 +1,5 @@
 # Imports
-import json
-import re
-import pandas as pd
+import json, re, pandas as pd
 from reference_data import Reference_data
 
 

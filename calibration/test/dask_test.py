@@ -1,8 +1,6 @@
-import os
-import tempfile
+import os, tempfile, dask
 from dask import delayed
 from dask.distributed import LocalCluster, Client
-import dask
 
 class SimulationManager:
     def __init__(self):

@@ -1,9 +1,6 @@
 #%% Imports
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd, matplotlib.pyplot as plt
 from matplotlib.style import context
-import re
 
 
 #%% Plot the results

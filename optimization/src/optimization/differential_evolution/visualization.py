@@ -1,8 +1,6 @@
 #%% Imports
-import numpy as np
-import matplotlib.pyplot as plt
+import os, numpy as np, matplotlib.pyplot as plt
 from matplotlib.style import context
-import os
 
 #%% Plot metric evolution
 def plot_metric_evolution(iterations: np.array = None,

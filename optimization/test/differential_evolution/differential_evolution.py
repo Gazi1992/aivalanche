@@ -1,8 +1,7 @@
 #%% Imports
 import pandas as pd
 from optimization.differential_evolution import Differential_evolution
-from optimization.test_functions import evaluate_quadratic_3_variables, evaluate_beale_2_variables, \
-                                        evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_sin_sqrt
+from optimization.test_functions import evaluate_quadratic_3_variables, evaluate_beale_2_variables, evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_sin_sqrt
 
 #%% Function selector
 function = evaluate_quadratic_3_variables

@@ -1,4 +1,8 @@
 from setuptools import setup, find_packages
+import os, pathlib
+
+current_directory = os.path.dirname(__file__)                                   # __file__ is the current script's path
+parent_directory = os.path.abspath(os.path.join(current_directory, os.pardir))  # Get the parent directory
 
 setup(
     name = 'calibration',
@@ -20,6 +24,14 @@ setup(
         'numpy',
         'pandas',
         'pyDOE',
+        f'reference_data @ {pathlib.Path(os.path.join(parent_directory, "reference_data")).as_uri()}',
+        f'optimization @ {pathlib.Path(os.path.join(parent_directory, "optimization")).as_uri()}',
+        f'parameters @ {pathlib.Path(os.path.join(parent_directory, "parameters")).as_uri()}',
+        f'testbench @ {pathlib.Path(os.path.join(parent_directory, "testbench")).as_uri()}',
+        f'simulation @ {pathlib.Path(os.path.join(parent_directory, "simulation")).as_uri()}',
+        f'cost_function @ {pathlib.Path(os.path.join(parent_directory, "cost_function")).as_uri()}',
         ],
+
     python_requires='>=3.6',
 )
+os.getcwd()

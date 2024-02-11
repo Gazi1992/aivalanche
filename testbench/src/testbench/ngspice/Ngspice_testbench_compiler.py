@@ -1,10 +1,6 @@
 #%% Imports
 import json
-import re
-import tempfile
-import os
-import pandas as pd
-import numpy as np
+import re, os, tempfile, pandas as pd, numpy as np
 from testbench.ngspice.utils import is_equidistant, get_curve_index, get_instance_parameters_for_curve, write_contents_to_file, extract_between_tags
 
 

@@ -1,7 +1,5 @@
 #%% Imports
-import pandas as pd
-import numpy as np
-from copy import deepcopy
+import pandas as pd, numpy as np
 from cost_function.utils import calculate_error_metric
 from cost_function.exceptions import raise_exception
 

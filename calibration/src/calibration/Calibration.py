@@ -11,11 +11,8 @@ from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
 from copy import deepcopy
 from datetime import datetime
-import dask
-import os
-import shutil
-import json
-import uuid
+import os, shutil, json, uuid, dask
+
 
 #%% calibration class
 
@@ -223,11 +220,11 @@ class Calibration:
             close_dask(self.cluster)
         
     def create_new_output_dir(self):
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.output_path = os.path.join(self.results_dir, f"calibration_{timestamp}")
         self.simulation_files_path = os.path.join(self.output_path, 'simulation_files')
         self.input_path = os.path.join(self.output_path, 'input')
-        os.mkdir(self.output_path)
+        os.makedirs(self.output_path)
         os.mkdir(self.simulation_files_path)
         os.mkdir(self.input_path)
         self.testbenches.update_working_directory(new_working_dir = self.simulation_files_path)

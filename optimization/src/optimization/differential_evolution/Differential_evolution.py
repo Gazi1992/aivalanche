@@ -27,10 +27,8 @@ Inputs:
 '''
 
 #%% Imports
-import pandas as pd
-import numpy as np
+import os, pandas as pd, numpy as np
 from pyDOE import lhs
-import os
 from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
 from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram
 

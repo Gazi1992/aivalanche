@@ -7,10 +7,7 @@ Inputs:
 '''
 
 #%% Imports
-import pandas as pd
-import numpy as np
-import json
-import random
+import pandas as pd, json, random
 
 #%% differential_evolution class
 

@@ -1,6 +1,5 @@
 #%% Imports
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np, matplotlib.pyplot as plt
 from matplotlib.style import context
 from matplotlib import cm
 

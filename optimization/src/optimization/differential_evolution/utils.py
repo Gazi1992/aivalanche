@@ -1,6 +1,5 @@
 #%% Imports
-import pandas as pd
-import numpy as np
+import pandas as pd, numpy as np
 
 
 #%% Set transfor to 'None' for the lin parameter, to 'log' for positive parameter in log scale and to 'neglog' for negative parameter in log scale.

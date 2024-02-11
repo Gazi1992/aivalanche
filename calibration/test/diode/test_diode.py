@@ -1,8 +1,7 @@
 from calibration import Calibration
 from reference_data.visualization import plot_all_groups
 from reference_data.utils import write_reference_data_to_file
-import numpy as np
-import os
+import os, numpy as np
 
 
 def callback_after_first_iter(parameters: dict = None,

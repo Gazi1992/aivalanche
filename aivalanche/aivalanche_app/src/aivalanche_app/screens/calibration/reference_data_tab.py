@@ -1,3 +1,4 @@
+import pyqtgraph as pg, numpy as np
 from PySide6.QtWidgets import QWidget, QLabel, QComboBox, QTableWidget, QSplitter, QFileDialog, QScrollArea
 from aivalanche_app.components.custom_layouts import h_layout, v_layout
 from aivalanche_app.components.custom_checkbox import custom_checkbox
@@ -8,8 +9,6 @@ from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.custom_table import custom_table
 from reference_data import Reference_data
-import pyqtgraph as pg
-import numpy as np
 from PySide6.QtCore import Qt
 
 
@@ -82,12 +81,6 @@ class reference_data_tab(QSplitter):
             (np.random.rand(100), np.random.rand(100)) for _ in range(20)
         ]
         
-        # Create and add scatter plots to the grid layout
-        # for i in range(100):
-        #     plot_item = frame.addPlot(row=i // 2, col=i % 2)
-        #     plot_item.setContentsMargins(10, 10, 10, 10)
-        #     plot_item.setMinimumHeight(100)
-        #     plot_item.plot(x=data_sets[i][0], y=data_sets[i][1], pen = None, symbol='o', brush = (255, 0, 0, 120))
 
         # Create and add scatter plots to the grid layout
         for i in range(20):
