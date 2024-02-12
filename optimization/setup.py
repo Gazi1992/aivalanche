@@ -20,6 +20,7 @@ setup(
         'numpy',
         'pandas',
         'pyDOE',
+        'matplotlib',
         ],
     python_requires='>=3.6',
 )

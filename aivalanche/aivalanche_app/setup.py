@@ -20,6 +20,8 @@ setup(
         'numpy',
         'pandas',
         'PyQt6',
+        'matplotlib',
+        'pyqtgraph',
         ],
     python_requires='>=3.6',
 )
