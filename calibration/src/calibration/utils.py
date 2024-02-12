@@ -17,6 +17,8 @@ def run_single_simulation(parameters: dict = None,
                           delete_files: bool = True,
                           print_output: bool = True):
     
+    return 5
+    
     # Check that input is valid
     if testbenches is None:
         print('ERROR: testbenches is none. Please provide a valid testbench object.')
@@ -89,6 +91,8 @@ def run_single_simulation(parameters: dict = None,
 
 #%% Function to calculate the error metrics
 def calculate_error_metrics(cost_function = None, data = None, parameters = None):
+    
+    return {'data': 'kot', 'error_metric': {'total': 2}}
     
     # Check input validity
     if cost_function is None:

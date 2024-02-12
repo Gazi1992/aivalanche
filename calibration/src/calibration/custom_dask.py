@@ -9,6 +9,7 @@ def init_dask(scale:int  = 2, dask_env: str = 'local'):
         print('dashboard_link: ', cluster.dashboard_link)
     elif dask_env == 'containers':
         cluster = Client("scheduler:8786")
+        print('dashboard_link: ', cluster.dashboard_link)
     else:
         print('Error: dask_env has to be one of the following: ["local", "containers"].')
         print('Dask not initialized. Returning none.')
