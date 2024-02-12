@@ -64,7 +64,7 @@ class Calibration:
             self.dask_env = 'local'
         
         if self.use_dask:
-            self.cluster = init_dask(dask_env)
+            self.cluster = init_dask(dask_env = self.dask_env)
             
                     
     def validate_simulator(self):

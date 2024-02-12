@@ -1,4 +1,4 @@
-from dask.distributed import LocalCluster
+from dask.distributed import LocalCluster, Client
 
 
 # Initialize dask client
@@ -7,8 +7,10 @@ def init_dask(scale:int  = 2, dask_env: str = 'local'):
     if dask_env == 'local':
         cluster = LocalCluster()
         print('dashboard_link: ', cluster.dashboard_link)
+    elif dask_env == 'containers':
+        cluster = Client("scheduler:8786")
     else:
-        print('Error: dask_env has to be one of the following: ["local"].')
+        print('Error: dask_env has to be one of the following: ["local", "containers"].')
         print('Dask not initialized. Returning none.')
     return cluster
 
