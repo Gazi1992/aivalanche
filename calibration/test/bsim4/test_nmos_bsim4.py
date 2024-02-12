@@ -130,8 +130,8 @@ cost_function_config = {'type': 'default',
                         ]}
 
 use_dask = True
-dask_env = 'local'
-# dask_env = 'containers'
+# dask_env = 'local'
+dask_env = 'containers'
 
 if __name__ == '__main__':
 
