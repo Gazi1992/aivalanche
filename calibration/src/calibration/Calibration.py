@@ -6,6 +6,7 @@ from testbench.ngspice import Ngspice_testbench_compiler
 from parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
 from calibration.custom_dask import init_dask, close_dask
+from calibration.utils import run_single_simulation, calculate_error_metrics
 from simulation.ngspice import Ngspice_simulator
 from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
@@ -27,7 +28,8 @@ class Calibration:
                  optimizer_config: dict = None,
                  simulator_config: dict = None,
                  cost_function_config: dict = None,
-                 use_dask: bool = False):
+                 use_dask: bool = False,
+                 dask_env: str = 'local'):
                 
         self.reference_data_file = reference_data_file
         self.parameters_file = parameters_file
@@ -40,6 +42,8 @@ class Calibration:
         self.simulator_config = simulator_config
         self.cost_function_config = cost_function_config
         self.use_dask = use_dask
+        self.dask_env = dask_env
+        self.dask_env_options = ('local', 'containers')        
         
         self.validate_simulator()
         self.validate_cost_function()
@@ -50,10 +54,19 @@ class Calibration:
         self.get_simulator()
         self.get_cost_function()
         
-        if self.use_dask:
-            self.cluster = init_dask()
-
         
+
+        if not os.path.exists(self.results_dir):
+            os.makedirs(self.results_dir)
+            
+        if self.dask_env not in self.dask_env_options:
+            print(f'WARNING: dask_env must be on of te following: {self.dask_env_options}. Setting it to "local".')
+            self.dask_env = 'local'
+        
+        if self.use_dask:
+            self.cluster = init_dask(dask_env)
+            
+                    
     def validate_simulator(self):
         available_simulators = ['ngspice']
         if self.simulator_config['type'] not in available_simulators:
@@ -121,73 +134,73 @@ class Calibration:
     def get_cost_function(self):
         if self.cost_function_config['type'] == 'default':
             self.cost_function = Cost_function(parts = self.cost_function_config['parts'])
-           
-        
-    def run_single_simulation(self, parameters: dict = None, plot: bool = False, delete_files: bool = True, print_output: bool = True):
-        
-        new_testbenches = deepcopy(self.testbenches)
-        
-        if self.use_dask:
-            temp_dir = os.path.join(self.simulation_files_path, str(uuid.uuid4()))
-            os.mkdir(temp_dir)
-            new_testbenches.update_working_directory(temp_dir)
-        
-        # If parameters are given, then create new testbenches
-        if parameters is not None:
-            new_testbenches.modify_model_parameters(parameters)
-        
-        # Simulate
-        results = self.simulator.simulate_testbenches(testbenches = new_testbenches,
-                                                      extract_results = True,
-                                                      compact = True,
-                                                      reference_data = self.reference_data.data,
-                                                      delete_files = delete_files,
-                                                      print_output = print_output)
-        
-        if self.use_dask and delete_files:
-            shutil.rmtree(temp_dir)
-        
-        # # Write the simulation values in a file
-        # write_reference_data_to_file(data = results,
-        #                               file_path = 'test.json',
-        #                               x_values = 'x_values_simulation',
-        #                               y_values = 'y_values_simulation',
-        #                               operating_conditions = ['temp', 'vbs', 'vds', 'vgs', 'frequency'],
-        #                               instance_parameters = ['w', 'l', 'm', 'area'],
-        #                               title = "nmos example",
-        #                               description = "this dataset serves as an example of the json data format for an nmos transistor",
-        #                               device_type = "mosfet")
-
-        # Plot the data
-        if plot:
-            plot_all_groups(results, extra_legend = ['w', 'l', 'vds', 'vgs', 'vbs', 'm', 'area', 'temp'])
-            
-        return results
 
 
     def run_no_parameter_simulation(self, plot: bool = False, delete_files: bool = False):
         self.testbenches.remove_model_parameters()
-        error_metric = self.run_single_simulation(plot = plot, delete_files = delete_files)
+        error_metric = run_single_simulation(testbenches = self.testbenches,
+                                             simulator = self.simulator,
+                                             reference_data = self.reference_data.data,
+                                             simulation_files_path = self.results_dir,
+                                             plot = plot,
+                                             delete_files = delete_files)
         print(error_metric)
 
 
     def run_default_simulation(self, plot: bool = False, delete_files: bool = False):
-        error_metric = self.run_single_simulation(plot = plot, delete_files = delete_files)
+        simulation_results = run_single_simulation(testbenches = self.testbenches,
+                                                   simulator = self.simulator,
+                                                   reference_data = self.reference_data.data,
+                                                   simulation_files_path = self.results_dir,
+                                                   plot = plot,
+                                                   delete_files = delete_files)
+        
+        error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results)
+        
         print(error_metric)
 
 
     def run_random_simulation(self, plot: bool = False, delete_files: bool = False):
         random_params = self.parameters.generate_random_parameters()
-        error_metric = self.run_single_simulation(parameters = random_params, plot = plot, delete_files = delete_files)
-        print(error_metric)
+        simulation_results = run_single_simulation(parameters = random_params, 
+                                                   testbenches = self.testbenches,
+                                                   simulator = self.simulator,
+                                                   reference_data = self.reference_data.data,
+                                                   simulation_files_path = self.results_dir,
+                                                   plot = plot,
+                                                   delete_files = delete_files)
+        
+        error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results)
 
+        print(error_metric)
+        
 
     def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):  
         responses = {'results': [], 'error_metrics': [], 'metrics': []}
         if self.use_dask:
-            simulation_futures = [dask.delayed(self.run_single_simulation)(parameters = param, plot = False, delete_files = True, print_output = False) for param in parameters]
-            error_metric_futures = [dask.delayed(self.cost_function.run)(sim_res, param) for sim_res, param in zip(simulation_futures, parameters)]
-            error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
+            # Create simulation futures
+            simulation_futures = [dask.delayed(run_single_simulation)(parameters = param, 
+                                                                      testbenches = self.testbenches,
+                                                                      simulator = self.simulator,
+                                                                      reference_data = self.reference_data.data,   
+                                                                      simulation_files_path = self.simulation_files_path,
+                                                                      use_dask = True,
+                                                                      dask_env = self.dask_env,
+                                                                      plot = False,
+                                                                      delete_files = True,
+                                                                      print_output = False) for param in parameters]
+            
+            # Create error metric futures
+            error_metric_futures = [dask.delayed(calculate_error_metrics)(cost_function = self.cost_function,
+                                                                          data = sim_res,
+                                                                          parameters = param) for sim_res, param in zip(simulation_futures, parameters)]
+            
+            # Evaluate the futures
+            if self.dask_env == 'local':
+                error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
+            elif self.dask_env == 'containers':
+                error_metrics = dask.compute(error_metric_futures, synchronous = True)
+            
             if len(error_metrics) == 1:
                 error_metrics = error_metrics[0]
             responses['results'] = [item['data'] for item in error_metrics]
@@ -196,8 +209,15 @@ class Calibration:
         else:
             for param in parameters:
                 try:
-                    simulation_results = self.run_single_simulation(parameters = param, plot = False, delete_files = True, print_output = False)
-                    metric = self.cost_function.run(simulation_results, param)
+                    simulation_results = run_single_simulation(parameters = param, 
+                                                               testbenches = self.testbenches,
+                                                               simulator = self.simulator,
+                                                               reference_data = self.reference_data.data,   
+                                                               simulation_files_path = self.simulation_files_path,
+                                                               plot = False,
+                                                               delete_files = False,
+                                                               print_output = True)
+                    metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results, parameters = param)
                 except Exception:
                     e_m = raise_exception('simulation_failed_exception')
                     simulation_results = None

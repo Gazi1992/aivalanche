@@ -36,6 +36,8 @@ log_x_icon_path = Path.joinpath(images_path, 'log_x_icon.png')
 log_y_icon_path = Path.joinpath(images_path, 'log_y_icon.png')
 lin_x_icon_path = Path.joinpath(images_path, 'lin_x_icon.png')
 lin_y_icon_path = Path.joinpath(images_path, 'lin_y_icon.png')
+forward_icon_path = Path.joinpath(images_path, 'forward_icon.png')
+backward_icon_path = Path.joinpath(images_path, 'backward_icon.png')
 
 
 

@@ -1,8 +1,4 @@
 from setuptools import setup, find_packages
-import os, pathlib
-
-current_directory = os.path.dirname(__file__)                                   # __file__ is the current script's path
-parent_directory = os.path.abspath(os.path.join(current_directory, os.pardir))  # Get the parent directory
 
 setup(
     name = 'simulation',
@@ -23,7 +19,6 @@ setup(
     install_requires = [
         'numpy',
         'pandas',
-        f'testbench @ {pathlib.Path(os.path.join(parent_directory, "testbench")).as_uri()}',
         ],
     python_requires='>=3.6',
 )

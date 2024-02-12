@@ -32,7 +32,7 @@ THEME = {
         QLabel { background-color: transparent; }
     """,
     "new_model_button": """
-        QPushButton { background-color: #E0F4FB; border: 1px solid #062279; }
+        QPushButton { background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 white, stop: 1 #E0F4FB); border: 1px solid #062279; }
         QPushButton:hover { background-color: #D5E8EE; }
         QPushButton:pressed { background-color: #CADCE2; }
         QLabel { background-color: transparent; }

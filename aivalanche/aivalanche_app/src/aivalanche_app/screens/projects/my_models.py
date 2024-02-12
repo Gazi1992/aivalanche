@@ -66,14 +66,14 @@ class my_models(QWidget):
         clear_layout(self.grid)
         
         # New model button
-        new_project_button = icon_text_button(parent = self, icon_path = plus_icon_path, button_height = MODEL_CARD_HEIGHT, button_width = MODEL_CARD_WIDTH,
-                                              icon_height = MODEL_PLUS_ICON_HEIGHT, icon_position = 'top', direction = 'vertical', checkable = False,
-                                              padding = (0, MODEL_CARD_HEIGHT * 0.35, 0, MODEL_CARD_HEIGHT * 0.2),
-                                              text = "New model", text_alignment = Qt.AlignmentFlag.AlignCenter,
-                                              on_click = self.on_new_model_press)
-        new_project_button.setStyleSheet(self.style.new_model_button)
+        new_model_button = icon_text_button(parent = self, icon_path = plus_icon_path, button_height = MODEL_CARD_HEIGHT, button_width = MODEL_CARD_WIDTH,
+                                            icon_height = MODEL_PLUS_ICON_HEIGHT, icon_position = 'top', direction = 'vertical', checkable = False,
+                                            padding = (0, MODEL_CARD_HEIGHT * 0.35, 0, MODEL_CARD_HEIGHT * 0.2),
+                                            text = "New model", text_alignment = Qt.AlignmentFlag.AlignCenter,
+                                            on_click = self.on_new_model_press)
+        new_model_button.setStyleSheet(self.style.new_model_button)
         
-        self.grid.addWidget(new_project_button, 0, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.grid.addWidget(new_model_button, 0, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         
         for i, m in enumerate(self.store.models):
             button = model_card(self, image_path = model_card_background_path, image_height = MODEL_CARD_HEIGHT, image_width = MODEL_CARD_WIDTH,

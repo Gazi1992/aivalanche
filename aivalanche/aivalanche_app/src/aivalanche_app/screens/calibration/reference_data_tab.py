@@ -56,7 +56,9 @@ class reference_data_tab(QSplitter):
         # left_layout.addWidget(checkbox)
         
         # Create table
-        self.table = custom_table(style = self.style)
+        self.table = custom_table(style = self.style,
+                                  on_checkbox_click = self.on_checkbox_click,
+                                  on_header_checkbox_click = self.on_header_checkbox_click)
         left_layout.addWidget(self.table)
         
         # Create right layout, where plots will be shown
@@ -77,11 +79,8 @@ class reference_data_tab(QSplitter):
         scroll_area.setWidgetResizable(True)
                 
         # Example data for each plot
-        data_sets = [
-            (np.random.rand(100), np.random.rand(100)) for _ in range(20)
-        ]
+        data_sets = [(np.random.rand(100), np.random.rand(100)) for _ in range(20)]
         
-
         # Create and add scatter plots to the grid layout
         for i in range(20):
             custom_plot =  line_scatter_plot(data_x=data_sets[i][0], data_y=data_sets[i][1], title=f"Custom Plot {i}")
@@ -96,7 +95,6 @@ class reference_data_tab(QSplitter):
         plot_item.setLogMode(y=label.text() == "log_Y")
         label.setText("linear" if label.text() == "log_Y" else "log_Y")
 
-        
         
     def on_load_data_button_click(self):
         response = QFileDialog.getOpenFileName(parent = self, caption = 'Select reference data file', filter = 'Json file (*.json)')
@@ -113,3 +111,10 @@ class reference_data_tab(QSplitter):
         self.reference_data.data['plot'] = False
         self.reference_data.data['calibrate'] = True
         self.table.update_data(self.reference_data.data)
+        
+    
+    def on_checkbox_click(self, data: dict = None):
+        print(data)
+        
+    def on_header_checkbox_click(self, data: dict = None):
+        print(data)

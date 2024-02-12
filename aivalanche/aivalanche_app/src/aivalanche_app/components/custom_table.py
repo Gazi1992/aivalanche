@@ -290,8 +290,12 @@ class table_horizontal_header(QHeaderView):
 
 
 class custom_table_model(QAbstractTableModel):
-    def __init__(self, data = None, default_nr_col = 6, default_nr_row = 10, checkbox_columns = None, no_edit_columns = None):
+    def __init__(self, data = None, on_checkbox_click: callable = None, on_header_checkbox_click: callable = None,
+                 default_nr_col = 6, default_nr_row = 10, checkbox_columns = None, no_edit_columns = None):
         super().__init__()
+        
+        self.on_checkbox_click_ = on_checkbox_click
+        self.on_header_checkbox_click_ = on_header_checkbox_click
         
         self.last_mouse_move_index = None
         
@@ -394,22 +398,31 @@ class custom_table_model(QAbstractTableModel):
     
     def on_checkbox_header_click(self, index):
         self.checkbox_header_status[index] = not self.checkbox_header_status[index]
-        print('index: ', index)
-        print('status: ', self.checkbox_header_status[index])
-        print('column: ', self._data.columns[index])
-        
+        if self.on_header_checkbox_click_ is not None:
+            self.on_header_checkbox_click_({'state': self.checkbox_header_status[index],
+                                            'column_index': index,
+                                            'column_name': self._data.columns[index]})        
+
         
     def on_checkbox_click(self, state, index):
-        print('row: ', index.row(), 'column: ', index.column())
-        print('col: ', self._data.columns[index.column()])
+        if self.on_checkbox_click_ is not None:
+            self.on_checkbox_click_({'state': state,
+                                     'row_index': index.row(),
+                                     'column_index': index.column(),
+                                     'column_name': self._data.columns[index.column()]})
 
 
 class custom_table(QTableView):
-    def __init__(self, data = None, style: style = None):       
+    def __init__(self, data = None, style: style = None, on_checkbox_click: callable = None, on_header_checkbox_click: callable = None):       
         super().__init__()
         
         # Set model
-        self.setModel(custom_table_model(data))
+        # self.model = custom_table_model(data = data,
+        #                                 on_checkbox_click = on_checkbox_click,
+        #                                 on_header_checkbox_click = on_header_checkbox_click)
+        self.setModel(custom_table_model(data = data,
+                                        on_checkbox_click = on_checkbox_click,
+                                        on_header_checkbox_click = on_header_checkbox_click))
         
         # Set header options
         self.setHorizontalHeader(table_horizontal_header(parent = self))
@@ -424,26 +437,10 @@ class custom_table(QTableView):
         self.last_mouse_move_index = None
         self.current_editor = None
         
+        
     def update_data(self, data = None, checkbox_columns = None):
         self.model().layoutAboutToBeChanged.emit()
         self.model().initialize_table(data, checkbox_columns)
         self.horizontalHeader().initialize_checkbox_rects()
         self.model().layoutChanged.emit()
         
-    
-    # def mouseMoveEvent(self, event):
-    #     index = self.indexAt(event.pos())      
-    #     if index.isValid():
-    #         col = index.column()
-    #         if self.model().checkbox_data[col]:
-    #             if index != self.last_mouse_move_index:
-    #                 if self.last_mouse_move_index is not None:
-    #                     self.closePersistentEditor(self.last_mouse_move_index)
-    #                 self.last_mouse_move_index = index
-    #                 self.openPersistentEditor(self.last_mouse_move_index)
-    #         else:
-    #             if self.last_mouse_move_index is not None:
-    #                 self.closePersistentEditor(self.last_mouse_move_index)
-    #                 self.last_mouse_move_index = None
-
-    #     super().mouseMoveEvent(event)
