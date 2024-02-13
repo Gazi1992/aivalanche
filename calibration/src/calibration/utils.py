@@ -37,9 +37,9 @@ def run_single_simulation(parameters: dict = None,
         dask_env = 'local'
     
     # deepcopy input parameters to avoid any problems with manipulating the original objects
-    testbenches_ = deepcopy(testbenches)
-    simulator_ = deepcopy(simulator)
-    reference_data_ = deepcopy(reference_data)
+    _testbenches = deepcopy(testbenches)
+    _simulator = deepcopy(simulator)
+    _reference_data = deepcopy(reference_data)
     
     # If dask is used, create temporary directories.
     if use_dask:
@@ -49,19 +49,19 @@ def run_single_simulation(parameters: dict = None,
         elif dask_env == 'containers':
             temp_dir = tempfile.mkdtemp()
             
-        testbenches_.update_working_directory(temp_dir)
+        _testbenches.update_working_directory(temp_dir)
     else:
         temp_dir = simulation_files_path
         
     # If parameters are given, then create new testbenches
     if parameters is not None:
-        testbenches_.modify_model_parameters(parameters)
+        _testbenches.modify_model_parameters(parameters)
     
     # Simulate
-    results = simulator_.simulate_testbenches(testbenches = testbenches_,
+    results = _simulator.simulate_testbenches(testbenches = _testbenches,
                                               extract_results = True,
                                               compact = True,
-                                              reference_data = reference_data_,
+                                              reference_data = _reference_data,
                                               delete_files = delete_files,
                                               print_output = print_output)
     
@@ -103,9 +103,9 @@ def calculate_error_metrics(cost_function = None, data = None, parameters = None
         return None
 
     # Deepcopy object in order to avoid modification of the original object.    
-    cost_function_ = deepcopy(cost_function)
+    _cost_function = deepcopy(cost_function)
     
-    return cost_function_.run(data, parameters)
+    return _cost_function.run(data, parameters)
 
 
 #%% Function to delete a directory and/or its contents

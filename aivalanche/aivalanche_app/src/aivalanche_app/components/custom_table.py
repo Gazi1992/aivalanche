@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from PySide6.QtWidgets import QLineEdit, QTableView, QStyledItemDelegate, QHeaderView, QStyle
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QRect, QItemSelection, QItemSelectionModel
-from PySide6.QtGui import QPalette, QColor, QPixmap, QPainter, QBrush, QFont, QLinearGradient, QPen, QMouseEvent
+from PySide6.QtGui import QColor, QPixmap, QPainter, QBrush, QFont, QLinearGradient, QPen, QMouseEvent
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.paths import ascending_icon_path, descending_icon_path, checkbox_checked_path, checkbox_unchecked_path
 from aivalanche_app.components.custom_checkbox import custom_checkbox
@@ -294,8 +294,8 @@ class custom_table_model(QAbstractTableModel):
                  default_nr_col = 6, default_nr_row = 10, checkbox_columns = None, no_edit_columns = None):
         super().__init__()
         
-        self.on_checkbox_click_ = on_checkbox_click
-        self.on_header_checkbox_click_ = on_header_checkbox_click
+        self._on_checkbox_click = on_checkbox_click
+        self._on_header_checkbox_click = on_header_checkbox_click
         
         self.last_mouse_move_index = None
         
@@ -398,15 +398,25 @@ class custom_table_model(QAbstractTableModel):
     
     def on_checkbox_header_click(self, index):
         self.checkbox_header_status[index] = not self.checkbox_header_status[index]
-        if self.on_header_checkbox_click_ is not None:
-            self.on_header_checkbox_click_({'state': self.checkbox_header_status[index],
+        column_name = self._data.columns[index]
+        state = self.checkbox_header_status[index]
+        
+        # change the rows of the responding column
+        self._data[column_name] = state
+        topLeft = self.index(0, index)
+        bottomRight = self.index(self.rowCount() - 1, index)
+        self.dataChanged.emit(topLeft, bottomRight)
+        
+        # run callback if provided
+        if self._on_header_checkbox_click is not None:
+            self._on_header_checkbox_click({'state': state,
                                             'column_index': index,
-                                            'column_name': self._data.columns[index]})        
+                                            'column_name': column_name})        
 
         
     def on_checkbox_click(self, state, index):
-        if self.on_checkbox_click_ is not None:
-            self.on_checkbox_click_({'state': state,
+        if self._on_checkbox_click is not None:
+            self._on_checkbox_click({'state': state,
                                      'row_index': index.row(),
                                      'column_index': index.column(),
                                      'column_name': self._data.columns[index.column()]})
@@ -417,9 +427,6 @@ class custom_table(QTableView):
         super().__init__()
         
         # Set model
-        # self.model = custom_table_model(data = data,
-        #                                 on_checkbox_click = on_checkbox_click,
-        #                                 on_header_checkbox_click = on_header_checkbox_click)
         self.setModel(custom_table_model(data = data,
                                         on_checkbox_click = on_checkbox_click,
                                         on_header_checkbox_click = on_header_checkbox_click))

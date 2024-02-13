@@ -22,6 +22,10 @@ class my_models(QWidget):
         self.store = store
         self.style = style
         
+        self.init_ui()
+        
+    
+    def init_ui(self):
         layout = v_layout(parent = self)
         
         # Header Section
@@ -52,8 +56,8 @@ class my_models(QWidget):
         self.new_model_dialog = modal_1(parent = self, title = 'New model', placeholder = 'Model name',
                                         message = 'Give a name to your model', explanation = 'You can edit the name later.',
                                         on_confirm = self.on_new_model_confirm, on_cancel = self.on_new_model_cancel, style = self.style)
-    
-    
+
+
     # Update header
     def update_header(self):
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},

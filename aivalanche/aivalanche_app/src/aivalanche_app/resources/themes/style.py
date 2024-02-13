@@ -27,6 +27,7 @@ class style():
         
         # Add extra variables
         my_dict['MAIN_BACKGROUND_COLOR'] = my_dict_module.MAIN_BACKGROUND_COLOR
+        my_dict['PLOT_COLORS'] = my_dict_module.PLOT_COLORS
         
         return my_dict
     

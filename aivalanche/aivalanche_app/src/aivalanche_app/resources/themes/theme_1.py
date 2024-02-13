@@ -2,6 +2,8 @@ from aivalanche_app.paths import arrow_down_icon_path
 
 MAIN_BACKGROUND_COLOR = '#f2faff'
 
+PLOT_COLORS = ['#0075FF', '#FF5C00', '#19B100', '#EB00FF', '#FFD600']
+
 THEME = {
     "home": """
         QWidget { background-color: %s; color: #062279 }

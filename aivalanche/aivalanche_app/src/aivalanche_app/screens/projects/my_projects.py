@@ -20,6 +20,10 @@ class my_projects(QWidget):
         self.store = store
         self.style = style
         
+        self.init_ui()
+        
+        
+    def init_ui(self):
         layout = v_layout(parent = self)
         
         # Header Section
