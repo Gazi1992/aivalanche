@@ -122,6 +122,20 @@ def remove_dir(dir_path: str = None, only_contents: bool = False):
                     shutil.rmtree(item_path)
         else:
             shutil.rmtree(dir_path)
+            
+
+
+#%% Function to test ngspice
+def test_ngspice(testbenches = None, simulator = None, reference_data = None):
+    
+    results = simulator.simulate_testbenches(testbenches = testbenches,
+                                              extract_results = True,
+                                              compact = True,
+                                              reference_data = reference_data,
+                                              delete_files = False,
+                                              print_output = True)
+    
+    return results
     
     
     

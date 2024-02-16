@@ -6,7 +6,7 @@ from testbench.ngspice import Ngspice_testbench_compiler
 from parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
 from calibration.custom_dask import init_dask, close_dask
-from calibration.utils import run_single_simulation, calculate_error_metrics
+from calibration.utils import run_single_simulation, calculate_error_metrics, test_ngspice
 from simulation.ngspice import Ngspice_simulator
 from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
@@ -178,34 +178,41 @@ class Calibration:
     def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):  
         responses = {'results': [], 'error_metrics': [], 'metrics': []}
         if self.use_dask:
-            # Create simulation futures
-            simulation_futures = [dask.delayed(run_single_simulation)(parameters = param, 
-                                                                      testbenches = self.testbenches,
-                                                                      simulator = self.simulator,
-                                                                      reference_data = self.reference_data.data,   
-                                                                      simulation_files_path = self.simulation_files_path,
-                                                                      use_dask = True,
-                                                                      dask_env = self.dask_env,
-                                                                      plot = False,
-                                                                      delete_files = True,
-                                                                      print_output = False) for param in parameters]
+            # test ngspice
             
-            # Create error metric futures
-            error_metric_futures = [dask.delayed(calculate_error_metrics)(cost_function = self.cost_function,
-                                                                          data = sim_res,
-                                                                          parameters = param) for sim_res, param in zip(simulation_futures, parameters)]
+            test_futures = [dask.delayed(test_ngspice)(self.testbenches, self.simulator, self.reference_data.data) for p in parameters]
+            test_results = dask.compute(test_futures, synchronous = True)
+            print(test_results)
             
-            # Evaluate the futures
-            if self.dask_env == 'local':
-                error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
-            elif self.dask_env == 'containers':
-                error_metrics = dask.compute(error_metric_futures, synchronous = True)
             
-            if len(error_metrics) == 1:
-                error_metrics = error_metrics[0]
-            responses['results'] = [item['data'] for item in error_metrics]
-            responses['error_metrics'] = [item['error_metric'] for item in error_metrics]
-            responses['metrics'] = [item['error_metric']['total'] for item in error_metrics]
+            # # Create simulation futures
+            # simulation_futures = [dask.delayed(run_single_simulation)(parameters = param, 
+            #                                                           testbenches = self.testbenches,
+            #                                                           simulator = self.simulator,
+            #                                                           reference_data = self.reference_data.data,   
+            #                                                           simulation_files_path = self.simulation_files_path,
+            #                                                           use_dask = True,
+            #                                                           dask_env = self.dask_env,
+            #                                                           plot = False,
+            #                                                           delete_files = True,
+            #                                                           print_output = False) for param in parameters]
+            
+            # # Create error metric futures
+            # error_metric_futures = [dask.delayed(calculate_error_metrics)(cost_function = self.cost_function,
+            #                                                               data = sim_res,
+            #                                                               parameters = param) for sim_res, param in zip(simulation_futures, parameters)]
+            
+            # # Evaluate the futures
+            # if self.dask_env == 'local':
+            #     error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
+            # elif self.dask_env == 'containers':
+            #     error_metrics = dask.compute(error_metric_futures, synchronous = True)
+            
+            # if len(error_metrics) == 1:
+            #     error_metrics = error_metrics[0]
+            # responses['results'] = [item['data'] for item in error_metrics]
+            # responses['error_metrics'] = [item['error_metric'] for item in error_metrics]
+            # responses['metrics'] = [item['error_metric']['total'] for item in error_metrics]
         else:
             for param in parameters:
                 try:
