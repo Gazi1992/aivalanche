@@ -285,22 +285,7 @@ class Ngspice_testbench_compiler():
             elif simulation_type == 'ac_point_dc_sweep':
                 self.build_file_ac_point_dc_sweep(split)
             elif simulation_type == 'ac_point_dc_list':
-                self.build_file_ac_point_dc_list(split)
-                
-                
-    # Add include files
-    def add_include_files(self):
-        contents = "* Include the dut file\n"
-        if self.inline: # Read the entire contents of the file
-            contents += '* Adding the file inline'
-            with open(self.dut_file, 'r') as file:
-                dut_file_content = file.read()
-                
-            contents += dut_file_content
-        else:
-            contents += f".INCLUDE {self.dut_file}\n\n"
-            
-        return contents        
+                self.build_file_ac_point_dc_list(split)   
         
 
     # Build file for dc_sweep simulations.        
@@ -333,7 +318,7 @@ class Ngspice_testbench_compiler():
         file_contents += f".TEMP {temp}\n\n"
         
         file_contents += "* Include the dut file\n"
-        file_contents += self.add_include_files()
+        file_contents += f".INCLUDE {self.dut_file}\n\n"
         
         file_contents += "** Start testbenches\n"
         for index, curve in curves.iterrows():
@@ -689,8 +674,7 @@ class Ngspice_testbench_compiler():
     # Modify the model parameters that exist in the files
     def modify_model_parameters(self, parameters: dict = None, add_new_parameters: bool = True):
         self.model_parameters = parameters
-        self.build_files()
-        # self.files['contents'] = self.files.apply(lambda row: self.modify_model_parameters_per_file(row, parameters, add_new_parameters), axis = 1)
+        self.files['contents'] = self.files.apply(lambda row: self.modify_model_parameters_per_file(row, parameters, add_new_parameters), axis = 1)
         
     
     # Modify the parameters in a single file
@@ -737,9 +721,15 @@ class Ngspice_testbench_compiler():
     # Update working directory
     def update_working_directory(self, new_working_dir: str = None):
         self.working_directory = os.path.abspath(new_working_dir)
-        self.build_files()
+        self.files[['results_dir', 'simulation_file_path', 'results_file_path', 'contents']] = self.files.apply(lambda row: self.modify_results_per_file(row), axis = 1, result_type = 'expand')
         
-        
+    # Modify results dir for each file
+    def modify_results_per_file(self, file: pd.Series = None):
+        new_results_dir = self.working_directory
+        new_simulation_file_path = os.path.join(new_results_dir, file['simulation_file_name'])
+        new_results_file_path = os.path.join(new_results_dir, file['results_file_name'])
+        new_contents = file['contents'].replace(file['results_file_path'], new_results_file_path)
+        return new_results_dir, new_simulation_file_path, new_results_file_path, new_contents
         
         
         

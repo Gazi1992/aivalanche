@@ -644,4 +644,6 @@ m1 d g s b nch
 + nrs = nrs
 + nrd = nrd
 
+.include dut1.cir
+
 .ends

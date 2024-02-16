@@ -31,6 +31,8 @@ testbench_compiler = Ngspice_testbench_compiler(testbenches_file = testbenches_f
 
 testbench_compiler.create_testbenches()
 
+testbench_compiler.update_working_directory('kot/temp')
+
 for index, file in testbench_compiler.files.iterrows():
     print(file['contents'])
 

@@ -186,34 +186,34 @@ class Calibration:
             print(test_results)
             
             
-            # # Create simulation futures
-            # simulation_futures = [dask.delayed(run_single_simulation)(parameters = param, 
-            #                                                           testbenches = self.testbenches,
-            #                                                           simulator = self.simulator,
-            #                                                           reference_data = self.reference_data.data,   
-            #                                                           simulation_files_path = self.simulation_files_path,
-            #                                                           use_dask = True,
-            #                                                           dask_env = self.dask_env,
-            #                                                           plot = False,
-            #                                                           delete_files = True,
-            #                                                           print_output = False) for param in parameters]
+            # Create simulation futures
+            simulation_futures = [dask.delayed(run_single_simulation)(parameters = param, 
+                                                                      testbenches = self.testbenches,
+                                                                      simulator = self.simulator,
+                                                                      reference_data = self.reference_data.data,   
+                                                                      simulation_files_path = self.simulation_files_path,
+                                                                      use_dask = True,
+                                                                      dask_env = self.dask_env,
+                                                                      plot = False,
+                                                                      delete_files = True,
+                                                                      print_output = False) for param in parameters]
             
-            # # Create error metric futures
-            # error_metric_futures = [dask.delayed(calculate_error_metrics)(cost_function = self.cost_function,
-            #                                                               data = sim_res,
-            #                                                               parameters = param) for sim_res, param in zip(simulation_futures, parameters)]
+            # Create error metric futures
+            error_metric_futures = [dask.delayed(calculate_error_metrics)(cost_function = self.cost_function,
+                                                                          data = sim_res,
+                                                                          parameters = param) for sim_res, param in zip(simulation_futures, parameters)]
             
-            # # Evaluate the futures
-            # if self.dask_env == 'local':
-            #     error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
-            # elif self.dask_env == 'containers':
-            #     error_metrics = dask.compute(error_metric_futures, synchronous = True)
+            # Evaluate the futures
+            if self.dask_env == 'local':
+                error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
+            elif self.dask_env == 'containers':
+                error_metrics = dask.compute(error_metric_futures, synchronous = True)
             
-            # if len(error_metrics) == 1:
-            #     error_metrics = error_metrics[0]
-            # responses['results'] = [item['data'] for item in error_metrics]
-            # responses['error_metrics'] = [item['error_metric'] for item in error_metrics]
-            # responses['metrics'] = [item['error_metric']['total'] for item in error_metrics]
+            if len(error_metrics) == 1:
+                error_metrics = error_metrics[0]
+            responses['results'] = [item['data'] for item in error_metrics]
+            responses['error_metrics'] = [item['error_metric'] for item in error_metrics]
+            responses['metrics'] = [item['error_metric']['total'] for item in error_metrics]
         else:
             for param in parameters:
                 try:
