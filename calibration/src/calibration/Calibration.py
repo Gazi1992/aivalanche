@@ -179,12 +179,6 @@ class Calibration:
     def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):  
         responses = {'results': [], 'error_metrics': [], 'metrics': []}
         if self.use_dask:
-            # test ngspice
-            
-            test_futures = [dask.delayed(test_ngspice)(self.testbenches, self.simulator, self.reference_data.data) for p in parameters]
-            test_results = dask.compute(test_futures, synchronous = True)
-            print(test_results)
-            
             
             # Create simulation futures
             simulation_futures = [dask.delayed(run_single_simulation)(parameters = param, 
