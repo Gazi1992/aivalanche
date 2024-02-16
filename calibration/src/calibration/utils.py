@@ -128,6 +128,10 @@ def remove_dir(dir_path: str = None, only_contents: bool = False):
 #%% Function to test ngspice
 def test_ngspice(testbenches = None, simulator = None, reference_data = None):
     
+    temp_dir = tempfile.mkdtemp()
+    
+    testbenches.update_working_directory(temp_dir)
+    
     results = simulator.simulate_testbenches(testbenches = testbenches,
                                               extract_results = True,
                                               compact = True,
