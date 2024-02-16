@@ -62,9 +62,6 @@ class Calibration:
         if self.dask_env not in self.dask_env_options:
             print(f'WARNING: dask_env must be on of te following: {self.dask_env_options}. Setting it to "local".')
             self.dask_env = 'local'
-            
-        if self.use_dask and self.dask_env == 'containers':
-            self.dask_upload_files.append(dut_file)
         
         if self.use_dask:
             self.cluster = init_dask(dask_env = self.dask_env, uplaod_files = self.dask_upload_files)
@@ -99,10 +96,11 @@ class Calibration:
     def get_testbenches(self):
         self.testbenches = Ngspice_testbench_compiler(testbenches_file = self.testbenches_file,
                                                       reference_data = self.reference_data.data,
-                                                      dut_file = self.dut_file.split('/')[-1] if self.use_dask and self.dask_env == 'containers' else self.dut_file,
+                                                      dut_file = self.dut_file,
                                                       dut_name = self.dut_name,
                                                       model_parameters = self.parameters.get_default_parameters(),
-                                                      working_directory = self.output_path)
+                                                      working_directory = self.output_path,
+                                                      inline = self.use_dask and self.dask_env == 'containers')
         self.testbenches.create_testbenches()
         
         

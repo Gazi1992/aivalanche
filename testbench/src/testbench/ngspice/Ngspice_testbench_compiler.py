@@ -1,7 +1,7 @@
 #%% Imports
 import json
 import re, os, tempfile, pandas as pd, numpy as np
-from testbench.ngspice.utils import is_equidistant, get_curve_index, get_instance_parameters_for_curve, write_contents_to_file, extract_between_tags
+from testbench.ngspice.utils import is_equidistant, get_curve_index, get_instance_parameters_for_curve, write_contents_to_file, extract_between_tags, process_file_contents_for_inline_includes
 
 
 #%% Ngspice_testbench_compiler is used to create all the simulation files.
@@ -15,6 +15,7 @@ class Ngspice_testbench_compiler():
                  model_parameters: dict = None,         # parameters of the model
                  dut_name: str = 'dut',                 # the name of the dut (device under test)
                  dut_file: str = 'dut.cir',             # the path of the dut
+                 inline: bool = False                   # if troue, then parse the dut file and write it into the testbench file
                  ):
         
         self.testbenches_file = testbenches_file
@@ -24,6 +25,7 @@ class Ngspice_testbench_compiler():
         self.model_parameters = model_parameters
         self.dut_name = dut_name
         self.dut_file = dut_file
+        self.inline = inline
         
         if self.working_directory is None:
             self.working_directory = tempfile.TemporaryDirectory().name
@@ -284,6 +286,22 @@ class Ngspice_testbench_compiler():
                 self.build_file_ac_point_dc_sweep(split)
             elif simulation_type == 'ac_point_dc_list':
                 self.build_file_ac_point_dc_list(split)
+                
+                
+    # Add include files
+    def add_include_files(self):
+        contents = "* Include the dut file\n"
+        if self.inline: # Read the entire contents of the file
+            contents += '* Adding the file inline'
+            with open(self.dut_file, 'r') as file:
+                dut_file_content = file.read()
+                
+            contents += dut_file_content
+        else:
+            contents += f".INCLUDE {self.dut_file}\n\n"
+            
+        return contents        
+        
 
     # Build file for dc_sweep simulations.        
     def build_file_dc_sweep(self, curves):
@@ -315,7 +333,7 @@ class Ngspice_testbench_compiler():
         file_contents += f".TEMP {temp}\n\n"
         
         file_contents += "* Include the dut file\n"
-        file_contents += f".INCLUDE {self.dut_file}\n\n"
+        file_contents += self.add_include_files()
         
         file_contents += "** Start testbenches\n"
         for index, curve in curves.iterrows():
@@ -330,7 +348,8 @@ class Ngspice_testbench_compiler():
         file_contents += "********** Start of control section **********\n"
         file_contents += ".control\n\n"
         
-        file_contents += self.add_model_parameters_to_file()
+        file_contents += "* Include the dut file\n"
+        file_contents += f".INCLUDE {self.dut_file}\n\n"
         
         file_contents += "** Declare the vectors to save.\n"
         file_contents += f"save {' '.join(all_save_variables)}\n\n"
@@ -347,6 +366,9 @@ class Ngspice_testbench_compiler():
         file_contents += "********** End of control section **********\n\n"
 
         file_contents += ".end"
+        
+        if self.inline:
+            file_contents = process_file_contents_for_inline_includes(file_contents)
         
         new_file = pd.DataFrame({'file_id': [file_id],
                                  'simulation_type': [simulation_type],
@@ -434,6 +456,9 @@ class Ngspice_testbench_compiler():
         file_contents += "********** End of control section **********\n\n"
 
         file_contents += ".end"
+        
+        if self.inline:
+            file_contents = process_file_contents_for_inline_includes(file_contents)
         
         new_file = pd.DataFrame({'file_id': [file_id],
                                  'simulation_type': [simulation_type],
@@ -527,6 +552,9 @@ class Ngspice_testbench_compiler():
 
         file_contents += ".end"
         
+        if self.inline:
+            file_contents = process_file_contents_for_inline_includes(file_contents)
+        
         new_file = pd.DataFrame({'file_id': [file_id],
                                  'simulation_type': [simulation_type],
                                  'nr_testbenches': [len(curves.index)],
@@ -619,6 +647,9 @@ class Ngspice_testbench_compiler():
         file_contents += "********** End of control section **********\n\n"
 
         file_contents += ".end"
+        
+        if self.inline:
+            file_contents = process_file_contents_for_inline_includes(file_contents)
         
         new_file = pd.DataFrame({'file_id': [file_id],
                                  'simulation_type': [simulation_type],
