@@ -41,9 +41,11 @@ class Calibration:
         self.optimizer_config = optimizer_config
         self.simulator_config = simulator_config
         self.cost_function_config = cost_function_config
+        
         self.use_dask = use_dask
         self.dask_env = dask_env
         self.dask_env_options = ('local', 'containers')        
+        self.dask_upload_files = []
         
         self.validate_simulator()
         self.validate_cost_function()
@@ -54,17 +56,18 @@ class Calibration:
         self.get_simulator()
         self.get_cost_function()
         
-        
-
         if not os.path.exists(self.results_dir):
             os.makedirs(self.results_dir)
             
         if self.dask_env not in self.dask_env_options:
             print(f'WARNING: dask_env must be on of te following: {self.dask_env_options}. Setting it to "local".')
             self.dask_env = 'local'
+            
+        if self.use_dask and self.dask_env == 'containers':
+            self.dask_upload_files.append(dut_file)
         
         if self.use_dask:
-            self.cluster = init_dask(dask_env = self.dask_env)
+            self.cluster = init_dask(dask_env = self.dask_env, uplaod_files = self.dask_upload_files)
             
                     
     def validate_simulator(self):
@@ -96,7 +99,7 @@ class Calibration:
     def get_testbenches(self):
         self.testbenches = Ngspice_testbench_compiler(testbenches_file = self.testbenches_file,
                                                       reference_data = self.reference_data.data,
-                                                      dut_file = self.dut_file,
+                                                      dut_file = self.dut_file.split('/')[-1] if self.use_dask and self.dask_env == 'containers' else self.dut_file,
                                                       dut_name = self.dut_name,
                                                       model_parameters = self.parameters.get_default_parameters(),
                                                       working_directory = self.output_path)
