@@ -5,7 +5,7 @@ from aivalanche_app.components.plots.plot_button import plot_button
 
 class line_scatter_plot(pg.PlotItem):
     
-    def __init__(self, title = None, style = None):
+    def __init__(self, title = None, x_axis_label = None, y_axis_label = None, style = None):
         # if title is None:
         #     super().__init__()
         # else:
@@ -20,6 +20,12 @@ class line_scatter_plot(pg.PlotItem):
         self.legend = self.addLegend(brush = '#0000000A')        
         self.showGrid(x = True, y = True, alpha = 0.2)
         
+        if x_axis_label is not None:
+            self.add_x_axis_label(x_axis_label)
+            
+        if y_axis_label is not None:
+            self.add_y_axis_label(y_axis_label)
+        
         # # Add plot buttons     
         # buttons_height = 20
         
@@ -30,7 +36,7 @@ class line_scatter_plot(pg.PlotItem):
         # self.scale_x_button.clicked.connect(self.toggle_x_scale)   
 
     
-    def add_scatter_plot(self, x = None, y = None, id = None, **kwargs):
+    def add_scatter_plot(self, x = None, y = None, id = None, add_to_legend = False, **kwargs):
         
         if x is None or y is None:
             print('WARNING: no plot is added because x or y is none.')
@@ -56,6 +62,17 @@ class line_scatter_plot(pg.PlotItem):
         self.addItem(temp)
         
         self.legend.addItem(temp, id)
+        
+    
+    def add_x_axis_label(self, label: str = 'x axis label'):
+        self.setLabel('bottom', text = label)
+        
+        
+    def add_y_axis_label(self, label: str = 'y axis label'):
+        self.setLabel('left', text = label)
+        
+    
+    
 
 
     # def resizeEvent(self, ev):

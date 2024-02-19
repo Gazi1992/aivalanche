@@ -1,55 +1,64 @@
-import pyqtgraph as pg
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QScrollArea
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTableView, QCheckBox, QStyledItemDelegate
-import numpy as np
 import sys
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from pyqtgraph.Qt import QtGui
+import pyqtgraph as pg
+from pyqtgraph import GraphicsLayout, GraphicsWidget
 
-class MyMainWindow(QMainWindow):
+class PlotManager:
+    def __init__(self, graphics_view):
+        self.graphics_view = graphics_view
+        self.graphics_layout = GraphicsLayout()
+        self.graphics_widget = GraphicsWidget()
+        self.graphics_widget.setLayout(QVBoxLayout())
+        self.graphics_widget.layout.addWidget(self.graphics_layout)
+        self.graphics_view.setCentralItem(self.graphics_widget)
+
+    def add_plot(self):
+        # Create a new plot and add it to the GraphicsLayoutWidget
+        plot = self.graphics_layout.addPlot(title=f"Plot {len(self.graphics_layout.items)}")
+        # Set minimum height for each plot
+        plot.setMinimumHeight(500)
+        # Adjust the layout to fit the new plot
+        self.adjust_layout()
+
+    def adjust_layout(self):
+        # Calculate the number of rows and columns based on the number of plots
+        num_plots = len(self.graphics_layout.items)
+        num_columns = min(num_plots, 2)  # Two columns
+        num_rows = (num_plots + 1) // 2  # Add 1 to round up for odd numbers
+
+        # Set the layout of the GraphicsLayoutWidget
+        self.graphics_layout.layout.setContentsMargins(0, 0, 0, 0)
+        self.graphics_layout.layout.setVerticalSpacing(10)  # Set vertical spacing between plots
+
+        # Set the layout of the QGraphicsView
+        scene_rect = QtGui.QRectF(0, 0, self.graphics_layout.width(), num_rows * 500)
+        self.graphics_widget.setGeometry(scene_rect.toRect())
+
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
 
-        # Create a scroll area
-        scroll_area = QScrollArea()
-        central_widget.layout().addWidget(scroll_area)
+        self.layout = QVBoxLayout(self.central_widget)
 
-        # Create a widget to contain the GraphicsLayoutWidget
-        scroll_content = QWidget()
-        scroll_area.setWidget(scroll_content)
+        # Button to add plots
+        self.button = QPushButton("Add Plot")
+        self.button.clicked.connect(self.add_plot)
+        self.layout.addWidget(self.button)
 
-        # Create a grid layout with 100 rows and 2 columns
-        grid_layout = pg.GraphicsLayoutWidget()
-        scroll_content_layout = QVBoxLayout(scroll_content)
-        
-        # Wrap the GraphicsLayoutWidget in a QWidget
-        wrapper_widget = QWidget()
-        wrapper_layout = QVBoxLayout(wrapper_widget)
-        wrapper_layout.addWidget(grid_layout)
-        scroll_content_layout.addWidget(wrapper_widget)
+        # GraphicsView to contain the GraphicsLayoutWidget
+        self.graphics_view = pg.GraphicsView()
+        self.layout.addWidget(self.graphics_view)
 
-        # Example data for each plot
-        data_sets = [
-            (np.random.rand(100), np.random.rand(100)) for _ in range(100)
-        ]
+        # Initialize the PlotManager
+        self.plot_manager = PlotManager(self.graphics_view)
 
-        # Create and add scatter plots to the grid layout
-        for i in range(100):
-            plot_item = grid_layout.addPlot(row=i // 2, col=i % 2)
-
-            # Get the ViewBox associated with the PlotItem
-            view_box = plot_item.getViewBox()
-
-            # Set the background color of the ViewBox to be transparent
-            view_box.setBackgroundColor('w')  # 'w' stands for white; you can use 'w' for white or (0, 0, 0, 0) for transparent
-
-            # Set a fixed height for each plot (minimum height of 200 pixels)
-            plot_item.setMaximumHeight(200)
-
-            scatter_plot = pg.ScatterPlotItem(x=data_sets[i][0], y=data_sets[i][1], size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 0, 120))
-            plot_item.addItem(scatter_plot)
+    def add_plot(self):
+        # Call the PlotManager to add a new plot
+        self.plot_manager.add_plot()
 
 def main():
     if not QApplication.instance():
@@ -57,7 +66,7 @@ def main():
     else:
         app = QApplication.instance()    
     
-    window = MyMainWindow()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec())
 

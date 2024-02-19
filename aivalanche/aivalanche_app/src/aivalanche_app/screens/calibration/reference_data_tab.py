@@ -1,4 +1,4 @@
-import pyqtgraph as pg, numpy as np
+import pyqtgraph as pg, numpy as np, pandas as pd, math
 from PySide6.QtWidgets import QWidget, QLabel, QComboBox, QTableWidget, QSplitter, QFileDialog, QScrollArea
 from aivalanche_app.components.custom_layouts import h_layout, v_layout
 from aivalanche_app.components.custom_checkbox import custom_checkbox
@@ -9,8 +9,6 @@ from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.custom_table import custom_table
 from reference_data import Reference_data
-from PySide6.QtCore import Qt
-
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
@@ -24,12 +22,11 @@ class reference_data_tab(QSplitter):
         
         self.store = store
         self.style = style
-        self.plot_colors = style.PLOT_COLORS
         
         self.reference_data_file = None
         self.reference_data = None
         
-        self.plots = {'group_ids': [], 'nr_plots': 0}        
+        self.plots = {'group_ids': [], 'nr_plots': 0, 'min_plot_height': 500}        
         
         self.init_ui()
         
@@ -77,6 +74,7 @@ class reference_data_tab(QSplitter):
         
         # Create a grid layout for plots
         self.plots_widget = pg.GraphicsLayoutWidget()
+        self.plots_widget.ci.setSpacing(20)
         
         scroll_area.setWidget(self.plots_widget)
         scroll_area.setWidgetResizable(True)
@@ -96,25 +94,34 @@ class reference_data_tab(QSplitter):
 
     def load_reference_data(self, file):
         self.reference_data = Reference_data(file)
+        min_group_id = self.reference_data.data['group_id'].min()
         self.reference_data.data.insert(0, 'include', True)
-        self.reference_data.data['plot'] = self.reference_data.data['group_id'] == self.reference_data.data['group_id'].min()
+        self.reference_data.data['plot'] = self.reference_data.data['group_id'] == min_group_id
         self.reference_data.data['calibrate'] = True        
         self.table.update_data(self.reference_data.data)
-        self.update_plots(group_id = self.reference_data.data['group_id'].min())
+        self.update_plots(group_id = min_group_id)
         
     
     def on_checkbox_click(self, data: dict = None):
-        print(data)
+        row = data['row_index']
+        column = data['column_index']
+        column_name = data['column_name']
+        state = data['state']
+        self.reference_data.data.iloc[row, column] = state
+        if column_name == 'plot':
+            group_id = self.reference_data.data.iloc[row]['group_id']
+            curve_id = self.reference_data.data.iloc[row]['curve_id']
+            self.update_plots(group_id, curve_id)
 
     
     def update_plots(self, group_id = None, curve_id = None):
     
+        # filtered_data = self.reference_data.data[self.reference_data.data['group_id'] == group_id]
         if group_id in self.plots['group_ids']:
             print('kot')
         else:
-            self.plots['group_ids'].append(group_id)
             self.add_plot(group_id, curve_id)
-            
+                                
             
     def add_plot(self, group_id = None, curve_id = None):
         
@@ -128,17 +135,42 @@ class reference_data_tab(QSplitter):
         
         # filtered_data.reset_index(drop = True, inplace = True)
         
+        # create the new plot
         group_name = filtered_data.iloc[0]['group_name']
         title = f"{group_name} - {group_id}"
-        custom_plot =  line_scatter_plot(title = title, style = self.style)
-                
+        x_axis_label = filtered_data.iloc[0]['x_name']
+        y_axis_label = filtered_data.iloc[0]['y_name']
+        custom_plot =  line_scatter_plot(title = title, x_axis_label = x_axis_label, y_axis_label = y_axis_label, style = self.style)
+        custom_plot.setMinimumHeight(self.plots['min_plot_height'])
+        
+        # add all the curves to the plot
         filtered_data.apply(lambda row: self.add_curve_to_given_plot(custom_plot, row), axis = 1)
 
-        self.plots_widget.addItem(custom_plot, row = 0, col = 0)
-    
+        # add the new plot to the plot_widget
+        row = self.plots['nr_plots'] / 2
+        col = self.plots['nr_plots'] % 2
+        self.plots_widget.addItem(custom_plot, row = row, col = col)
+        
+        # update self.plots
+        self.plots['group_ids'].append(group_id)
+        self.plots['nr_plots'] += 1
+
+        # update the min height of the plots_widget
+        if self.plots['nr_plots'] > 2:
+            self.plots_widget.setFixedHeight(self.plots_widget.ci.height())
+            
+        # update the table plot checkboxes
+        self.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
+        self.table.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
+        # self.plots_widget.ci.setBorder(color = 'r')
+        # self.plots_widget.ci.height()
+        # self.plots_widget.ci.setSpacing(10)
+        # self.plots_widget.setMinimumHeight(self.plots_widget.sizeHint().height())
+        # self.plots_widget.getItem(0, 0).height()
+        # self.plots_widget.height()
     
     def add_curve_to_given_plot(self, plot, data):
-        if 'extra_var_name' in data:
+        if 'extra_var_name' in data and not pd.isna(data['extra_var_name']):
             id = f"{data['extra_var_name']} = {data['extra_var_value']}"
         else:
             id = f"{data['curve_id']}"

@@ -161,7 +161,14 @@ class Reference_data:
             
         if self.error_parsing is not None:
             raise key_missing_exception(self.error_parsing)
-
+            
+    
+    # update data based on some given condition
+    def update_by_condition(self, condition: str = None, update_columns: list = None, update_values: list = None):
+        mask = self.data.eval(condition)
+        for col, val in zip(update_columns, update_values):
+            self.data.loc[mask, col] = val
+            
 
 # custom exception class for missing key
 class key_missing_exception(Exception):

@@ -22,11 +22,9 @@ class item_delegate(QStyledItemDelegate):
     
     def commit_and_close_editor_checkbox(self, state):
         editor = self.sender()
-        print('closing editor:', editor)
-        # self.parent().model().on_checkbox_click(index)
         self.commitData.emit(editor)
-
-        # self.closeEditor.emit(editor)
+        self.closeEditor.emit(editor)
+        self.parent().edit(self.parent().currentIndex())
         
     
     def createEditor(self, parent, option, index):
@@ -37,7 +35,6 @@ class item_delegate(QStyledItemDelegate):
             editor = custom_checkbox(parent = parent, state = index.data(Qt.EditRole), on_click = lambda state: self.parent().model().on_checkbox_click(state, index),
                                      checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
             editor.stateChanged.connect(self.commit_and_close_editor_checkbox)
-            # editor.stateChanged.connect(lambda state: self.commit_and_close_editor_checkbox(state, index))
             return editor
         return super().createEditor(parent, option, index)
     
@@ -87,13 +84,12 @@ class item_delegate(QStyledItemDelegate):
                         model.last_mouse_move_index = index
                         self.parent().setCurrentIndex(index)
                         self.parent().edit(index)
-                        return True
+                        return True                       
                 else:
                     if model.last_mouse_move_index is not None:
                         model.last_mouse_move_index = None
                         
-        super().editorEvent(event, model, option, index)
-
+        return super().editorEvent(event, model, option, index)
 
 
 class table_horizontal_header(QHeaderView):
@@ -250,7 +246,8 @@ class table_horizontal_header(QHeaderView):
         default_pen = QPen(painter.pen())
 
         # Set the background
-        gradient = QLinearGradient(rect.x(), rect.y() + rect.height(), rect.x() + rect.width(), rect.y())
+        # gradient = QLinearGradient(rect.x(), rect.y() + rect.height(), rect.x() + rect.width(), rect.y())
+        gradient = QLinearGradient(rect.x(), rect.y() + rect.height(), rect.x(), rect.y() + rect.height())
         gradient.setColorAt(0, 'white')
         gradient.setColorAt(1, '#F3F3F3')
         brush = QBrush(gradient)
@@ -259,12 +256,12 @@ class table_horizontal_header(QHeaderView):
         painter.drawRect(rect)
         
         # # Create a pen for the border and draw the border
-        # border_pen = QPen(QColor(0, 0, 0, 127))
-        # border_pen.setWidth(1)
-        # border_pen.setStyle(Qt.SolidLine)
-        # painter.setPen(border_pen)
-        # painter.drawLine(self.x, self.y, self.x, self.y + self.height)                              # Left side
-        # painter.drawLine(self.x, self.y + self.height, self.x + self.width, self.y + self.height)   # Bottom side
+        border_pen = QPen(QColor(0, 0, 0, 127))
+        border_pen.setWidth(1)
+        border_pen.setStyle(Qt.SolidLine)
+        painter.setPen(border_pen)
+        painter.drawLine(self.x, self.y, self.x, self.y + self.height)                              # Left side
+        painter.drawLine(self.x, self.y + self.height, self.x + self.width, self.y + self.height)   # Bottom side
    
         # Reset pen to its default
         painter.setPen(default_pen)
@@ -306,10 +303,11 @@ class custom_table_model(QAbstractTableModel):
         
     def flags(self, index):
         flags = super().flags(index)
-        col = index.column()
-        if self.edit_data[col] or self.checkbox_data[col]:
-            flags |= Qt.ItemIsEditable
-        return flags
+        if index.isValid():
+            col = index.column()
+            if self.edit_data[col] or self.checkbox_data[col]:
+                flags |= Qt.ItemIsEditable
+            return flags
         
     
     def rowCount(self, parent = QModelIndex()):
@@ -367,7 +365,7 @@ class custom_table_model(QAbstractTableModel):
                                 {'name': 'calibrate', 'check_all': True}]
         
         self.checkbox_header = [False] * self.columnCount()
-        self.checkbox_data = [False] * self.rowCount()
+        self.checkbox_data = [False] * self.columnCount()
         
         checkbox_columns_names = [item['name'] for item in checkbox_columns]
         checkbox_columns_check_all = [item['check_all'] for item in checkbox_columns]
@@ -403,9 +401,9 @@ class custom_table_model(QAbstractTableModel):
         
         # change the rows of the responding column
         self._data[column_name] = state
-        topLeft = self.index(0, index)
-        bottomRight = self.index(self.rowCount() - 1, index)
-        self.dataChanged.emit(topLeft, bottomRight)
+        top_left = self.index(0, index)
+        bottom_right = self.index(self.rowCount() - 1, index)
+        self.dataChanged.emit(top_left, bottom_right)
         
         # run callback if provided
         if self._on_header_checkbox_click is not None:
@@ -413,14 +411,28 @@ class custom_table_model(QAbstractTableModel):
                                             'column_index': index,
                                             'column_name': column_name})        
 
-        
+    
     def on_checkbox_click(self, state, index):
         if self._on_checkbox_click is not None:
             self._on_checkbox_click({'state': state,
                                      'row_index': index.row(),
                                      'column_index': index.column(),
                                      'column_name': self._data.columns[index.column()]})
-
+    
+    
+    # update data based on some given condition
+    def update_by_condition(self, condition: str = None, update_columns: list = None, update_values: list = None):
+        mask = self._data.eval(condition)
+        for col, val in zip(update_columns, update_values):
+            self._data.loc[mask, col] = val
+        
+        left = min([self._data.columns.get_loc(item) for item in update_columns])
+        right = max([self._data.columns.get_loc(item)  for item in update_columns])
+        top_left = self.index(mask[mask].idxmin(), left)
+        bottom_right = self.index(mask[mask].idxmax(), right)
+        self.dataChanged.emit(top_left, bottom_right)
+        
+    
 
 class custom_table(QTableView):
     def __init__(self, data = None, style: style = None, on_checkbox_click: callable = None, on_header_checkbox_click: callable = None):       
@@ -447,7 +459,13 @@ class custom_table(QTableView):
         
     def update_data(self, data = None, checkbox_columns = None):
         self.model().layoutAboutToBeChanged.emit()
+        self.last_mouse_move_index = None
+        self.current_editor = None
         self.model().initialize_table(data, checkbox_columns)
         self.horizontalHeader().initialize_checkbox_rects()
         self.model().layoutChanged.emit()
         
+    
+    # update data based on some given condition
+    def update_by_condition(self, condition: str = None, update_columns: list = None, update_values: list = None):
+        self.model().update_by_condition(condition, update_columns, update_values)
