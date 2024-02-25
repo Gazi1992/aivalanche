@@ -4,70 +4,53 @@ from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
 from pyqtgraph import GraphicsLayout, GraphicsWidget
 
-class PlotManager:
-    def __init__(self, graphics_view):
-        self.graphics_view = graphics_view
-        self.graphics_layout = GraphicsLayout()
-        self.graphics_widget = GraphicsWidget()
-        self.graphics_widget.setLayout(QVBoxLayout())
-        self.graphics_widget.layout.addWidget(self.graphics_layout)
-        self.graphics_view.setCentralItem(self.graphics_widget)
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui, QtCore
 
-    def add_plot(self):
-        # Create a new plot and add it to the GraphicsLayoutWidget
-        plot = self.graphics_layout.addPlot(title=f"Plot {len(self.graphics_layout.items)}")
-        # Set minimum height for each plot
-        plot.setMinimumHeight(500)
-        # Adjust the layout to fit the new plot
-        self.adjust_layout()
+# Create a GraphicsLayoutWidget
+win = pg.GraphicsLayoutWidget()
+win.setWindowTitle('PyQtGraph Example')
 
-    def adjust_layout(self):
-        # Calculate the number of rows and columns based on the number of plots
-        num_plots = len(self.graphics_layout.items)
-        num_columns = min(num_plots, 2)  # Two columns
-        num_rows = (num_plots + 1) // 2  # Add 1 to round up for odd numbers
+# Create some sample data
+x = [1, 2, 3, 4, 5]
+y = [2, 4, 1, 7, 3]
 
-        # Set the layout of the GraphicsLayoutWidget
-        self.graphics_layout.layout.setContentsMargins(0, 0, 0, 0)
-        self.graphics_layout.layout.setVerticalSpacing(10)  # Set vertical spacing between plots
+# Create plots at various positions
+plot_00 = win.addPlot(row=0, col=0, title="Plot (0, 0)")
+plot_00.plot(x, y)
 
-        # Set the layout of the QGraphicsView
-        scene_rect = QtGui.QRectF(0, 0, self.graphics_layout.width(), num_rows * 500)
-        self.graphics_widget.setGeometry(scene_rect.toRect())
+plot_10 = win.addPlot(row=1, col=0, title="Plot (1, 0)")
+plot_10.plot(x, [i * 2 for i in y])
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+plot_01 = win.addPlot(row=0, col=1, title="Plot (0, 1)")
+plot_01.plot(x, [i * 3 for i in y])
 
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
+plot_11 = win.addPlot(row=1, col=1, title="Plot (1, 1)")
+plot_11.plot(x, [i * 4 for i in y])
 
-        self.layout = QVBoxLayout(self.central_widget)
+plot_to_delete = win.getItem(0,1)
 
-        # Button to add plots
-        self.button = QPushButton("Add Plot")
-        self.button.clicked.connect(self.add_plot)
-        self.layout.addWidget(self.button)
+if plot_to_delete:
+    # Find the plots at (1, 0) and (1, 1)
+    plot_10 = win.getItem(1,0)
+    plot_11 = win.getItem(1,1)
 
-        # GraphicsView to contain the GraphicsLayoutWidget
-        self.graphics_view = pg.GraphicsView()
-        self.layout.addWidget(self.graphics_view)
+    # Move the plots to rearrange the layout
+    if plot_10:
+        win.removeItem(plot_10)
+        win.addItem(plot_10, row=0, col=1)
 
-        # Initialize the PlotManager
-        self.plot_manager = PlotManager(self.graphics_view)
+    if plot_11:
+        win.removeItem(plot_11)
+        win.addItem(plot_11, row=1, col=0)
 
-    def add_plot(self):
-        # Call the PlotManager to add a new plot
-        self.plot_manager.add_plot()
+    # Delete the plot at (0, 1)
+    win.removeItem(plot_to_delete)
 
-def main():
-    if not QApplication.instance():
-        app = QApplication(sys.argv)
-    else:
-        app = QApplication.instance()    
-    
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+if not QApplication.instance():
+    app = QApplication(sys.argv)
+else:
+    app = QApplication.instance()    
+win.show()
+app.exec_()
 
-main()

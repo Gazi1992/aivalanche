@@ -260,8 +260,10 @@ class table_horizontal_header(QHeaderView):
         border_pen.setWidth(1)
         border_pen.setStyle(Qt.SolidLine)
         painter.setPen(border_pen)
-        painter.drawLine(self.x, self.y, self.x, self.y + self.height)                              # Left side
-        painter.drawLine(self.x, self.y + self.height, self.x + self.width, self.y + self.height)   # Bottom side
+        painter.drawLine(self.x, self.y, self.x, self.y + self.height)                               # Left side
+        painter.drawLine(self.x, self.y + self.height, self.x + self.width, self.y + self.height)    # Bottom side
+        if logicalIndex == self.parent().model().columnCount() - 1:                                  # If the right most cell
+            painter.drawLine(self.x + self.width, self.y, self.x + self.width, self.y + self.height) # draw right side
    
         # Reset pen to its default
         painter.setPen(default_pen)

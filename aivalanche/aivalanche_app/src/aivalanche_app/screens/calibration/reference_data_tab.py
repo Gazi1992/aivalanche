@@ -9,6 +9,8 @@ from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.custom_table import custom_table
 from reference_data import Reference_data
+from copy import deepcopy
+import time
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
@@ -26,11 +28,18 @@ class reference_data_tab(QSplitter):
         self.reference_data_file = None
         self.reference_data = None
         
-        self.plots = {'group_ids': [], 'nr_plots': 0, 'min_plot_height': 500}        
+        self.plots = []
+        self.min_plot_height = 500
+        self.plots_widget_height_array = []
         
         self.init_ui()
-        
-        
+    
+    
+    @property
+    def nr_plots(self):
+        return len(self.plots)
+    
+
     def init_ui(self):
         
         # Set invisible splitter handle
@@ -93,11 +102,13 @@ class reference_data_tab(QSplitter):
             
 
     def load_reference_data(self, file):
+        self.clear_all_plots()
         self.reference_data = Reference_data(file)
         min_group_id = self.reference_data.data['group_id'].min()
         self.reference_data.data.insert(0, 'include', True)
+        self.reference_data.data.insert(1, 'plot', False)
+        self.reference_data.data.insert(2, 'calibrate', True)
         self.reference_data.data['plot'] = self.reference_data.data['group_id'] == min_group_id
-        self.reference_data.data['calibrate'] = True        
         self.table.update_data(self.reference_data.data)
         self.update_plots(group_id = min_group_id)
         
@@ -111,20 +122,32 @@ class reference_data_tab(QSplitter):
         if column_name == 'plot':
             group_id = self.reference_data.data.iloc[row]['group_id']
             curve_id = self.reference_data.data.iloc[row]['curve_id']
-            self.update_plots(group_id, curve_id)
+            self.update_plots(group_id, curve_id, state)
 
     
-    def update_plots(self, group_id = None, curve_id = None):
-    
-        # filtered_data = self.reference_data.data[self.reference_data.data['group_id'] == group_id]
-        if group_id in self.plots['group_ids']:
-            print('kot')
+    def update_plots(self, group_id = None, curve_id = None, state = None):
+        if group_id in self.plots:
+            if not state:
+                plot_item = self.get_plot_from_group_id(group_id)
+                if plot_item.nr_curves == 1:
+                    self.remove_plot(group_id)
+                else:
+                    plot = self.get_plot_from_group_id(group_id)
+                    self.remove_curve_from_plot(plot, curve_id)
+            else:
+                data = self.reference_data.data[(self.reference_data.data['group_id'] == group_id) & (self.reference_data.data['curve_id'] == curve_id)]
+                plot = self.get_plot_from_group_id(group_id)
+                self.add_curve_to_plot(plot, data.squeeze())
         else:
-            self.add_plot(group_id, curve_id)
-                                
+            self.add_plot(group_id)
             
-    def add_plot(self, group_id = None, curve_id = None):
+            
+    def clear_all_plots(self):
+        self.plots_widget.ci.clear()
+        self.plots = []
         
+            
+    def add_plot(self, group_id = None):
         if group_id is None:
             return
         
@@ -141,38 +164,106 @@ class reference_data_tab(QSplitter):
         x_axis_label = filtered_data.iloc[0]['x_name']
         y_axis_label = filtered_data.iloc[0]['y_name']
         custom_plot =  line_scatter_plot(title = title, x_axis_label = x_axis_label, y_axis_label = y_axis_label, style = self.style)
-        custom_plot.setMinimumHeight(self.plots['min_plot_height'])
+        custom_plot.setMinimumHeight(self.min_plot_height)
         
         # add all the curves to the plot
-        filtered_data.apply(lambda row: self.add_curve_to_given_plot(custom_plot, row), axis = 1)
+        filtered_data.apply(lambda row: self.add_curve_to_plot(custom_plot, row), axis = 1)
 
         # add the new plot to the plot_widget
-        row = self.plots['nr_plots'] / 2
-        col = self.plots['nr_plots'] % 2
+        index = self.nr_plots
+        row, col = self.get_plot_row_col_from_index(index)
         self.plots_widget.addItem(custom_plot, row = row, col = col)
         
-        # update self.plots
-        self.plots['group_ids'].append(group_id)
-        self.plots['nr_plots'] += 1
+        # add to self.plots
+        self.plots.append(group_id)
 
-        # update the min height of the plots_widget
-        if self.plots['nr_plots'] > 2:
-            self.plots_widget.setFixedHeight(self.plots_widget.ci.height())
+        # update plots_widget heights
+        if self.nr_plots > len(self.plots_widget_height_array):
+            self.plots_widget_height_array.append(self.plots_widget.ci.height())
+
+        self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
             
         # update the table plot checkboxes
         self.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
         self.table.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
+        
         # self.plots_widget.ci.setBorder(color = 'r')
         # self.plots_widget.ci.height()
         # self.plots_widget.ci.setSpacing(10)
         # self.plots_widget.setMinimumHeight(self.plots_widget.sizeHint().height())
         # self.plots_widget.getItem(0, 0).height()
         # self.plots_widget.height()
+           
     
-    def add_curve_to_given_plot(self, plot, data):
+    def add_curve_to_plot(self, plot, data):
         if 'extra_var_name' in data and not pd.isna(data['extra_var_name']):
-            id = f"{data['extra_var_name']} = {data['extra_var_value']}"
+            label = f"{data['extra_var_name']} = {data['extra_var_value']}"
         else:
-            id = f"{data['curve_id']}"
+            label = f"{data['curve_id']}"
                 
-        plot.add_scatter_plot(x = data['x_values'], y = data['y_values'], id = id, symbol = 'o', symbolPen = None)
+        plot.add_scatter_plot(x = data['x_values'], y = data['y_values'], id = data['curve_id'], label = label, symbol = 'o', symbolPen = None)
+        
+    
+    def remove_curve_from_plot(self, plot, curve_id):
+        plot.remove_curve(id = curve_id)
+        
+    
+    def remove_plot(self, group_id = None):
+        if group_id in self.plots:
+            index = self.get_plot_index_from_group_id(group_id)
+            if index == self.nr_plots - 1:
+                self.plots_widget.removeItem(self.get_plot_from_group_id(group_id))
+                del self.plots[index]
+            else:
+                self.shift_plots_left(start_index = index + 1)
+                
+            self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
+
+        
+    def shift_plots_left(self, start_index = -1):
+        if start_index > 0:
+            index = start_index
+            
+            # remove first the plot which is to be deleted from the layout
+            plot_to_remove = self.get_plot_from_index(index - 1)
+            self.plots_widget.removeItem(plot_to_remove) 
+            
+            # shift left all the following plots
+            while index < self.nr_plots:
+                
+                new_row, new_col = self.get_plot_row_col_from_index(index - 1) # row and col of the element to the left
+                new_plot = self.get_plot_from_index(index)
+                
+                self.plots_widget.removeItem(new_plot) # remove first the item on the left
+                self.plots_widget.addItem(new_plot, new_row, new_col) # duplicate the current item by adding it to the left, which will be also overwriten by the next loop iteration
+
+                self.plots[index - 1] = self.plots[index] # update the self.plots
+                    
+                index += 1 # increment the index
+            
+            # delete the last element of the plots, since it is duplicated to the left
+            del self.plots[-1]
+                       
+    
+    def get_plot_from_index(self, index = -1):
+        if index >= 0:
+            return self.get_plot_from_group_id(self.plots[index])
+    
+    
+    def get_plot_from_group_id(self, group_id = None):
+        if group_id in self.plots:
+            index = self.get_plot_index_from_group_id(group_id)
+            row, col = self.get_plot_row_col_from_index(index)
+            return self.plots_widget.getItem(row, col)
+        
+        
+    def get_plot_index_from_group_id(self, group_id = None):
+        if group_id in self.plots:
+            return self.plots.index(group_id)
+        return -1
+        
+    
+    def get_plot_row_col_from_index(self, index):
+        row = index // 2
+        col = index % 2
+        return row, col
