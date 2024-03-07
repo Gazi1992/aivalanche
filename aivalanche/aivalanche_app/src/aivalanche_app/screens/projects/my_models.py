@@ -8,7 +8,6 @@ from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.constants.dimensions import MODEL_CARD_WIDTH, MODEL_CARD_HEIGHT, MODEL_CARD_MARGIN, MODELS_NR_COLUMNS, MODEL_PLUS_ICON_HEIGHT
 from aivalanche_app.components.header import header
 from aivalanche_app.data_store.store import store
-from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.modals.modal_1 import modal_1
 
 
@@ -16,12 +15,14 @@ class my_models(QWidget):
     go_to_calibration = Signal()
     go_to_projects = Signal()
     
-    def __init__(self, parent = None, store: store = None, style: style = None):
+    def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
         
         self.store = store
-        self.style = style
         
+        if object_name is not None:
+            self.setObjectName(object_name)
+            
         self.init_ui()
         
     
@@ -31,7 +32,7 @@ class my_models(QWidget):
         # Header Section
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},
                                   {'text': self.store.active_project.title if self.store.active_project is not None else 'Models', 'on_click': None}]
-        self.header_widget = header(navigation_path = self.header_navigation, on_search_text_changed = self.on_search, style = self.style)
+        self.header_widget = header(navigation_path = self.header_navigation, on_search_text_changed = self.on_search, object_name = 'header')
         layout.addWidget(self.header_widget)
         self.update_header()
         
@@ -55,7 +56,7 @@ class my_models(QWidget):
         # Create an instance of the custom dialog
         self.new_model_dialog = modal_1(parent = self, title = 'New model', placeholder = 'Model name',
                                         message = 'Give a name to your model', explanation = 'You can edit the name later.',
-                                        on_confirm = self.on_new_model_confirm, on_cancel = self.on_new_model_cancel, style = self.style)
+                                        on_confirm = self.on_new_model_confirm, on_cancel = self.on_new_model_cancel, object_name = 'modal')
 
 
     # Update header
@@ -74,8 +75,7 @@ class my_models(QWidget):
                                             icon_height = MODEL_PLUS_ICON_HEIGHT, icon_position = 'top', direction = 'vertical', checkable = False,
                                             padding = (0, MODEL_CARD_HEIGHT * 0.35, 0, MODEL_CARD_HEIGHT * 0.2),
                                             text = "New model", text_alignment = Qt.AlignmentFlag.AlignCenter,
-                                            on_click = self.on_new_model_press)
-        new_model_button.setStyleSheet(self.style.new_model_button)
+                                            on_click = self.on_new_model_press, object_name = 'new_model')
         
         self.grid.addWidget(new_model_button, 0, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         

@@ -2,38 +2,30 @@ from PySide6.QtWidgets import QMainWindow, QSplitter, QMessageBox
 from aivalanche_app.components.main_tabs import main_tabs
 from aivalanche_app.components.drawer import drawer
 from aivalanche_app.data_store.store import store
-from aivalanche_app.resources.themes.style import style
 
 
 class home(QMainWindow):
-    def __init__(self):
+    def __init__(self, store: store = None):
         super().__init__()
-        
-        self.initialize_store()
-        
-        self.style = style()
-        
+        self.store = store
+        self.set_user_id()        
         self.setWindowTitle("aivalanche")
-        
-        # # Remove top bar        
         # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
-
-        # Open the window in full-screen mode
         self.showMaximized()
-        self.setStyleSheet(self.style.home)
         self.init_ui()
+        self.setObjectName('home')
         
 
     def init_ui(self):        
-        splitter = QSplitter()
+        splitter = QSplitter(parent = self)
         splitter.setHandleWidth(0)
         self.setCentralWidget(splitter)
 
         # Create the drawer on the left
-        drawer_widget = drawer(parent = splitter, user = self.store.user, style = self.style)
+        drawer_widget = drawer(parent = splitter, user = self.store.user, object_name = 'drawer')
         
         # Create a main tabs on the right
-        self.tab_widget = main_tabs(parent = splitter, store = self.store, style = self.style)
+        self.tab_widget = main_tabs(parent = splitter, store = self.store, object_name = 'main_tabs')
         
         # Set stretch factors to ensure the drawer widget takes minimum space
         splitter.setStretchFactor(0, 0)
@@ -65,5 +57,5 @@ class home(QMainWindow):
         else:
             event.ignore()
             
-    def initialize_store(self):
-        self.store = store(user_id = 'asdsd-asdfr-123asd-asdas4-asdsda')
+    def set_user_id(self):
+        self.store.set_user_id('asdsd-asdfr-123asd-asdas4-asdsda')

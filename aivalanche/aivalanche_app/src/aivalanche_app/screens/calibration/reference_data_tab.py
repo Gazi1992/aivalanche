@@ -1,29 +1,27 @@
-import pyqtgraph as pg, numpy as np, pandas as pd, math
-from PySide6.QtWidgets import QWidget, QLabel, QComboBox, QTableWidget, QSplitter, QFileDialog, QScrollArea
-from aivalanche_app.components.custom_layouts import h_layout, v_layout
-from aivalanche_app.components.custom_checkbox import custom_checkbox
+import pyqtgraph as pg, pandas as pd
+from PySide6.QtWidgets import QWidget, QSplitter, QFileDialog, QScrollArea
+from aivalanche_app.components.custom_layouts import v_layout
 from aivalanche_app.data_store.store import store
-from aivalanche_app.paths import upload_icon_path
-from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
-from aivalanche_app.resources.themes.style import style
+from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from reference_data import Reference_data
-from copy import deepcopy
-import time
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
 pg.setConfigOption('background', (0, 0, 0, 0))
 pg.setConfigOption('foreground', 'k')
 
-class reference_data_tab(QSplitter):
+class reference_data_tab(QWidget):
     
-    def __init__(self, parent = None, store: store = None, style: style = None):
+    def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
         
+        if object_name is not None:
+            self.setObjectName(object_name)
+            
         self.store = store
-        self.style = style
+        self.style = self.store.style
         
         self.reference_data_file = None
         self.reference_data = None
@@ -42,36 +40,29 @@ class reference_data_tab(QSplitter):
 
     def init_ui(self):
         
-        # Set invisible splitter handle
-        self.setHandleWidth(0)
+        layout = v_layout(parent = self)
+        self.setLayout(layout)
+        
+        splitter = QSplitter(parent = self)
+        splitter.setHandleWidth(0)
+        layout.addWidget(splitter, 1)
         
         # Create left widget
-        left_widget = QWidget(self)
+        left_widget = QWidget(parent = splitter)
         left_layout = v_layout(spacing = 20)
         left_widget.setLayout(left_layout)
         
-        # Create load data layout
-        load_data_layout = h_layout(spacing = 10)
-        
-        # Create drop-down widget
-        self.drop_down_widget = QComboBox(parent = self)
-        self.drop_down_widget.setFixedHeight(30)
-        self.drop_down_widget.currentTextChanged.connect(lambda text: self.load_reference_data(text))
-        load_data_layout.addWidget(self.drop_down_widget, 1)
-        
-        # Create load data button
-        load_data_button = icon_text_button(parent = self, icon_path = upload_icon_path, icon_height = 25, on_click = self.on_load_data_button_click)
-        load_data_layout.addWidget(load_data_button, 0)
-        
-        left_layout.addLayout(load_data_layout)
+        # Create load data combo box
+        self.load_data_widget = combo_box_load_data(parent = self, caption = 'Select reference data file', filter = 'Json file (*.json)', on_combo_box_changed = self.load_reference_data)       
+        left_layout.addWidget(self.load_data_widget, 0)
         
         # Create table
         self.table = custom_table(style = self.style,
                                   on_checkbox_click = self.on_checkbox_click)
-        left_layout.addWidget(self.table)
+        left_layout.addWidget(self.table, 1)
         
         # Create right layout, where plots will be shown
-        right_widget = QWidget(self)
+        right_widget = QWidget(parent = splitter)
         right_widget.setContentsMargins(10, 0, 0, 0)
         right_layout = v_layout(spacing = 20)
         right_widget.setLayout(right_layout)
@@ -88,8 +79,8 @@ class reference_data_tab(QSplitter):
         scroll_area.setWidget(self.plots_widget)
         scroll_area.setWidgetResizable(True)
 
-        self.setStretchFactor(0, 1)
-        self.setStretchFactor(1, 1)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 1)
 
         
     def on_load_data_button_click(self):

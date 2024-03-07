@@ -27,7 +27,10 @@ class style():
         
         # Add extra variables
         my_dict['MAIN_BACKGROUND_COLOR'] = my_dict_module.MAIN_BACKGROUND_COLOR
+        my_dict['SECOND_BACKGROUND_COLOR'] = my_dict_module.SECOND_BACKGROUND_COLOR
         my_dict['PLOT_COLORS'] = my_dict_module.PLOT_COLORS
+        my_dict['FONT_SIZES'] = my_dict_module.FONT_SIZES
+        my_dict['theme'] = my_dict_module.theme
         
         return my_dict
     

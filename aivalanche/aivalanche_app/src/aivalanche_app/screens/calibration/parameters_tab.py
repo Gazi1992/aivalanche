@@ -5,8 +5,11 @@ from aivalanche_app.data_store.store import store
 
 class parameters_tab(QWidget):
     
-    def __init__(self, parent = None, store: store = None):
+    def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
+
+        if object_name is not None:
+            self.setObjectName(object_name)
         
         self.store = store
         

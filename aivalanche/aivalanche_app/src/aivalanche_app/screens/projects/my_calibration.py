@@ -4,7 +4,6 @@ from aivalanche_app.components.custom_layouts import v_layout, h_layout
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.components.header import header
 from aivalanche_app.data_store.store import store
-from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.calibration_tabs import calibration_tabs
 from aivalanche_app.constants.dimensions import CALIBRATION_TAB_BUTTON_WIDTH, CALIBRATION_TAB_BUTTON_HEIGHT
 
@@ -12,23 +11,26 @@ class my_calibration(QWidget):
     go_to_projects = Signal()
     go_to_models = Signal()
     
-    def __init__(self, parent = None, store: store = None, style: style = None):
+    def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
         
         self.store = store
-        self.style = style
+        
+        if object_name is not None:
+            self.setObjectName(object_name)
         
         self.init_ui()
         
         
     def init_ui(self):
         layout = v_layout(self)
-        
+        self.setLayout(layout)
+
         # Header Section
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},
                                   {'text': self.store.active_project.title if self.store.active_project is not None else 'Models', 'on_click': self.on_models_press},
                                   {'text': self.store.active_model.title if self.store.active_model is not None else 'My model', 'on_click': None}]
-        self.header_widget = header(navigation_path = self.header_navigation, style = self.style)
+        self.header_widget = header(navigation_path = self.header_navigation, object_name = 'header')
         layout.addWidget(self.header_widget)
         self.update_header()
         
@@ -41,7 +43,7 @@ class my_calibration(QWidget):
                     
         # Reference data button    
         self.reference_data_button = icon_text_button(parent = self, text = 'Reference data', checkable = True, on_click = self.on_reference_data_click, button_height = CALIBRATION_TAB_BUTTON_HEIGHT, button_width = CALIBRATION_TAB_BUTTON_WIDTH)
-        buttons_layout.addWidget(self.reference_data_button )
+        buttons_layout.addWidget(self.reference_data_button)
         buttons_layout.addStretch()
         
         # Model button    
@@ -65,12 +67,8 @@ class my_calibration(QWidget):
         
         # Calibration tabs
         layout.addSpacing(20)
-        self.calibration_tabs = calibration_tabs(parent = self, style = self.style)
+        self.calibration_tabs = calibration_tabs(parent = self, store = self.store, object_name = 'calibration_tabs')
         layout.addWidget(self.calibration_tabs)
-        
-        self.setLayout(layout)
-        
-        self.setStyleSheet(self.style.calibration_tabs)
         
         self.reference_data_button.click()
     

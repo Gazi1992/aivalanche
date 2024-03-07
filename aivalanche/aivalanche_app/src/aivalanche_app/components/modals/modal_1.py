@@ -10,26 +10,28 @@ from PySide6.QtWidgets import QPushButton, QLabel, QLineEdit, QDialog, QStyle
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QAction
 from aivalanche_app.components.custom_layouts import v_layout, h_layout
-from aivalanche_app.resources.themes.style import style
 
 class modal_1(QDialog):
     def __init__(self, parent = None, title = 'Title', message = 'Message', explanation = 'Explanation',
-                 placeholder = 'Placeholder', on_cancel = None, on_confirm = None, style: style = None):
+                 placeholder = 'Placeholder', on_cancel = None, on_confirm = None, object_name: str = None):
         super().__init__(parent = parent)
+        
+        if object_name is not None:
+            self.setObjectName(object_name)
         
         self.on_confirm = on_confirm
         self.on_cancel = on_cancel
         
         self.setContentsMargins(20, 20, 20, 20)
         self.setWindowTitle(title)
-        self.setStyleSheet(style.modal_1)
         
         # Create layout for the dialog
         layout = v_layout(spacing = 10)
+        self.setLayout(layout)
 
         # Add label
         label = QLabel(message, parent = self)
-        label.setObjectName('message')
+        label.setObjectName('modal_message')
         layout.addWidget(label)
         
         # Add line edit
@@ -39,7 +41,7 @@ class modal_1(QDialog):
         
         # Add label
         label = QLabel(explanation, parent = self)
-        label.setObjectName('explanation')
+        label.setObjectName('modal_explanation')
         layout.addWidget(label)
         
         # Add space to buttons
@@ -76,12 +78,10 @@ class modal_1(QDialog):
         escape_action.setShortcut(QKeySequence(Qt.Key_Escape))
         escape_action.triggered.connect(cancel_button.click)
         self.addAction(escape_action)
-
-        # Set the layout for the dialog
-        self.setLayout(layout)
         
         # Set fixed size and non-resizable
-        self.setFixedSize(self.sizeHint())
+        # self.setFixedSize(self.sizeHint())
+        # self.setMinimumWidth(500)
         
         
     def on_confirm_press(self):

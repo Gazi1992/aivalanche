@@ -1,12 +1,13 @@
 import json
 from aivalanche_app.data_store.utils import project, model, user
 from aivalanche_app.paths import dummy_data_path
+from aivalanche_app.resources.themes.style import style
 
 # Just to test the UI
 dummy_data = json.load(open(dummy_data_path))
 
 class store():
-    def __init__(self, user_id: str = None):
+    def __init__(self, user_id: str = None, style: style = None):
         self.user = user(id = user_id)
         
         self.projects = []
@@ -18,12 +19,15 @@ class store():
         self.active_model = None
     
         self.get_all_projects()
+        
+        self.style = style
     
     def get_all_projects(self):
         for item in dummy_data['projects']:
             models = [model(id = m['id'], title = m['title'], created = m['created'], last_modified = m['last_modified']) for m in item['models']]
             p = project(id = item['id'], title = item['title'], created = item['created'], last_modified = item['last_modified'], models = models)
             self.projects.append(p)
+
 
     def set_active_project(self, id: str = None):
         project_ids = [p.id for p in self.projects]
@@ -47,3 +51,7 @@ class store():
         else:
             self.active_model_id = id
             self.active_model = list(filter(lambda m: m.id == id, self.models))[0]
+            
+    def set_user_id(self, id: str = None):
+        self.user.set_id(id)
+            

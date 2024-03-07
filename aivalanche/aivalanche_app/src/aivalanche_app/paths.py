@@ -10,6 +10,9 @@ dummy_data_path = Path.joinpath(store_path, 'DUMMY_DATA.json')
 # Resources
 resources_path = Path.joinpath(package_path, 'resources')
 
+# Fonts path
+fonts_path = Path.joinpath(resources_path, 'fonts')
+
 # Themes
 themes_path = Path.joinpath(resources_path, 'themes')
 theme_1_path = Path.joinpath(themes_path, 'theme_1.py')
@@ -38,6 +41,12 @@ lin_x_icon_path = Path.joinpath(images_path, 'lin_x_icon.png')
 lin_y_icon_path = Path.joinpath(images_path, 'lin_y_icon.png')
 forward_icon_path = Path.joinpath(images_path, 'forward_icon.png')
 backward_icon_path = Path.joinpath(images_path, 'backward_icon.png')
+radio_button_checked_path = Path.joinpath(images_path, 'radio_button_checked.png')
+radio_button_checked_hovered_path = Path.joinpath(images_path, 'radio_button_checked_hovered.png')
+radio_button_checked_pressed_path = Path.joinpath(images_path, 'radio_button_checked_pressed.png')
+radio_button_unchecked_path = Path.joinpath(images_path, 'radio_button_unchecked.png')
+radio_button_unchecked_hovered_path = Path.joinpath(images_path, 'radio_button_unchecked_hovered.png')
+radio_button_unchecked_pressed_path = Path.joinpath(images_path, 'radio_button_unchecked_pressed.png')
 
 
 

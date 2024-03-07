@@ -1,6 +1,5 @@
 from PySide6.QtWidgets import QFrame
 from PySide6.QtCore import Signal
-from aivalanche_app.resources.themes.style import style
 from aivalanche_app.components.custom_image import custom_image
 from aivalanche_app.components.custom_layouts import v_layout
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
@@ -13,15 +12,18 @@ class drawer(QFrame):
     running_active = Signal(bool)
     logout_active = Signal()
     
-    def __init__(self, parent = None, user = None, style: style = None):
+    def __init__(self, parent = None, user = None, object_name: str = None):
         super().__init__(parent)
         
         self.user = user
-        self.style = style
+
+        if object_name is not None:
+            self.setObjectName(object_name)    
                         
         # Create the layout
         layout = v_layout(parent = self, padding = (0, 0, 0, 10))
-        
+        self.setLayout(layout)
+
         # Add logo
         image_widget = custom_image(image_path = logo_path, image_height = DRAWER_LOGO_HEIGHT, resize = 'fit',
                                     padding_left = 10, padding_right = 10, padding_top = 10, padding_bottom = 10)
@@ -30,29 +32,24 @@ class drawer(QFrame):
         # Create the buttons
         self.projects_button = icon_text_button(parent = self, icon_path = projects_icon_path, button_height = DRAWER_BUTTON_HEIGHT,
                                                 icon_width = DRAWER_BUTTON_ICON_WIDTH, icon_height = DRAWER_BUTTON_ICON_HEIGHT, padding = (10, 0, 0, 0),
-                                                text = "Projects", checkable = True, on_click = self.on_projects_press)
+                                                text = "Projects", checkable = True, on_click = self.on_projects_press, object_name = 'drawer_button')
         self.running_button = icon_text_button(parent = self, icon_path = running_icon_path, button_height = DRAWER_BUTTON_HEIGHT,
                                                icon_width = DRAWER_BUTTON_ICON_WIDTH, icon_height = DRAWER_BUTTON_ICON_HEIGHT, padding = (10, 0, 0, 0),
-                                               text = "Running", checkable = True, on_click = self.on_running_press)
+                                               text = "Running", checkable = True, on_click = self.on_running_press, object_name = 'drawer_button')
         self.logout_button = icon_text_button(parent = self, icon_path = logout_icon_path, button_height = DRAWER_BUTTON_HEIGHT,
                                               icon_width = DRAWER_BUTTON_ICON_WIDTH, icon_height = DRAWER_BUTTON_ICON_HEIGHT, padding = (10, 0, 0, 0),
-                                              text = "Log out", on_click = self.on_logout_press)
+                                              text = "Log out", on_click = self.on_logout_press, object_name = 'drawer_button')
 
         # Add the buttons to the drawer
         layout.addWidget(self.projects_button)
         layout.addWidget(self.running_button)
         layout.addStretch()
         layout.addWidget(self.logout_button)
-        
-        # Set the style
-        self.setStyleSheet(self.style.drawer)
-        
+               
         # Set minimum width
         self.setFixedWidth(DRAWER_WIDTH)
         
-        # Set layout
-        self.setLayout(layout)
-
+        
     def on_projects_press(self, checked):
         if checked:
             self.running_button.setChecked(False)

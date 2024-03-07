@@ -3,17 +3,19 @@ from aivalanche_app.components.custom_layouts import h_layout, v_layout, clear_l
 from aivalanche_app.constants.dimensions import HEADER_PADDING_LEFT, HEADER_PADDING_RIGHT, HEADER_PADDING_TOP, HEADER_PADDING_BOTTOM, SEARCH_BAR_HEIGHT, SEARCH_BAR_WIDTH, SEARCH_ICON_HEIGHT, SEARCH_ICON_WIDTH
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.paths import search_icon_path
-from aivalanche_app.resources.themes.style import style
+
 
 class header(QWidget):
-    def __init__(self, parent = None, navigation_path: list[dict] = None, on_search_text_changed: callable = None, labels: list[str] = None, style: style = None):
+    def __init__(self, parent = None, navigation_path: list[dict] = None, on_search_text_changed: callable = None, labels: list[str] = None, object_name: str = None):
         super().__init__(parent = parent)
         
         self.navigation_path = navigation_path
-        self.style = style
+        if object_name is not None:
+            self.setObjectName(object_name)
         
         main_layout = v_layout(padding = (HEADER_PADDING_LEFT, HEADER_PADDING_TOP, HEADER_PADDING_RIGHT, HEADER_PADDING_BOTTOM))
-        
+        self.setLayout(main_layout)
+
         # Top layout
         layout_top = h_layout()
         
@@ -47,9 +49,6 @@ class header(QWidget):
         # Add bottom layout
         main_layout.addLayout(layout_bottom)
         
-        self.setLayout(main_layout)
-        
-        self.setStyleSheet(self.style.header)
     
     def update_navigation_path(self, navigation_path):
         clear_layout(self.layout_top_left)
@@ -57,5 +56,5 @@ class header(QWidget):
         for i, item in enumerate(self.navigation_path):
             if i > 0:
                 self.layout_top_left.addWidget(QLabel('>'))
-            temp = icon_text_button(parent = self, text = item['text'], on_click = item['on_click'], change_cursor = True, checkable = False, object_name = 'navigation')
+            temp = icon_text_button(parent = self, text = item['text'], on_click = item['on_click'], change_cursor = True, checkable = False, object_name = 'header')
             self.layout_top_left.addWidget(temp)

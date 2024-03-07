@@ -6,6 +6,9 @@ class user():
         self.id = id
         self.name = name
         self.created = created
+        
+    def set_id(self, id):
+        self.id = id
     
 
 # Model class

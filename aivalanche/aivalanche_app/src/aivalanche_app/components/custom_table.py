@@ -16,7 +16,7 @@ class item_delegate(QStyledItemDelegate):
         # Define checkbox icon dimension
         self.checkbox_width = 16
         self.checkbox_height = 16
-        self.alternate_row_background_color = QColor(0, 0, 0, 25)
+        self.alternate_row_background_color = QColor(6, 34, 121, 20)
         self.style = style
     
     
@@ -194,42 +194,8 @@ class table_horizontal_header(QHeaderView):
             self.update_section(temp)
 
 
-    def paintSection(self, painter, rect, logicalIndex):        
-        painter.save()
+    def paintSection(self, painter, rect, logicalIndex):     
         
-        painter.setRenderHint(QPainter.Antialiasing)
-        
-        # Get section text
-        text = self.model().headerData(logicalIndex, Qt.Horizontal)
-        
-        # Get header dimensions
-        self.x = rect.x()
-        self.y = rect.y()
-        self.width = rect.width()
-        self.height = rect.height()
-        
-        # Check if section contains checkbox
-        has_checkbox = self.model().checkbox_header[logicalIndex]
-        
-        # Calculate checkbox icon position
-        if has_checkbox:
-            checkbox_x = self.x + self.width - self.padding_right - self.checkbox_width
-            checkbox_y = self.y + (self.height - self.checkbox_height) / 2
-            checkbox_rect = QRect(checkbox_x, checkbox_y, self.checkbox_width, self.checkbox_height)
-            self.checkbox_rects[logicalIndex] = checkbox_rect
-        
-        # Calculate text position
-        text_x = self.x + self.padding_left
-        text_y = self.y
-        text_height = self.height
-        if has_checkbox:
-            text_width = self.width - self.padding_left - self.padding_right - self.checkbox_width - self.padding_between
-        else:
-            text_width = self.width - self.padding_left - self.padding_right
-        text_rect = QRect(text_x, text_y, text_width, text_height)
-        
-        # Calculate filter icon position
-
         # Set font to bold if is a cell corresponding to the header is selected, otherwise normal font.
         if self.parent():
            selected_columns = {index.column() for index in self.parent().selectedIndexes()}
@@ -241,38 +207,67 @@ class table_horizontal_header(QHeaderView):
            font = QFont()
            font.setBold(is_selected)  # Set the font to bold if the column is selected
            painter.setFont(font)
-
-        # Get the default pen
-        default_pen = QPen(painter.pen())
-
-        # Set the background
-        # gradient = QLinearGradient(rect.x(), rect.y() + rect.height(), rect.x() + rect.width(), rect.y())
-        gradient = QLinearGradient(rect.x(), rect.y() + rect.height(), rect.x(), rect.y() + rect.height())
-        gradient.setColorAt(0, 'white')
-        gradient.setColorAt(1, '#F3F3F3')
-        brush = QBrush(gradient)
-        painter.setBrush(brush)
-        painter.setPen(Qt.NoPen)
-        painter.drawRect(rect)
-        
-        # # Create a pen for the border and draw the border
-        border_pen = QPen(QColor(0, 0, 0, 127))
-        border_pen.setWidth(1)
-        border_pen.setStyle(Qt.SolidLine)
-        painter.setPen(border_pen)
-        painter.drawLine(self.x, self.y, self.x, self.y + self.height)                               # Left side
-        painter.drawLine(self.x, self.y + self.height, self.x + self.width, self.y + self.height)    # Bottom side
-        if logicalIndex == self.parent().model().columnCount() - 1:                                  # If the right most cell
-            painter.drawLine(self.x + self.width, self.y, self.x + self.width, self.y + self.height) # draw right side
-   
-        # Reset pen to its default
-        painter.setPen(default_pen)
-            
-        # Draw text
-        painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignVCenter, text)
-        
-        # Draw checkbox
+                
+        # Check if section contains checkbox
+        has_checkbox = self.model().checkbox_header[logicalIndex]
         if has_checkbox:
+            painter.save()
+            painter.setRenderHint(QPainter.Antialiasing)
+            
+            # Get section text
+            text = self.model().headerData(logicalIndex, Qt.Horizontal)
+            
+            # Get header dimensions
+            self.x = rect.x()
+            self.y = rect.y()
+            self.width = rect.width()
+            self.height = rect.height()
+            
+            # Calculate checkbox icon position
+            checkbox_x = self.x + self.width - self.padding_right - self.checkbox_width
+            checkbox_y = self.y + (self.height - self.checkbox_height) / 2
+            checkbox_rect = QRect(checkbox_x, checkbox_y, self.checkbox_width, self.checkbox_height)
+            self.checkbox_rects[logicalIndex] = checkbox_rect
+            
+            # Calculate text position
+            text_x = self.x + self.padding_left
+            text_y = self.y
+            text_height = self.height
+            if has_checkbox:
+                text_width = self.width - self.padding_left - self.padding_right - self.checkbox_width - self.padding_between
+            else:
+                text_width = self.width - self.padding_left - self.padding_right
+            text_rect = QRect(text_x, text_y, text_width, text_height)
+            
+            # Calculate filter icon position
+        
+            # Get the default pen
+            default_pen = QPen(painter.pen())
+    
+            # Set the background
+            gradient = QLinearGradient(rect.x(), rect.y(), rect.x() + rect.width(), rect.y())
+            gradient.setColorAt(0, '#f2faff')
+            gradient.setColorAt(1, '#e0f4fb')
+            brush = QBrush(gradient)
+            painter.setBrush(brush)
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(rect)
+            
+            # # Create a pen for the border and draw the border
+            border_pen = QPen(QColor(6, 34, 121, 170))
+            border_pen.setWidth(2)
+            border_pen.setStyle(Qt.SolidLine)
+            painter.setPen(border_pen)
+            painter.drawLine(self.x + rect.width(), self.y, self.x + rect.width(), self.y + self.height)                               # Right side
+            painter.drawLine(self.x, self.y + self.height, self.x + self.width, self.y + self.height)    # Bottom side
+            
+            # Reset pen to its default
+            painter.setPen(default_pen)
+                
+            # Draw text
+            painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignVCenter, text)
+            
+            # Draw checkbox
             checkbox_icon = QPixmap(checkbox_checked_path) if self.model().checkbox_header_status[logicalIndex] else QPixmap(checkbox_unchecked_path)
             painter.drawPixmap(checkbox_rect, checkbox_icon)
             
@@ -284,8 +279,10 @@ class table_horizontal_header(QHeaderView):
                 brush = QBrush(QColor(255, 255, 255, 100))
                 painter.setBrush(brush)
                 painter.drawRect(checkbox_rect)
-        
-        painter.restore()
+            
+            painter.restore()
+        else:
+            super().paintSection(painter, rect, logicalIndex)      
 
 
 class custom_table_model(QAbstractTableModel):
