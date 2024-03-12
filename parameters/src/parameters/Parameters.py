@@ -34,6 +34,7 @@ class Parameters:
     def nr_parameters(self):
         return len(self.all_parameters.index)
     
+    
     # Set file and parse the file
     def set_file(self, file: str = None):
         self.file = file

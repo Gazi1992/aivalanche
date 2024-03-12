@@ -6,7 +6,7 @@ from aivalanche_app.components.project_card import project_card
 from aivalanche_app.paths import project_card_background_path, plus_icon_path
 from aivalanche_app.constants.dimensions import PROJECT_CARD_WIDTH, PROJECT_CARD_HEIGHT, PROJECT_CARD_MARGIN, PROJECTS_NR_COLUMNS, PROJECT_PLUS_ICON_HEIGHT
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
-from aivalanche_app.components.header import header
+from aivalanche_app.components.navigation_header import navigation_header
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.modals.modal_1 import modal_1
 
@@ -30,7 +30,7 @@ class my_projects(QWidget):
 
         # Header Section
         header_navigation = [{'text': 'Projects', 'on_click': None}]
-        header_widget = header(navigation_path = header_navigation, on_search_text_changed = self.on_search, object_name = 'header')
+        header_widget = navigation_header(navigation_path = header_navigation, on_search_text_changed = self.on_search, object_name = 'header')
         layout.addWidget(header_widget)
         
         # Scrollable buttons Section

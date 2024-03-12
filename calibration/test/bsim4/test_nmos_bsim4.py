@@ -73,7 +73,7 @@ optimizer_config = {'type': 'differential_evolution',
                     'callback_after_each_iter': callback_after_each_iter,
                     'callback_after_last_iter': callback_after_last_iter,
                     'callback_after_better_solution_found': callback_after_better_solution_found,
-                    'pop_size': 100,
+                    'pop_size': 10,
                     'metric_threshold': 1e-10,
                     'max_iterations': 10000,
                     'max_iter_without_improvement': 500,
@@ -130,8 +130,8 @@ cost_function_config = {'type': 'default',
                         ]}
 
 use_dask = True
-# dask_env = 'local'
-dask_env = 'containers'
+dask_env = 'local'
+# dask_env = 'containers'
 
 if __name__ == '__main__':
 

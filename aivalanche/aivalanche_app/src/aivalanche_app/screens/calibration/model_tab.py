@@ -5,6 +5,7 @@ from aivalanche_app.data_store.store import store
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_label import custom_label
 from aivalanche_app.components.custom_radio_button import custom_radio_button
+from aivalanche_app.components.custom_checkbox_with_text import custom_checkbox_with_text
 
 MODEL_TEMPLATES = {'Transistors': ['BSIM4', 'BSIM3', 'BSIMBULK', 'BSIM CMG', 'Level 1', 'Level 3'],
                    'Pasive elements': ['Resistor', 'Capacitor', 'Inductor', 'Diode']}
@@ -21,16 +22,23 @@ class model_tab(QWidget):
             self.setObjectName(object_name)
         
         self.store = store
+        
+        self.model = None
+        self.testbenches = []
 
         self.init_ui()
 
 
     def init_ui(self):
         
+        self.testbench_checkboxes = []
+        self.model_radiobuttons = []
+        
         self.model_buttons_group = QButtonGroup(self)
         self.model_buttons_group.buttonClicked.connect(self.on_model_template_clicked)
         
         self.testbench_buttons_group = QButtonGroup(self)
+        self.testbench_buttons_group.setExclusive(False)
         self.testbench_buttons_group.buttonClicked.connect(self.on_testbench_template_clicked)
 
         layout = h_layout(spacing = 40)
@@ -104,10 +112,11 @@ class model_tab(QWidget):
         # Add the testbench templates
         grid_layout_temp = g_layout( vertical_spacing = 10)
         for index, val in enumerate(TESTBENCH_TEMPLATES):
-            button_temp = custom_radio_button(parent = self, text = val, group = self.testbench_buttons_group)
+            button_temp = custom_checkbox_with_text(parent = self, text = val, on_click = self.on_testbench_checkbox_clicked)
             row = index // 3
             col = index % 3
             grid_layout_temp.addWidget(button_temp, row, col)
+            self.testbench_checkboxes.append(button_temp)
             
         right_layout.addLayout(grid_layout_temp)
         
@@ -121,6 +130,9 @@ class model_tab(QWidget):
 
     def on_testbench_template_clicked(self, button):
         if button.text() == 'Custom testbenches':
-            self.load_testbenches_widget.set_state(True)
+            self.load_testbenches_widget.set_state(button.isChecked())
         else:
             self.load_testbenches_widget.set_state(False)
+            
+    def on_testbench_checkbox_clicked(self, state, text):
+        print(text, ': ', state)

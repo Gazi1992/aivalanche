@@ -11,18 +11,30 @@ class line_scatter_plot(pg.PlotItem):
         super().__init__(title = title)
         
         self.style = style        
-        self.plot_colors = style.PLOT_COLORS
+        self.plot_colors = style.colors['plot_colors']
     
         self.clear_plot()
         
         self.hideButtons()
         
-        self.legend = self.addLegend(brush = '#0000000A')        
-        self.showGrid(x = True, y = True, alpha = 0.2)
+        self.legend = self.addLegend(brush = self.style.colors['plot_legend_background'],
+                                     labelTextColor = self.style.colors['plot_legend_text'])        
+        self.showGrid(x = True, y = True, alpha = 0.5)
         
         self.set_title(title)
         self.add_x_axis_label(x_axis_label)
         self.add_y_axis_label(y_axis_label)
+        
+        self.x_axis = self.getAxis('bottom')
+        self.x_axis.setPen(self.style.colors['plot_axis'])
+        self.x_axis.setTextPen(self.style.colors['plot_text'])
+        self.x_axis.setTickPen(self.style.colors['plot_grid'])
+        
+        self.y_axis = self.getAxis('left')
+        self.y_axis.setPen(self.style.colors['plot_axis'])
+        self.y_axis.setTextPen(self.style.colors['plot_text'])
+        self.y_axis.setTickPen(self.style.colors['plot_grid'])
+
         
         # # Add plot buttons     
         # buttons_height = 20
@@ -41,19 +53,19 @@ class line_scatter_plot(pg.PlotItem):
     def set_title(self, title = 'title'):
         self.title = title
         if title is not None:
-            self.setTitle(title)
+            self.setTitle(title, color = self.style.colors['plot_text'])
     
     
     def add_x_axis_label(self, label: str = 'x axis label'):
         self.x_axis_label = label
         if label is not None:
-            self.setLabel('bottom', text = label)
+            self.setLabel('bottom', text = label, color = self.style.colors['plot_text'])
         
         
     def add_y_axis_label(self, label: str = 'y axis label'):
         self.y_axis_label = label
         if label is not None:
-            self.setLabel('left', text = label)
+            self.setLabel('left', text = label, color = self.style.colors['plot_text'])
 
     
     def clear_plot(self):

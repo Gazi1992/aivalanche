@@ -2,12 +2,14 @@ from PySide6.QtWidgets import QWidget, QRadioButton
 from aivalanche_app.components.custom_layouts import h_layout
 
 class custom_radio_button(QWidget):
-    def __init__(self, parent = None, text = '', on_click = None, group = None):
+    def __init__(self, parent = None, text = '', on_click = None, group = None, object_name = None):
         super().__init__(parent)
         layout = h_layout()
         self.setLayout(layout)
 
-        button = QRadioButton(text = text)        
+        button = QRadioButton(text = text)
+        if object_name is not None:
+            button.setObjectName(object_name)
         
         layout.addWidget(button)
         layout.addStretch()

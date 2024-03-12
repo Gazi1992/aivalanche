@@ -3,7 +3,7 @@ from aivalanche_app.data_store.store import store
 from aivalanche_app.screens.calibration.reference_data_tab import reference_data_tab
 from aivalanche_app.screens.calibration.model_tab import model_tab
 from aivalanche_app.screens.calibration.parameters_tab import parameters_tab
-from aivalanche_app.screens.calibration.optimizer_tab import optimizer_tab
+from aivalanche_app.screens.calibration.optimization_tab import optimization_tab
 from aivalanche_app.screens.calibration.results_tab import results_tab
 
 class calibration_tabs(QTabWidget):
@@ -23,13 +23,13 @@ class calibration_tabs(QTabWidget):
         self.reference_data_tab = reference_data_tab(parent = self, store = self.store, object_name = 'reference_data_tab')
         self.model_tab = model_tab(parent = self, store = self.store, object_name = 'model_tab')
         self.parameters_tab = parameters_tab(parent = self, store = self.store, object_name = 'parameters_tab')
-        self.optimizer_tab = optimizer_tab(parent = self, store = self.store, object_name = 'optimizer_tab')
+        self.optimization_tab = optimization_tab(parent = self, store = self.store, object_name = 'optimization_tab')
         self.results_tab = results_tab(parent = self, store = self.store, object_name = 'results_tab')
 
         self.addTab(self.reference_data_tab, "Reference data")
         self.addTab(self.model_tab, "Model")
         self.addTab(self.parameters_tab, "Parameters")
-        self.addTab(self.optimizer_tab, "Optimizer")
+        self.addTab(self.optimization_tab, "Optimizer")
         self.addTab(self.results_tab, "Results")
         
         # Hide the tab bar
@@ -45,7 +45,7 @@ class calibration_tabs(QTabWidget):
         elif tab == 'parameters':
             self.setCurrentWidget(self.parameters_tab)
         elif tab == 'optimizer':
-            self.setCurrentWidget(self.optimizer_tab)
+            self.setCurrentWidget(self.optimization_tab)
         elif tab == 'results':
             self.setCurrentWidget(self.results_tab)
             

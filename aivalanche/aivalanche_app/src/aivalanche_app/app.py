@@ -26,11 +26,11 @@ if not QApplication.instance():
 else:
     app = QApplication.instance()
 
-# app.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
+app.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
 
 style = style()
 store = store(style = style)
-app.setStyleSheet(style.theme)
+app.setStyleSheet(style.stylesheet)
 
 window = home(store = store)    
 window.show()

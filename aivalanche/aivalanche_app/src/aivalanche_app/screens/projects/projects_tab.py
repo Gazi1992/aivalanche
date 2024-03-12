@@ -66,7 +66,7 @@ class projects_tab(QWidget):
         
         painter.setRenderHint(QPainter.Antialiasing)
         center = QPoint(self.rect().x(), self.rect().y())
-        painter.setBrush(QColor(self.store.style.SECOND_BACKGROUND_COLOR))
+        painter.setBrush(QColor(self.store.style.colors['background_2']))
         painter.setPen(Qt.NoPen)
         radius = min(self.width(), self.height()) * 0.35
         painter.drawEllipse(center, radius, radius)        

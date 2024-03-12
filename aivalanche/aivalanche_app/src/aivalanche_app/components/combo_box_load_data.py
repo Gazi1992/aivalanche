@@ -44,8 +44,6 @@ class combo_box_load_data(QWidget):
         load_data_button = icon_text_button(parent = self, icon_path = upload_icon_path, icon_height = 25, on_click = self.on_load_data_button_click)
         layout.addWidget(load_data_button, 0)
     
-        
-
 
     def toggle_state(self):
         self.is_enabled = not self.is_enabled

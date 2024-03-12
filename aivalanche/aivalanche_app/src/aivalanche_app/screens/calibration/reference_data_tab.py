@@ -1,5 +1,5 @@
 import pyqtgraph as pg, pandas as pd
-from PySide6.QtWidgets import QWidget, QSplitter, QFileDialog, QScrollArea
+from PySide6.QtWidgets import QWidget, QSplitter, QScrollArea
 from aivalanche_app.components.custom_layouts import v_layout
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
@@ -57,7 +57,7 @@ class reference_data_tab(QWidget):
         left_layout.addWidget(self.load_data_widget, 0)
         
         # Create table
-        self.table = custom_table(style = self.style,
+        self.table = custom_table(store = self.store,
                                   on_checkbox_click = self.on_checkbox_click)
         left_layout.addWidget(self.table, 1)
         
@@ -81,15 +81,6 @@ class reference_data_tab(QWidget):
 
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 1)
-
-        
-    def on_load_data_button_click(self):
-        response = QFileDialog.getOpenFileName(parent = self, caption = 'Select reference data file', filter = 'Json file (*.json)')
-        if len(response[0]) > 0:
-            ref_data_file = response[0]
-            if ref_data_file != self.reference_data_file:
-                self.drop_down_widget.addItem(ref_data_file)
-                self.drop_down_widget.setCurrentText(ref_data_file)
             
 
     def load_reference_data(self, file):

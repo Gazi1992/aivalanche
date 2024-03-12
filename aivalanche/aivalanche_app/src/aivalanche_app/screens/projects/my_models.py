@@ -6,7 +6,7 @@ from aivalanche_app.components.model_card import model_card
 from aivalanche_app.paths import model_card_background_path, plus_icon_path
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.constants.dimensions import MODEL_CARD_WIDTH, MODEL_CARD_HEIGHT, MODEL_CARD_MARGIN, MODELS_NR_COLUMNS, MODEL_PLUS_ICON_HEIGHT
-from aivalanche_app.components.header import header
+from aivalanche_app.components.navigation_header import navigation_header
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.modals.modal_1 import modal_1
 
@@ -32,7 +32,7 @@ class my_models(QWidget):
         # Header Section
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},
                                   {'text': self.store.active_project.title if self.store.active_project is not None else 'Models', 'on_click': None}]
-        self.header_widget = header(navigation_path = self.header_navigation, on_search_text_changed = self.on_search, object_name = 'header')
+        self.header_widget = navigation_header(navigation_path = self.header_navigation, on_search_text_changed = self.on_search, object_name = 'header')
         layout.addWidget(self.header_widget)
         self.update_header()
         

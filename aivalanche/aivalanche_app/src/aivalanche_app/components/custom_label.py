@@ -11,8 +11,8 @@ class custom_label(QLabel):
         
     def set_font_size(self, font_size):
         if isinstance(font_size, str):
-            if font_size in self.style.FONT_SIZES.keys():
-                font_size = self.style.FONT_SIZES[font_size]
+            if font_size in self.style.font_sizes.keys():
+                font_size = self.style.font_sizes[font_size]
             else:
                 font_size = None
                 

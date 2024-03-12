@@ -60,18 +60,19 @@ class icon_text_button(QPushButton):
         self.setLayout(self.layout)
         
         if self.object_name is not None:
-            self.setObjectName(object_name)
-            
+            self.setObjectName(object_name)            
         
     def enterEvent(self, event):
-        # super().enterEvent(event)
+        super().enterEvent(event)
         if self.change_cursor:
             self.setCursor(Qt.PointingHandCursor)
 
+
     def leaveEvent(self, event):
-        # super().enterEvent(event)
+        super().leaveEvent(event)
         if self.change_cursor:
             self.setCursor(Qt.ArrowCursor)
+        
         
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -84,6 +85,7 @@ class icon_text_button(QPushButton):
             print('Warning: direction has to be either horizontal or vertical.')
             print('Setting it to horizontal')
             self.direction = 'horizontal'
+
 
     # Validate icon_position
     def validate_icon_position(self):
@@ -99,6 +101,7 @@ class icon_text_button(QPushButton):
             print('Setting it to top')
             self.icon_position = 'top'
 
+
     # Set text_alignment
     def set_text_alignment(self):
         if self.text_alignment is None:
@@ -106,6 +109,7 @@ class icon_text_button(QPushButton):
                 self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
             else:
                 self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignHCenter
+
 
     # Set button dimensions
     def set_button_dimensions(self):        
@@ -115,7 +119,6 @@ class icon_text_button(QPushButton):
         elif self.minimum_width is not None:
             self.setMinimumWidth(self.minimum_width)
         else:
-            # self.setMinimumWidth(self.sizeHint().width())
             if self.only_icon:
                 self.setMinimumWidth(self.icon_widget.width() + self.padding_horizontal)
             elif self.only_text:
@@ -142,11 +145,13 @@ class icon_text_button(QPushButton):
                 else:
                     self.setMinimumHeight(self.icon_widget.height() + self.icon_text_spacing + self.text_widget.sizeHint().height() + self.padding_vertical)
         
+        
     # Add icon
     def create_icon(self):
         self.icon_widget = custom_image(self, image_path = self.icon_path, image_width = self.icon_width, image_height = self.icon_height, resize = self.icon_resize, on_click = self.click)
         if self.object_name is not None:
             self.icon_widget.setObjectName(self.object_name)
+            
             
     # Add text
     def create_text(self):
@@ -162,6 +167,7 @@ class icon_text_button(QPushButton):
         if self.object_name is not None:
             self.text_widget.setObjectName(self.object_name)
         
+        
     # Set action
     def set_action(self):
         if self.editable:
@@ -171,6 +177,7 @@ class icon_text_button(QPushButton):
             if self.on_click is not None:
                 self.clicked.connect(self.on_click)
     
+    
     # Create layout
     def create_layout(self):
         if self.icon_path is not None and self.text is not None:
@@ -178,6 +185,7 @@ class icon_text_button(QPushButton):
         else:
             self.layout = h_layout(self)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    
     
     # Add icon and/or text to layout
     def add_icon_or_text(self):
@@ -193,14 +201,17 @@ class icon_text_button(QPushButton):
                 self.layout.addWidget(self.text_widget, 1)
                 self.layout.addWidget(self.icon_widget, 0)
 
+
     # Create only icon button.
     def create_icon_button(self):
         self.create_icon()
+        
         
     # Create only text button.    
     def create_text_button(self):
         self.set_text_alignment()
         self.create_text()
+
 
     # Create icon and text button.
     def create_icon_text_button(self):

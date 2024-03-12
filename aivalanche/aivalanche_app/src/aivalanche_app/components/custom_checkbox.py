@@ -1,14 +1,14 @@
 from PySide6.QtWidgets import QCheckBox
 from PySide6.QtGui import QPainter, QPixmap, QColor, QBrush, QMouseEvent
 from PySide6.QtCore import Qt, QRect
-from aivalanche_app.paths import checkbox_checked_path, checkbox_unchecked_path
+from aivalanche_app.paths import checkbox_checked_path, checkbox_checked_hovered_path, checkbox_checked_pressed_path, checkbox_unchecked_path, checkbox_unchecked_hovered_path, checkbox_unchecked_pressed_path
 from aivalanche_app.resources.themes.style import style
 
 class custom_checkbox(QCheckBox):
     def __init__(self, parent = None,
                  checkbox_checked_path = checkbox_checked_path, checkbox_unchecked_path = checkbox_unchecked_path,
                  checkbox_width: int = 16, checkbox_height: int = 16, state: bool = False,
-                 style: style = None, on_click: callable = None):
+                 style: style = None, on_click: callable = None, object_name: str = None):
         
         super().__init__(parent)
         
@@ -26,6 +26,9 @@ class custom_checkbox(QCheckBox):
         
         self.checkbox_rect = QRect(0, 0, 0, 0)
         
+        if object_name is not None:
+            self.setObjectName(object_name)
+            
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if not self.checkbox_pressed:
@@ -74,7 +77,7 @@ class custom_checkbox(QCheckBox):
         rect = self.rect()
         painter = QPainter(self)
         self.paint(painter, rect)
-
+        
 
     def paint(self, painter, rect):
         # Make the height of the rect a little larger, so that the image is not cut
@@ -106,18 +109,10 @@ class custom_checkbox(QCheckBox):
         painter.fillRect(rect, QColor(Qt.transparent))
         
         # Draw the checkbox icon
-        checkbox_icon = QPixmap(checkbox_checked_path) if self.checkbox_checked else QPixmap(checkbox_unchecked_path)
+        checkbox_icon = get_checkbox_icon(is_checked = self.checkbox_checked,
+                                          is_hovered = self.checkbox_hovered,
+                                          is_pressed = self.checkbox_pressed)
         painter.drawPixmap(self.checkbox_rect, checkbox_icon)
-        
-        # Based on the state, draw certain overlays
-        if self.checkbox_pressed:
-            brush = QBrush(QColor(0, 0, 0, 100))
-            painter.setBrush(brush)
-            painter.drawRect(self.checkbox_rect)
-        elif self.checkbox_hovered:
-            brush = QBrush(QColor(255, 255, 255, 100))
-            painter.setBrush(brush)
-            painter.drawRect(self.checkbox_rect)
 
         painter.restore()
     
@@ -131,7 +126,24 @@ class custom_checkbox(QCheckBox):
             self.update()
 
         
-
+def get_checkbox_icon(is_checked = False, is_hovered = False, is_pressed = False):
+    if is_pressed:
+        if is_checked:
+            checkbox_icon = QPixmap(checkbox_checked_pressed_path)
+        else:
+            checkbox_icon = QPixmap(checkbox_unchecked_pressed_path)
+    elif is_hovered:
+        if is_checked:
+            checkbox_icon = QPixmap(checkbox_checked_hovered_path)
+        else:
+            checkbox_icon = QPixmap(checkbox_unchecked_hovered_path)        
+    else:
+        if is_checked:
+            checkbox_icon = QPixmap(checkbox_checked_path)
+        else:
+            checkbox_icon = QPixmap(checkbox_unchecked_path)
+            
+    return checkbox_icon
 
 
 

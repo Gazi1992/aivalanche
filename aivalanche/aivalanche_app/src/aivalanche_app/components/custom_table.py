@@ -3,21 +3,20 @@ import numpy as np
 from PySide6.QtWidgets import QLineEdit, QTableView, QStyledItemDelegate, QHeaderView, QStyle
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QRect, QItemSelection, QItemSelectionModel
 from PySide6.QtGui import QColor, QPixmap, QPainter, QBrush, QFont, QLinearGradient, QPen, QMouseEvent
-from aivalanche_app.resources.themes.style import style
 from aivalanche_app.paths import ascending_icon_path, descending_icon_path, checkbox_checked_path, checkbox_unchecked_path
-from aivalanche_app.components.custom_checkbox import custom_checkbox
+from aivalanche_app.components.custom_checkbox import custom_checkbox, get_checkbox_icon
+from aivalanche_app.data_store.store import store
+
 
 class item_delegate(QStyledItemDelegate):
     
-    def __init__(self, parent, style):
+    def __init__(self, parent):
         
         super().__init__(parent)
         
         # Define checkbox icon dimension
         self.checkbox_width = 16
         self.checkbox_height = 16
-        self.alternate_row_background_color = QColor(6, 34, 121, 20)
-        self.style = style
     
     
     def commit_and_close_editor_checkbox(self, state):
@@ -64,7 +63,7 @@ class item_delegate(QStyledItemDelegate):
         # If checkbox, then use the custom checkbox paint
         if model.checkbox_data[index.column()]:
             if option.state & QStyle.State_Selected:
-                painter.fillRect(rect, QColor(self.style.MAIN_BACKGROUND_COLOR))
+                painter.fillRect(rect, self.parent().style.get_qcolor_from_string(self.parent().style.colors['background_1']))
             editor = custom_checkbox(parent = self.parent(), state = index.data(Qt.EditRole), checkbox_height = self.checkbox_height, checkbox_width = self.checkbox_width)
             editor.paint(painter, rect)           
         else:        
@@ -72,7 +71,7 @@ class item_delegate(QStyledItemDelegate):
         
         # Set background color
         if index.row() % 2 == 1:
-            painter.fillRect(rect, self.alternate_row_background_color)
+            painter.fillRect(rect, self.parent().style.get_qcolor_from_string(self.parent().style.colors['table_even_rows']))
             
             
     def editorEvent(self, event, model, option, index):
@@ -246,15 +245,15 @@ class table_horizontal_header(QHeaderView):
     
             # Set the background
             gradient = QLinearGradient(rect.x(), rect.y(), rect.x() + rect.width(), rect.y())
-            gradient.setColorAt(0, '#f2faff')
-            gradient.setColorAt(1, '#e0f4fb')
+            gradient.setColorAt(0, self.parent().style.colors['header_section_color_1'])
+            gradient.setColorAt(1, self.parent().style.colors['header_section_color_2'])
             brush = QBrush(gradient)
             painter.setBrush(brush)
             painter.setPen(Qt.NoPen)
             painter.drawRect(rect)
             
             # # Create a pen for the border and draw the border
-            border_pen = QPen(QColor(6, 34, 121, 170))
+            border_pen = QPen(self.parent().style.get_qcolor_from_string(self.parent().style.colors['header_section_border']))
             border_pen.setWidth(2)
             border_pen.setStyle(Qt.SolidLine)
             painter.setPen(border_pen)
@@ -268,18 +267,12 @@ class table_horizontal_header(QHeaderView):
             painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignVCenter, text)
             
             # Draw checkbox
-            checkbox_icon = QPixmap(checkbox_checked_path) if self.model().checkbox_header_status[logicalIndex] else QPixmap(checkbox_unchecked_path)
+            checkbox_icon = get_checkbox_icon(is_checked = self.model().checkbox_header_status[logicalIndex],
+                                              is_pressed = self.checkbox_pressed_section == logicalIndex,
+                                              is_hovered = self.checkbox_hovered_section == logicalIndex)
             painter.drawPixmap(checkbox_rect, checkbox_icon)
             
-            if self.checkbox_pressed_section == logicalIndex:
-                brush = QBrush(QColor(0, 0, 0, 100))
-                painter.setBrush(brush)
-                painter.drawRect(checkbox_rect)
-            elif self.checkbox_hovered_section == logicalIndex:
-                brush = QBrush(QColor(255, 255, 255, 100))
-                painter.setBrush(brush)
-                painter.drawRect(checkbox_rect)
-            
+            # Restore painter
             painter.restore()
         else:
             super().paintSection(painter, rect, logicalIndex)      
@@ -434,8 +427,11 @@ class custom_table_model(QAbstractTableModel):
     
 
 class custom_table(QTableView):
-    def __init__(self, data = None, style: style = None, on_checkbox_click: callable = None, on_header_checkbox_click: callable = None):       
+    def __init__(self, data = None, store: store = None, on_checkbox_click: callable = None, on_header_checkbox_click: callable = None, column_width_mode: str = 'Interactive'):       
         super().__init__()
+        
+        self.store = store
+        self.style = self.store.style
         
         # Set model
         self.setModel(custom_table_model(data = data,
@@ -445,10 +441,15 @@ class custom_table(QTableView):
         # Set header options
         self.setHorizontalHeader(table_horizontal_header(parent = self))
         self.horizontalHeader().setStretchLastSection(True)  # Make columns stretch to the full width
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        if column_width_mode == 'Interactive':
+            self.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        elif column_width_mode == 'ResizeToContents':
+            self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        elif column_width_mode == 'Stretch':
+            self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-        self.setItemDelegate(item_delegate(parent = self, style = style))
+
+        self.setItemDelegate(item_delegate(parent = self))
         
         self.setMouseTracking(True)
         
