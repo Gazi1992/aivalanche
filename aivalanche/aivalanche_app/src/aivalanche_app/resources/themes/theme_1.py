@@ -15,6 +15,11 @@ colors = {
     "drawer_button_press": "#c9c9c9",
     "drawer_button_check": "#baf0f8",    
     
+    "selection": "#ffffff",
+    "selection_background": "#e95420",
+
+    "calibration_header_button_checked": "#ffb800",
+    
     "button_hover": "rgba(6, 34, 121, 50)",
     "button_press": "rgba(6, 34, 121, 125)",
     
@@ -41,9 +46,9 @@ colors = {
     "modal_button_color_2": "#e0f4fb",
     "modal_button_border": "rgba(6, 34, 121, 170)",
     
-    "parameters_tab_button_color_1": "#f2faff",
-    "parameters_tab_button_color_2": "#e0f4fb",
-    "parameters_tab_button_border": "rgba(6, 34, 121, 170)",
+    "button_1_color_1": "#f2faff",
+    "button_1_color_2": "#e0f4fb",
+    "button_1_border": "rgba(6, 34, 121, 170)",
     
     "progress_bar_background": "rgba(6, 34, 121, 20)",
     "progress_bar_chunk": "#339313",
@@ -60,6 +65,7 @@ stylesheet = f"""
     QWidget {{background-color: transparent; border: none;}}
     QFrame {{background-color: transparent; border: none;}}
     QSplitter {{background-color: transparent; border: none;}}
+    QSplitter::handle {{width: 0px; height: 0px;}}
     QStackedWidget {{background-color: transparent; border: none;}}
     QTabWidget {{background-color: transparent; border: none;}}
     QScrollArea {{background-color: transparent; border: none;}}
@@ -74,7 +80,11 @@ stylesheet = f"""
     QScrollBar:add-page {{border: none;}}
     
     QMenu {{background-color: {colors['background_1']}; color: {colors['text']};}}
-    QLabel {{background-color: transparent; border: none; color: {colors['text']}}}
+    QLabel {{
+        background-color: transparent;
+        border: none;
+        color: {colors['text']};
+        }}
     QDialog {{min-width: 500px; background-color: {colors['background_1']};}}
     
     /* Button */
@@ -91,6 +101,9 @@ stylesheet = f"""
         background: {colors['line_edit_background']};
         border: 1px solid {colors['line_edit_border']};
         padding: 5px;
+        color: {colors['text']};
+        selection-color: {colors['selection']};
+        selection-background-color: {colors['selection_background']};
         }}
                                                      
     /* Table view */
@@ -128,10 +141,9 @@ stylesheet = f"""
     QComboBox {{
         background-color: {colors['combo_box_background']};
         border: 1px solid {colors['combo_box_border']};
-        border-radius: 15px;
-        selection-background-color: {colors['combo_box_selection']};
-        padding-left: 10;
-        color: {colors['text']};}}
+        color: {colors['text']};
+        padding: 5px;
+        }}
     QComboBox:down-arrow {{image: url({arrow_down_icon_path}); width: 20px;}}
     QComboBox:drop-down:button {{border: none; width: 20px; padding-right: 5px}}
     
@@ -194,12 +206,12 @@ stylesheet = f"""
     
     /* Calibration header */
     QFrame#calibration_header_frame {{background-color: white;}}
-    QPushButton#calibration_header_button:checked {{background-color: #ffd600;}}
+    QPushButton#calibration_header_button:checked {{background-color: {colors['calibration_header_button_checked']};}}
     
     /* Parameters tab button */
     QPushButton#parameters_tab {{
-        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {colors['parameters_tab_button_color_1']}, stop:1 {colors['parameters_tab_button_color_2']});
-        border: 1px solid {colors['parameters_tab_button_border']};
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {colors['button_1_color_1']}, stop:1 {colors['button_1_color_2']});
+        border: 1px solid {colors['button_1_border']};
         }} 
     QPushButton#parameters_tab:hover {{background: {colors['button_hover']};}}
     QPushButton#parameters_tab:pressed {{background: {colors['button_press']};}}
@@ -208,4 +220,25 @@ stylesheet = f"""
     QPushButton#calibration_control {{icon-size: 30px 30px;}}
     QPushButton#calibration_control:hover {{background-color: transparent;}}
     QPushButton#calibration_control:pressed {{background-color: transparent;}}
+    
+    /* Round combo box */
+    QComboBox#round_combo_box {{border-radius: 15px; padding-left: 10px; height: 20px;}}
+    
+    /* Loss card */
+    QFrame#loss_card {{
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {colors['button_1_color_1']}, stop:1 {colors['button_1_color_2']});
+        border: 1px solid {colors['button_1_border']};
+        padding: 10px;
+        }}
+    QPushButton#add_loss_card_button {{
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {colors['button_1_color_1']}, stop:1 {colors['button_1_color_2']});
+        border: 1px solid {colors['button_1_border']};
+        }}
+    QPushButton#add_loss_card_button:hover {{background: {colors['button_hover']};}}
+    QPushButton#add_loss_card_button:pressed {{background: {colors['button_press']};}}
+    
+    /* Add group type */
+    QPushButton#add_group_type {{icon-size: 25px 25px;}}
+    QPushButton#add_group_type:hover {{background-color: transparent;}}
+    QPushButton#add_group_type:pressed {{background-color: transparent;}}
 """

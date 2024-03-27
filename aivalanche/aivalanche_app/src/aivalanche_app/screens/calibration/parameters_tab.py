@@ -5,6 +5,7 @@ from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from parameters import Parameters
+import os
 
 
 class parameters_tab(QWidget):
@@ -30,7 +31,12 @@ class parameters_tab(QWidget):
         layout.addLayout(top_layout)
         
         # Create load data combo box
-        self.load_data_widget = combo_box_load_data(parent = self, caption = 'Select parameters file', filter = 'CSV and Json files (*.csv *.json)', on_combo_box_changed = self.load_parameters)       
+        self.load_data_widget = combo_box_load_data(parent = self,
+                                                    caption = 'Select parameters file',
+                                                    filter = 'CSV and Json files (*.csv *.json)',
+                                                    placeholder = 'Select parameters file',
+                                                    on_combo_box_changed = self.load_parameters,
+                                                    object_name = 'round_combo_box')       
         top_layout.addWidget(self.load_data_widget, 0)
         top_layout.addSpacing(20)
         
@@ -50,9 +56,10 @@ class parameters_tab(QWidget):
         
 
     def load_parameters(self, file):
-        self.parameters = Parameters(file)
-        self.parameters.all_parameters.insert(0, 'include', True)
-        self.table.update_data(self.parameters.all_parameters)
+        if os.path.exists(file):
+            self.parameters = Parameters(file)
+            self.parameters.all_parameters.insert(0, 'include', True)
+            self.table.update_data(self.parameters.all_parameters)
 
 
     def save_parameters_to_file(self):

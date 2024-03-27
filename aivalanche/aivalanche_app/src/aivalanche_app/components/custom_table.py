@@ -29,6 +29,7 @@ class item_delegate(QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         if self.parent().model().edit_data[index.column()]:
             editor = QLineEdit(parent = parent)
+            # editor.setObjectName('table')
             return editor
         elif self.parent().model().checkbox_data[index.column()]:
             editor = custom_checkbox(parent = parent, state = index.data(Qt.EditRole), on_click = lambda state: self.parent().model().on_checkbox_click(state, index),

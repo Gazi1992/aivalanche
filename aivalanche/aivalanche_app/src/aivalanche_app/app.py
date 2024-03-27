@@ -1,4 +1,3 @@
-import sys, os
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFontDatabase, QFont
 from PySide6.QtCore import Qt
@@ -6,7 +5,12 @@ from aivalanche_app.screens.home import home
 from aivalanche_app.paths import fonts_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.store import store
+import sys, os, pyqtgraph as pg
 
+# Enable antialiasing for prettier plots
+pg.setConfigOptions(antialias = True)
+pg.setConfigOption('background', (0, 0, 0, 0))
+pg.setConfigOption('foreground', 'k')
 
 # # Loop through all files in the specified folder
 # for dir_name in os.listdir(fonts_path):

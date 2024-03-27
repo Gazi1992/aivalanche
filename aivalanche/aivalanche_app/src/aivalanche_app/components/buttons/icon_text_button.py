@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QPushButton, QLabel, QLineEdit
+from PySide6.QtWidgets import QPushButton, QLabel, QLineEdit, QGraphicsOpacityEffect
 from PySide6.QtCore import Qt
 from aivalanche_app.components.custom_image import custom_image
 from aivalanche_app.components.custom_layouts import h_layout, v_layout
@@ -6,7 +6,7 @@ from aivalanche_app.paths import image_placeholder_path
 
 class icon_text_button(QPushButton):
     def __init__(self, parent = None, direction = 'horizontal', padding = (0, 0, 0, 0), button_width = None, button_height = None, minimum_width = None, minimum_height = None,
-                 icon_path = None, icon_width = None, icon_height = None, icon_text_spacing = 5, icon_position = 'left', icon_resize = 'fit',
+                 icon_path = None, icon_width = None, icon_height = None, icon_text_spacing = 5, icon_position = 'left', icon_resize = 'fit', is_enabled: bool = True,
                  editable = False, text = None, text_alignment = None, checkable = False, on_click = None, on_text_edit = None, change_cursor: bool = False, object_name: str = None):
         super().__init__(parent)
         
@@ -24,6 +24,7 @@ class icon_text_button(QPushButton):
         self.icon_text_spacing = icon_text_spacing
         self.icon_position = icon_position
         self.icon_resize = icon_resize
+        self.is_enabled = is_enabled
         self.editable = editable
         self.text = text
         self.text_alignment = text_alignment
@@ -34,6 +35,7 @@ class icon_text_button(QPushButton):
         self.object_name = object_name
         self.only_text = False
         self.only_icon = False
+        self.opacity_effect = QGraphicsOpacityEffect()
         
         self.create_layout()
         self.setContentsMargins(*self.padding)
@@ -61,6 +63,8 @@ class icon_text_button(QPushButton):
         
         if self.object_name is not None:
             self.setObjectName(object_name)            
+            
+        self.set_state(self.is_enabled)
         
     def enterEvent(self, event):
         super().enterEvent(event)
@@ -220,3 +224,18 @@ class icon_text_button(QPushButton):
         self.set_text_alignment()                   
         self.create_icon()
         self.create_text()
+        
+    
+    def set_state(self, state: bool = True):
+        if state != self.is_enabled:
+            self.is_enabled = state
+            self.setEnabled(self.is_enabled)
+            self.adjust_opacity()
+        
+    
+    def adjust_opacity(self):
+        if self.is_enabled:
+            self.opacity_effect.setOpacity(1)
+        else:
+            self.opacity_effect.setOpacity(0.3)
+        self.setGraphicsEffect(self.opacity_effect)

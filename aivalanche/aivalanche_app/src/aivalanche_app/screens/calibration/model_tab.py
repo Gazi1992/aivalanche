@@ -7,11 +7,6 @@ from aivalanche_app.components.custom_label import custom_label
 from aivalanche_app.components.custom_radio_button import custom_radio_button
 from aivalanche_app.components.custom_checkbox_with_text import custom_checkbox_with_text
 
-MODEL_TEMPLATES = {'Transistors': ['BSIM4', 'BSIM3', 'BSIMBULK', 'BSIM CMG', 'Level 1', 'Level 3'],
-                   'Pasive elements': ['Resistor', 'Capacitor', 'Inductor', 'Diode']}
-
-TESTBENCH_TEMPLATES = ['id_vd_vg', 'id_vb_vd', 'cgd_vg_vd', 'cgs_vg_vd', 'ciss_vd_vg']
-
 
 class model_tab(QWidget):
     
@@ -65,17 +60,22 @@ class model_tab(QWidget):
         left_layout.addWidget(custom_model_button)
         
         # Create load model combo box
-        self.load_model_widget = combo_box_load_data(parent = self, caption = 'Select model file', filter = 'cir file (*.cir)', is_enabled = False)
+        self.load_model_widget = combo_box_load_data(parent = self,
+                                                     caption = 'Select model file',
+                                                     filter = 'cir file (*.cir)',
+                                                     placeholder = 'Select model file',
+                                                     is_enabled = False,
+                                                     object_name = 'round_combo_box')
         left_layout.addWidget(self.load_model_widget)
         
         # Add the model templates
-        for item in MODEL_TEMPLATES.keys():
+        for item in self.store.model_templates.keys():
             layout_temp = v_layout(spacing = 15) 
             label = custom_label(parent = self, text = item, font_size = 'normal')
             layout_temp.addWidget(label)
 
             grid_layout_temp = g_layout( vertical_spacing = 10)
-            for index, val in enumerate(MODEL_TEMPLATES[item]):
+            for index, val in enumerate(self.store.model_templates[item]):
                 button_temp = custom_radio_button(parent = self, text = val, group = self.model_buttons_group)
                 row = index // 3
                 col = index % 3
@@ -106,12 +106,17 @@ class model_tab(QWidget):
         right_layout.addWidget(custom_testbenches_button)
         
         # Create load testbench combo box
-        self.load_testbenches_widget = combo_box_load_data(parent = self, caption = 'Select testbenches file', filter = 'json file (*.json)', is_enabled = False)
+        self.load_testbenches_widget = combo_box_load_data(parent = self,
+                                                           caption = 'Select testbenches file',
+                                                           filter = 'json file (*.json)',
+                                                           placeholder = 'Select testbenches file',
+                                                           is_enabled = False,
+                                                           object_name = 'round_combo_box')
         right_layout.addWidget(self.load_testbenches_widget)
         
         # Add the testbench templates
         grid_layout_temp = g_layout( vertical_spacing = 10)
-        for index, val in enumerate(TESTBENCH_TEMPLATES):
+        for index, val in enumerate(self.store.testbench_templates):
             button_temp = custom_checkbox_with_text(parent = self, text = val, on_click = self.on_testbench_checkbox_clicked)
             row = index // 3
             col = index % 3

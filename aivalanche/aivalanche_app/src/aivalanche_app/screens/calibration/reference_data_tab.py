@@ -1,4 +1,3 @@
-import pyqtgraph as pg, pandas as pd
 from PySide6.QtWidgets import QWidget, QSplitter, QScrollArea
 from aivalanche_app.components.custom_layouts import v_layout
 from aivalanche_app.data_store.store import store
@@ -6,17 +5,14 @@ from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from reference_data import Reference_data
+import pyqtgraph as pg, pandas as pd, os
 
-# Enable antialiasing for prettier plots
-pg.setConfigOptions(antialias=True)
-pg.setConfigOption('background', (0, 0, 0, 0))
-pg.setConfigOption('foreground', 'k')
-
-class reference_data_tab(QWidget):
+class reference_data_tab(QSplitter):
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
         
+        self.object_name = object_name
         if object_name is not None:
             self.setObjectName(object_name)
             
@@ -30,6 +26,9 @@ class reference_data_tab(QWidget):
         self.min_plot_height = 500
         self.plots_widget_height_array = []
         
+        self.placeholder_plot = line_scatter_plot(x_axis_label = 'x', y_axis_label = 'y', style = self.style)
+        self.placeholder_plot_visible = False
+        
         self.init_ui()
     
     
@@ -39,21 +38,18 @@ class reference_data_tab(QWidget):
     
 
     def init_ui(self):
-        
-        layout = v_layout(parent = self)
-        self.setLayout(layout)
-        
-        splitter = QSplitter(parent = self)
-        splitter.setHandleWidth(0)
-        layout.addWidget(splitter, 1)
-        
         # Create left widget
-        left_widget = QWidget(parent = splitter)
+        left_widget = QWidget(parent = self)
         left_layout = v_layout(spacing = 20)
         left_widget.setLayout(left_layout)
         
         # Create load data combo box
-        self.load_data_widget = combo_box_load_data(parent = self, caption = 'Select reference data file', filter = 'Json file (*.json)', on_combo_box_changed = self.load_reference_data)       
+        self.load_data_widget = combo_box_load_data(parent = self,
+                                                    caption = 'Select reference data file',
+                                                    filter = 'Json file (*.json)',
+                                                    on_combo_box_changed = self.load_reference_data,
+                                                    placeholder = 'Select reference data file',
+                                                    object_name = 'round_combo_box')       
         left_layout.addWidget(self.load_data_widget, 0)
         
         # Create table
@@ -62,7 +58,7 @@ class reference_data_tab(QWidget):
         left_layout.addWidget(self.table, 1)
         
         # Create right layout, where plots will be shown
-        right_widget = QWidget(parent = splitter)
+        right_widget = QWidget(parent = self)
         right_widget.setContentsMargins(10, 0, 0, 0)
         right_layout = v_layout(spacing = 20)
         right_widget.setLayout(right_layout)
@@ -79,21 +75,36 @@ class reference_data_tab(QWidget):
         scroll_area.setWidget(self.plots_widget)
         scroll_area.setWidgetResizable(True)
 
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 1)
+        self.setStretchFactor(0, 1)
+        self.setStretchFactor(1, 1)
+        
+        self.check_empty_plot_widget()
+            
+    
+    def check_empty_plot_widget(self):
+        if self.nr_plots == 0:
+            self.show_placeholder_plot()
             
 
+    def show_placeholder_plot(self):
+        self.plots_widget.addItem(self.placeholder_plot, row = 0, col = 0)
+        self.placeholder_plot_visible = True
+        if len(self.plots_widget_height_array) > 0:
+            self.plots_widget.setFixedHeight(self.plots_widget_height_array[0])
+
+
     def load_reference_data(self, file):
-        self.clear_all_plots()
-        self.reference_data = Reference_data(file)
-        min_group_id = self.reference_data.data['group_id'].min()
-        self.reference_data.data.insert(0, 'include', True)
-        self.reference_data.data.insert(1, 'plot', False)
-        self.reference_data.data.insert(2, 'calibrate', True)
-        self.reference_data.data['plot'] = self.reference_data.data['group_id'] == min_group_id
-        self.table.update_data(self.reference_data.data)
-        self.update_plots(group_id = min_group_id)
-        
+        if os.path.exists(file):
+            self.clear_all_plots()
+            self.reference_data = Reference_data(file)
+            min_group_id = self.reference_data.data['group_id'].min()
+            self.reference_data.data.insert(0, 'include', True)
+            self.reference_data.data.insert(1, 'plot', False)
+            self.reference_data.data.insert(2, 'calibrate', True)
+            self.reference_data.data['plot'] = self.reference_data.data['group_id'] == min_group_id
+            self.table.update_data(self.reference_data.data)
+            self.update_plots(group_id = min_group_id)
+
     
     def on_checkbox_click(self, data: dict = None):
         row = data['row_index']
@@ -127,9 +138,14 @@ class reference_data_tab(QWidget):
     def clear_all_plots(self):
         self.plots_widget.ci.clear()
         self.plots = []
+        self.placeholder_plot_visible = False
         
             
     def add_plot(self, group_id = None):
+        
+        if self.placeholder_plot_visible:
+            self.clear_all_plots()
+        
         if group_id is None:
             return
         
@@ -200,6 +216,8 @@ class reference_data_tab(QWidget):
                 self.shift_plots_left(start_index = index + 1)
                 
             self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
+    
+            self.check_empty_plot_widget()
 
         
     def shift_plots_left(self, start_index = -1):
@@ -249,3 +267,7 @@ class reference_data_tab(QWidget):
         row = index // 2
         col = index % 2
         return row, col
+    
+    
+
+            

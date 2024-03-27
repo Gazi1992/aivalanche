@@ -18,7 +18,6 @@ class calibration_tabs(QTabWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.setDocumentMode(True)
 
-
         # Create tabs for the QTabWidget
         self.reference_data_tab = reference_data_tab(parent = self, store = self.store, object_name = 'reference_data_tab')
         self.model_tab = model_tab(parent = self, store = self.store, object_name = 'model_tab')

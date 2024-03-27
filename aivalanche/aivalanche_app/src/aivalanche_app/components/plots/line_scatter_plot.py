@@ -1,24 +1,23 @@
-import pyqtgraph as pg, numpy as np
 from PySide6.QtWidgets import QMenu
 from aivalanche_app.paths import home_icon_path, log_x_icon_path, log_y_icon_path, lin_x_icon_path, lin_y_icon_path
 from aivalanche_app.components.plots.plot_button import plot_button
+import pyqtgraph as pg, numpy as np
 
 
 class line_scatter_plot(pg.PlotItem):
     
-    def __init__(self, title = None, x_axis_label = None, y_axis_label = None, style = None):
+    def __init__(self, parent = None, title = None, x_axis_label = None, y_axis_label = None, show_legend: bool = True, style = None):
 
-        super().__init__(title = title)
+        super().__init__(parent = parent, title = title)
         
+        self.show_legend = show_legend
         self.style = style        
         self.plot_colors = style.colors['plot_colors']
     
         self.clear_plot()
         
         self.hideButtons()
-        
-        self.legend = self.addLegend(brush = self.style.colors['plot_legend_background'],
-                                     labelTextColor = self.style.colors['plot_legend_text'])        
+             
         self.showGrid(x = True, y = True, alpha = 0.5)
         
         self.set_title(title)
@@ -84,6 +83,10 @@ class line_scatter_plot(pg.PlotItem):
     
     def add_scatter_plot(self, x = None, y = None, id = None, add_to_legend = True, label = None, **kwargs):
         
+        if self.show_legend and self.total_nr_plots == 0:
+            self.legend = self.addLegend(brush = self.style.colors['plot_legend_background'],
+                                         labelTextColor = self.style.colors['plot_legend_text'])   
+        
         if x is None or y is None:
             print('WARNING: no plot is added because x or y is none.')
             return
@@ -107,7 +110,8 @@ class line_scatter_plot(pg.PlotItem):
         self.add_item(temp, id, add_to_legend, label)
                 
     
-    def add_item(self, item, id = None, add_to_legend = True, label = None,):
+    def add_item(self, item, id = None, add_to_legend = True, label = None):
+        
         self.addItem(item)
         
         # Update the plots

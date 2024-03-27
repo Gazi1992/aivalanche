@@ -20,6 +20,11 @@ class store():
     
         self.get_all_projects()
         
+        self.model_templates = dummy_data['model_templates']
+        self.testbench_templates = dummy_data['testbench_templates']
+        self.optimizers = dummy_data['optimizers']
+        self.simulators = dummy_data['simulators']
+        
         self.style = style
     
     def get_all_projects(self):
