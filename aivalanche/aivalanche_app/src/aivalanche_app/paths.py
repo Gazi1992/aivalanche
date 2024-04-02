@@ -19,6 +19,8 @@ theme_1_path = Path.joinpath(themes_path, 'theme_1.py')
 
 # Images
 images_path = Path.joinpath(resources_path, 'images')
+
+loading_path = Path.joinpath(images_path, 'loading.gif')
 logo_path = Path.joinpath(images_path, 'logo.png')
 image_placeholder_path = Path.joinpath(images_path, 'image_placeholder.png')
 project_card_background_path = Path.joinpath(images_path, 'background_example.jpg')
@@ -72,3 +74,5 @@ delete_press_icon_path = Path.joinpath(images_path, 'delete_pressed.png')
 delete_1_icon_path = Path.joinpath(images_path, 'delete_1.png')
 delete_1_hover_icon_path = Path.joinpath(images_path, 'delete_1_hovered.png')
 delete_1_press_icon_path = Path.joinpath(images_path, 'delete_1_pressed.png')
+eye_show_icon_path = Path.joinpath(images_path, 'eye_show.png')
+eye_hide_icon_path = Path.joinpath(images_path, 'eye_hide.png')

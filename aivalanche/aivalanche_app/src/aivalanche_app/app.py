@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFontDatabase, QFont
 from PySide6.QtCore import Qt
-from aivalanche_app.screens.home import home
+from aivalanche_app.screens.main_window import main_window
 from aivalanche_app.paths import fonts_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.store import store
@@ -23,7 +23,7 @@ pg.setConfigOption('foreground', 'k')
 #                     print(f.readlines())
 #                 # kot = QFont.applicationFontFamilies(id)
             
-#TODO Make sure to close the app once the GUI closes.
+# TODO Make sure to close the app once the GUI closes.
 # This problem appeared when migrated from PyQt6 to PySide6.
 if not QApplication.instance():
     app = QApplication(sys.argv)
@@ -36,6 +36,6 @@ style = style()
 store = store(style = style)
 app.setStyleSheet(style.stylesheet)
 
-window = home(store = store)    
+window = main_window(store = store)    
 window.show()
 sys.exit(app.exec())

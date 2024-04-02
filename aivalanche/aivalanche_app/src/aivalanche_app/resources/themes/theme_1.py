@@ -169,8 +169,8 @@ stylesheet = f"""
     QProgressBar {{background-color: {colors['progress_bar_background']};}}
     QProgressBar:chunk {{background-color: {colors['progress_bar_chunk']};}}
     
-    /* Home */
-    QWidget#home {{background-color: {colors['background_1']};}}
+    /* Main window */
+    QWidget#main_window {{background-color: {colors['background_1']};}}
     
     /* Drawer */
     QFrame#drawer {{background-color: {colors['drawer_background']};}}
@@ -209,12 +209,12 @@ stylesheet = f"""
     QPushButton#calibration_header_button:checked {{background-color: {colors['calibration_header_button_checked']};}}
     
     /* Parameters tab button */
-    QPushButton#parameters_tab {{
+    QPushButton#parameters_tab, QPushButton#log_in_button {{
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {colors['button_1_color_1']}, stop:1 {colors['button_1_color_2']});
         border: 1px solid {colors['button_1_border']};
         }} 
-    QPushButton#parameters_tab:hover {{background: {colors['button_hover']};}}
-    QPushButton#parameters_tab:pressed {{background: {colors['button_press']};}}
+    QPushButton#parameters_tab:hover, QPushButton#log_in_button:hover {{background: {colors['button_hover']};}}
+    QPushButton#parameters_tab:pressed, QPushButton#log_in_button:pressed {{background: {colors['button_press']};}}
     
     /* Calibration control buttons */
     QPushButton#calibration_control {{icon-size: 30px 30px;}}

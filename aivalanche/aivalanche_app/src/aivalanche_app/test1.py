@@ -1,45 +1,74 @@
-import numpy as np, sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView
-import pyqtgraph as pg
+import sys
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFrame, QDialog
+from PySide6.QtCore import Qt, QThread, Signal, QTimer
+from PySide6.QtGui import QMovie, QColor
+from aivalanche_app.components.loading_spinner import loading_spinner
 
-class HeatmapWindow(QMainWindow):
+class DataFetcher(QThread):
+    data_ready = Signal(str)
+
+    def run(self):
+        # Simulate fetching data from API (replace with actual API call)
+        import time
+        time.sleep(3)
+        fetched_data = "Fetched data from API"
+        self.data_ready.emit(fetched_data)
+
+        
+class LoadingDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Loading")
+        # self.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint)
+        self.setModal(True)
+        self.setLayout(QVBoxLayout())
+        self.loading_label = QLabel("Loading...", self)
+        self.loading_label.setAlignment(Qt.AlignCenter)
+        self.layout().addWidget(self.loading_label)
+        self.movie = QMovie(str(loading_spinner))  # Replace "spinner.gif" with your GIF file
+        self.loading_label.setMovie(self.movie)
+        self.movie.start()
+
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.initUI()
 
-        # Create random 2D data for heatmap
-        data = np.random.rand(100, 100)  # Example 100x100 grid with random values
+    def initUI(self):
+        self.setWindowTitle("Loading Indicator Example")
+        self.setGeometry(100, 100, 300, 200)
 
-        # Create a GraphicsView to display the heatmap
-        self.view = pg.GraphicsView()
-        self.setCentralWidget(self.view)
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
 
-        # Create a PlotItem and add it to the view
-        self.plot_item = pg.PlotItem()
-        self.view.setCentralItem(self.plot_item)
+        self.fetch_button = QPushButton("Fetch Data", self)
+        self.fetch_button.clicked.connect(self.fetch_data)
+        self.layout.addWidget(self.fetch_button)
 
-        # Create an ImageItem to display the heatmap
-        self.image_item = pg.ImageItem()
-        self.plot_item.addItem(self.image_item)
+        self.result_label = QLabel("", self)
+        self.result_label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.result_label)
 
-        # Set colormap (optional)
-        # self.image_item.setLookupTable(pg.colorMaps['viridis'])
+    def fetch_data(self):
+        # Show loading dialog
+        loading_dialog = LoadingDialog(self)
+        loading_dialog.exec_()  # Block until dialog is closed
 
-        # Set data for the ImageItem
-        self.image_item.setImage(data)
+        # Start data fetching in a separate thread
+        data_fetcher = DataFetcher()
+        data_fetcher.data_ready.connect(self.handle_data_ready)
+        data_fetcher.start()
 
-def main():
-    # Create the application
+    def handle_data_ready(self, data):
+        # Update UI with fetched data
+        self.result_label.setText(data)
+
+
+if __name__ == "__main__":
     if not QApplication.instance():
         app = QApplication(sys.argv)
     else:
         app = QApplication.instance()
-
-    # Create the main window
-    window = HeatmapWindow()
-    window.show()
-
-    # Start the event loop
-    app.exec()
-
-if __name__ == "__main__":
-    main()
+    mainWindow = MainWindow()
+    mainWindow.show()
+    sys.exit(app.exec())
