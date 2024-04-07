@@ -5,7 +5,7 @@ from aivalanche_app.screens.main_window import main_window
 from aivalanche_app.paths import fonts_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.store import store
-import sys, os, pyqtgraph as pg
+import sys, pyqtgraph as pg
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias = True)
@@ -33,7 +33,8 @@ else:
 app.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
 
 style = style()
-store = store(style = style)
+db_type = 'local_files' # possible values are [local_files, local_mysql_db]
+store = store(db_type = db_type, style = style)
 app.setStyleSheet(style.stylesheet)
 
 window = main_window(store = store)    

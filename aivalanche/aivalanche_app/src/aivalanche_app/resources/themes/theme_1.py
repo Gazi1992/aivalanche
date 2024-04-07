@@ -53,6 +53,8 @@ colors = {
     "progress_bar_background": "rgba(6, 34, 121, 20)",
     "progress_bar_chunk": "#339313",
     
+    "error_text": "#ff0000",
+    
     "plot_colors": ["#0075FF", "#FF5C00", "#19B100", "#EB00FF", "#FFD600"],
     "plot_text": "#062279",
     "plot_axis": "#062279",
@@ -241,4 +243,7 @@ stylesheet = f"""
     QPushButton#add_group_type {{icon-size: 25px 25px;}}
     QPushButton#add_group_type:hover {{background-color: transparent;}}
     QPushButton#add_group_type:pressed {{background-color: transparent;}}
+    
+    /* Error label */
+    QLabel#error {{color: {colors['error_text']}; padding-left: 50px; padding-right: 50px; }}
 """

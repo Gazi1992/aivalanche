@@ -8,7 +8,6 @@ from aivalanche_app.screens.projects.my_calibration import my_calibration
 from aivalanche_app.data_store.store import store
 from aivalanche_app.constants.dimensions import PROJECTS_TAB_PADDING_BOTTOM, PROJECTS_TAB_PADDING_LEFT, PROJECTS_TAB_PADDING_RIGHT, PROJECTS_TAB_PADDING_TOP
 
-
 class projects_tab(QWidget):
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
@@ -74,3 +73,6 @@ class projects_tab(QWidget):
         painter.restore()
 
         super().paintEvent(event)
+        
+    def fetch_projects(self):
+        self.my_projects.fetch_projects()

@@ -8,6 +8,7 @@ from aivalanche_app.paths import logo_path
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.components.custom_label import custom_label
 from aivalanche_app.components.password_text_input import password_text_input
+from aivalanche_app.data_store.db import db
 from aivalanche_app.components.modals.loading_modal import loading_modal
 
 class log_in(QWidget):   
@@ -17,19 +18,18 @@ class log_in(QWidget):
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent = parent)
-        
         self.store = store
-        self.store.on_user_validation.connect(self.on_user_validation)
-        
         if object_name is not None:
             self.setObjectName(object_name)
-        
         self.init_ui()
         
         self._loading = False
         self._error = None
         self.username = None
         self.password = None
+        
+        self.db = db(on_query_success = self.on_query_success, on_query_error = self.on_query_error)
+        self.db.connect_to_db()
 
     @property
     def loading(self):
@@ -40,14 +40,6 @@ class log_in(QWidget):
         if self._loading != value:
             self._loading = value
             self.loading_changed()
-            
-    def loading_changed(self):
-        if self.loading:
-            self.loading_modal.start()
-            self.loading_modal.exec()
-        else:
-            self.loading_modal.stop()
-            self.loading_modal.accept()
 
     @property
     def error(self):
@@ -58,13 +50,6 @@ class log_in(QWidget):
         if self._error != value:
             self._error = value
             self.error_changed()
-
-    def error_changed(self):
-        if self.error is None:
-            self.error_widget.hide()
-        else:
-            self.error_widget.setText(self.error)
-            self.error_widget.show()
 
     def init_ui(self):
 
@@ -106,21 +91,48 @@ class log_in(QWidget):
         
         # Loading modal        
         self.loading_modal = loading_modal(parent = self, text = 'Confirming user credentials...')
-
-
+        
+    
+    def error_changed(self):
+        if self.error is None:
+            self.error_widget.hide()
+        else:
+            self.error_widget.setText(self.error)
+            self.error_widget.show()
+        
+        
+    def loading_changed(self):
+        if self.loading:
+            self.loading_modal.start()
+            self.loading_modal.exec()
+        else:
+            self.loading_modal.stop()
+            self.loading_modal.accept()
+    
     def on_log_in_press(self):
         self.validate_log_in()
 
-
-    def on_user_validation(self, res: dict = {}):
-        if res['success']:
-            self.loading = False
-            self.go_to_home.emit()
-        else:
-            self.error = res['error']
-            self.loading = False
-
-
+    def on_query_success(self, res: dict = {}):
+        if res['description'] == 'get_users':
+            result = res['result']
+            user = result[(result['username'] == self.username) & (result['password'] == self.password)]
+            if user.empty:
+                self.error = 'No user matches the username and password given! Please contact aivalanche support for further information!'
+                self.loading = False
+            elif len(user.index) > 1:
+                self.error = 'More than 1 user matches the username and password given! Please contact aivalanche support for further information!'
+                self.loading = False
+            else:
+                user = user.squeeze()
+                user_id = user['id']
+                self.update_store.emit({'user': {'id': user_id}})
+                self.loading = False
+                self.go_to_home.emit()
+        
+    def on_query_error(self, error):
+        self.error = 'Error communicating to the database! Try again!'
+        self.loading = False
+        
     def validate_log_in(self):
         self.username = self.username_widget.text()
         if len(self.username) == 0:
@@ -132,11 +144,11 @@ class log_in(QWidget):
             self.error = 'Password cannot be empty!'
             return
         
-        self.error = None
-        self.store.validate_user(self.username, self.password)
+        self.error = None       
+        self.db.get_users()
         self.loading = True
-
-
+        
+        
     def paintEvent(self, event):
         painter = QPainter(self)
         

@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QTabWidget
 from aivalanche_app.screens.projects.projects_tab import projects_tab
 from aivalanche_app.screens.running.running_tab import running_tab
-from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.store import store
 
 class main_tabs(QTabWidget):
@@ -33,3 +32,6 @@ class main_tabs(QTabWidget):
             self.setCurrentWidget(self.projects_tab)
         elif tab == 'running':
             self.setCurrentWidget(self.running_tab)
+            
+    def fetch_projects(self):
+        self.projects_tab.fetch_projects()

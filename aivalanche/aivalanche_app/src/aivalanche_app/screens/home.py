@@ -12,7 +12,6 @@ class home(QSplitter):
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent = parent)
         self.store = store
-        self.set_user_id()
         if object_name is not None:
             self.setObjectName(object_name)
         self.init_ui()
@@ -42,10 +41,8 @@ class home(QSplitter):
     def set_active_tab(self, tab: str = None):
         self.tab_widget.set_active_tab(tab)
         
-    
     def on_log_out_press(self):
         self.go_to_log_in.emit()
         
-            
-    def set_user_id(self):
-        self.store.set_user_id('asdsd-asdfr-123asd-asdas4-asdsda')
+    def fetch_projects(self):
+        self.tab_widget.fetch_projects()

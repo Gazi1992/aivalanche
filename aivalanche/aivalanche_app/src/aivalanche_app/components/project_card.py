@@ -5,26 +5,27 @@ from PySide6.QtCore import Qt
 from aivalanche_app.components.custom_image import custom_image
 
 class project_card(custom_image):
-    def __init__(self, parent = None, image_path = None, title = 'Project X', created = None, last_modified = None, on_click = None, *args, **kwargs):
+    def __init__(self, parent = None, image_path = None, title = 'Project X', 
+                 created_at = None, last_modified_at = None, on_click = None, *args, **kwargs):
         super().__init__(parent = parent, image_path = image_path, *args, **kwargs)
         
         self.title = title
         
-        if created is not None:
-            self.created = self.parse_date_time(created)
+        if created_at is not None:
+            self.created_at = self.parse_date_time(created_at)
         else:
-            self.created = None
+            self.created_at = None
             
-        if last_modified is not None:
-            self.last_modified = self.parse_date_time(last_modified)
+        if last_modified_at is not None:
+            self.last_modified_at = self.parse_date_time(last_modified_at)
         else:
-            self.last_modified = None
+            self.last_modified_at = None
         
         if on_click is not None:
             self.clicked.connect(on_click)
 
     def parse_date_time(self, date_time):
-        time = datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%SZ")
+        time = datetime.strptime(str(date_time), "%Y-%m-%d %H:%M:%S")
         time_difference = relativedelta(datetime.now(), time)
         # parsed_date_time = {'day': time_1.day, 'month': time_1.strftime("%b"), 'year': time_1.year, 
         #                     'hour': time_1.hour, 'minute': time_1.minute, 'second': time_1.second}
@@ -86,33 +87,33 @@ class project_card(custom_image):
         painter.drawText(title_x, title_y, title_w, title_h, Qt.TextFlag.TextWordWrap, self.title)
         
         # Add created text
-        if self.created is not None:
-            created_font_size = 10
-            created_font_weight = QFont.Weight.Normal # bold
-            created_color = 'white'
-            created_x = x + left
-            created_y = y + h - bottom / 2
-            created_w = (w - left - right) / 2
-            created_h = created_font_size * 2
+        if self.created_at is not None:
+            created_at_font_size = 10
+            created_at_font_weight = QFont.Weight.Normal # bold
+            created_at_color = 'white'
+            created_at_x = x + left
+            created_at_y = y + h - bottom / 2
+            created_at_w = (w - left - right) / 2
+            created_at_h = created_at_font_size * 2
             font = QFont()
-            font.setPointSize(created_font_size)
-            font.setWeight(created_font_weight)
+            font.setPointSize(created_at_font_size)
+            font.setWeight(created_at_font_weight)
             painter.setFont(font)
-            painter.setPen(created_color)
-            painter.drawText(created_x, created_y, created_w, created_h, Qt.TextFlag.TextWordWrap, f'created: {self.created}')
+            painter.setPen(created_at_color)
+            painter.drawText(created_at_x, created_at_y, created_at_w, created_at_h, Qt.TextFlag.TextWordWrap, f'created: {self.created_at}')
         
         # Add last modified text
-        if self.last_modified is not None:
-            last_modified_font_size = 10
-            last_modified_font_weight = QFont.Weight.Normal # bold
-            last_modified_color = 'white'
-            last_modified_x = x + left + (w - left - right)  / 2
-            last_modified_y = y + h - bottom / 2
-            last_modified_w = (w - left - right) / 2
-            last_modified_h = last_modified_font_size * 5
+        if self.last_modified_at is not None:
+            last_modified_at_font_size = 10
+            last_modified_at_font_weight = QFont.Weight.Normal # bold
+            last_modified_at_color = 'white'
+            last_modified_at_x = x + left + (w - left - right)  / 2
+            last_modified_at_y = y + h - bottom / 2
+            last_modified_at_w = (w - left - right) / 2
+            last_modified_at_h = last_modified_at_font_size * 5
             font = QFont()
-            font.setPointSize(last_modified_font_size)
-            font.setWeight(last_modified_font_weight)
+            font.setPointSize(last_modified_at_font_size)
+            font.setWeight(last_modified_at_font_weight)
             painter.setFont(font)
-            painter.setPen(last_modified_color)
-            painter.drawText(last_modified_x, last_modified_y, last_modified_w, last_modified_h, Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignRight, f'last modified: {self.last_modified}')
+            painter.setPen(last_modified_at_color)
+            painter.drawText(last_modified_at_x, last_modified_at_y, last_modified_at_w, last_modified_at_h, Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignRight, f'last modified: {self.last_modified_at}')

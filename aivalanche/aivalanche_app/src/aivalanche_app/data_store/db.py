@@ -1,11 +1,7 @@
-import threading, mysql.connector
-from PySide6.QtCore import QObject, Signal
-import time
+import mysql.connector, time, pandas as pd
+from PySide6.QtCore import QObject
 
 class db(QObject):
-    query_success = Signal(object)
-    query_error = Signal(str)
-
     def __init__(self, host: str = 'localhost', database: str = 'aivalanche_db', user: str = 'root', password: str = '6364',
                  on_query_success: callable = None, on_query_error: callable = None):
         super().__init__()
@@ -21,8 +17,7 @@ class db(QObject):
             
         if on_query_error is not None:
             self.query_error.connect(on_query_error)
-            
-            
+
     def connect_to_db(self):
         try:
             self.connection = mysql.connector.connect(
@@ -36,7 +31,6 @@ class db(QObject):
                 self.cursor = self.connection.cursor()
         except mysql.connector.Error as e:
             print(f'Error connecting to the MySQL database: {e}')
-            
 
     def close(self):
         try:
@@ -44,30 +38,48 @@ class db(QObject):
             self.connection.close()
         except mysql.connector.Error as e:
             print(f'Error closing he connection: {e}')
-        
-    def execute_query(self, query):
-        threading.Thread(target=self._execute_query, args=(query,)).start()
-        # self._execute_query(query)
-        
-    def _execute_query(self, query):
+
+    def execute_query(self, query, description):
         try:
             self.cursor.execute(query)
-            result = self.cursor.fetchall()  # Get the result of the query
-            self.connection.commit()
-            time.sleep(3)
-            self.query_success.emit(result)  # Emit query_success signal with the result
+            if 'insert' in query or 'update' in query:
+                self.connection.commit()
+                data = None
+            else:
+                columns = [column[0] for column in self.cursor.description]  # Get column names
+                result = self.cursor.fetchall()  # Get the result of the query
+                data = pd.DataFrame(data = result, columns = columns)
+            # time.sleep(3)
+            success = True
+            error = None
         except mysql.connector.Error as e:
-            self.query_error.emit(str(e)) # Emit query_error signal with error message
+            success = False
+            data = None
+            error = str(e)
+        return {'success': success,
+                'description': description,
+                'data': data,
+                'error': error}
 
-    def retrieve_data(self, table):
-        query = f"SELECT * FROM {table}"
-        self.execute_query(query)
+    def fetch_users(self):
+        query = "select * from users"
+        return self.execute_query(query, 'fetch_users')
+    
+    def fetch_user_by_username_and_password(self, username: str = '', password: str = ''):
+        query = f"select * from aivalanche_db.users where username = '{username}' and password = '{password}'"
+        return self.execute_query(query, 'fetch_user_by_username_and_password') 
+        
+    def fetch_projects_by_user_id(self, user_id: str = ''):
+        query = f"select * from aivalanche_db.projects where user_id = '{user_id}' order by created_at desc"
+        return self.execute_query(query, 'fetch_projects_by_user_id')
+        
+    def fetch_models_by_user_id_and_project_id(self, user_id, project_id):
+        query = f"select * from aivalanche_db.models where user_id = '{user_id}' and project_id = '{project_id}'"
+        return self.execute_query(query, 'fetch_models_by_user_id_and_project_id')
 
-    def insert_data(self, table, data):
-        columns = ', '.join(data.keys())
-        placeholders = ', '.join(['%s'] * len(data))
-        query = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
-        self.execute_query(query)
+    def create_project_by_user_id(self, user_id: str = None, title: str = None):
+        query = f"insert into projects (user_id, created_at, last_modified_at, title, labels) values ('{user_id}', now(), now(), '{title}', '')"
+        return self.execute_query(query, 'create_project_by_user_id')
 
         
 

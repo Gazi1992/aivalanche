@@ -9,21 +9,60 @@ from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.components.navigation_header import navigation_header
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.modals.modal_1 import modal_1
+from aivalanche_app.components.modals.loading_modal import loading_modal
+import threading
 
 class my_projects(QWidget):
     go_to_models = Signal()
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
-        
-        self.store = store
-        
         if object_name is not None:
             self.setObjectName(object_name)
+        
+        self.init_ui()        
+        
+        self.store = store
+        self.store.on_projects_fetched.connect(self.on_projects_fetched)
+        self.store.on_project_created.connect(self.on_project_created)
+        
+        self._loading = False
+        self._error = None
+                
+    
+    @property
+    def loading(self):
+        return self._loading
 
-        self.init_ui()
-        
-        
+    @loading.setter
+    def loading(self, value):
+        if self._loading != value:
+            self._loading = value
+            self.loading_changed()
+    
+    def loading_changed(self):
+        if self.loading:
+            self.loading_modal.start()
+            self.loading_modal.exec()
+        else:
+            self.loading_modal.stop()
+            self.loading_modal.accept()
+            
+    
+    @property
+    def error(self):
+        return self._error
+
+    @error.setter
+    def error(self, value):
+        if self._error != value:
+            self._error = value
+            self.error_changed()
+            
+    def error_changed(self):
+        print(self.error)
+            
+            
     def init_ui(self):
         layout = v_layout(parent = self)
         self.setLayout(layout)
@@ -46,15 +85,20 @@ class my_projects(QWidget):
         self.grid = g_layout(horizontal_spacing = PROJECT_CARD_MARGIN, vertical_spacing = PROJECT_CARD_MARGIN)
         self.grid.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         scroll_widget.setLayout(self.grid)
-
-        self.update_projects()
         
         # Create an instance of the custom dialog
         self.new_project_dialog = modal_1(parent = self, title = 'New project', placeholder = 'Project name',
-                                          message = 'Give a name to your project', explanation = 'You can edit the name later.',
+                                          message = 'Give a title to your project', explanation = 'You can edit the title later.',
                                           on_confirm = self.on_new_project_confirm, on_cancel = self.on_new_project_cancel, object_name = 'modal')
         
-        
+        # Loading modal        
+        self.loading_modal = loading_modal(parent = self)
+    
+    def fetch_projects(self):
+        self.loading_modal.update_text('Fetching your projects...')
+        self.store.fetch_projects()
+        self.loading = True        
+    
     # Add buttons to the grid layout
     def update_projects(self):
         clear_layout(self.grid)
@@ -67,14 +111,30 @@ class my_projects(QWidget):
                                               on_click = self.on_new_project_press, object_name = 'new_project')
         
         self.grid.addWidget(new_project_button, 0, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        for i, p in enumerate(self.store.projects):
+        for i, p in self.store.projects.iterrows():
             button = project_card(self, image_path = project_card_background_path, image_height = PROJECT_CARD_HEIGHT, image_width = PROJECT_CARD_WIDTH,
                                 front_hover_color = (0, 0, 0, 50), front_click_color = (0, 0, 0, 100), on_click = partial(self.on_project_press, p),
-                                title = p.title, created = p.created, last_modified = p.last_modified)
+                                title = p.title, created_at = p.created_at, last_modified_at = p.last_modified_at)
             row = (i + 1) // PROJECTS_NR_COLUMNS
             col = (i + 1) % PROJECTS_NR_COLUMNS
             self.grid.addWidget(button, row, col, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
+    def on_projects_fetched(self, res: dict = {}):
+        if res['success']:
+            self.loading = False
+            self.update_projects()
+        else:
+            self.error = res['error']
+            self.loading = False
+            
+    def on_project_created(self, res: dict = {}):
+        if res['success']:
+            self.loading = False
+            self.fetch_projects()
+        else:
+            self.error = res['error']
+            print(self.error)
+            self.loading = False
 
     def on_project_press(self, p):
         self.store.set_active_project(id = p.id)
@@ -90,9 +150,11 @@ class my_projects(QWidget):
         self.new_project_dialog.exec()
 
             
-    def on_new_project_confirm(self, project_name):
-        print(f"User clicked Confirm. Project name: {project_name}")
+    def on_new_project_confirm(self, project_title):
+        self.store.create_project(project_title)
+        self.loading_modal.update_text('Creating your new project...')
+        self.loading = True
         
         
-    def on_new_project_cancel(self, project_name):
+    def on_new_project_cancel(self, project_title):
         print("User clicked Cancel")

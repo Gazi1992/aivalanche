@@ -1,0 +1,8 @@
+[
+    {
+        "name": "NGspice",
+        "parameters": [
+            {"name": "timeout", "type": "float", "default": 30}
+        ]
+    }
+] 
