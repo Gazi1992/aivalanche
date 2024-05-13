@@ -17,6 +17,11 @@ class reference_data_tab(QSplitter):
             self.setObjectName(object_name)
             
         self.store = store
+        self.store.fetch_available_reference_data_end.connect(self.on_available_reference_data_fetched)
+        self.store.add_available_reference_data_end.connect(self.on_available_reference_data_added)
+        self.store.update_reference_data_id_end.connect(self.on_reference_data_id_updated)
+        self.store.active_model_changed.connect(self.check_reference_data_exists)
+        
         self.style = self.store.style
         
         self.reference_data_file = None
@@ -35,7 +40,6 @@ class reference_data_tab(QSplitter):
     @property
     def nr_plots(self):
         return len(self.plots)
-    
 
     def init_ui(self):
         # Create left widget
@@ -47,14 +51,14 @@ class reference_data_tab(QSplitter):
         self.load_data_widget = combo_box_load_data(parent = self,
                                                     caption = 'Select reference data file',
                                                     filter = 'Json file (*.json)',
-                                                    on_combo_box_changed = self.load_reference_data,
+                                                    on_combo_box_changed = self.on_combo_box_changed,
+                                                    on_import_new_file = self.on_import_new_ref_data_file,
                                                     placeholder = 'Select reference data file',
                                                     object_name = 'round_combo_box')       
         left_layout.addWidget(self.load_data_widget, 0)
         
         # Create table
-        self.table = custom_table(store = self.store,
-                                  on_checkbox_click = self.on_checkbox_click)
+        self.table = custom_table(store = self.store, on_checkbox_click = self.on_checkbox_click)
         left_layout.addWidget(self.table, 1)
         
         # Create right layout, where plots will be shown
@@ -79,20 +83,13 @@ class reference_data_tab(QSplitter):
         self.setStretchFactor(1, 1)
         
         self.check_empty_plot_widget()
-            
     
-    def check_empty_plot_widget(self):
-        if self.nr_plots == 0:
-            self.show_placeholder_plot()
-            
-
-    def show_placeholder_plot(self):
-        self.plots_widget.addItem(self.placeholder_plot, row = 0, col = 0)
-        self.placeholder_plot_visible = True
-        if len(self.plots_widget_height_array) > 0:
-            self.plots_widget.setFixedHeight(self.plots_widget_height_array[0])
-
-
+    def clear_data(self):
+        self.clear_all_plots()
+        self.table.clear_data()
+        self.load_data_widget.set_active_item(None)
+        self.check_empty_plot_widget()
+    
     def load_reference_data(self, file):
         if os.path.exists(file):
             self.clear_all_plots()
@@ -104,8 +101,57 @@ class reference_data_tab(QSplitter):
             self.reference_data.data['plot'] = self.reference_data.data['group_id'] == min_group_id
             self.table.update_data(self.reference_data.data)
             self.update_plots(group_id = min_group_id)
-
     
+    def on_combo_box_changed(self, val):
+        if val is not None and len(val) > 0:
+            reference_data_id = self.store.available_reference_data.loc[self.store.available_reference_data['path'] == val,'id'].iloc[0]
+            self.store.update_reference_data_id(reference_data_id = reference_data_id, model_id = self.store.active_model['id'])
+    
+    def on_reference_data_id_updated(self, data: dict = {}):
+        if data['success']:
+            if not pd.isnull(self.store.active_model['reference_data_id']):
+                reference_data_path = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'path'] 
+                if reference_data_path.empty:
+                    self.store.fetch_available_reference_data(self.store.active_project['id'])
+                else:
+                    reference_data_path = reference_data_path.iloc[0]
+                    self.load_reference_data(reference_data_path)
+        else:
+            print(data['error'])
+    
+    def on_available_reference_data_fetched(self, data: dict = {}):
+        self.load_data_widget.update_items(self.store.available_reference_data['path'].tolist())
+        self.check_reference_data_exists()
+        
+    def check_reference_data_exists(self):
+        self.clear_data()
+        if self.store.active_model is not None:
+            if not pd.isnull(self.store.active_model['reference_data_id']):
+                reference_data_path = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'path']
+                if reference_data_path.empty:
+                    self.store.update_reference_data_id(reference_data_id = None, model_id = self.store.active_model['id'])
+                else:
+                    reference_data_path = reference_data_path.iloc[0]
+                    self.load_data_widget.set_active_item(reference_data_path, trigger_on_change_slot = False)
+                    self.load_reference_data(reference_data_path)
+    
+    def on_import_new_ref_data_file(self, file_path: str = None):
+        if file_path is not None:
+            self.store.add_available_reference_data(path = file_path, project_id = self.store.active_project['id'])
+            
+    def on_available_reference_data_added(self, data: dict = {}):
+        self.store.update_reference_data_id(reference_data_id = data['data']['id'], model_id = self.store.active_model['id'])
+    
+    def check_empty_plot_widget(self):
+        if self.nr_plots == 0:
+            self.show_placeholder_plot()
+            
+    def show_placeholder_plot(self):
+        self.plots_widget.addItem(self.placeholder_plot, row = 0, col = 0)
+        self.placeholder_plot_visible = True
+        if len(self.plots_widget_height_array) > 0:
+            self.plots_widget.setFixedHeight(self.plots_widget_height_array[0])
+
     def on_checkbox_click(self, data: dict = None):
         row = data['row_index']
         column = data['column_index']
@@ -117,7 +163,6 @@ class reference_data_tab(QSplitter):
             curve_id = self.reference_data.data.iloc[row]['curve_id']
             self.update_plots(group_id, curve_id, state)
 
-    
     def update_plots(self, group_id = None, curve_id = None, state = None):
         if group_id in self.plots:
             if not state:
@@ -134,21 +179,18 @@ class reference_data_tab(QSplitter):
         else:
             self.add_plot(group_id)
             
-            
     def clear_all_plots(self):
         self.plots_widget.ci.clear()
         self.plots = []
         self.placeholder_plot_visible = False
-        
-            
+
     def add_plot(self, group_id = None):
-        
         if self.placeholder_plot_visible:
             self.clear_all_plots()
-        
+
         if group_id is None:
             return
-        
+
         # get the group
         filtered_data = self.reference_data.data[self.reference_data.data['group_id'] == group_id]
         if len(filtered_data.index) == 0:
@@ -191,21 +233,17 @@ class reference_data_tab(QSplitter):
         # self.plots_widget.setMinimumHeight(self.plots_widget.sizeHint().height())
         # self.plots_widget.getItem(0, 0).height()
         # self.plots_widget.height()
-           
     
     def add_curve_to_plot(self, plot, data):
         if 'extra_var_name' in data and not pd.isna(data['extra_var_name']):
             label = f"{data['extra_var_name']} = {data['extra_var_value']}"
         else:
             label = f"{data['curve_id']}"
-                
         plot.add_scatter_plot(x = data['x_values'], y = data['y_values'], id = data['curve_id'], label = label, symbol = 'o', symbolPen = None)
         
-    
     def remove_curve_from_plot(self, plot, curve_id):
         plot.remove_curve(id = curve_id)
         
-    
     def remove_plot(self, group_id = None):
         if group_id in self.plots:
             index = self.get_plot_index_from_group_id(group_id)
@@ -219,7 +257,6 @@ class reference_data_tab(QSplitter):
     
             self.check_empty_plot_widget()
 
-        
     def shift_plots_left(self, start_index = -1):
         if start_index > 0:
             index = start_index
@@ -243,31 +280,23 @@ class reference_data_tab(QSplitter):
             
             # delete the last element of the plots, since it is duplicated to the left
             del self.plots[-1]
-                       
-    
+
     def get_plot_from_index(self, index = -1):
         if index >= 0:
             return self.get_plot_from_group_id(self.plots[index])
-    
-    
+
     def get_plot_from_group_id(self, group_id = None):
         if group_id in self.plots:
             index = self.get_plot_index_from_group_id(group_id)
             row, col = self.get_plot_row_col_from_index(index)
             return self.plots_widget.getItem(row, col)
-        
-        
+
     def get_plot_index_from_group_id(self, group_id = None):
         if group_id in self.plots:
             return self.plots.index(group_id)
         return -1
-        
-    
+
     def get_plot_row_col_from_index(self, index):
         row = index // 2
         col = index % 2
         return row, col
-    
-    
-
-            

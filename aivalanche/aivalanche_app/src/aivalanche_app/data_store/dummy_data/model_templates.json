@@ -1,4 +1,0 @@
-{
-    "Transistors": ["BSIM4", "BSIM3", "BSIMBULK", "BSIM CMG", "Level 1", "Level 3"],
-    "Pasive elements": ["Resistor", "Capacitor", "Inductor", "Diode"]
-}

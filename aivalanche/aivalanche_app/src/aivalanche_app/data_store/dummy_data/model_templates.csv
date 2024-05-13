@@ -1,0 +1,11 @@
+id,category,name
+1,Transistors,BSIM4
+2,Transistors,BSIM3
+3,Transistors,BSIMBULK
+4,Transistors,BSIM CMG
+5,Transistors,Level 1
+6,Transistors,Level 3
+7,Pasive elements,Resistor
+8,Pasive elements,Capacitor
+9,Pasive elements,Inductor
+10,Pasive elements,Diode

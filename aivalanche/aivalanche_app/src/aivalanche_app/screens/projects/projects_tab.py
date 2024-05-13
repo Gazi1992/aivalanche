@@ -73,6 +73,3 @@ class projects_tab(QWidget):
         painter.restore()
 
         super().paintEvent(event)
-        
-    def fetch_projects(self):
-        self.my_projects.fetch_projects()

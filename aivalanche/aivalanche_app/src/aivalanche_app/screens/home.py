@@ -43,6 +43,3 @@ class home(QSplitter):
         
     def on_log_out_press(self):
         self.go_to_log_in.emit()
-        
-    def fetch_projects(self):
-        self.tab_widget.fetch_projects()

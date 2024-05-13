@@ -1,3 +1,5 @@
-id,project_id,created_at,last_modified_at,title,labels
-ssdaws,asdasd,2024-04-05 17:06:53,2024-04-05 17:06:53,model 1, label 1;label_2
-asdaww,asdasd,2024-04-05 17:06:53,2024-04-05 17:06:53,model 2, label 1;label_2
+id,project_id,created_at,last_modified_at,title,labels,status,calibration_started_at,reference_data_id,model_id,testbenches_id,parameters_id,optimization_config_id,results_id 
+ssdaws,asdasd,2024-04-05 17:06:53,2024-04-05 17:06:53,model 1, label 1;label_2,,,,,,,,
+asdaww,asdasd,2024-04-05 17:06:53,2024-04-05 17:06:53,model 2, label 1;label_2,,,,,,,,
+e5686acf-1a7d-4c35-89b7-b087cb5684ff,00a5e06c-722f-4f68-bc4d-d6a2a1162c41,2024-04-10 18:43:44,2024-04-10 18:43:44,modeli im,,,,43ba698b-6f4a-4c03-a247-ca2c4ffa361a,,,,,
+f3513155-9ccf-4b89-95c9-770d0454da60,00a5e06c-722f-4f68-bc4d-d6a2a1162c41,2024-04-10 19:22:28,2024-04-10 19:22:28,modeli im 1,,,,47e8b5f1-9ba7-43bb-b64e-25c4a6dd7d04,,,,,

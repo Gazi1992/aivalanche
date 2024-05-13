@@ -143,14 +143,3 @@ class optimization_tab(QWidget):
         self.right_layout.removeWidget(self.loss_parts[id])
         self.loss_parts[id].deleteLater()
         del self.loss_parts[id]
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        

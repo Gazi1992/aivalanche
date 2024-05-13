@@ -13,13 +13,12 @@ from aivalanche_app.components.modals.loading_modal import loading_modal
 class log_in(QWidget):   
     
     go_to_home = Signal()
-    update_store = Signal(dict)
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent = parent)
         
         self.store = store
-        self.store.on_user_validation.connect(self.on_user_validation)
+        self.store.validate_user_end.connect(self.on_user_validation)
         
         if object_name is not None:
             self.setObjectName(object_name)
@@ -85,20 +84,23 @@ class log_in(QWidget):
         self.username_widget = QLineEdit(parent = self)
         self.username_widget.setPlaceholderText('Username')
         self.username_widget.setFixedWidth(500)
+        self.username_widget.setFocus()
+        self.username_widget.returnPressed.connect(self.on_log_in_press)
         layout.addWidget(self.username_widget, alignment = Qt.AlignmentFlag.AlignCenter)
         
         # Password
         self.password_widget = password_text_input(parent = self)
         self.password_widget.setFixedWidth(500)
+        self.password_widget.returnPressed.connect(self.on_log_in_press)
         layout.addWidget(self.password_widget, alignment = Qt.AlignmentFlag.AlignCenter)
         
         # Add space to buttons
         layout.addSpacing(10)
                 
         # Log in button
-        button = icon_text_button(parent = self, text = 'Log in', padding = (10, 5, 10, 5), button_width = 150,
-                                  on_click = self.on_log_in_press, object_name = 'log_in_button')
-        layout.addWidget(button, alignment = Qt.AlignmentFlag.AlignCenter)
+        self.log_in_button = icon_text_button(parent = self, text = 'Log in', padding = (10, 5, 10, 5), button_width = 150,
+                                              on_click = self.on_log_in_press, object_name = 'log_in_button')
+        layout.addWidget(self.log_in_button, alignment = Qt.AlignmentFlag.AlignCenter)
         
         # Error message
         self.error_widget = custom_label(parent = self, object_name = 'error', font_size = 'small')
@@ -107,10 +109,8 @@ class log_in(QWidget):
         # Loading modal        
         self.loading_modal = loading_modal(parent = self, text = 'Confirming user credentials...')
 
-
     def on_log_in_press(self):
         self.validate_log_in()
-
 
     def on_user_validation(self, res: dict = {}):
         if res['success']:
@@ -119,7 +119,6 @@ class log_in(QWidget):
         else:
             self.error = res['error']
             self.loading = False
-
 
     def validate_log_in(self):
         self.username = self.username_widget.text()
@@ -135,7 +134,6 @@ class log_in(QWidget):
         self.error = None
         self.store.validate_user(self.username, self.password)
         self.loading = True
-
 
     def paintEvent(self, event):
         painter = QPainter(self)

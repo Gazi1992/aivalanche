@@ -32,6 +32,3 @@ class main_tabs(QTabWidget):
             self.setCurrentWidget(self.projects_tab)
         elif tab == 'running':
             self.setCurrentWidget(self.running_tab)
-            
-    def fetch_projects(self):
-        self.projects_tab.fetch_projects()

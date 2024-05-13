@@ -10,7 +10,6 @@ from aivalanche_app.components.navigation_header import navigation_header
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.modals.modal_1 import modal_1
 from aivalanche_app.components.modals.loading_modal import loading_modal
-import threading
 
 class my_projects(QWidget):
     go_to_models = Signal()
@@ -23,8 +22,10 @@ class my_projects(QWidget):
         self.init_ui()        
         
         self.store = store
-        self.store.on_projects_fetched.connect(self.on_projects_fetched)
-        self.store.on_project_created.connect(self.on_project_created)
+        self.store.fetch_projects_start.connect(self.on_fetch_projects_start)
+        self.store.fetch_projects_end.connect(self.on_fetch_projects_end)
+        self.store.create_project_start.connect(self.on_create_project_start)
+        self.store.create_project_end.connect(self.on_create_project_end)
         
         self._loading = False
         self._error = None
@@ -60,7 +61,7 @@ class my_projects(QWidget):
             self.error_changed()
             
     def error_changed(self):
-        print(self.error)
+        self.new_project_dialog.error = self.error
             
             
     def init_ui(self):
@@ -93,11 +94,7 @@ class my_projects(QWidget):
         
         # Loading modal        
         self.loading_modal = loading_modal(parent = self)
-    
-    def fetch_projects(self):
-        self.loading_modal.update_text('Fetching your projects...')
-        self.store.fetch_projects()
-        self.loading = True        
+      
     
     # Add buttons to the grid layout
     def update_projects(self):
@@ -119,42 +116,47 @@ class my_projects(QWidget):
             col = (i + 1) % PROJECTS_NR_COLUMNS
             self.grid.addWidget(button, row, col, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
-    def on_projects_fetched(self, res: dict = {}):
+    def on_fetch_projects_start(self):
+        self.loading_modal.update_text('Fetching your projects...')
+        self.loading = True     
+
+    def on_fetch_projects_end(self, res: dict = {}):
         if res['success']:
             self.loading = False
             self.update_projects()
-        else:
-            self.error = res['error']
-            self.loading = False
-            
-    def on_project_created(self, res: dict = {}):
-        if res['success']:
-            self.loading = False
-            self.fetch_projects()
+            self.store.fetch_model_templates()
         else:
             self.error = res['error']
             print(self.error)
             self.loading = False
+    
+    def on_create_project_start(self):
+        self.loading_modal.update_text('Creating your new project...')
+        self.loading = True
+    
+    def on_create_project_end(self, res: dict = {}):
+        if res['success']:
+            self.loading = False
+            self.error = None
+            self.store.fetch_projects()
+        else:
+            self.error = res['error']
+            self.loading = False
+            self.on_new_project_press()
 
     def on_project_press(self, p):
-        self.store.set_active_project(id = p.id)
+        self.store.set_active_project(p)
+        self.store.fetch_models()
         self.go_to_models.emit()
 
+    def on_new_project_press(self):
+        self.new_project_dialog.exec()
+
+    def on_new_project_confirm(self, project_title):
+        self.store.create_project(project_title)
+
+    def on_new_project_cancel(self, project_title):
+        print("User clicked Cancel")
 
     def on_search(self, text):
         print(text)
-
-
-    def on_new_project_press(self, text):
-        # Show the dialog and get the result
-        self.new_project_dialog.exec()
-
-            
-    def on_new_project_confirm(self, project_title):
-        self.store.create_project(project_title)
-        self.loading_modal.update_text('Creating your new project...')
-        self.loading = True
-        
-        
-    def on_new_project_cancel(self, project_title):
-        print("User clicked Cancel")

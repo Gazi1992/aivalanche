@@ -6,13 +6,14 @@ Modal that has the following layout:
     Buttons (Cancel, Confirm)
 '''
 
-from PySide6.QtWidgets import QPushButton, QLabel, QLineEdit, QDialog, QStyle, QGraphicsOpacityEffect
+from PySide6.QtWidgets import QPushButton, QLineEdit, QDialog, QStyle, QGraphicsOpacityEffect
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QAction
 from aivalanche_app.components.custom_layouts import v_layout, h_layout
+from aivalanche_app.components.custom_label import custom_label
 
 class modal_1(QDialog):
-    def __init__(self, parent = None, title = 'Title', message = 'Message', explanation = 'Explanation',
+    def __init__(self, parent = None, title = 'Title', message = 'Message', explanation = 'Explanation', error = None,
                  placeholder = 'Placeholder', on_cancel = None, on_confirm = None, object_name: str = None):
         super().__init__(parent = parent)
         
@@ -21,12 +22,30 @@ class modal_1(QDialog):
         self.title = title
         self.message = message
         self.explanation = explanation
+        self._error = error
         self.placeholder = placeholder
         self.on_confirm = on_confirm
         self.on_cancel = on_cancel
         self.opacity_effect = QGraphicsOpacityEffect(self)
         
         self.init_ui()
+        
+    @property
+    def error(self):
+        return self._error
+
+    @error.setter
+    def error(self, value):
+        if self._error != value:
+            self._error = value
+            self.error_changed()
+
+    def error_changed(self):
+        if self.error is None:
+            self.error_widget.hide()
+        else:
+            self.error_widget.setText(self.error)
+            self.error_widget.show()
     
     def init_ui(self):
         self.setContentsMargins(20, 20, 20, 20)
@@ -36,9 +55,8 @@ class modal_1(QDialog):
         layout = v_layout(spacing = 10)
         self.setLayout(layout)
 
-        # Add label
-        label = QLabel(self.message, parent = self)
-        label.setObjectName('modal_message')
+        # Add message
+        label = custom_label(text = self.message, parent = self, object_name = 'modal_message', font_size = 'normal')
         layout.addWidget(label)
         
         # Add line edit
@@ -47,10 +65,13 @@ class modal_1(QDialog):
         self.line_edit.textChanged.connect(self.on_text_changed)
         layout.addWidget(self.line_edit)
         
-        # Add label
-        label = QLabel(self.explanation, parent = self)
-        label.setObjectName('modal_explanation')
+        # Explanation
+        label = custom_label(text = self.explanation, parent = self, object_name = 'modal_explanation', font_size = 'small')
         layout.addWidget(label)
+        
+        # Error
+        self.error_widget = custom_label(parent = self, object_name = 'error', font_size = 'tiny')
+        layout.addWidget(self.error_widget)
         
         # Add space to buttons
         layout.addSpacing(20)
@@ -116,3 +137,4 @@ class modal_1(QDialog):
         else:
             self.opacity_effect.setOpacity(0.3)
         self.confirm_button.setGraphicsEffect(self.opacity_effect)
+        

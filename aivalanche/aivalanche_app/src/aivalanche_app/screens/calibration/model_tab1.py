@@ -33,24 +33,32 @@ class model_tab(QWidget):
         self.model_buttons_group = QButtonGroup(self)
         self.model_buttons_group.buttonClicked.connect(self.on_model_template_clicked)
         
+        self.testbench_buttons_group = QButtonGroup(self)
+        self.testbench_buttons_group.setExclusive(False)
+        self.testbench_buttons_group.buttonClicked.connect(self.on_testbench_template_clicked)
+
         layout = h_layout(spacing = 40)
         self.setLayout(layout)
 
         # Create left scroll area
-        scroll_area = QScrollArea()
-        scroll_area.setContentsMargins(0, 0, 0, 0)
-        scroll_area.setWidgetResizable(True)
-        layout.addWidget(scroll_area)
+        left_scroll_area = QScrollArea()
+        left_scroll_area.setContentsMargins(0, 0, 0, 0)
+        left_scroll_area.setWidgetResizable(True)
+        layout.addWidget(left_scroll_area)
         
         # Create left widget
-        scroll_widget = QWidget(self)
-        scroll_layout = v_layout(spacing = 20, alignment = Qt.AlignmentFlag.AlignTop)
-        scroll_widget.setLayout(scroll_layout)
-        scroll_area.setWidget(scroll_widget)
+        left_widget = QWidget(self)
+        self.left_layout = v_layout(spacing = 20, alignment = Qt.AlignmentFlag.AlignTop)
+        left_widget.setLayout(self.left_layout)
+        left_scroll_area.setWidget(left_widget)
         
+        # Model label
+        model_label = custom_label(parent = self, text = 'Model', font_size = 'huge', opacity = 0.5)
+        self.left_layout.addWidget(model_label)
+
         # Custom model button
         custom_model_button = custom_radio_button(parent = self, text = 'Custom model', group = self.model_buttons_group)
-        scroll_layout.addWidget(custom_model_button)
+        self.left_layout.addWidget(custom_model_button)
         
         # Create load model combo box
         self.load_model_widget = combo_box_load_data(parent = self,
@@ -59,7 +67,47 @@ class model_tab(QWidget):
                                                      placeholder = 'Select model file',
                                                      is_enabled = False,
                                                      object_name = 'round_combo_box')
-        scroll_layout.addWidget(self.load_model_widget)
+        self.left_layout.addWidget(self.load_model_widget)
+        
+        self.model_templates_layout = v_layout(spacing = 20, alignment = Qt.AlignmentFlag.AlignTop)
+        self.left_layout.addLayout(self.model_templates_layout)
+        
+        # # Add the model templates
+        # for item in self.store.model_templates.keys():
+        #     layout_temp = v_layout(spacing = 15) 
+        #     label = custom_label(parent = self, text = item, font_size = 'normal')
+        #     layout_temp.addWidget(label)
+
+        #     grid_layout_temp = g_layout( vertical_spacing = 10)
+        #     for index, val in enumerate(self.store.model_templates[item]):
+        #         button_temp = custom_radio_button(parent = self, text = val, group = self.model_buttons_group)
+        #         row = index // 3
+        #         col = index % 3
+        #         grid_layout_temp.addWidget(button_temp, row, col)
+            
+        #     layout_temp.addLayout(grid_layout_temp)
+            
+        #     self.left_layout.addLayout(layout_temp)
+        
+        # Create right scroll area
+        right_scroll_area = QScrollArea()
+        right_scroll_area.setContentsMargins(0, 0, 0, 0)
+        right_scroll_area.setWidgetResizable(True)
+        layout.addWidget(right_scroll_area)
+        
+        # Create right widget
+        right_widget = QWidget(self)
+        right_layout = v_layout(spacing = 20, alignment = Qt.AlignmentFlag.AlignTop)
+        right_widget.setLayout(right_layout)
+        right_scroll_area.setWidget(right_widget)
+        
+        # Testbench label
+        testbench_label = custom_label(parent = self, text = 'Testbench', font_size = 'huge', opacity = 0.5)
+        right_layout.addWidget(testbench_label)
+        
+        # Custom testbenches button
+        custom_testbenches_button = custom_radio_button(parent = self, text = 'Custom testbenches', group = self.testbench_buttons_group)
+        right_layout.addWidget(custom_testbenches_button)
         
         # Create load testbench combo box
         self.load_testbenches_widget = combo_box_load_data(parent = self,
@@ -68,15 +116,19 @@ class model_tab(QWidget):
                                                            placeholder = 'Select testbenches file',
                                                            is_enabled = False,
                                                            object_name = 'round_combo_box')
-        scroll_layout.addWidget(self.load_testbenches_widget)
+        right_layout.addWidget(self.load_testbenches_widget)
         
-        # Templates label
-        templates_label = custom_label(parent = self, text = 'Templates', font_size = 'huge', opacity = 0.5)
-        scroll_layout.addWidget(templates_label)
-        
-        self.model_templates_layout = v_layout(spacing = 20, alignment = Qt.AlignmentFlag.AlignTop)
-        scroll_layout.addLayout(self.model_templates_layout)
-
+        # Add the testbench templates
+        grid_layout_temp = g_layout( vertical_spacing = 10)
+        for index, val in enumerate(self.store.testbench_templates):
+            button_temp = custom_checkbox_with_text(parent = self, text = val, on_click = self.on_testbench_checkbox_clicked)
+            row = index // 5
+            col = index % 5
+            grid_layout_temp.addWidget(button_temp, row, col)
+            self.testbench_checkboxes.append(button_temp)
+            
+        right_layout.addLayout(grid_layout_temp)
+    
     
     def update_model_templates(self, data):
         clear_layout(self.model_templates_layout)
@@ -102,7 +154,15 @@ class model_tab(QWidget):
     def on_model_template_clicked(self, button):
         if button.text() == 'Custom model':
             self.load_model_widget.set_state(True)
-            self.load_testbenches_widget.set_state(True)
         else:
             self.load_model_widget.set_state(False)
+
+
+    def on_testbench_template_clicked(self, button):
+        if button.text() == 'Custom testbenches':
+            self.load_testbenches_widget.set_state(button.isChecked())
+        else:
             self.load_testbenches_widget.set_state(False)
+            
+    def on_testbench_checkbox_clicked(self, state, text):
+        print(text, ': ', state)

@@ -90,6 +90,7 @@ stylesheet = f"""
     QDialog {{min-width: 500px; background-color: {colors['background_1']};}}
     
     /* Button */
+    QPushButton {{outline: none;}}
     QPushButton:hover {{background: {colors['button_hover']};}}
     QPushButton:pressed {{background: {colors['button_press']};}}
     QDialog QPushButton {{
@@ -150,6 +151,7 @@ stylesheet = f"""
     QComboBox:drop-down:button {{border: none; width: 20px; padding-right: 5px}}
     
     /* Radio button */
+    QRadioButton {{outline: none;}}
     QRadioButton:indicator {{width: 15px; height: 15px;}}
     QRadioButton:indicator::unchecked {{image: url({radio_button_unchecked_path});}}
     QRadioButton:indicator:unchecked:hover {{image: url({radio_button_unchecked_hovered_path});}}
@@ -217,7 +219,7 @@ stylesheet = f"""
         }} 
     QPushButton#parameters_tab:hover, QPushButton#log_in_button:hover {{background: {colors['button_hover']};}}
     QPushButton#parameters_tab:pressed, QPushButton#log_in_button:pressed {{background: {colors['button_press']};}}
-    
+        
     /* Calibration control buttons */
     QPushButton#calibration_control {{icon-size: 30px 30px;}}
     QPushButton#calibration_control:hover {{background-color: transparent;}}

@@ -465,7 +465,9 @@ class custom_table(QTableView):
         self.model().initialize_table(data, checkbox_columns)
         self.horizontalHeader().initialize_checkbox_rects()
         self.model().layoutChanged.emit()
-        
+    
+    def clear_data(self):
+        self.update_data()
     
     # update data based on some given condition
     def update_by_condition(self, condition: str = None, update_columns: list = None, update_values: list = None):

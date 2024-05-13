@@ -61,6 +61,7 @@ class db(QObject):
                 'data': data,
                 'error': error}
 
+    #%% User
     def fetch_users(self):
         query = "select * from users"
         return self.execute_query(query, 'fetch_users')
@@ -68,20 +69,37 @@ class db(QObject):
     def fetch_user_by_username_and_password(self, username: str = '', password: str = ''):
         query = f"select * from aivalanche_db.users where username = '{username}' and password = '{password}'"
         return self.execute_query(query, 'fetch_user_by_username_and_password') 
-        
-    def fetch_projects_by_user_id(self, user_id: str = ''):
+    
+    #%% Projects
+    def fetch_projects_by_user_id(self, user_id: str = None):
         query = f"select * from aivalanche_db.projects where user_id = '{user_id}' order by created_at desc"
         return self.execute_query(query, 'fetch_projects_by_user_id')
         
-    def fetch_models_by_user_id_and_project_id(self, user_id, project_id):
-        query = f"select * from aivalanche_db.models where user_id = '{user_id}' and project_id = '{project_id}'"
-        return self.execute_query(query, 'fetch_models_by_user_id_and_project_id')
-
     def create_project_by_user_id(self, user_id: str = None, title: str = None):
-        query = f"insert into projects (user_id, created_at, last_modified_at, title, labels) values ('{user_id}', now(), now(), '{title}', '')"
+        query = f"insert into aivalanche_db.projects (user_id, created_at, last_modified_at, title, labels) values ('{user_id}', now(), now(), '{title}', '')"
         return self.execute_query(query, 'create_project_by_user_id')
+    
+    def fetch_reference_data_by_project_id(self, project_id: str = None):
+        query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' order by path desc"
+        return self.execute_query(query, 'fetch_reference_data_by_project_id')
 
-        
+    def add_reference_data_by_project_id(self, path: str = None, project_id: str = None):
+        query = f"insert into aivalanche_db.reference_data_files (path, project_id) values ('{project_id}', '{path}')"
+        return self.execute_query(query, 'add_reference_data_by_project_id')
+    
+    #%% Models
+    def fetch_models_by_project_id(self, project_id):
+        query = f"select * from aivalanche_db.models where project_id = '{project_id}'"
+        return self.execute_query(query, 'fetch_models_by_project_id')
 
+    def create_model_by_project_id(self, project_id: str = None, title: str = None):
+       query = f"insert into aivalanche_db.models (project_id, created_at, last_modified_at, title, labels, status) values ('{project_id}', now(), now(), '{title}', '', 'setup')"
+       return self.execute_query(query, 'create_model_by_project_id')
 
-
+    def fetch_model_templates(self):
+        query = "select * from aivalanche_db.model_templates"
+        return self.execute_query(query, 'fetch_model_templates')
+    
+    def update_reference_data_id_by_model_id(self, reference_data_id: str = None, model_id: str = None):
+        query = f"update aivalanche_db.models set reference_data_id = '{reference_data_id}' where id = '{model_id}'"
+        return self.execute_query(query, 'update_reference_data_id_by_model_id')

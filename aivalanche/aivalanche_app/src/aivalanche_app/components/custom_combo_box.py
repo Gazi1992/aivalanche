@@ -29,7 +29,7 @@ class custom_combo_box(QComboBox):
         else:
             self.setPlaceholderText(placeholder)
         
-        self.currentTextChanged.connect(lambda text: self.on_item_change(text))
+        self.connect_on_change_slot()
             
         if len(self.items) > 0:
             self.addItems(items)
@@ -50,20 +50,38 @@ class custom_combo_box(QComboBox):
             self.on_delete_button_clicked = on_delete_button_clicked
             self.setMouseTracking(True)
             # self.setContentsMargins(0, 50, 0, 0)
-                
+    
+    def update_items(self, items: list = [], trigger_on_change_slot: bool = False):
+        self.clear()
+        self.items = items
+        current_index = self.currentIndex()
+        if not trigger_on_change_slot:
+            self.disconnect_on_change_slot()
+            self.addItems(self.items)
+            self.connect_on_change_slot()
+        else:
+            self.addItems(self.items)
+        
+        # Keep the current index in case it was -1
+        if current_index == -1:
+            self.setCurrentIndex(-1)
+            
+    def disconnect_on_change_slot(self):
+        self.currentTextChanged.disconnect()
+        
+    def connect_on_change_slot(self):
+        self.currentTextChanged.connect(lambda text: self.on_item_change(text))
 
     def toggle_state(self):
         self.is_enabled = not self.is_enabled
         self.setEnabled(self.is_enabled)
         self.adjust_opacity()
         
-        
     def set_state(self, state: bool = True):
         if state != self.is_enabled:
             self.is_enabled = state
             self.setEnabled(self.is_enabled)
             self.adjust_opacity()
-        
     
     def adjust_opacity(self):
         if self.is_enabled:
@@ -71,13 +89,11 @@ class custom_combo_box(QComboBox):
         else:
             self.opacity_effect.setOpacity(0.3)
         self.setGraphicsEffect(self.opacity_effect)
-       
         
     def on_item_change(self, text):
         self.active_item = text
         if self.on_change is not None:
             self.on_change(text)
-        
             
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -95,7 +111,6 @@ class custom_combo_box(QComboBox):
             y = rect.y() + self.delete_button_margin
             self.delete_button_rect = QRect(x, y, self.delete_button_width, self.delete_button_height)
         super().resizeEvent(event)
-
     
     def mouseMoveEvent(self, event):
         if self.has_delete_button:
@@ -114,7 +129,6 @@ class custom_combo_box(QComboBox):
                     self.hovered = False
             self.update()
         super().mouseMoveEvent(event)
-
      
     def mousePressEvent(self, event):
         if self.has_delete_button:
@@ -146,7 +160,6 @@ class custom_combo_box(QComboBox):
         else:
             super().mouseReleaseEvent(event)
 
-            
     def leaveEvent(self, event):
         if self.has_delete_button:
             if not self.mouse_pressed:

@@ -23,7 +23,6 @@ class main_window(QMainWindow):
         # Create log_in screen
         self.log_in_screen = log_in(parent = self.stacked_widget, store = self.store, object_name = 'log_in')
         self.log_in_screen.go_to_home.connect(self.go_to_home)
-        self.log_in_screen.update_store.connect(self.update_store)
         self.stacked_widget.addWidget(self.log_in_screen)
         
         # Create home screen
@@ -45,7 +44,7 @@ class main_window(QMainWindow):
             
     def go_to_home(self):
         self.stacked_widget.setCurrentWidget(self.home_screen)
-        self.home_screen.fetch_projects()
+        self.store.fetch_projects()
 
     def go_to_log_in(self):
         self.stacked_widget.setCurrentWidget(self.log_in_screen)
