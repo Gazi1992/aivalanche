@@ -24,26 +24,22 @@ class custom_image(QPushButton):
         self.front_color = front_color
         self.front_hover_color = front_hover_color
         self.front_click_color = front_click_color
-        self.image_path = image_path
         self.on_click = on_click
+        self.image_path = None
         
-        if self.image_path is not None:
-            self.image = QPixmap(image_path)
-            self.image_aspect_ratio = self.image.width() / self.image.height()
-                
         if minimum_width is not None:
             self.setMinimumWidth(minimum_width)
             
         if minimum_height is not None:
             self.setMinimumHeight(minimum_height)
-        
+            
         if self.image_height is not None and self.image_width is not None:
             self.setFixedSize(self.image_width, self.image_height)
         elif self.image_height is not None and self.image_width is None:
             self.setFixedHeight(self.image_height)
         elif self.image_width is not None and self.image_height is None:
             self.setFixedWidth(self.image_width)
-        
+                
         # Declare mouse events
         self.hovered = False
         self.is_clicked = False
@@ -54,17 +50,24 @@ class custom_image(QPushButton):
         
         if self.on_click is not None:
             self.clicked.connect(self.on_click)
+            
+        self.update_image(image_path)
+
         
-        
+    def update_image(self, image_path: str = image_placeholder_path):
+        if self.image_path != image_path:
+            self.image_path = image_path
+            self.image = QPixmap(self.image_path)
+            self.image_aspect_ratio = self.image.width() / self.image.height()
+            self.update()
+
     def enterEvent(self, event):
         self.hovered = True
         self.update()
-        
 
     def leaveEvent(self, event):
         self.hovered = False
         self.update()
-    
     
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -78,7 +81,6 @@ class custom_image(QPushButton):
             self.update()
             if self.rect().contains(event.pos()):
                 self.click()
-            
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -102,7 +104,6 @@ class custom_image(QPushButton):
             painter.setBrush(QBrush(fg_color, Qt.SolidPattern))
             painter.drawRect(x, y, w, h)
             
-        
     def get_dimensions(self):
         # Get viewport dimensions
         rect_width = self.rect().width() - self.padding_left - self.padding_right
@@ -157,7 +158,6 @@ class custom_image(QPushButton):
         
         return (x, y, w, h), (sx, sy, sw, sh)
     
-    
     def get_background_color(self):
         if self.is_clicked and self.back_click_color is not None:
             if isinstance(self.back_click_color, tuple):
@@ -175,7 +175,6 @@ class custom_image(QPushButton):
             else:
                 return QColor(self.back_color)
         return None
-    
     
     def get_foreground_color(self):
         if self.is_clicked and self.front_click_color is not None:

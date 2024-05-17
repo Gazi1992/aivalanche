@@ -1,4 +1,4 @@
-import mysql.connector, time, pandas as pd
+import mysql.connector, time, pandas as pd, uuid
 from PySide6.QtCore import QObject
 
 class db(QObject):
@@ -39,12 +39,12 @@ class db(QObject):
         except mysql.connector.Error as e:
             print(f'Error closing he connection: {e}')
 
-    def execute_query(self, query, description):
+    def execute_query(self, query, description, return_data = {}):
         try:
             self.cursor.execute(query)
             if 'insert' in query or 'update' in query:
                 self.connection.commit()
-                data = None
+                data = return_data
             else:
                 columns = [column[0] for column in self.cursor.description]  # Get column names
                 result = self.cursor.fetchall()  # Get the result of the query
@@ -79,17 +79,13 @@ class db(QObject):
         query = f"insert into aivalanche_db.projects (user_id, created_at, last_modified_at, title, labels) values ('{user_id}', now(), now(), '{title}', '')"
         return self.execute_query(query, 'create_project_by_user_id')
     
-    def fetch_reference_data_by_project_id(self, project_id: str = None):
-        query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' order by path desc"
-        return self.execute_query(query, 'fetch_reference_data_by_project_id')
-
-    def add_reference_data_by_project_id(self, path: str = None, project_id: str = None):
-        query = f"insert into aivalanche_db.reference_data_files (path, project_id) values ('{project_id}', '{path}')"
-        return self.execute_query(query, 'add_reference_data_by_project_id')
-    
     #%% Models
+    def fetch_all_models(self):
+        query = "select * from aivalanche_db.models"
+        return self.execute_query(query, 'fetch_all_models')
+    
     def fetch_models_by_project_id(self, project_id):
-        query = f"select * from aivalanche_db.models where project_id = '{project_id}'"
+        query = f"select * from aivalanche_db.models where project_id = '{project_id}' order by created_at desc"
         return self.execute_query(query, 'fetch_models_by_project_id')
 
     def create_model_by_project_id(self, project_id: str = None, title: str = None):
@@ -99,7 +95,25 @@ class db(QObject):
     def fetch_model_templates(self):
         query = "select * from aivalanche_db.model_templates"
         return self.execute_query(query, 'fetch_model_templates')
+
+    #%% Reference data
+    def fetch_reference_data_by_project_id(self, project_id: str = None):
+        query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' order by path desc"
+        return self.execute_query(query, 'fetch_reference_data_by_project_id')
+
+    def add_reference_data_by_project_id(self, path: str = None, project_id: str = None):
+        id = str(uuid.uuid4())
+        query = f"insert into aivalanche_db.reference_data_files (id, path, project_id) values ('{id}', '{path}', '{project_id}')"
+        return_data = {'id': id, 'path': path, 'project_id': project_id}
+        return self.execute_query(query, 'add_reference_data_by_project_id', return_data)
     
     def update_reference_data_id_by_model_id(self, reference_data_id: str = None, model_id: str = None):
-        query = f"update aivalanche_db.models set reference_data_id = '{reference_data_id}' where id = '{model_id}'"
+        if reference_data_id is None:
+            query = f"update aivalanche_db.models set reference_data_id = NULL where id = '{model_id}'"
+        else:
+            query = f"update aivalanche_db.models set reference_data_id = '{reference_data_id}' where id = '{model_id}'"
         return self.execute_query(query, 'update_reference_data_id_by_model_id')
+    
+    def fetch_reference_data_by_path_and_project_id(self, path: str = None, project_id: str = None):
+        query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' and path = '{path}' order by path desc"
+        return self.execute_query(query, 'fetch_reference_data_by_path_and_project_id')

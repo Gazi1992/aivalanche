@@ -50,13 +50,11 @@ class Reference_data:
         self.file = file
         self.parse_file()
         
-        
     # Parse the file and save the data into the respective dataframes
     def parse_file(self):
         if self.file is not None:
             if self.file.split('.')[-1] == 'json':
                 self.parse_json()
-    
 
     # Convert json file to pandas dataframe
     def parse_json(self):
@@ -121,7 +119,6 @@ class Reference_data:
             self.groups = pd.DataFrame.from_dict(data = group_info)
             self.curves = pd.DataFrame.from_dict(data = curve_info)
             self.data = pd.merge(left = self.groups, right = self.curves, on = 'group_id')
-
         
     # validate that a group has the necessary elements    
     def validate_group(self, group):
@@ -144,8 +141,7 @@ class Reference_data:
             self.error_parsing += f"Error happened at group: {group}.\n"
         if self.error_parsing is not None:
             raise key_missing_exception(self.error_parsing)
-        
-        
+
     # validate that a curve has the necessary elements    
     def validate_curve(self, curve):
         keys = curve.keys()
@@ -161,8 +157,7 @@ class Reference_data:
             
         if self.error_parsing is not None:
             raise key_missing_exception(self.error_parsing)
-            
-    
+
     # update data based on some given condition
     def update_by_condition(self, condition: str = None, update_columns: list = None, update_values: list = None):
         mask = self.data.eval(condition)

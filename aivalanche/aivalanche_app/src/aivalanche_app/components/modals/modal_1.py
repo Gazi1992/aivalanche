@@ -1,5 +1,6 @@
 '''
 Modal that has the following layout:
+    Title
     Message
     Line edit
     Explanation

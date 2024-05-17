@@ -1,13 +1,16 @@
-from PySide6.QtWidgets import QWidget, QSplitter, QScrollArea
+from PySide6.QtWidgets import QWidget, QSplitter
+from PySide6.QtCore import Signal
 from aivalanche_app.components.custom_layouts import v_layout
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
+from aivalanche_app.components.custom_scroll_area import custom_scroll_area
 from reference_data import Reference_data
 import pyqtgraph as pg, pandas as pd, os
 
 class reference_data_tab(QSplitter):
+    reference_data_warning = Signal(dict)    
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
@@ -30,6 +33,7 @@ class reference_data_tab(QSplitter):
         self.plots = []
         self.min_plot_height = 500
         self.plots_widget_height_array = []
+        self.plots_scroll_area_height = 0
         
         self.placeholder_plot = line_scatter_plot(x_axis_label = 'x', y_axis_label = 'y', style = self.style)
         self.placeholder_plot_visible = False
@@ -68,7 +72,7 @@ class reference_data_tab(QSplitter):
         right_widget.setLayout(right_layout)
         
         # Create a scroll area
-        scroll_area = QScrollArea()
+        scroll_area = custom_scroll_area(parent = self, on_resize_event = self.on_scroll_area_resize_event) #QScrollArea()
         scroll_area.setContentsMargins(0, 0, 0, 0)
         right_layout.addWidget(scroll_area)
         
@@ -77,13 +81,22 @@ class reference_data_tab(QSplitter):
         self.plots_widget.ci.setSpacing(20)
         
         scroll_area.setWidget(self.plots_widget)
-        scroll_area.setWidgetResizable(True)
 
         self.setStretchFactor(0, 1)
         self.setStretchFactor(1, 1)
         
         self.check_empty_plot_widget()
     
+    def on_scroll_area_resize_event(self, event):  
+        self.plots_scroll_area_height = event.size().height()
+        self.update_plots_widget_height()              
+                
+    def update_plots_widget_height(self):
+        if self.nr_plots <= 2:
+            self.plots_widget.setFixedHeight(self.plots_scroll_area_height)
+        else:
+            self.plots_widget.setFixedHeight(self.plots_widget.ci.height())
+
     def clear_data(self):
         self.clear_all_plots()
         self.table.clear_data()
@@ -120,8 +133,9 @@ class reference_data_tab(QSplitter):
             print(data['error'])
     
     def on_available_reference_data_fetched(self, data: dict = {}):
-        self.load_data_widget.update_items(self.store.available_reference_data['path'].tolist())
-        self.check_reference_data_exists()
+        if data['success']:
+            self.load_data_widget.update_items(self.store.available_reference_data['path'].tolist())
+            self.check_reference_data_exists()
         
     def check_reference_data_exists(self):
         self.clear_data()
@@ -137,11 +151,32 @@ class reference_data_tab(QSplitter):
     
     def on_import_new_ref_data_file(self, file_path: str = None):
         if file_path is not None:
-            self.store.add_available_reference_data(path = file_path, project_id = self.store.active_project['id'])
+            # Check if the file is readable
+            try:
+                file_valid = True
+                Reference_data(file_path)
+            except Exception:
+                file_valid = False
+            
+            # If the file is valid, load it, otherwise show a warning message
+            if file_valid:
+                self.store.add_available_reference_data(path = file_path, project_id = self.store.active_project['id'])
+            else:
+                warning = {'title': 'Reference data import error',
+                           'message': 'File could not be read',
+                           'explanation': f'The file {file_path} is not a valid reference data file. Please see the documentation about the correct format of the reference_data file.'}
+                self.reference_data_warning.emit(warning)
+                
             
     def on_available_reference_data_added(self, data: dict = {}):
-        self.store.update_reference_data_id(reference_data_id = data['data']['id'], model_id = self.store.active_model['id'])
-    
+        if data['success']:
+            self.store.update_reference_data_id(reference_data_id = data['data']['id'], model_id = self.store.active_model['id'])
+        else:
+            warning = {'title': 'Reference data add error',
+                       'message': 'Reference data could not be added.',
+                       'explanation': data['error']}
+            self.reference_data_warning.emit(warning)
+        
     def check_empty_plot_widget(self):
         if self.nr_plots == 0:
             self.show_placeholder_plot()
@@ -149,8 +184,7 @@ class reference_data_tab(QSplitter):
     def show_placeholder_plot(self):
         self.plots_widget.addItem(self.placeholder_plot, row = 0, col = 0)
         self.placeholder_plot_visible = True
-        if len(self.plots_widget_height_array) > 0:
-            self.plots_widget.setFixedHeight(self.plots_widget_height_array[0])
+        self.update_plots_widget_height() # update plots_widget heights
 
     def on_checkbox_click(self, data: dict = None):
         row = data['row_index']
@@ -218,10 +252,11 @@ class reference_data_tab(QSplitter):
         self.plots.append(group_id)
 
         # update plots_widget heights
-        if self.nr_plots > len(self.plots_widget_height_array):
-            self.plots_widget_height_array.append(self.plots_widget.ci.height())
-
-        self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
+        self.update_plots_widget_height()   
+        
+        # if self.nr_plots > len(self.plots_widget_height_array):
+        #     self.plots_widget_height_array.append(self.plots_widget.ci.height())
+        # self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
             
         # update the table plot checkboxes
         self.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
@@ -253,7 +288,8 @@ class reference_data_tab(QSplitter):
             else:
                 self.shift_plots_left(start_index = index + 1)
                 
-            self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
+            # update plots_widget heights
+            self.update_plots_widget_height()   
     
             self.check_empty_plot_widget()
 

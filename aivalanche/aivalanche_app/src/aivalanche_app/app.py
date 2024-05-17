@@ -33,7 +33,7 @@ else:
 app.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
 
 style = style()
-db_type = 'local_files' # possible values are [local_files, local_mysql_db]
+db_type = 'local_mysql_db' # possible values are [local_files, local_mysql_db]
 store = store(db_type = db_type, style = style)
 app.setStyleSheet(style.stylesheet)
 

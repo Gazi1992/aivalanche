@@ -45,6 +45,7 @@ class main_window(QMainWindow):
     def go_to_home(self):
         self.stacked_widget.setCurrentWidget(self.home_screen)
         self.store.fetch_projects()
+        self.store.fetch_model_templates()
 
     def go_to_log_in(self):
         self.stacked_widget.setCurrentWidget(self.log_in_screen)

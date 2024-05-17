@@ -1,4 +1,4 @@
-import json, pandas as pd, threading, uuid
+import json, pandas as pd, threading, uuid, queue
 from pathlib import Path
 from datetime import datetime
 from aivalanche_app.paths import dummy_data_path
@@ -67,11 +67,27 @@ class store(QObject):
         self.available_reference_data = pd.DataFrame()
         self.available_parameters = pd.DataFrame()
         self.available_loss_functions = pd.DataFrame()
-
+        
+        self.queue = queue.Queue()
+        
+        # Start the db_worker thread
+        threading.Thread(target = self.db_worker, daemon = True).start()
+        
+    #%% DB worker
+    def db_worker(self):
+        while True:
+            task, args = self.queue.get()
+            try:
+                task(*args)
+            finally:
+                self.queue.task_done()
+                
+    def _run_task(self, task, *args):
+        self.queue.put((task, args))
         
     #%% Users
     def validate_user(self, username: str = None, password: str = None):
-        threading.Thread(target = self._validate_user, args = (username, password)).start()
+        self._run_task(self._validate_user, username, password)
         
     def _validate_user(self, username: str = None, password: str = None):
         self.validate_user_start.emit({'username': username, 'password': password})
@@ -114,12 +130,10 @@ class store(QObject):
     def set_active_project(self, p: pd.Series = None):
         if self.active_project is None or p is None or self.active_project['id'] != p['id']:
             self.active_project = p
-            if p is not None:
-                self.fetch_available_reference_data(project_id = self.active_project['id'])
             self.active_project_changed.emit({'active_project': p})
-    
+
     def fetch_projects(self):
-        threading.Thread(target = self._fetch_projects).start()
+        self._run_task(self._fetch_projects)
 
     def _fetch_projects(self):
         self.fetch_projects_start.emit({'user': self.user})
@@ -152,7 +166,7 @@ class store(QObject):
         self.fetch_projects_end.emit({'success': success, 'error': error, 'data': projects})
     
     def create_project(self, title: str = None):
-        threading.Thread(target = self._create_project, args = (title,)).start()
+        self._run_task(self._create_project, title)
 
     def _create_project(self, title: str = None):
         self.create_project_start.emit({'title': title})
@@ -191,78 +205,6 @@ class store(QObject):
         
         self.create_project_end.emit({'success': success, 'error': error, 'data': data})
         
-    def fetch_available_reference_data(self, project_id: str = None):
-        threading.Thread(target = self._fetch_available_reference_data, args = (project_id,)).start()
-        # self._fetch_available_reference_data(project_id)
-        
-    def _fetch_available_reference_data(self, project_id: str = None):
-        self.fetch_available_reference_data_start.emit({'project_id': project_id})
-        success = True
-        error = None
-        available_reference_data = None
-        
-        if project_id is None:
-            success = False
-            error = 'project_id is None!'
-        else:
-            if self.db_type == 'local_files':
-                all_reference_data = pd.read_csv(self.available_reference_data_path)
-                available_reference_data = all_reference_data[(all_reference_data['project_id'] == project_id)]
-                available_reference_data.sort_values(by = 'path', ascending = False, inplace = True)
-                available_reference_data.reset_index(inplace = True)
-            elif self.db_type == 'local_mysql_db':
-                db_response = self.db.fetch_reference_data_by_project_id(project_id)
-                if db_response['success']:
-                    available_reference_data = db_response['data']
-                else:
-                    success = False
-                    error = db_response['error']
-        
-        if success:
-            self.available_reference_data = available_reference_data
-        
-        self.fetch_available_reference_data_end.emit({'success': success, 'error': error, 'data': available_reference_data})
-    
-    def add_available_reference_data(self, path: str = None, project_id: str = None):
-        # threading.Thread(target = self._add_available_reference_data, args = (path, project_id)).start()
-        self._add_available_reference_data(path, project_id)
-        
-    def _add_available_reference_data(self, path: str = None, project_id: str = None):
-        self.add_available_reference_data_start.emit({'path': path, 'project_id': project_id})
-        success = True
-        error = None
-        data = None
-        
-        if path is None:
-            success = False
-            error = 'path is None!'
-        elif project_id is None:
-            success = False
-            error = 'project_id is None!'
-        else:
-            if self.db_type == 'local_files':
-                all_reference_data = pd.read_csv(self.available_reference_data_path)
-                if path in all_reference_data[all_reference_data['project_id'] == project_id]['path'].tolist():
-                    success = False
-                    error = f'You already have a reference data file with the path {path} for the project {project_id}. Please specify a different file.'
-                else:
-                    new_reference_data_file = pd.DataFrame.from_dict([{'id': str(uuid.uuid4()),
-                                                                       'path': path,
-                                                                       'project_id': project_id}])
-                    all_reference_data = pd.concat((all_reference_data, new_reference_data_file))
-                    all_reference_data.to_csv(path_or_buf = self.available_reference_data_path, index = False)
-                    data = new_reference_data_file.squeeze()
-            elif self.db_type == 'local_mysql_db':
-                db_response = self.db.add_reference_data_by_project_id(path, project_id)
-                if db_response['success']:
-                    data = db_response['data']
-                else:
-                    success = False
-                    error = db_response['error']
-        
-        self.add_available_reference_data_end.emit({'success': success, 'error': error, 'data': data})
-        
-        
     #%% Models
     def set_active_model(self, m: pd.Series = None, override: bool = False):
         if self.active_model is None or m is None or self.active_model['id'] != m['id'] or override:
@@ -271,7 +213,7 @@ class store(QObject):
                 self.active_model_changed.emit({'active_model': m})
     
     def fetch_model_templates(self):
-        threading.Thread(target = self._fetch_model_templates).start()
+        self._run_task(self._fetch_model_templates)
         
     def _fetch_model_templates(self):
         self.fetch_model_templates_start.emit()
@@ -290,8 +232,8 @@ class store(QObject):
         self.fetch_model_templates_end.emit({'success': success, 'error': error, 'data': self.model_templates})
     
     def fetch_models(self):
-        threading.Thread(target = self._fetch_models).start()
-
+        self._run_task(self._fetch_models)
+ 
     def _fetch_models(self):
         self.fetch_models_start.emit({'project': self.active_project})
         success = True
@@ -324,7 +266,7 @@ class store(QObject):
         self.fetch_models_end.emit({'success': success, 'error': error, 'data': models})
     
     def create_model(self, title: str = None):
-        threading.Thread(target = self._create_model, args = (title,)).start()
+        self._run_task(self._create_model, title)
 
     def _create_model(self, title: str = None):
         self.create_model_start.emit({'title': title})
@@ -362,10 +304,85 @@ class store(QObject):
                     error = db_response['error']
         
         self.create_model_end.emit({'success': success, 'error': error, 'data': data})
+
+    #%% Reference data
+    def fetch_available_reference_data(self, project_id: str = None):
+        self._run_task(self._fetch_available_reference_data, project_id)
+        
+    def _fetch_available_reference_data(self, project_id: str = None):
+        self.fetch_available_reference_data_start.emit({'project_id': project_id})
+        success = True
+        error = None
+        available_reference_data = None
+        
+        if project_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_reference_data = pd.read_csv(self.available_reference_data_path)
+                available_reference_data = all_reference_data[(all_reference_data['project_id'] == project_id)]
+                available_reference_data_sorted = available_reference_data.sort_values(by = 'path', ascending = False, ignore_index = True)
+                available_reference_data = available_reference_data_sorted
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_reference_data_by_project_id(project_id)
+                if db_response['success']:
+                    available_reference_data = db_response['data']
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if success:
+            self.available_reference_data = available_reference_data
+        
+        self.fetch_available_reference_data_end.emit({'success': success, 'error': error, 'data': available_reference_data})
     
+    def add_available_reference_data(self, path: str = None, project_id: str = None):
+        self._run_task(self._add_available_reference_data, path, project_id)
+        
+    def _add_available_reference_data(self, path: str = None, project_id: str = None):
+        self.add_available_reference_data_start.emit({'path': path, 'project_id': project_id})
+        success = True
+        error = None
+        data = None
+        
+        if path is None:
+            success = False
+            error = 'path is None!'
+        elif project_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_reference_data = pd.read_csv(self.available_reference_data_path)
+                if path in all_reference_data[all_reference_data['project_id'] == project_id]['path'].tolist():
+                    success = False
+                    error = f'You already have a reference data file with the path {path} for the project {project_id}. Please specify a different file.'
+                else:
+                    new_reference_data_file = pd.DataFrame.from_dict([{'id': str(uuid.uuid4()),
+                                                                       'path': path,
+                                                                       'project_id': project_id}])
+                    all_reference_data = pd.concat((all_reference_data, new_reference_data_file))
+                    all_reference_data.to_csv(path_or_buf = self.available_reference_data_path, index = False)
+                    data = new_reference_data_file.squeeze()
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_reference_data_by_path_and_project_id(path, project_id)
+                if len(db_response['data'].index) == 0:
+                    db_response = self.db.add_reference_data_by_project_id(path, project_id)
+                    if db_response['success']:
+                        data = db_response['data']
+                    else:
+                        success = False
+                        error = db_response['error']
+                else:
+                    success = False
+                    error = f'You already have a reference data file with the path {path} for the project {project_id}. Please specify a different file.'
+        
+        self.add_available_reference_data_end.emit({'success': success, 'error': error, 'data': data})
+        
     def update_reference_data_id(self, reference_data_id: str = None, model_id: str = None):
-        # threading.Thread(target = self._update_reference_data_id, args = (reference_data_id, model_id)).start()
-        self._update_reference_data_id(reference_data_id, model_id)
+        self._run_task(self._update_reference_data_id, reference_data_id, model_id)
+        # self._update_reference_data_id(reference_data_id, model_id)
     
     def _update_reference_data_id(self, reference_data_id: str = None, model_id: str = None):
         self.update_reference_data_id_start.emit({'reference_data_id': reference_data_id, 'model_id': model_id})
@@ -386,14 +403,17 @@ class store(QObject):
                 all_models.to_csv(path_or_buf = self.models_path, index = False)
                 self.models.loc[self.models['id'] == model_id, 'reference_data_id'] = reference_data_id
                 if self.active_model is not None and self.active_model['id'] == model_id:
-                    self.set_active_model(all_models[all_models['id'] == model_id].squeeze(), override = True)
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True)
             elif self.db_type == 'local_mysql_db':
                 db_response = self.db.update_reference_data_id_by_model_id(reference_data_id, model_id)
                 if db_response['success']:
                     data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'reference_data_id'] = reference_data_id
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True)
                 else:
                     success = False
                     error = db_response['error']
         
         self.update_reference_data_id_end.emit({'success': success, 'error': error, 'data': data})
-        
+    

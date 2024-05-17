@@ -11,7 +11,6 @@ from aivalanche_app.data_store.store import store
 from aivalanche_app.components.modals.modal_1 import modal_1
 from aivalanche_app.components.modals.loading_modal import loading_modal
 
-
 class my_models(QWidget):
     go_to_calibration = Signal()
     go_to_projects = Signal()

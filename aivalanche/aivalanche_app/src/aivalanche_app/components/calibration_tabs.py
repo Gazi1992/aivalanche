@@ -8,7 +8,7 @@ from aivalanche_app.screens.calibration.results_tab import results_tab
 
 class calibration_tabs(QTabWidget):
     
-    def __init__(self, parent = None, store: store = None, object_name: str = None):
+    def __init__(self, parent = None, store: store = None, object_name: str = None, on_warning: callable = None):
         super().__init__(parent)
         
         if object_name is not None:
@@ -30,6 +30,10 @@ class calibration_tabs(QTabWidget):
         self.addTab(self.parameters_tab, "Parameters")
         self.addTab(self.optimization_tab, "Optimizer")
         self.addTab(self.results_tab, "Results")
+        
+        # Connect warning signals
+        if on_warning is not None:
+            self.reference_data_tab.reference_data_warning.connect(on_warning)
         
         # Hide the tab bar
         for i in range(5):

@@ -5,6 +5,7 @@ for m in get_monitors():
     if m.is_primary:
         SCREEN_WIDTH = m.width
         SCREEN_HEIGHT = m.height
+        print('screen size: ', SCREEN_WIDTH, 'x', SCREEN_HEIGHT)
         
 # Drawer
 DRAWER_WIDTH = 200

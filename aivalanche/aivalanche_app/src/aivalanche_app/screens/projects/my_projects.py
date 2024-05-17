@@ -26,10 +26,10 @@ class my_projects(QWidget):
         self.store.fetch_projects_end.connect(self.on_fetch_projects_end)
         self.store.create_project_start.connect(self.on_create_project_start)
         self.store.create_project_end.connect(self.on_create_project_end)
+        self.store.active_project_changed.connect(self.on_active_project_changed)
         
         self._loading = False
         self._error = None
-                
     
     @property
     def loading(self):
@@ -48,7 +48,6 @@ class my_projects(QWidget):
         else:
             self.loading_modal.stop()
             self.loading_modal.accept()
-            
     
     @property
     def error(self):
@@ -62,7 +61,6 @@ class my_projects(QWidget):
             
     def error_changed(self):
         self.new_project_dialog.error = self.error
-            
             
     def init_ui(self):
         layout = v_layout(parent = self)
@@ -94,8 +92,7 @@ class my_projects(QWidget):
         
         # Loading modal        
         self.loading_modal = loading_modal(parent = self)
-      
-    
+
     # Add buttons to the grid layout
     def update_projects(self):
         clear_layout(self.grid)
@@ -124,7 +121,6 @@ class my_projects(QWidget):
         if res['success']:
             self.loading = False
             self.update_projects()
-            self.store.fetch_model_templates()
         else:
             self.error = res['error']
             print(self.error)
@@ -160,3 +156,8 @@ class my_projects(QWidget):
 
     def on_search(self, text):
         print(text)
+        
+    def on_active_project_changed(self):
+        if self.store.active_project is not None:
+            self.store.set_active_model(None)
+            self.store.fetch_available_reference_data(project_id = self.store.active_project['id'])

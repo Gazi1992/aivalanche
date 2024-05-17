@@ -6,6 +6,7 @@ from aivalanche_app.components.navigation_header import navigation_header
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.calibration_tabs import calibration_tabs
 from aivalanche_app.constants.dimensions import CALIBRATION_TAB_BUTTON_WIDTH, CALIBRATION_TAB_BUTTON_HEIGHT
+from aivalanche_app.components.modals.warning_modal import warning_modal
 
 class my_calibration(QWidget):
     go_to_projects = Signal()
@@ -13,15 +14,13 @@ class my_calibration(QWidget):
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
-        
         self.store = store
+        self.store.active_model_changed.connect(self.reset_tab_to_reference_data)
         
         if object_name is not None:
             self.setObjectName(object_name)
-        
         self.init_ui()
-        
-        
+            
     def init_ui(self):
         layout = v_layout(self)
         self.setLayout(layout)
@@ -67,12 +66,15 @@ class my_calibration(QWidget):
         
         # Calibration tabs
         layout.addSpacing(20)
-        self.calibration_tabs = calibration_tabs(parent = self, store = self.store, object_name = 'calibration_tabs')
+        self.calibration_tabs = calibration_tabs(parent = self, store = self.store, object_name = 'calibration_tabs', on_warning = self.on_calibration_warning)
         layout.addWidget(self.calibration_tabs)
         
         self.reference_data_button.click()
-    
-    
+        
+        # Add the warning modal widget, which is to be shown in case smth goes wrong with the calibration setup
+        self.warning_modal = warning_modal(parent = self)
+        
+
     # Update header
     def update_header(self):
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},
@@ -135,9 +137,21 @@ class my_calibration(QWidget):
             self.calibration_tabs.set_active_tab('results')
         else:
             self.results_button.setChecked(True)
+            
+    def on_calibration_warning(self, data: dict = None):
+        if data is not None:
+            if 'icon' in data.keys():
+                self.warning_modal.update_icon(data['icon'])
+            if 'title' in data.keys():
+                self.warning_modal.update_title(data['title'])
+            if 'message' in data.keys():
+                self.warning_modal.update_message(data['message'])
+            if 'explanation' in data.keys():
+                self.warning_modal.update_explanation(data['explanation'])
+            self.warning_modal.exec()
         
-        
-        
+    def reset_tab_to_reference_data(self):
+        self.reference_data_button.click()
         
         
         
