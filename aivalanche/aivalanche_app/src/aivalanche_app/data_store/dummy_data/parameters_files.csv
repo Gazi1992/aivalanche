@@ -1,1 +1,4 @@
 id,path,project_id
+2ca4aa16-9bd4-484c-a8d9-20c89fefd6c6,/home/gazi/Desktop/Work/custom_packages/calibration/src/templates/bsim4/nmos/parameters.csv,00a5e06c-722f-4f68-bc4d-d6a2a1162c41
+a8fb9152-c6e2-418c-b658-678e31af5e80,/home/gazi/Desktop/Work/custom_packages/calibration/src/templates/diode/parameters.csv,00a5e06c-722f-4f68-bc4d-d6a2a1162c41
+0affce81-d66d-49e9-82ae-e53ecad1a696,/home/gazi/Desktop/Work/custom_packages/calibration/src/templates/diode/reference_data.json,00a5e06c-722f-4f68-bc4d-d6a2a1162c41

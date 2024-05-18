@@ -15,10 +15,6 @@ class store(QObject):
     fetch_projects_end = Signal(object)
     create_project_start = Signal(object)
     create_project_end = Signal(object)
-    fetch_available_reference_data_start = Signal(object)
-    fetch_available_reference_data_end = Signal(object)
-    add_available_reference_data_start = Signal(object)
-    add_available_reference_data_end = Signal(object)
     
     active_model_changed = Signal(object)
     fetch_models_start = Signal(object)
@@ -27,8 +23,20 @@ class store(QObject):
     create_model_end = Signal(object)
     fetch_model_templates_start = Signal()
     fetch_model_templates_end = Signal(object)
+    
+    fetch_available_reference_data_start = Signal(object)
+    fetch_available_reference_data_end = Signal(object)
+    add_available_reference_data_start = Signal(object)
+    add_available_reference_data_end = Signal(object)
     update_reference_data_id_start = Signal(object)
     update_reference_data_id_end = Signal(object)
+    
+    fetch_available_parameters_start = Signal(object)
+    fetch_available_parameters_end = Signal(object)
+    add_available_parameters_start = Signal(object)
+    add_available_parameters_end = Signal(object)
+    update_parameters_id_start = Signal(object)
+    update_parameters_id_end = Signal(object)
     
     def __init__(self, db_type: str = 'local_files', style: style = None,
                  on_query_success: callable = None, on_query_error: callable = None):
@@ -305,7 +313,7 @@ class store(QObject):
         
         self.create_model_end.emit({'success': success, 'error': error, 'data': data})
 
-    #%% Reference data
+    #%% Reference data files
     def fetch_available_reference_data(self, project_id: str = None):
         self._run_task(self._fetch_available_reference_data, project_id)
         
@@ -416,4 +424,115 @@ class store(QObject):
                     error = db_response['error']
         
         self.update_reference_data_id_end.emit({'success': success, 'error': error, 'data': data})
+        
+    #%% Parameters files
+    def fetch_available_parameters(self, project_id: str = None):
+        self._run_task(self._fetch_available_parameters, project_id)
+        
+    def _fetch_available_parameters(self, project_id: str = None):
+        self.fetch_available_parameters_start.emit({'project_id': project_id})
+        success = True
+        error = None
+        available_parameters = None
+        
+        if project_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_parameters = pd.read_csv(self.available_parameters_path)
+                available_parameters = all_parameters[(all_parameters['project_id'] == project_id)]
+                available_parameters_sorted = available_parameters.sort_values(by = 'path', ascending = False, ignore_index = True)
+                available_parameters = available_parameters_sorted
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_parameters_by_project_id(project_id)
+                if db_response['success']:
+                    available_parameters = db_response['data']
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if success:
+            self.available_parameters = available_parameters
+        
+        self.fetch_available_parameters_end.emit({'success': success, 'error': error, 'data': available_parameters})
+    
+    def add_available_parameters(self, path: str = None, project_id: str = None):
+        self._run_task(self._add_available_parameters, path, project_id)
+        
+    def _add_available_parameters(self, path: str = None, project_id: str = None):
+        self.add_available_parameters_start.emit({'path': path, 'project_id': project_id})
+        success = True
+        error = None
+        data = None
+        
+        if path is None:
+            success = False
+            error = 'path is None!'
+        elif project_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_parameters = pd.read_csv(self.available_parameters_path)
+                if path in all_parameters[all_parameters['project_id'] == project_id]['path'].tolist():
+                    success = False
+                    error = f'You already have a parameters file with the path {path} for the project {project_id}. Please specify a different file.'
+                else:
+                    new_parameters_file = pd.DataFrame.from_dict([{'id': str(uuid.uuid4()),
+                                                                   'path': path,
+                                                                   'project_id': project_id}])
+                    all_parameters = pd.concat((all_parameters, new_parameters_file))
+                    all_parameters.to_csv(path_or_buf = self.available_parameters_path, index = False)
+                    data = new_parameters_file.squeeze()
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_parameters_by_path_and_project_id(path, project_id)
+                if len(db_response['data'].index) == 0:
+                    db_response = self.db.add_parameters_by_project_id(path, project_id)
+                    if db_response['success']:
+                        data = db_response['data']
+                    else:
+                        success = False
+                        error = db_response['error']
+                else:
+                    success = False
+                    error = f'You already have a parameters file with the path {path} for the project {project_id}. Please specify a different file.'
+        
+        self.add_available_parameters_end.emit({'success': success, 'error': error, 'data': data})
+        
+    def update_parameters_id(self, parameters_id: str = None, model_id: str = None):
+        self._run_task(self._update_parameters_id, parameters_id, model_id)
+    
+    def _update_parameters_id(self, parameters_id: str = None, model_id: str = None):
+        self.update_parameters_id_start.emit({'parameters_id': parameters_id, 'model_id': model_id})
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        elif parameters_id == self.models.loc[self.models['id'] == model_id, 'parameters_id'].iloc[0]:
+            success = False
+            error = 'parameters_id is the same as the one you are trying to set!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'parameters_id'] = parameters_id
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'parameters_id'] = parameters_id
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_parameters_id_by_model_id(parameters_id, model_id)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'parameters_id'] = parameters_id
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        self.update_parameters_id_end.emit({'success': success, 'error': error, 'data': data})
     

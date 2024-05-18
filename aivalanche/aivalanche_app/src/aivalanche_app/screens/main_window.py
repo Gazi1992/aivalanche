@@ -50,6 +50,6 @@ class main_window(QMainWindow):
     def go_to_log_in(self):
         self.stacked_widget.setCurrentWidget(self.log_in_screen)
         
-    def update_store(self, data = dict):
-        self.store.update(data)
-        self.home_screen.print_user()
+    # def update_store(self, data = dict):
+    #     self.store.update(data)
+    #     self.home_screen.print_user()

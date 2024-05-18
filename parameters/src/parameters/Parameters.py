@@ -54,7 +54,6 @@ class Parameters:
     def parse_json(self):
         with open(self.file) as json_file:
             self.raw_data = json.load(json_file)           
-            
             self.all_parameters = pd.DataFrame.from_dict(self.raw_data)
             
             if 'scale' not in self.all_parameters.columns:
@@ -62,8 +61,8 @@ class Parameters:
             
             if 'mode' not in self.all_parameters.columns:
                 self.all_parameters['mode'] = 'variable'
-    
-    
+                
+            
     # Convert csv file to pandas dataframe
     def parse_csv(self):
         self.raw_data = pd.read_csv(filepath_or_buffer = self.file, comment = '#') 
@@ -74,17 +73,14 @@ class Parameters:
         
         if 'mode' not in self.all_parameters.columns:
             self.all_parameters['mode'] = 'variable'
-            
-            
+
     # Generate random parameters
     def generate_random_parameters(self):
         return self.all_parameters.set_index('name').apply(self.generate_random_number, axis=1).to_dict()
-       
         
     # Get default parameters
     def get_default_parameters(self):
         return self.all_parameters.set_index('name')['default'].to_dict()
-
     
     # Generate a random number
     def generate_random_number(self, row):
@@ -92,22 +88,10 @@ class Parameters:
             return row['default']
         else:
             return random.uniform(row['min'], row['max'])
-    
-    
+
     # Write parameters to file
     def write_parameters_to_file(self, file_path: str = None):
         if self.file.split('.')[-1] == 'json':
             self.all_parameters.to_json(path_or_buf = file_path, orient = 'records')
         elif self.file.split('.')[-1] == 'csv':
             self.all_parameters.to_csv(path_or_buf = file_path, index = False)
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        

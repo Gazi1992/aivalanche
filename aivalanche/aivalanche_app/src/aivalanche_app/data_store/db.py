@@ -96,7 +96,7 @@ class db(QObject):
         query = "select * from aivalanche_db.model_templates"
         return self.execute_query(query, 'fetch_model_templates')
 
-    #%% Reference data
+    #%% Reference data files
     def fetch_reference_data_by_project_id(self, project_id: str = None):
         query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' order by path desc"
         return self.execute_query(query, 'fetch_reference_data_by_project_id')
@@ -117,3 +117,25 @@ class db(QObject):
     def fetch_reference_data_by_path_and_project_id(self, path: str = None, project_id: str = None):
         query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' and path = '{path}' order by path desc"
         return self.execute_query(query, 'fetch_reference_data_by_path_and_project_id')
+    
+    #%% Parameters files
+    def fetch_parameters_by_project_id(self, project_id: str = None):
+        query = f"select * from aivalanche_db.parameters_files where project_id = '{project_id}' order by path desc"
+        return self.execute_query(query, 'fetch_parameters_by_project_id')
+
+    def add_parameters_by_project_id(self, path: str = None, project_id: str = None):
+        id = str(uuid.uuid4())
+        query = f"insert into aivalanche_db.parameters_files (id, path, project_id) values ('{id}', '{path}', '{project_id}')"
+        return_data = {'id': id, 'path': path, 'project_id': project_id}
+        return self.execute_query(query, 'add_parameters_by_project_id', return_data)
+    
+    def update_parameters_id_by_model_id(self, parameters_id: str = None, model_id: str = None):
+        if parameters_id is None:
+            query = f"update aivalanche_db.models set parameters_id = NULL where id = '{model_id}'"
+        else:
+            query = f"update aivalanche_db.models set parameters_id = '{parameters_id}' where id = '{model_id}'"
+        return self.execute_query(query, 'update_parameters_id_by_model_id')
+    
+    def fetch_parameters_by_path_and_project_id(self, path: str = None, project_id: str = None):
+        query = f"select * from aivalanche_db.parameters_files where project_id = '{project_id}' and path = '{path}' order by path desc"
+        return self.execute_query(query, 'fetch_parameters_by_path_and_project_id')

@@ -13,6 +13,7 @@ class projects_tab(QWidget):
         super().__init__(parent)
         
         self.store = store
+        self.store.validate_user_end.connect(self.on_user_validation)
         
         if object_name is not None:
             self.setObjectName(object_name)
@@ -73,3 +74,7 @@ class projects_tab(QWidget):
         painter.restore()
 
         super().paintEvent(event)
+        
+    def on_user_validation(self, data: dict = {}):
+        if data['success']:
+            self.go_to_my_projects()

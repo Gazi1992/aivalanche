@@ -161,3 +161,4 @@ class my_projects(QWidget):
         if self.store.active_project is not None:
             self.store.set_active_model(None)
             self.store.fetch_available_reference_data(project_id = self.store.active_project['id'])
+            self.store.fetch_available_parameters(project_id = self.store.active_project['id'])

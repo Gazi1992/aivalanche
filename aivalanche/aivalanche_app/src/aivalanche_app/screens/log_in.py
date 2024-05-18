@@ -66,7 +66,6 @@ class log_in(QWidget):
             self.error_widget.show()
 
     def init_ui(self):
-
         layout = v_layout(spacing = 10, padding = (0, 100, 0, 100), alignment = Qt.AlignmentFlag.AlignTop)
         self.setLayout(layout)
         
