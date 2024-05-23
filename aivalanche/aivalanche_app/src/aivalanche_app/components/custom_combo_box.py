@@ -51,7 +51,7 @@ class custom_combo_box(QComboBox):
             self.setMouseTracking(True)
             # self.setContentsMargins(0, 50, 0, 0)
     
-    def update_items(self, items: list = [], trigger_on_change_slot: bool = False):
+    def update_items(self, items: list = [], active_item: str = None, trigger_on_change_slot: bool = False):
         self.clear()
         self.items = items
         current_index = self.currentIndex()
@@ -61,10 +61,13 @@ class custom_combo_box(QComboBox):
             self.connect_on_change_slot()
         else:
             self.addItems(self.items)
-        
+                
         # Keep the current index in case it was -1
-        if current_index == -1:
+        if current_index == -1 and active_item is None:
             self.setCurrentIndex(-1)
+        elif active_item is not None and active_item in items:
+            self.active_item = active_item
+            self.setCurrentText(self.active_item)
             
     def disconnect_on_change_slot(self):
         self.currentTextChanged.disconnect()

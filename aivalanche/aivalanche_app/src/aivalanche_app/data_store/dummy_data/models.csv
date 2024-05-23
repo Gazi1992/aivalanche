@@ -1,5 +1,5 @@
 id,project_id,created_at,last_modified_at,title,labels,status,calibration_started_at,reference_data_id,model_id,testbenches_id,parameters_id,optimization_config_id,results_id 
 ssdaws,asdasd,2024-04-05 17:06:53,2024-04-05 17:06:53,model 1, label 1;label_2,,,d9293d21-2f4b-475f-ba3a-b80c2250df98,,,,,
 asdaww,asdasd,2024-04-05 17:06:53,2024-04-05 17:06:53,model 2, label 1;label_2,,,,,,,,
-e5686acf-1a7d-4c35-89b7-b087cb5684ff,00a5e06c-722f-4f68-bc4d-d6a2a1162c41,2024-04-10 18:43:44,2024-04-10 18:43:44,modeli im,,,,e92a5274-c068-47c3-b1db-c5c02be38bcc,,,0affce81-d66d-49e9-82ae-e53ecad1a696,,
-f3513155-9ccf-4b89-95c9-770d0454da60,00a5e06c-722f-4f68-bc4d-d6a2a1162c41,2024-04-10 19:22:28,2024-04-10 19:22:28,modeli im 1,,,,e52c9edb-6528-443b-b289-5ff9e02a43ec,,,a8fb9152-c6e2-418c-b658-678e31af5e80,,
+e5686acf-1a7d-4c35-89b7-b087cb5684ff,00a5e06c-722f-4f68-bc4d-d6a2a1162c41,2024-04-10 18:43:44,2024-04-10 18:43:44,modeli im,,,,e52c9edb-6528-443b-b289-5ff9e02a43ec,,,0affce81-d66d-49e9-82ae-e53ecad1a696,,
+f3513155-9ccf-4b89-95c9-770d0454da60,00a5e06c-722f-4f68-bc4d-d6a2a1162c41,2024-04-10 19:22:28,2024-04-10 19:22:28,modeli im 1,,,,e52c9edb-6528-443b-b289-5ff9e02a43ec,,,2ca4aa16-9bd4-484c-a8d9-20c89fefd6c6,,

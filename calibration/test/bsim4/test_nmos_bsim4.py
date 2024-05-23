@@ -73,7 +73,7 @@ optimizer_config = {'type': 'differential_evolution',
                     'callback_after_each_iter': callback_after_each_iter,
                     'callback_after_last_iter': callback_after_last_iter,
                     'callback_after_better_solution_found': callback_after_better_solution_found,
-                    'pop_size': 10,
+                    'pop_size': 100,
                     'metric_threshold': 1e-10,
                     'max_iterations': 10000,
                     'max_iter_without_improvement': 500,
@@ -149,8 +149,8 @@ if __name__ == '__main__':
     
     # calibration.run_no_parameter_simulation(plot = True)
     
-    # calibration.run_default_simulation(plot = True, delete_files = True)
+    # calibration.run_default_simulation(plot = True, delete_files = False)
     
-    # calibration.run_random_simulation(plot = True, delete_files = True)
+    # calibration.run_random_simulation(plot = True, delete_files = False)
     
     calibration.calibrate()

@@ -115,6 +115,8 @@ class log_in(QWidget):
         if res['success']:
             self.loading = False
             self.go_to_home.emit()
+            self.store.fetch_available_optimizers()
+            self.store.fetch_available_simulators()
         else:
             self.error = res['error']
             self.loading = False

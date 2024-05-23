@@ -42,7 +42,8 @@ class parameters_tab(QWidget):
                                                     placeholder = 'Select parameters file',
                                                     on_combo_box_changed = self.on_combo_box_changed,
                                                     on_import_new_file = self.on_import_new_ref_data_file,
-                                                    object_name = 'round_combo_box')       
+                                                    object_name = 'round_combo_box',
+                                                    is_editable = False)       
         top_layout.addWidget(self.load_data_widget, 0)
         top_layout.addSpacing(20)
         

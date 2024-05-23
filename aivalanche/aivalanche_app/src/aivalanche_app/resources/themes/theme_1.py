@@ -33,6 +33,9 @@ colors = {
     "line_edit_background": "#ffffff",
     "line_edit_border": "rgba(6, 34, 121, 170)",
     
+    "tooltip_background": "#fffbe3",
+    "tooltip_border": "#062279",
+    
     "combo_box_background": "#ffffff",
     "combo_box_border": "#062279",
     "combo_box_selection": "rgba(6, 34, 121, 50)",
@@ -72,6 +75,7 @@ stylesheet = f"""
     QTabWidget {{background-color: transparent; border: none;}}
     QScrollArea {{background-color: transparent; border: none;}}
     
+    /* Scroll bar */
     QScrollBar:handle {{background-color: rgba(6, 34, 121, 50);}}
     QScrollBar:handle:hover {{background-color: rgba(6, 34, 121, 100);}}
     QScrollBar:vertical {{width: 10px; border: none; border-radius: 5px;}}
@@ -107,6 +111,14 @@ stylesheet = f"""
         color: {colors['text']};
         selection-color: {colors['selection']};
         selection-background-color: {colors['selection_background']};
+        }}
+    
+    /* Tooltip*/
+    QToolTip {{
+        background: {colors['tooltip_background']};
+        border: 1px solid {colors['tooltip_border']};
+        padding: 5px;
+        color: {colors['text']};
         }}
                                                      
     /* Table view */
@@ -146,10 +158,12 @@ stylesheet = f"""
         border: 1px solid {colors['combo_box_border']};
         color: {colors['text']};
         padding: 5px;
+        selection-background-color: {colors['selection_background']};
+        selection-color: {colors['selection']};
         }}
     QComboBox:down-arrow {{image: url({arrow_down_icon_path}); width: 20px;}}
-    QComboBox:drop-down:button {{border: none; width: 20px; padding-right: 5px}}
-    
+    QComboBox:drop-down {{border: none; width: 20px; padding-right: 5px}}
+
     /* Radio button */
     QRadioButton {{outline: none;}}
     QRadioButton:indicator {{width: 15px; height: 15px;}}

@@ -12,7 +12,7 @@ from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
 from copy import deepcopy
 from datetime import datetime
-import os, shutil, json, uuid, dask
+import os, shutil, json, uuid, dask, time
 
 
 #%% calibration class
@@ -139,12 +139,15 @@ class Calibration:
 
     def run_no_parameter_simulation(self, plot: bool = False, delete_files: bool = False):
         self.testbenches.remove_model_parameters()
-        error_metric = run_single_simulation(testbenches = self.testbenches,
+        simulation_results = run_single_simulation(testbenches = self.testbenches,
                                              simulator = self.simulator,
                                              reference_data = self.reference_data.data,
                                              simulation_files_path = self.results_dir,
                                              plot = plot,
                                              delete_files = delete_files)
+        
+        error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results)
+        
         print(error_metric)
 
 
@@ -171,12 +174,12 @@ class Calibration:
                                                    plot = plot,
                                                    delete_files = delete_files)
         
-        error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results)
+        error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results, parameters = random_params)
 
         print(error_metric)
         
 
-    def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):  
+    def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):
         responses = {'results': [], 'error_metrics': [], 'metrics': []}
         if self.use_dask:
             
@@ -211,6 +214,7 @@ class Calibration:
         else:
             for param in parameters:
                 try:
+                    start_time = time.time()
                     simulation_results = run_single_simulation(parameters = param, 
                                                                testbenches = self.testbenches,
                                                                simulator = self.simulator,
@@ -219,7 +223,13 @@ class Calibration:
                                                                plot = False,
                                                                delete_files = False,
                                                                print_output = True)
+                    end_time = time.time()
+                    print('simulation time: ', end_time - start_time)
+                    
+                    start_time = time.time()
                     metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results, parameters = param)
+                    end_time = time.time()
+                    print('metric time: ', end_time - start_time)
                 except Exception:
                     e_m = raise_exception('simulation_failed_exception')
                     simulation_results = None
@@ -228,7 +238,7 @@ class Calibration:
                 responses['results'].append(metric['data'])
                 responses['error_metrics'].append(metric['error_metric'])
                 responses['metrics'].append(metric['error_metric']['total'])
-                    
+        
         return responses
     
     

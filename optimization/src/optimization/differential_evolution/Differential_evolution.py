@@ -27,7 +27,7 @@ Inputs:
 '''
 
 #%% Imports
-import os, pandas as pd, numpy as np
+import os, pandas as pd, numpy as np, time
 from pyDOE import lhs
 from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
 from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram
@@ -141,6 +141,8 @@ class Differential_evolution:
                                'best_parameters': self.best_unscaled,
                                **self.eval_func_args}
             responses = self.eval_func(parameters = parameters, **extra_arguments)  # run the evaluation function
+            
+            start_time = time.time()
             self.save_metrics(responses['metrics'])                                 # save the metrics
             
             self.determine_survivors()                                              # determine the survivors
@@ -205,6 +207,8 @@ class Differential_evolution:
             
             # Generate new trials
             self.prepare_next_iter()
+            end_time = time.time()
+            print('de time: ', end_time - start_time)
         
         # once the stop criteria is reached
         self.show_final_result()

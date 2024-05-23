@@ -1,0 +1,3 @@
+id,simulator,name,type,default,category,explanation
+1,ngspice,timeout,float,30,normal,Timeout in seconds. Simulations will be aborted if they exceed the timeout.
+2,pspice,timeout,float,30,normal,Timeout in seconds. Simulations will be aborted if they exceed the timeout.

@@ -333,8 +333,7 @@ class Ngspice_testbench_compiler():
         file_contents += "********** Start of control section **********\n"
         file_contents += ".control\n\n"
         
-        file_contents += "* Include the dut file\n"
-        file_contents += f".INCLUDE {self.dut_file}\n\n"
+        file_contents += self.add_model_parameters_to_file()
         
         file_contents += "** Declare the vectors to save.\n"
         file_contents += f"save {' '.join(all_save_variables)}\n\n"

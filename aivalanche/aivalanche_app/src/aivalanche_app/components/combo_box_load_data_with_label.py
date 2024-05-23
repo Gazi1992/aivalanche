@@ -6,7 +6,7 @@ from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 class combo_box_load_data_with_label(QWidget):
     def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder',
                  caption = 'Select file', filter = 'Json file (*.json)',
-                 label_position: str = 'top', spacing: int = 5, on_change: callable = None):
+                 label_position: str = 'top', spacing: int = 5, on_change: callable = None, tooltip: str = None):
         super().__init__(parent = parent)
         
         self.label = label
@@ -16,12 +16,10 @@ class combo_box_load_data_with_label(QWidget):
         self.caption = caption
         self.filter = filter
         self.on_change = on_change
-        
+        self.tooltip = tooltip        
         self.init_ui()
         
-    
     def init_ui(self):
-        
         if self.label_position not in ['top', 'bottom', 'left', 'right']:
             print('Warning: text_input_with_label requires label_position to be "top", "bottom", "right" or "left". Setting it to "top".')
             self.label_position = 'top'
@@ -31,7 +29,6 @@ class combo_box_load_data_with_label(QWidget):
         else:
             layout = h_layout(spacing = self.spacing)
         self.setLayout(layout)
-        
         
         label_widget = QLabel(parent = self, text = self.label)
         combo_box = combo_box_load_data(parent = self,
@@ -49,5 +46,8 @@ class combo_box_load_data_with_label(QWidget):
         
         if self.label_position in ['bottom', 'right']:
             layout.addWidget(label_widget, 0)
+            
+        if self.tooltip is not None:
+            self.setToolTip(self.tooltip)
             
            

@@ -7,6 +7,12 @@ from aivalanche_app.data_store.db import db
 from PySide6.QtCore import QObject, Signal
 
 class store(QObject):
+    fetch_available_optimizers_start = Signal()
+    fetch_available_optimizers_end = Signal(object)
+    
+    fetch_available_simulators_start = Signal()
+    fetch_available_simulators_end = Signal(object)
+    
     validate_user_start = Signal(object)
     validate_user_end = Signal(object)
 
@@ -52,6 +58,8 @@ class store(QObject):
             self.available_reference_data_path = Path.joinpath(dummy_data_path, 'reference_data_files.csv')
             self.available_parameters_path = Path.joinpath(dummy_data_path, 'parameters_files.csv')
             self.available_loss_function_path = Path.joinpath(dummy_data_path, 'loss_function_files.csv')
+            self.available_optimizers_path = Path.joinpath(dummy_data_path, 'optimizers.csv')
+            self.available_simulators_path = Path.joinpath(dummy_data_path, 'simulators.csv')
         elif self.db_type == 'local_mysql_db':
             self.db = db()
             self.db.connect_to_db()
@@ -68,19 +76,33 @@ class store(QObject):
         self.active_model = None
     
         # Extra variables        
-        self.model_templates = pd.DataFrame()
-        self.optimizers = json.load(open(Path.joinpath(dummy_data_path, 'optimizers.json')))
-        self.simulators = json.load(open(Path.joinpath(dummy_data_path, 'simulators.json')))
-        
+        self.model_templates = pd.DataFrame()        
         self.available_reference_data = pd.DataFrame()
         self.available_parameters = pd.DataFrame()
         self.available_loss_functions = pd.DataFrame()
+        self.available_optimizers = {}
+        self.available_simulators = {}
         
+        self.model = None
+        self.testbenches = None
+        self.parameters = None
+        self.reference_data = None
+        self.optimizer_settings = None
+        self.simulator_settings = None
+        self.loss_function_parts = None
+        
+        # Queue to make sure the interaction to db is one at a time
         self.queue = queue.Queue()
         
         # Start the db_worker thread
         threading.Thread(target = self.db_worker, daemon = True).start()
-        
+    
+    #%% Function to convert semicolumn to list of items when reading a csv
+    def convert_to_list_if_semi_colon(self, value):
+        if isinstance(value, str) and ';' in value:
+            return value.split(';')
+        return value
+    
     #%% DB worker
     def db_worker(self):
         while True:
@@ -93,6 +115,64 @@ class store(QObject):
     def _run_task(self, task, *args):
         self.queue.put((task, args))
         
+    #%% Optimizers
+    def fetch_available_optimizers(self):
+        self._run_task(self._fetch_available_optimizers)
+        # self._fetch_available_optimizers()
+        
+    def _fetch_available_optimizers(self):
+        self.fetch_available_optimizers_start.emit()
+        success = True
+        error = None
+        available_optimizers = None
+        
+        if self.db_type == 'local_files':
+            available_optimizers = pd.read_csv(filepath_or_buffer = self.available_optimizers_path,
+                                               converters = {'file_type': self.convert_to_list_if_semi_colon},
+                                               na_values = ['null', 'Null', 'None', 'none'])
+        elif self.db_type == 'local_mysql_db':
+            db_response = self.db.fetch_optimizers()
+            if db_response['success']:
+                available_optimizers = db_response['data']
+                if 'file_type' in available_optimizers.columns:
+                    available_optimizers['file_type'] = available_optimizers['file_type'].apply(self.convert_to_list_if_semi_colon)
+            else:
+                success = False
+                error = db_response['error']
+                
+        if success:
+            self.available_optimizers = available_optimizers
+                
+        self.fetch_available_optimizers_end.emit({'success': success, 'error': error, 'data': available_optimizers})
+    
+    #%% Simulators
+    def fetch_available_simulators(self):
+        self._run_task(self._fetch_available_simulators)
+        # self._fetch_available_simulators()
+        
+    def _fetch_available_simulators(self):
+        self.fetch_available_simulators_start.emit()
+        success = True
+        error = None
+        available_simulators = None
+        
+        if self.db_type == 'local_files':
+            available_simulators = pd.read_csv(filepath_or_buffer = self.available_simulators_path,
+                                               converters = {'file_type': self.convert_to_list_if_semi_colon},
+                                               na_values = ['null', 'Null', 'None', 'none'])
+        elif self.db_type == 'local_mysql_db':
+            db_response = self.db.fetch_simulators()
+            if db_response['success']:
+                available_simulators = db_response['data']
+            else:
+                success = False
+                error = db_response['error']
+                
+        if success:
+            self.available_simulators = available_simulators
+                
+        self.fetch_available_simulators_end.emit({'success': success, 'error': error, 'data': available_simulators})
+    
     #%% Users
     def validate_user(self, username: str = None, password: str = None):
         self._run_task(self._validate_user, username, password)

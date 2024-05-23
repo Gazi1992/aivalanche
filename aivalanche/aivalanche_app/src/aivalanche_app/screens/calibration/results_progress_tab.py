@@ -76,7 +76,7 @@ class results_progress_tab(QSplitter):
         p_widget.addItem(parameter_heatmap, 0, 0)
         parameter_evolution_layout.addWidget(p_widget)
         
-        self.setStretchFactor(0, 1)
+        self.setStretchFactor(0, 5)
         self.setStretchFactor(1, 1)
     
     def on_checkbox_click(self, data: dict = None):

@@ -20,8 +20,9 @@ class optimization_tab(QWidget):
             self.setObjectName(object_name)
         
         self.store = store
-        self.optimizers = self.store.optimizers
-        self.simulators = self.store.simulators
+        self.store.fetch_available_optimizers_end.connect(self.update_optimizers)
+        self.store.fetch_available_simulators_end.connect(self.update_simulators)
+        
         self.active_optimizer = None
         self.active_simulator = None
         self.loss_parts = {}
@@ -33,12 +34,11 @@ class optimization_tab(QWidget):
         layout = v_layout()        
         self.setLayout(layout)
         
-        splitter = QSplitter(parent = self)
-        splitter.setHandleWidth(0)
-        layout.addWidget(splitter, 1)
+        self.splitter = QSplitter(parent = self)
+        layout.addWidget(self.splitter, 1)
         
         # Create left scroll area
-        left_scroll_area = QScrollArea(parent = splitter)
+        left_scroll_area = QScrollArea(parent = self.splitter)
         left_scroll_area.setWidgetResizable(True)
         
         # Create left widget
@@ -53,17 +53,13 @@ class optimization_tab(QWidget):
         left_layout.addWidget(optimizer_config_label)
         
         # Optimizer selection
-        optimizer_selection_widget = custom_combo_box(parent = self,
-                                                      items = [item['name'] for item in self.optimizers],
-                                                      is_editable = False,
-                                                      object_name = 'round_combo_box',
-                                                      placeholder = 'Select optimizer')
-        self.active_optimizer = optimizer_selection_widget.active_item
-        left_layout.addWidget(optimizer_selection_widget)
+        self.optimizer_selection_widget = custom_combo_box(parent = self, is_editable = False, object_name = 'round_combo_box',
+                                                           placeholder = 'Select optimizer', on_change = self.on_optimizer_change)
+        left_layout.addWidget(self.optimizer_selection_widget)
         
         # Optimizer parameters
-        optimizer_parameters_widget = optimization_parameters(parent = self, parameters = self.get_optimizer_parameters())
-        left_layout.addWidget(optimizer_parameters_widget)
+        self.optimizer_parameters_widget = optimization_parameters(parent = self)
+        left_layout.addWidget(self.optimizer_parameters_widget)
         
         left_layout.addSpacing(50)
         
@@ -72,20 +68,16 @@ class optimization_tab(QWidget):
         left_layout.addWidget(simulator_config_label)
         
         # Simulator selection
-        simulator_selection_widget = custom_combo_box(parent = self,
-                                                      items = [item['name'] for item in self.simulators],
-                                                      is_editable = False,
-                                                      object_name = 'round_combo_box',
-                                                      placeholder = 'Select simulator')
-        self.active_simulator = simulator_selection_widget.active_item
-        left_layout.addWidget(simulator_selection_widget)
+        self.simulator_selection_widget = custom_combo_box(parent = self, is_editable = False, object_name = 'round_combo_box',
+                                                           placeholder = 'Select simulator', on_change = self.on_simulator_change)
+        left_layout.addWidget(self.simulator_selection_widget)
         
         # Simulator parameters
-        simulator_parameters_widget = optimization_parameters(parent = self, parameters = self.get_simulator_parameters())
-        left_layout.addWidget(simulator_parameters_widget)
+        self.simulator_parameters_widget = optimization_parameters(parent = self)
+        left_layout.addWidget(self.simulator_parameters_widget)
         
         # Create right scroll area
-        right_scroll_area = QScrollArea(parent = splitter)
+        right_scroll_area = QScrollArea(parent = self.splitter)
         right_scroll_area.setContentsMargins(0, 0, 0, 0)
         right_scroll_area.setWidgetResizable(True)
         
@@ -113,24 +105,45 @@ class optimization_tab(QWidget):
         add_part_button = icon_text_button(parent = self, text = 'Add loss part', padding = (10, 5, 10, 5), object_name = 'add_loss_card_button', on_click = self.on_add_loss_part_click)
         self.right_layout.addWidget(add_part_button, alignment = Qt.AlignmentFlag.AlignLeft)
         
-        # add the first loos part
+        # Add the first loos part
         self.on_add_loss_part_click()
+    
+        # Set the initial stretches
+        self.splitter.setStretchFactor(0, 2)
+        self.splitter.setStretchFactor(1, 1)
+    
+    def update_optimizers(self):
+        items = list(set(self.store.available_optimizers['optimizer'].to_list()))
+        items.sort()
+        self.optimizer_selection_widget.update_items(items = items, active_item = items[0])
+        self.update_optimizer_parameters()
+    
+    def update_optimizer_parameters(self):
+        self.active_optimizer = self.optimizer_selection_widget.active_item
+        parameters = self.store.available_optimizers[(self.store.available_optimizers['optimizer'] == self.active_optimizer) & (self.store.available_optimizers['category'] == 'normal')]
+        parameters.reset_index(drop = True, inplace = True)
+        self.optimizer_parameters_widget.update_parameters(parameters)
         
-        # set the left and right widgets to equal width initially
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 1)
+    def on_optimizer_change(self, val):
+        self.update_optimizer_parameters()
+
+    def update_simulators(self):
+        items = list(set(self.store.available_simulators['simulator'].to_list()))
+        items.sort()
+        self.simulator_selection_widget.update_items(items = items, active_item = items[0])
+        self.update_simulator_parameters()
         
+    def update_simulator_parameters(self):
+        self.active_simulator = self.simulator_selection_widget.active_item
+        parameters = self.store.available_simulators[(self.store.available_simulators['simulator'] == self.active_simulator) & (self.store.available_simulators['category'] == 'normal')]
+        parameters.reset_index(drop = True, inplace = True)
+        self.simulator_parameters_widget.update_parameters(parameters)
+        
+    def on_simulator_change(self, val):
+        self.update_simulator_parameters()
 
     def load_custom_loss_function(self, text):
         print(text)
-        
-    def get_optimizer_parameters(self):
-        optimizer = [item for item in self.optimizers if item['name'] == self.active_optimizer][0]
-        return optimizer['parameters']
-    
-    def get_simulator_parameters(self):
-        simulator = [item for item in self.simulators if item['name'] == self.active_simulator][0]
-        return simulator['parameters']
     
     def on_add_loss_part_click(self):
         id = uuid.uuid4()

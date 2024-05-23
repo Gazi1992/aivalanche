@@ -7,7 +7,7 @@ from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
 from reference_data import Reference_data
-import pyqtgraph as pg, pandas as pd, os
+import pyqtgraph as pg, pandas as pd, os, math
 
 class reference_data_tab(QSplitter):
     reference_data_warning = Signal(dict)    
@@ -32,6 +32,7 @@ class reference_data_tab(QSplitter):
         
         self.plots = []
         self.min_plot_height = 500
+        self.plot_spacing = 20
         self.plots_widget_height_array = []
         self.plots_scroll_area_height = 0
         
@@ -58,7 +59,8 @@ class reference_data_tab(QSplitter):
                                                     on_combo_box_changed = self.on_combo_box_changed,
                                                     on_import_new_file = self.on_import_new_ref_data_file,
                                                     placeholder = 'Select reference data file',
-                                                    object_name = 'round_combo_box')       
+                                                    object_name = 'round_combo_box',
+                                                    is_editable = False)       
         left_layout.addWidget(self.load_data_widget, 0)
         
         # Create table
@@ -78,7 +80,7 @@ class reference_data_tab(QSplitter):
         
         # Create a grid layout for plots
         self.plots_widget = pg.GraphicsLayoutWidget()
-        self.plots_widget.ci.setSpacing(20)
+        self.plots_widget.ci.setSpacing(self.plot_spacing)
         
         scroll_area.setWidget(self.plots_widget)
 
@@ -92,10 +94,8 @@ class reference_data_tab(QSplitter):
         self.update_plots_widget_height()              
                 
     def update_plots_widget_height(self):
-        if self.nr_plots <= 2:
-            self.plots_widget.setFixedHeight(self.plots_scroll_area_height)
-        else:
-            self.plots_widget.setFixedHeight(self.plots_widget.ci.height())
+        min_plots_height = (self.min_plot_height + self.plot_spacing) * math.ceil(self.nr_plots / 2) 
+        self.plots_widget.setFixedHeight(max(self.plots_scroll_area_height, min_plots_height))
 
     def clear_data(self):
         self.clear_all_plots()
@@ -252,11 +252,7 @@ class reference_data_tab(QSplitter):
         self.plots.append(group_id)
 
         # update plots_widget heights
-        self.update_plots_widget_height()   
-        
-        # if self.nr_plots > len(self.plots_widget_height_array):
-        #     self.plots_widget_height_array.append(self.plots_widget.ci.height())
-        # self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
+        self.update_plots_widget_height()
             
         # update the table plot checkboxes
         self.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])

@@ -61,9 +61,19 @@ class db(QObject):
                 'data': data,
                 'error': error}
 
+    #%% Optimizers
+    def fetch_optimizers(self):
+        query = "select * from aivalanche_db.optimizers"
+        return self.execute_query(query, 'fetch_optimizers')
+    
+    #%% Simulators
+    def fetch_simulators(self):
+        query = "select * from aivalanche_db.simulators"
+        return self.execute_query(query, 'fetch_simulators')
+
     #%% User
     def fetch_users(self):
-        query = "select * from users"
+        query = "select * from aivalanche_db.users"
         return self.execute_query(query, 'fetch_users')
     
     def fetch_user_by_username_and_password(self, username: str = '', password: str = ''):
