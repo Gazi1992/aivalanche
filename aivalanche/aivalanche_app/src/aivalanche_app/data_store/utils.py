@@ -1,45 +1,14 @@
-from datetime import datetime
+import pandas as pd
 
-# User class
-class user():
-    def __init__(self, id: str = None, name: str = None, created_at: datetime = None):
-        self.id = id
-        self.name = name
-        self.created_at = created_at
-        
-    def update(self, data):
-        for key, value in data.items():
-            setattr(self, key, value)
+# Function to convert semicolumn to list of items when reading a csv
+def convert_to_list_if_semi_colon(value):
+    if isinstance(value, str) and ';' in value:
+        return value.split(';')
+    return value
 
-# Model class
-class model():
-    def __init__(self, id: str = None, title: str = None, labels: list[str] = None,
-                 created_at: datetime = None, last_modified: datetime = None):
-        self.id = id
-        self.title = title
-        self.labels = labels
-        self.created_at = created_at
-        self.last_modified = last_modified
-        
-    def update(self, data):
-        for key, value in data.items():
-            setattr(self, key, value)
-
-
-# Project class
-class project():
-    def __init__(self, id: str = None, user_id: str = None, title: str = None, labels: list[str] = None,
-                 created_at: datetime = None, last_modified: datetime = None, models: list[model] = None):
-        self.id = id
-        self.user_is = user_id
-        self.title = title
-        self.labels = labels
-        self.created_at = created_at
-        self.last_modified = last_modified
-        self.models = models
-        
-    def update(self, data):
-        for key, value in data.items():
-            setattr(self, key, value)
-
-
+# Filter a dataframe by col_name and value
+def filter_df_by_col_name_and_val(df: pd.DataFrame, col_name: str, val: object, single: bool = True):
+    filtered = df[df[col_name] == val]
+    if len(filtered.index) > 0 and single:
+        filtered = filtered.iloc[0, :]
+    return filtered

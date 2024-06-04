@@ -1,0 +1,207 @@
+[
+    {   
+        "device_type": "mosfet",
+        "name": "nmos output characteristic",
+        "testbench_type": ["nmos_ids_vds_vgs", "nmos_id_vd_vg"],
+        "simulation_type": "dc",
+        "characteristic_type": "output",
+        "circuit": [
+            "e_ds_<<index>> d_<<index>> 0 v_sweep 0 1",
+            "v_gs_<<index>> g_<<index>> 0 <<vgs>>",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(v_s_<<index>>)", "v(d_<<index>>)"],
+            "rename": {
+                "i(v_s_<<index>>)": "ids_<<index>>",
+                "v(d_<<index>>)": "vds_<<index>>"
+            }
+        },
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos output characteristic",
+        "testbench_type": ["nmos_ids_vgs_vds", "nmos_id_vg_vd", "nmos_ids_vgs_vbs", "nmos_id_vg_vb"],
+        "simulation_type": "dc",
+        "characteristic_type": "transfer",
+        "circuit": [
+            "v_ds_<<index>> d_<<index>> 0 <<vds>>",
+            "e_gs_<<index>> g_<<index>> 0 v_sweep 0 1",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(v_s_<<index>>)", "v(g_<<index>>)"],
+            "rename": {
+                "i(v_s_<<index>>)": "ids_<<index>>",
+                "v(g_<<index>>)": "vgs_<<index>>"
+            }
+        },        
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos capacitor characteristic",
+        "testbench_type": ["nmos_cgd_vgs_vds", "nmos_cgd_vg_vd", "nmos_cgd_vgs_vbs", "nmos_cgd_vg_vb"],
+        "simulation_type": "ac_point",
+        "characteristic_type": "cgd characteristic",
+        "circuit": [
+            "v_gs_ac_<<index>> g_<<index>> g_ac_<<index>> DC 0 AC 1",
+            "e_gs_<<index>> g_ac_<<index>> 0 v_sweep 0 1",
+            "v_ds_<<index>> d_<<index>> 0 <<vds>>",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(v_ds_<<index>>)"],
+            "calculate": {
+                "cgd_<<index>>": "abs(imag(i(v_ds_<<index>>)))/2*pi*<<frequency>>"
+            },
+            "output": ["cgd_<<index>>"]
+        },
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos capacitor characteristic",
+        "testbench_type": ["nmos_cgs_vgs_vds", "nmos_cgs_vg_vd", "nmos_cgs_vgs_vbs", "nmos_cgs_vg_vb"],
+        "simulation_type": "ac_point",
+        "characteristic_type": "cgs characteristic",
+        "circuit": [
+            "v_gs_ac_<<index>> g_<<index>> g_ac_<<index>> DC 0 AC 1",
+            "e_gs_<<index>> g_ac_<<index>> 0 v_sweep 0 1",
+            "v_ds_<<index>> d_<<index>> 0 <<vds>>",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(v_s_<<index>>)"],
+            "calculate": {
+                "cgs_<<index>>": "abs(imag(i(v_s_<<index>>)))/2*pi*<<frequency>>"
+            },
+            "output": ["cgs_<<index>>"]
+        },
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos capacitor characteristic",
+        "testbench_type": ["nmos_cgb_vgs_vds", "nmos_cgb_vg_vd", "nmos_cgb_vgs_vbs", "nmos_cgb_vg_vb"],
+        "simulation_type": "ac_point",
+        "characteristic_type": "cgb characteristic",
+        "circuit": [
+            "v_gs_ac_<<index>> g_<<index>> g_ac_<<index>> DC 0 AC 1",
+            "e_gs_<<index>> g_ac_<<index>> 0 v_sweep 0 1",
+            "v_ds_<<index>> d_<<index>> 0 <<vds>>",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(v_bs_<<index>>)"],
+            "calculate": {
+                "cgb_<<index>>": "abs(imag(i(v_bs_<<index>>)))/2*pi*<<frequency>>"
+            },
+            "output": ["cgb_<<index>>"]
+        },
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos capacitor characteristic",
+        "testbench_type": ["nmos_cgg_vgs_vds", "nmos_cgg_vg_vd", "nmos_cgg_vgs_vbs", "nmos_cgg_vg_vb"],
+        "simulation_type": "ac_point",
+        "characteristic_type": "cgg characteristic",
+        "circuit": [
+            "v_gs_ac_<<index>> g_<<index>> g_ac_<<index>> DC 0 AC 1",
+            "e_gs_<<index>> g_ac_<<index>> 0 v_sweep 0 1",
+            "v_ds_<<index>> d_<<index>> 0 <<vds>>",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(v_ds_<<index>>)", "i(v_bs_<<index>>)", "i(v_s_<<index>>)"],
+            "calculate": {
+                "cgg_<<index>>": "(abs(imag(i(v_s_<<index>>))) + abs(imag(i(v_ds_<<index>>))) + abs(imag(i(v_bs_<<index>>))))/2*pi*<<frequency>>"
+            },
+            "output": ["cgg_<<index>>"]
+        },
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos capacitor characteristic",
+        "testbench_type": ["nmos_ciss_vds_vgs", "nmos_ciss_vd_vg"],
+        "simulation_type": "ac_point",
+        "characteristic_type": "ciss characteristic",
+        "circuit": [
+            "v_gs_ac_<<index>> g_<<index>> g_ac_<<index>> DC 0 AC 1",
+            "v_gs_<<index>> g_ac_<<index>> 0 <<vgs>>",
+            "e_ds_<<index>> d_<<index>> 0 v_sweep 0 1",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(e_ds_<<index>>)", "i(v_s_<<index>>)"],
+            "calculate": {
+                "ciss_<<index>>": "(abs(imag(i(v_s_<<index>>))) + abs(imag(i(e_ds_<<index>>))))/2*pi*<<frequency>>"
+            },
+            "output": ["ciss_<<index>>"]
+        },
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos capacitor characteristic",
+        "testbench_type": ["nmos_crss_vds_vgs", "nmos_crss_vd_vg"],
+        "simulation_type": "ac_point",
+        "characteristic_type": "crss characteristic",
+        "circuit": [
+            "v_gs_ac_<<index>> g_<<index>> g_ac_<<index>> DC 0 AC 1",
+            "v_gs_<<index>> g_ac_<<index>> 0 <<vgs>>",
+            "e_ds_<<index>> d_<<index>> 0 v_sweep 0 1",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(e_ds_<<index>>)"],
+            "calculate": {
+                "crss_<<index>>": "abs(imag(i(e_ds_<<index>>)))/2*pi*<<frequency>>"
+            },
+            "output": ["crss_<<index>>"]
+        },
+        "instance_parameters": ["w", "l", "m"]
+    },
+    {   
+        "device_type": "mosfet",
+        "name": "nmos capacitor characteristic",
+        "testbench_type": ["nmos_coss_vds_vgs", "nmos_coss_vd_vg"],
+        "simulation_type": "ac_point",
+        "characteristic_type": "coss characteristic",
+        "circuit": [
+            "v_gs_ac_<<index>> g_<<index>> g_ac_<<index>> DC 0 AC 1",
+            "v_gs_<<index>> g_ac_<<index>> 0 <<vgs>>",
+            "e_ds_<<index>> d_<<index>> 0 v_sweep 0 1",
+            "v_s_<<index>> s_<<index>> 0 0",
+            "v_bs_<<index>> b_<<index>> 0 <<vbs>>",
+            "x_<<index>> d_<<index>> g_<<index>> s_<<index>> b_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(e_ds_<<index>>)"],
+            "calculate": {
+                "crss_<<index>>": "abs(imag(i(e_ds_<<index>>)))/2*pi*<<frequency>>"
+            },
+            "output": ["coss_<<index>>"]
+        },
+        "instance_parameters": ["w", "l", "m"]
+    }
+]

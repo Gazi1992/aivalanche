@@ -3,7 +3,6 @@ from reference_data.visualization import plot_all_groups
 from reference_data.utils import write_reference_data_to_file
 import os, numpy as np
 
-
 def callback_after_first_iter(parameters: dict = None,
                               responses: dict = None,
                               iteration: int = None,
@@ -73,7 +72,7 @@ optimizer_config = {'type': 'differential_evolution',
                     'callback_after_each_iter': callback_after_each_iter,
                     'callback_after_last_iter': callback_after_last_iter,
                     'callback_after_better_solution_found': callback_after_better_solution_found,
-                    'pop_size': 100,
+                    'pop_size': 10,
                     'metric_threshold': 1e-10,
                     'max_iterations': 10000,
                     'max_iter_without_improvement': 500,
@@ -129,9 +128,7 @@ cost_function_config = {'type': 'default',
                             }
                         ]}
 
-use_dask = True
-dask_env = 'local'
-# dask_env = 'containers'
+running_environment = 'kafka_aws' # [local, dask_local, kafka_local, kafka_aws]
 
 if __name__ == '__main__':
 
@@ -144,8 +141,7 @@ if __name__ == '__main__':
                               simulator_config = simulator_config,
                               optimizer_config = optimizer_config,
                               cost_function_config = cost_function_config,
-                              use_dask = use_dask,
-                              dask_env = dask_env)
+                              running_environment = running_environment)
     
     # calibration.run_no_parameter_simulation(plot = True)
     

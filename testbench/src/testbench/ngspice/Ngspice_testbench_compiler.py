@@ -32,7 +32,6 @@ class Ngspice_testbench_compiler():
             
         self.working_directory = os.path.abspath(self.working_directory)
 
-
     def create_testbenches(self):
         self.deternime_curve_index()
         self.parse_testbenches_file()        
@@ -40,18 +39,15 @@ class Ngspice_testbench_compiler():
         self.determine_file_id()
         self.build_circuit_and_results()
         self.build_files()
-        
-        
+
     def write_simulation_files(self):
         self.files.apply(lambda row: write_contents_to_file(row), axis = 1)
-                
 
     # Set a unique curve_index for each curve
     def deternime_curve_index(self):
         if self.reference_data is not None:
             self.reference_data['curve_index'] = self.reference_data.apply(lambda row: get_curve_index(row), axis = 1)
 
-    
     # Read and parse the testbench file and save them in a dataframe
     def parse_testbenches_file(self):
         if self.testbenches_file is not None:
@@ -59,17 +55,14 @@ class Ngspice_testbench_compiler():
                 self.testbenches_raw = json.load(json_file)
                 self.testbenches = pd.DataFrame.from_dict(self.testbenches_raw).explode('testbench_type', ignore_index=True)
 
-
     # Set the simulation_type and some auxiliary columns
     def determine_simulation_type(self):
         if self.reference_data is not None:
             self.reference_data[['simulation_type', 'start', 'stop', 'step']] = self.reference_data.apply(lambda row: self.get_simulation_type_from_curve(row), axis = 1, result_type = 'expand')
 
-
     # Get the simulation type from the curve data
     def get_simulation_type_from_curve(self, curve) -> tuple:
         testbench = self.testbenches[self.testbenches['testbench_type'] == curve['testbench_type']]
-        
         if len(testbench.index) == 0:
             print('ERROR: No testbench for the following curve.')
             print(curve)
@@ -78,9 +71,7 @@ class Ngspice_testbench_compiler():
             print('WARNING: More than 1 testbench found for the following curve:')
             print(curve)
             print('Considering the first of the testbenches defined.')
-            
         testbench = testbench.iloc[0]
-        
         if testbench['simulation_type'] == 'dc':
             if is_equidistant(curve['x_values']):
                 return 'dc_sweep', curve['x_values'][0], curve['x_values'][-1], round(curve['x_values'][1]-curve['x_values'][0], 10)
@@ -93,7 +84,6 @@ class Ngspice_testbench_compiler():
                 return 'ac_point_dc_list', None, None, None
         else:
             return None, None, None, None
-
 
     # Group the curves into similar ones in order to put them in the same file
     def determine_file_id(self):
@@ -122,7 +112,6 @@ class Ngspice_testbench_compiler():
     # For each split, set the file_id
     def set_file_id_for_split(self, split):
         split_length = len(split.index)
-        
         # if the max nr of testbenches per file is smaller than the length of the split,
         # then it should be split into chunks which have to be as equal as possible in length
         if split_length > self.max_testbenches_per_file:
@@ -137,7 +126,6 @@ class Ngspice_testbench_compiler():
                 chunk_sizes = [1] * nr_chunks
                 chunk_sizes[0:nr_big_chunks] = [big_chunk_size] * nr_big_chunks
                 chunk_sizes[nr_big_chunks:] = [small_chunk_size] * nr_small_chunks
-            
             # Calculate chunk_sizes
             chunk_indices = []
             cumulative_sum = 0
@@ -145,7 +133,6 @@ class Ngspice_testbench_compiler():
                 cumulative_sum += num
                 chunk_indices.append(cumulative_sum)
             chunk_indices = chunk_indices[0:-1]
-
             chunks = np.split(split, chunk_indices)
             for chunk in chunks:
                 self.reference_data.loc[self.reference_data.index.isin(chunk.index), 'file_id'] = self.file_id
@@ -154,49 +141,39 @@ class Ngspice_testbench_compiler():
             self.reference_data.loc[self.reference_data.index.isin(split.index), 'file_id'] = self.file_id
             self.file_id += 1
 
-
     # Build circuit and measure blocks
     def build_circuit_and_results(self):      
         self.reference_data['circuit'] = self.reference_data.apply(lambda row: self.build_circuit_for_curve(row), axis = 1)
         self.reference_data[['save_variables',
                              'rename_variables',
                              'calculate_variables',
-                             'output_variables']] = self.reference_data.apply(lambda row: self.build_results_for_curve(row), axis = 1, result_type = 'expand')        
+                             'output_variables']] = self.reference_data.apply(lambda row: self.build_results_for_curve(row), axis = 1, result_type = 'expand')
         
-
     # Build circuit block for one curve
     def build_circuit_for_curve(self, curve) -> str:
         testbench = self.get_testbench_by_type(curve['testbench_type'])
         if testbench is None:
             return None
-        
         if 'circuit' not in testbench:
             print('ERROR: No circuit defined for the following testbench:')
             print(testbench)
             return None
-        
         circuit_template = '\n'.join(testbench['circuit'])
-        
         to_replace = set(re.findall(r"<<(.*?)>>", circuit_template))
-        
         circuit = f"********************* dut testbench {curve['curve_index']} *********************\n"
         circuit += circuit_template
         circuit += '\n*************************************************************'
-        
         if 'dut_name' in to_replace:
             circuit = circuit.replace('<<dut_name>>', self.dut_name)
             to_replace.remove('dut_name')
-        
         if 'index' in to_replace:
             circuit = circuit.replace('<<index>>', curve['curve_index'])
             to_replace.remove('index')
-        
         if 'instance_parameters' in to_replace:
             instance_parameters = get_instance_parameters_for_curve(testbench, curve)
             instance_parameters_joined = ' '.join([f'{key}={value}' for key, value in instance_parameters.items()])
             circuit = circuit.replace('<<instance_parameters>>', instance_parameters_joined)
             to_replace.remove('instance_parameters')
-        
         for param in to_replace:
             if curve['extra_var_name'] == param:
                 circuit = circuit.replace(f'<<{param}>>', str(curve['extra_var_value']))
@@ -207,33 +184,26 @@ class Ngspice_testbench_compiler():
                 print(f'curve: {curve}')
                 print(f'testbench: {testbench}')
                 return None
-        
         return circuit
 
-    
     # Build measure block for one curve
     def build_results_for_curve(self, curve):
         testbench = self.get_testbench_by_type(curve['testbench_type'])
         if testbench is None:
             return None
-        
         if 'results' not in testbench:
             print('ERROR: No results defined for the following testbench:')
             print(testbench)
             return None
-        
         save_variables = None
         if "save" in testbench['results']:
             save_variables = [item.replace('<<index>>', curve['curve_index']) for item in testbench['results']['save']]
-        
         output_variables = save_variables
         if "output" in testbench['results']:
             output_variables = [item.replace('<<index>>', curve['curve_index']) for item in testbench['results']['output']]
-        
         rename_variables = None
         if 'rename' in testbench['results']:
             rename_variables = {key.replace('<<index>>', curve['curve_index']): value.replace('<<index>>', curve['curve_index']) for key, value in testbench['results']['rename'].items()}
-        
         calculate_variables = None
         if 'calculate' in testbench['results']:
             calculate_variables = {key.replace('<<index>>', curve['curve_index']): value.replace('<<index>>', curve['curve_index']) for key, value in testbench['results']['calculate'].items()}
@@ -247,14 +217,11 @@ class Ngspice_testbench_compiler():
                         print(f'ERROR trying to replace the value for {item} in the testbench.')
                         print(testbench)
                         return None
-        
         return save_variables, rename_variables, calculate_variables, output_variables
-    
-    
+
     # Get testbench by type
     def get_testbench_by_type(self, testbench_type) -> pd.Series:
         testbench = self.testbenches[self.testbenches['testbench_type'] == testbench_type]
-        
         if len(testbench.index) == 0: # if no testbench exists, return none
             print('ERROR: No testbench found for the following testbench_type:')
             print(testbench_type)
@@ -264,10 +231,8 @@ class Ngspice_testbench_compiler():
             print('WARNING: More than 1 testbench found for the following testbench_type:')
             print(testbench_type)
             print('Considering the first of the testbenches defined.')
-        
         return testbench.iloc[0]
-    
-    
+
     # Build files
     def build_files(self):
         self.files = pd.DataFrame(columns = ['file_id', 'simulation_type', 'nr_testbenches',
@@ -286,7 +251,6 @@ class Ngspice_testbench_compiler():
                 self.build_file_ac_point_dc_sweep(split)
             elif simulation_type == 'ac_point_dc_list':
                 self.build_file_ac_point_dc_list(split)   
-        
 
     # Build file for dc_sweep simulations.        
     def build_file_dc_sweep(self, curves):
@@ -371,8 +335,7 @@ class Ngspice_testbench_compiler():
                                  'calculate_variables': [None]})
         
         self.files = pd.concat([self.files, new_file])
-    
-    
+
     # Build file for dc_list simulations.
     def build_file_dc_list(self, curves):
         file_id = curves.iloc[0]['file_id']
@@ -631,10 +594,9 @@ class Ngspice_testbench_compiler():
         file_contents += "********** End of control section **********\n\n"
 
         file_contents += ".end"
-        
+
         if self.inline:
             file_contents = process_file_contents_for_inline_includes(file_contents)
-        
         new_file = pd.DataFrame({'file_id': [file_id],
                                  'simulation_type': [simulation_type],
                                  'nr_testbenches': [len(curves.index)],
@@ -650,13 +612,11 @@ class Ngspice_testbench_compiler():
                                  'output_variables': [all_output_variables],
                                  'rename_variables': [all_rename_variables],
                                  'calculate_variables': [all_calculate_variables]})
-        
         self.files = pd.concat([self.files, new_file])
         
     
     def add_model_parameters_to_file(self):
         model_parameters_part = "** Model parameters start\n"
-        
         if self.model_parameters is not None:
             for key, value in self.model_parameters.items():
                 if value < 0:
@@ -664,22 +624,17 @@ class Ngspice_testbench_compiler():
                 else:
                     model_parameters_part += f"alterparam {self.dut_name} {key} = {value}\n"
             model_parameters_part += "reset\n"
-        
         model_parameters_part += "** Model parameters end\n\n"
-        
         return model_parameters_part
-    
-    
+
     # Modify the model parameters that exist in the files
     def modify_model_parameters(self, parameters: dict = None, add_new_parameters: bool = True):
         self.model_parameters = parameters
         self.files['contents'] = self.files.apply(lambda row: self.modify_model_parameters_per_file(row, parameters, add_new_parameters), axis = 1)
-        
-    
+
     # Modify the parameters in a single file
     def modify_model_parameters_per_file(self, file: pd.Series = None, parameters: dict = None, add_new_parameters: bool = True):
         contents = file['contents']
-        
         for key, value in parameters.items():
             pattern = r'(alterparam dut ' + key + r' = )(.*?)(?=\n)'
             if re.search(pattern, contents):
@@ -689,9 +644,7 @@ class Ngspice_testbench_compiler():
                         return match.group(1) + '1*' + str(value)
                     else:
                         return match.group(1) + str(value)
-               
                 contents = re.sub(pattern, replace_value, contents, flags = re.DOTALL)
-
             else:
                 if add_new_parameters:
                     # Parameter does not exist, add it after "** Model parameters start"
@@ -701,21 +654,17 @@ class Ngspice_testbench_compiler():
                     else:
                         new_parameter += f'alterparam dut {key} = {value}\n'
                     contents = contents.replace('** Model parameters start\n', new_parameter)
-            
         return contents
-    
-    
+
     # Remove model parameters
     def remove_model_parameters(self):
         self.files['contents'] = self.files.apply(lambda row: self.remove_model_parameters_per_file(row), axis = 1)
 
-    
     # Remove model parameters per file
     def remove_model_parameters_per_file(self, file: pd.Series = None):
         contents = file['contents']
         contents = re.sub(r'\*\* Model parameters start\n.*?\*\* Model parameters end\n', '', contents, flags = re.DOTALL)
         return contents
-    
     
     # Update working directory
     def update_working_directory(self, new_working_dir: str = None):
@@ -729,13 +678,3 @@ class Ngspice_testbench_compiler():
         new_results_file_path = os.path.join(new_results_dir, file['results_file_name'])
         new_contents = file['contents'].replace(file['results_file_path'], new_results_file_path)
         return new_results_dir, new_simulation_file_path, new_results_file_path, new_contents
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        

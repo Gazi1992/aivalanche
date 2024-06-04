@@ -1,9 +1,10 @@
 import json, pandas as pd, threading, uuid, queue
 from pathlib import Path
 from datetime import datetime
-from aivalanche_app.paths import dummy_data_path
+from aivalanche_app.paths import dummy_data_path, projects_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.db import db
+from aivalanche_app.data_store.utils import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val
 from PySide6.QtCore import QObject, Signal
 
 class store(QObject):
@@ -21,6 +22,8 @@ class store(QObject):
     fetch_projects_end = Signal(object)
     create_project_start = Signal(object)
     create_project_end = Signal(object)
+    create_project_directories_start = Signal(object)
+    create_project_directories_end = Signal(object)
     
     active_model_changed = Signal(object)
     fetch_models_start = Signal(object)
@@ -60,10 +63,12 @@ class store(QObject):
             self.available_loss_function_path = Path.joinpath(dummy_data_path, 'loss_function_files.csv')
             self.available_optimizers_path = Path.joinpath(dummy_data_path, 'optimizers.csv')
             self.available_simulators_path = Path.joinpath(dummy_data_path, 'simulators.csv')
+            self.projects_directory_path = projects_path
         elif self.db_type == 'local_mysql_db':
             self.db = db()
             self.db.connect_to_db()
-        
+            self.projects_directory_path = projects_path
+            
         # User        
         self.user = None
         
@@ -97,12 +102,6 @@ class store(QObject):
         # Start the db_worker thread
         threading.Thread(target = self.db_worker, daemon = True).start()
     
-    #%% Function to convert semicolumn to list of items when reading a csv
-    def convert_to_list_if_semi_colon(self, value):
-        if isinstance(value, str) and ';' in value:
-            return value.split(';')
-        return value
-    
     #%% DB worker
     def db_worker(self):
         while True:
@@ -118,7 +117,6 @@ class store(QObject):
     #%% Optimizers
     def fetch_available_optimizers(self):
         self._run_task(self._fetch_available_optimizers)
-        # self._fetch_available_optimizers()
         
     def _fetch_available_optimizers(self):
         self.fetch_available_optimizers_start.emit()
@@ -128,14 +126,14 @@ class store(QObject):
         
         if self.db_type == 'local_files':
             available_optimizers = pd.read_csv(filepath_or_buffer = self.available_optimizers_path,
-                                               converters = {'file_type': self.convert_to_list_if_semi_colon},
+                                               converters = {'file_type': convert_to_list_if_semi_colon},
                                                na_values = ['null', 'Null', 'None', 'none'])
         elif self.db_type == 'local_mysql_db':
             db_response = self.db.fetch_optimizers()
             if db_response['success']:
                 available_optimizers = db_response['data']
                 if 'file_type' in available_optimizers.columns:
-                    available_optimizers['file_type'] = available_optimizers['file_type'].apply(self.convert_to_list_if_semi_colon)
+                    available_optimizers['file_type'] = available_optimizers['file_type'].apply(convert_to_list_if_semi_colon)
             else:
                 success = False
                 error = db_response['error']
@@ -148,7 +146,6 @@ class store(QObject):
     #%% Simulators
     def fetch_available_simulators(self):
         self._run_task(self._fetch_available_simulators)
-        # self._fetch_available_simulators()
         
     def _fetch_available_simulators(self):
         self.fetch_available_simulators_start.emit()
@@ -158,7 +155,7 @@ class store(QObject):
         
         if self.db_type == 'local_files':
             available_simulators = pd.read_csv(filepath_or_buffer = self.available_simulators_path,
-                                               converters = {'file_type': self.convert_to_list_if_semi_colon},
+                                               converters = {'file_type': convert_to_list_if_semi_colon},
                                                na_values = ['null', 'Null', 'None', 'none'])
         elif self.db_type == 'local_mysql_db':
             db_response = self.db.fetch_simulators()
@@ -212,8 +209,7 @@ class store(QObject):
                 self.user = user
                 
         self.validate_user_end.emit({'success': success, 'error': error, 'data': user})
-    
-    
+
     #%% Projects
     def set_active_project(self, p: pd.Series = None):
         if self.active_project is None or p is None or self.active_project['id'] != p['id']:
@@ -292,6 +288,64 @@ class store(QObject):
                     error = db_response['error']
         
         self.create_project_end.emit({'success': success, 'error': error, 'data': data})
+        
+    def create_project_directories(self, title: str = None):
+        self._run_task(self._create_project_directories, title)
+        
+    def _create_project_directories(self, title: str = None):
+        self.create_project_directories_start.emit({'title': title})
+        success = True
+        error = None
+        data = None
+        
+        if title is None:
+            success = False
+            error = 'Title is None!'
+        else:
+            if self.db_type in ['local_files', 'local_mysql_db']:
+                project = filter_df_by_col_name_and_val(df = self.projects, col_name = 'title', val = title)
+                if len(project.index) == 0:
+                    success = False
+                    error = f'No project titled {title} exists!'
+                else:
+                    username = self.user['username']
+                    project_id = project['id']
+                    project_path = Path.joinpath(self.projects_directory_path, f'{title}_{username}_{project_id}')
+                    project_models_path = Path.joinpath(project_path, 'models')
+                    project_common_path = Path.joinpath(project_path, 'common')
+                    project_common_models_path = Path.joinpath(project_common_path, 'models')
+                    project_common_parameters_path = Path.joinpath(project_common_path, 'parameters')
+                    project_common_reference_data_path = Path.joinpath(project_common_path, 'reference_data')
+                    project_common_testbenches_path = Path.joinpath(project_common_path, 'testbenches')
+                    project_common_loss_functions_path = Path.joinpath(project_common_path, 'loss_functions')
+                    try:
+                        Path.mkdir(project_path)
+                        Path.mkdir(project_models_path)
+                        Path.mkdir(project_common_path)
+                        Path.mkdir(project_common_models_path)
+                        Path.mkdir(project_common_parameters_path)
+                        Path.mkdir(project_common_reference_data_path)
+                        Path.mkdir(project_common_testbenches_path)
+                        Path.mkdir(project_common_loss_functions_path)
+                        if self.db_type == 'local_files':
+                            all_projects = pd.read_csv(self.projects_path)
+                            all_projects.loc[all_projects['id'] == project_id, 'path'] = project_path
+                            all_projects.to_csv(path_or_buf = self.projects_path, index = False)
+                        elif self.db_type == 'local_mysql_db':
+                            db_response = self.db.update_project_path_by_id(project_id = project_id, path = project_path)
+                            if db_response['success']:
+                                data = db_response['data']
+                            else:
+                                success = False
+                                error = db_response['error']                        
+                    except FileExistsError:
+                        success = False
+                        error = f'{project_path} already exists!'
+                    except FileNotFoundError:
+                        success = False
+                        error = f'{project_path} cannot be created because one of the parent directories does not exist!'
+                        
+        self.create_project_directories_end.emit({'success': success, 'error': error, 'data': data})
         
     #%% Models
     def set_active_model(self, m: pd.Series = None, override: bool = False):
@@ -615,4 +669,4 @@ class store(QObject):
                     error = db_response['error']
         
         self.update_parameters_id_end.emit({'success': success, 'error': error, 'data': data})
-    
+

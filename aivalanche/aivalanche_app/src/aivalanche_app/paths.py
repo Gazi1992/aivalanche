@@ -6,6 +6,8 @@ package_path = Path(__file__).parent.absolute()
 # Store
 store_path = Path.joinpath(package_path, 'data_store')
 dummy_data_path = Path.joinpath(store_path, 'dummy_data')
+templates_path = Path.joinpath(store_path, 'templates')
+projects_path = Path.joinpath(store_path, 'projects')
 
 # Resources
 resources_path = Path.joinpath(package_path, 'resources')

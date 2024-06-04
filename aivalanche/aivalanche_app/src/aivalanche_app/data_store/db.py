@@ -82,12 +82,19 @@ class db(QObject):
     
     #%% Projects
     def fetch_projects_by_user_id(self, user_id: str = None):
-        query = f"select * from aivalanche_db.projects where user_id = '{user_id}' order by created_at desc"
-        return self.execute_query(query, 'fetch_projects_by_user_id')
+        if user_id is not None:
+            query = f"select * from aivalanche_db.projects where user_id = '{user_id}' order by created_at desc"
+            return self.execute_query(query, 'fetch_projects_by_user_id')
         
     def create_project_by_user_id(self, user_id: str = None, title: str = None):
-        query = f"insert into aivalanche_db.projects (user_id, created_at, last_modified_at, title, labels) values ('{user_id}', now(), now(), '{title}', '')"
-        return self.execute_query(query, 'create_project_by_user_id')
+        if user_id is not None and title is not None:
+            query = f"insert into aivalanche_db.projects (user_id, created_at, last_modified_at, title, labels) values ('{user_id}', now(), now(), '{title}', '')"
+            return self.execute_query(query, 'create_project_by_user_id')
+    
+    def update_project_path_by_id(self, project_id: str = None, path: str = None):
+        if id is not None and path is not None:
+            query = f"update aivalanche_db.projects set path = '{path}' where id = '{project_id}'"
+            return self.execute_query(query, 'update_project_path_by_id')
     
     #%% Models
     def fetch_all_models(self):
