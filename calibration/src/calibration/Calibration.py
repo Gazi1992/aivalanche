@@ -1,16 +1,14 @@
 #%% Imports
-from reference_data import Reference_data
+from reference_data.Reference_data import Reference_data
 from reference_data.visualization import plot_all_groups
 from reference_data.utils import write_reference_data_to_file
 from testbench.ngspice import Ngspice_testbench_compiler
-from parameters import Parameters
+from parameters.Parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
 from calibration.custom_dask import init_dask, close_dask
 from calibration.utils import run_single_simulation, calculate_error_metrics, test_ngspice, run_single_simulation_kafka_local
 from calibration.logging import logging_config, set_log_file, set_log_level
 from simulation.ngspice import Ngspice_simulator
-from kafka_consumer.kafka_consumer import consume, consumer_with_timeout
-from kafka_producer.kafka_producer import send_event_to_worker
 from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
 from datetime import datetime

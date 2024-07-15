@@ -30,8 +30,7 @@ class my_models(QWidget):
         self.init_ui()
         
         self._loading = False
-        self._error = None
-        
+        self._error = None        
         
     @property
     def loading(self):
@@ -144,7 +143,7 @@ class my_models(QWidget):
         if res['success']:
             self.loading = False
             self.error = None
-            self.store.fetch_models()
+            self.update_models()
         else:
             self.error = res['error']
             self.loading = False

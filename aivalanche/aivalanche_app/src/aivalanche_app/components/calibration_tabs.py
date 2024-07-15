@@ -35,6 +35,7 @@ class calibration_tabs(QTabWidget):
         if on_warning is not None:
             self.reference_data_tab.reference_data_warning.connect(on_warning)
             self.parameters_tab.parameters_warning.connect(on_warning)
+            self.model_tab.model_file_warning.connect(on_warning)
         
         # Hide the tab bar
         for i in range(5):

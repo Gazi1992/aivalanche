@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 
-class custom_icon_button(QPushButton):
+class icon_button(QPushButton):
     def __init__(self, parent = None, icon_path: str = None, icon_hover_path: str = None, icon_press_path: str = None, on_click: callable = None, object_name: str = None):
         super().__init__(parent)
 

@@ -4,13 +4,14 @@ from aivalanche_app.components.custom_combo_box import custom_combo_box
 
 
 class custom_combo_box_with_label(QWidget):
-    def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder', is_editable: bool = False,
+    def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder', is_editable: bool = False, combo_box_width: int = None,
                  items: list[str] = [], label_position: str = 'top', spacing: int = 5, on_change: callable = None, object_name: str = None):
         super().__init__(parent = parent)
         
         self.label = label
         self.placeholder = str(placeholder)
         self.is_editable = is_editable
+        self.combo_box_width = combo_box_width
         self.items = items
         self.label_position = label_position
         self.spacing = spacing
@@ -39,6 +40,9 @@ class custom_combo_box_with_label(QWidget):
                                      items = self.items,
                                      is_editable = self.is_editable,
                                      on_change = self.on_change)
+        
+        if self.combo_box_width is not None:
+            combo_box.setFixedWidth(self.combo_box_width)
         
         if self.label_position in ['top', 'left']:
             layout.addWidget(label_widget, 0)

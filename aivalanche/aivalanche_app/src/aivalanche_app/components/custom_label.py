@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QLabel, QGraphicsOpacityEffect, QSizePolicy
+from PySide6.QtCore import Qt
 from aivalanche_app.resources.themes.style import style
 
 class custom_label(QLabel):
-    def __init__(self, parent = None, text = '', font_size = None, opacity = 1, object_name = None):
+    def __init__(self, parent = None, text = '', font_size = None, opacity = 1, object_name = None, word_wrap: bool = False,
+                 minimum_width: float = None, text_alignment = Qt.AlignmentFlag.AlignLeft):
         super().__init__(parent = parent)
         self.style = style()
         self.setText(text)
@@ -10,8 +12,12 @@ class custom_label(QLabel):
         self.set_opacity(opacity)
         if object_name is not None:
             self.setObjectName(object_name)
-        self.setWordWrap(True)
+        self.setWordWrap(word_wrap)
+        self.setAlignment(text_alignment)
+        if minimum_width is not None:
+            self.setMinimumWidth(minimum_width)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
         
     def set_font_size(self, font_size):
         if isinstance(font_size, str):
@@ -32,6 +38,10 @@ class custom_label(QLabel):
         opacity_effect = QGraphicsOpacityEffect(self)
         opacity_effect.setOpacity(opacity)
         self.setGraphicsEffect(opacity_effect)
+
+    def resizeEvent(self, event):
+        self.adjustSize()
+        super().resizeEvent(event)
         
         
         

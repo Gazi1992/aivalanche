@@ -1,4 +1,4 @@
-import mysql.connector, time, pandas as pd, uuid
+import mysql.connector, pandas as pd, uuid
 from PySide6.QtCore import QObject
 
 class db(QObject):
@@ -49,7 +49,6 @@ class db(QObject):
                 columns = [column[0] for column in self.cursor.description]  # Get column names
                 result = self.cursor.fetchall()  # Get the result of the query
                 data = pd.DataFrame(data = result, columns = columns)
-            # time.sleep(3)
             success = True
             error = None
         except mysql.connector.Error as e:
@@ -89,10 +88,11 @@ class db(QObject):
     def create_project_by_user_id(self, user_id: str = None, title: str = None):
         if user_id is not None and title is not None:
             query = f"insert into aivalanche_db.projects (user_id, created_at, last_modified_at, title, labels) values ('{user_id}', now(), now(), '{title}', '')"
-            return self.execute_query(query, 'create_project_by_user_id')
+            return_data = {'user_id': user_id, 'title': title}
+            return self.execute_query(query, 'create_project_by_user_id', return_data)
     
     def update_project_path_by_id(self, project_id: str = None, path: str = None):
-        if id is not None and path is not None:
+        if project_id is not None and path is not None:
             query = f"update aivalanche_db.projects set path = '{path}' where id = '{project_id}'"
             return self.execute_query(query, 'update_project_path_by_id')
     
@@ -112,16 +112,21 @@ class db(QObject):
     def fetch_model_templates(self):
         query = "select * from aivalanche_db.model_templates"
         return self.execute_query(query, 'fetch_model_templates')
+    
+    def update_model_path_by_id(self, model_id: str = None, path: str = None):
+        if model_id is not None and path is not None:
+            query = f"update aivalanche_db.models set path = '{path}' where id = '{model_id}'"
+            return self.execute_query(query, 'update_model_path_by_id')
 
-    #%% Reference data files
+    #%% Reference data
     def fetch_reference_data_by_project_id(self, project_id: str = None):
-        query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' order by path desc"
+        query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' order by name desc"
         return self.execute_query(query, 'fetch_reference_data_by_project_id')
 
-    def add_reference_data_by_project_id(self, path: str = None, project_id: str = None):
+    def add_reference_data_by_project_id(self, path: str = None, name: str = None, original_path: str = None, project_id: str = None):
         id = str(uuid.uuid4())
-        query = f"insert into aivalanche_db.reference_data_files (id, path, project_id) values ('{id}', '{path}', '{project_id}')"
-        return_data = {'id': id, 'path': path, 'project_id': project_id}
+        query = f"insert into aivalanche_db.reference_data_files (id, path, project_id, name, original_path) values ('{id}', '{path}', '{project_id}', '{name}', '{original_path}')"
+        return_data = {'id': id, 'path': path, 'project_id': project_id, 'name': name}
         return self.execute_query(query, 'add_reference_data_by_project_id', return_data)
     
     def update_reference_data_id_by_model_id(self, reference_data_id: str = None, model_id: str = None):
@@ -135,15 +140,15 @@ class db(QObject):
         query = f"select * from aivalanche_db.reference_data_files where project_id = '{project_id}' and path = '{path}' order by path desc"
         return self.execute_query(query, 'fetch_reference_data_by_path_and_project_id')
     
-    #%% Parameters files
+    #%% Parameters
     def fetch_parameters_by_project_id(self, project_id: str = None):
-        query = f"select * from aivalanche_db.parameters_files where project_id = '{project_id}' order by path desc"
+        query = f"select * from aivalanche_db.parameters_files where project_id = '{project_id}' order by name desc"
         return self.execute_query(query, 'fetch_parameters_by_project_id')
 
-    def add_parameters_by_project_id(self, path: str = None, project_id: str = None):
+    def add_parameters_by_project_id(self, path: str = None, name: str = None, original_path: str = None, project_id: str = None):
         id = str(uuid.uuid4())
-        query = f"insert into aivalanche_db.parameters_files (id, path, project_id) values ('{id}', '{path}', '{project_id}')"
-        return_data = {'id': id, 'path': path, 'project_id': project_id}
+        query = f"insert into aivalanche_db.parameters_files (id, path, project_id, name, original_path) values ('{id}', '{path}', '{project_id}', '{name}', '{original_path}')"
+        return_data = {'id': id, 'path': path, 'project_id': project_id, 'name': name}
         return self.execute_query(query, 'add_parameters_by_project_id', return_data)
     
     def update_parameters_id_by_model_id(self, parameters_id: str = None, model_id: str = None):
@@ -156,3 +161,50 @@ class db(QObject):
     def fetch_parameters_by_path_and_project_id(self, path: str = None, project_id: str = None):
         query = f"select * from aivalanche_db.parameters_files where project_id = '{project_id}' and path = '{path}' order by path desc"
         return self.execute_query(query, 'fetch_parameters_by_path_and_project_id')
+    
+    #%% Model files
+    def fetch_model_files_by_project_id(self, project_id: str = None):
+        query = f"select * from aivalanche_db.model_files where project_id = '{project_id}' order by name desc"
+        return self.execute_query(query, 'fetch_model_files_by_project_id')
+
+    def add_model_file_by_project_id(self, path: str = None, name: str = None, original_path: str = None, project_id: str = None):
+        id = str(uuid.uuid4())
+        query = f"insert into aivalanche_db.model_files (id, path, project_id, name, original_path) values ('{id}', '{path}', '{project_id}', '{name}', '{original_path}')"
+        return_data = {'id': id, 'path': path, 'project_id': project_id, 'name': name}
+        return self.execute_query(query, 'add_model_file_by_project_id', return_data)
+    
+    def update_model_file_id_by_model_id(self, model_file_id: str = None, model_id: str = None):
+        if model_file_id is None:
+            query = f"update aivalanche_db.models set model_file_id = NULL where id = '{model_id}'"
+        else:
+            query = f"update aivalanche_db.models set model_file_id = '{model_file_id}' where id = '{model_id}'"
+        return self.execute_query(query, 'update_model_file_id_by_model_id')
+    
+    def update_model_template_by_model_id(self, model_template: str = None, model_id: str = None):
+        if model_template is None:
+            query = f"update aivalanche_db.models set model_template = NULL where id = '{model_id}'"
+        else:
+            query = f"update aivalanche_db.models set model_template = '{model_template}' where id = '{model_id}'"
+        return self.execute_query(query, 'update_model_template_by_model_id')
+    
+    def fetch_model_file_by_path_and_project_id(self, path: str = None, project_id: str = None):
+        query = f"select * from aivalanche_db.model_files where project_id = '{project_id}' and path = '{path}' order by path desc"
+        return self.execute_query(query, 'fetch_model_file_by_path_and_project_id')
+    
+    #%% Optimization settings
+    def fetch_optimization_settings_by_id(self, optimization_settings_id: str = None):
+        query = f"select * from aivalanche_db.optimization_settings_files where id = '{optimization_settings_id}'"
+        return self.execute_query(query, 'fetch_optimization_settings_by_id')
+    
+    def add_optimization_settings(self, path: str = None):
+        id = str(uuid.uuid4())
+        query = f"insert into aivalanche_db.optimization_settings_files (id, path) values ('{id}', '{path}')"
+        return_data = {'id': id, 'path': path}
+        return self.execute_query(query, 'add_optimization_settings', return_data)
+    
+    def update_optimization_settings_id_by_model_id(self, optimization_settings_id: str = None, model_id: str = None):
+        if optimization_settings_id is None:
+            query = f"update aivalanche_db.models set optimization_settings_id = NULL where id = '{model_id}'"
+        else:
+            query = f"update aivalanche_db.models set optimization_settings_id = '{optimization_settings_id}' where id = '{model_id}'"
+        return self.execute_query(query, 'update_optimization_settings_id_by_model_id')

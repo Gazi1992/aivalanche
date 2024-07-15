@@ -7,18 +7,24 @@ class custom_radio_button(QWidget):
         layout = h_layout()
         self.setLayout(layout)
 
-        button = QRadioButton(text = text)
+        self.button = QRadioButton(text = text)
         if object_name is not None:
-            button.setObjectName(object_name)
+            self.button.setObjectName(object_name)
         
-        layout.addWidget(button)
+        layout.addWidget(self.button)
         layout.addStretch()
         
         if on_click is not None:
-            button.clicked.connect(lambda state: on_click(state, text))
+            self.button.clicked.connect(lambda state: on_click(state, text))
         
         if group is not None:
-            group.addButton(button)
+            group.addButton(self.button)
+            
+    def click(self):
+        self.button.click()
         
+    def set_state(self, state):
+        self.button.setChecked(state)
+
     
         

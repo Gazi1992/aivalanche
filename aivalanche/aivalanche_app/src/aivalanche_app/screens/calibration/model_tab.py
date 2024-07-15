@@ -1,14 +1,16 @@
 from PySide6.QtWidgets import QWidget, QScrollArea, QButtonGroup
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from aivalanche_app.components.custom_layouts import v_layout, h_layout, g_layout, clear_layout
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_label import custom_label
 from aivalanche_app.components.custom_radio_button import custom_radio_button
-from aivalanche_app.components.custom_checkbox_with_text import custom_checkbox_with_text
-
+from aivalanche_app.helper_functions import find_max_suffix
+import pandas as pd, shutil
+from pathlib import Path
 
 class model_tab(QWidget):
+    model_file_warning = Signal(dict)
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
@@ -18,12 +20,15 @@ class model_tab(QWidget):
         
         self.store = store
         self.store.fetch_model_templates_end.connect(self.update_model_templates)
+        self.store.fetch_available_model_files_end.connect(self.on_available_model_files_fetched)
+        self.store.add_available_model_file_end.connect(self.on_available_model_file_added)
+        self.store.update_model_file_id_end.connect(self.on_model_file_id_updated)
+        self.store.active_model_changed.connect(self.check_model_file_exists)
         
         self.model = None
         self.testbenches = []
 
         self.init_ui()
-
 
     def init_ui(self):
         
@@ -49,16 +54,19 @@ class model_tab(QWidget):
         scroll_area.setWidget(scroll_widget)
         
         # Custom model button
-        custom_model_button = custom_radio_button(parent = self, text = 'Custom model', group = self.model_buttons_group)
-        scroll_layout.addWidget(custom_model_button)
+        self.custom_model_button = custom_radio_button(parent = self, text = 'Custom model', group = self.model_buttons_group)
+        scroll_layout.addWidget(self.custom_model_button)
         
         # Create load model combo box
         self.load_model_widget = combo_box_load_data(parent = self,
                                                      caption = 'Select model file',
                                                      filter = 'cir file (*.cir)',
                                                      placeholder = 'Select model file',
+                                                     on_combo_box_changed = self.on_model_combo_box_changed,
+                                                     on_import_new_file = self.on_import_new_model_file,
                                                      is_enabled = False,
-                                                     object_name = 'round_combo_box')
+                                                     object_name = 'round_combo_box',
+                                                     is_editable = False)
         scroll_layout.addWidget(self.load_model_widget)
         
         # Create load testbench combo box
@@ -66,8 +74,11 @@ class model_tab(QWidget):
                                                            caption = 'Select testbenches file',
                                                            filter = 'json file (*.json)',
                                                            placeholder = 'Select testbenches file',
+                                                           # on_combo_box_changed = self.on_testbenches_combo_box_changed,
+                                                           # on_import_new_file = self.on_import_new_testbenches_file,
                                                            is_enabled = False,
-                                                           object_name = 'round_combo_box')
+                                                           object_name = 'round_combo_box',
+                                                           is_editable = False)
         scroll_layout.addWidget(self.load_testbenches_widget)
         
         # Templates label
@@ -76,7 +87,6 @@ class model_tab(QWidget):
         
         self.model_templates_layout = v_layout(spacing = 20, alignment = Qt.AlignmentFlag.AlignTop)
         scroll_layout.addLayout(self.model_templates_layout)
-
     
     def update_model_templates(self, data):
         clear_layout(self.model_templates_layout)
@@ -98,11 +108,91 @@ class model_tab(QWidget):
                 
                 self.model_templates_layout.addLayout(layout_temp)
     
-    
     def on_model_template_clicked(self, button):
-        if button.text() == 'Custom model':
+        text = button.text()
+        if text == 'Custom model':
             self.load_model_widget.set_state(True)
             self.load_testbenches_widget.set_state(True)
+            self.store.model_template = None
         else:
             self.load_model_widget.set_state(False)
             self.load_testbenches_widget.set_state(False)
+            self.store.model_template = text
+            
+    def set_active_radio_button(self, text):
+        self.clear_data()
+        for button in self.model_buttons_group.buttons():
+            if button.text() == text:
+                button.click()
+    
+    def clear_data(self):
+        for button in self.model_buttons_group.buttons():
+            button.setChecked(False)
+        self.load_model_widget.set_state(False)
+        self.load_testbenches_widget.set_state(False)
+        self.load_model_widget.set_active_item(None)
+        self.load_testbenches_widget.set_active_item(None)
+    
+    def on_model_combo_box_changed(self, val):
+        if val is not None and len(val) > 0:
+            model_file_id = self.store.available_model_files.loc[self.store.available_model_files['name'] == val,'id'].iloc[0]
+            self.store.update_model_file_id(model_file_id = model_file_id, model_id = self.store.active_model['id'])
+    
+    def on_model_file_id_updated(self, data: dict = {}):
+        if data['success']:
+            if not pd.isnull(self.store.active_model['model_file_id']):
+                model_file_path = self.store.available_model_files.loc[self.store.available_model_files['id'] == self.store.active_model['model_file_id'], 'path'] 
+                if model_file_path.empty:
+                    self.store.fetch_available_model_files(self.store.active_project['id'])
+                else:
+                    self.store.model_file_path = model_file_path.iloc[0]
+        else:
+            print(data['error'])
+    
+    def on_available_model_files_fetched(self, data: dict = {}):
+        if data['success']:
+            self.load_model_widget.update_items(self.store.available_model_files['name'].tolist())
+            self.check_model_file_exists()
+        
+    def check_model_file_exists(self):
+        self.clear_data()
+        if self.store.active_model is not None:
+            if not pd.isnull(self.store.active_model['model_template']):
+                self.set_active_radio_button(self.store.active_model['model_template'])
+            elif not pd.isnull(self.store.active_model['model_file_id']):
+                self.set_active_radio_button('Custom model')
+                model_file_path = self.store.available_model_files.loc[self.store.available_model_files['id'] == self.store.active_model['model_file_id'], 'path']
+                model_file_name = self.store.available_model_files.loc[self.store.available_model_files['id'] == self.store.active_model['model_file_id'], 'name']
+                if model_file_path.empty:
+                    self.store.update_model_file_id(model_file_id = None, model_id = self.store.active_model['id'])
+                else:
+                    self.store.model_file_path = model_file_path.iloc[0]
+                    self.load_model_widget.set_active_item(model_file_name.iloc[0], trigger_on_change_slot = False)
+    
+    def on_available_model_file_added(self, data: dict = {}):
+        if data['success']:
+            self.store.update_model_file_id(model_file_id = data['data']['id'], model_id = self.store.active_model['id'])
+        else:
+            warning = {'title': 'Model file add error',
+                       'message': 'Model file could not be added.',
+                       'explanation': data['error']}
+            self.model_file_warning.emit(warning)
+    
+    def on_import_new_model_file(self, file_path: str = None):
+        if file_path is not None:            
+            file_exists = False
+            new_file_path = Path.joinpath(self.store.active_project_common_model_files_directory_path, Path(file_path).name)
+            if Path.exists(new_file_path):
+                if file_path in self.store.available_model_files['original_path'].tolist():
+                    file_exists = True
+                else:
+                    new_file_path = find_max_suffix(self.store.active_project_common_model_files_directory_path, Path(file_path).name)
+            if file_exists:
+                warning = {'title': 'Model import error',
+                           'message': 'File already exists',
+                           'explanation': f'You already have a model file with the name {file_path} for this project. Please specify a different file.'}
+                self.model_file_warning.emit(warning)
+            else:
+                new_file_path = str(new_file_path)
+                shutil.copy(file_path, new_file_path)
+                self.store.add_available_model_file(path = new_file_path, name = file_path, original_path = file_path, project_id = self.store.active_project['id'])

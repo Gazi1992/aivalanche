@@ -29,6 +29,9 @@ class log_in(QWidget):
         self._error = None
         self.username = None
         self.password = None
+        
+        # For debugging purposes
+        self.log_in_as_gazi()
 
     @property
     def loading(self):
@@ -102,7 +105,7 @@ class log_in(QWidget):
         layout.addWidget(self.log_in_button, alignment = Qt.AlignmentFlag.AlignCenter)
         
         # Error message
-        self.error_widget = custom_label(parent = self, object_name = 'error', font_size = 'small')
+        self.error_widget = custom_label(parent = self, object_name = 'error', font_size = 'small', minimum_width = 500)
         layout.addWidget(self.error_widget, alignment = Qt.AlignmentFlag.AlignCenter)
         
         # Loading modal        
@@ -151,3 +154,8 @@ class log_in(QWidget):
         painter.restore()
 
         super().paintEvent(event)
+        
+    def log_in_as_gazi(self):
+        self.username = 'gazi'
+        self.password = 'gazi'
+        self.store.validate_user(self.username, self.password)

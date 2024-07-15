@@ -5,6 +5,3 @@ Description: the cost_function package provides methods for calculation differen
 """
 
 __version__ = '1.0.0'
-
-
-from .kafka_producer import kafka_producer

@@ -58,7 +58,7 @@ class results_tab(QWidget):
             self.results_progress_button.setChecked(False)
             self.tabs.set_active_tab('results_data_tab')
         else:
-            self.reference_data_button.setChecked(True)
+            self.results_data_button.setChecked(True)
         
     def on_results_progress_click(self, checked):
         if checked:

@@ -2,7 +2,6 @@ from PySide6.QtWidgets import QWidget, QLabel
 from aivalanche_app.components.custom_layouts import v_layout, h_layout
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 
-
 class combo_box_load_data_with_label(QWidget):
     def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder',
                  caption = 'Select file', filter = 'Json file (*.json)',

@@ -5,9 +5,10 @@ from aivalanche_app.data_store.store import store
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
-from parameters import Parameters
-import os, pandas as pd
-
+from parameters.Parameters import Parameters
+from aivalanche_app.helper_functions import find_max_suffix
+import pandas as pd
+from pathlib import Path
 
 class parameters_tab(QWidget):
     parameters_warning = Signal(dict)
@@ -23,7 +24,7 @@ class parameters_tab(QWidget):
         self.store.add_available_parameters_end.connect(self.on_available_parameters_added)
         self.store.update_parameters_id_end.connect(self.on_parameters_id_updated)
         self.store.active_model_changed.connect(self.check_parameters_exists)
-        
+                
         self.init_ui()
         
     def init_ui(self):
@@ -65,15 +66,14 @@ class parameters_tab(QWidget):
         self.table.clear_data()
         self.load_data_widget.set_active_item(None)
 
-    def load_parameters(self, file):
-        if os.path.exists(file):
-            self.parameters = Parameters(file)
-            self.parameters.all_parameters.insert(0, 'include', True)
-            self.table.update_data(self.parameters.all_parameters)
+    def load_parameters(self):
+        if 'include' not in self.store.parameters.columns:
+            self.store.parameters.all_parameters.insert(0, 'include', True)
+        self.table.update_data(self.store.parameters.all_parameters)
     
     def on_combo_box_changed(self, val):
         if val is not None and len(val) > 0:
-            parameters_id = self.store.available_parameters.loc[self.store.available_parameters['path'] == val,'id'].iloc[0]
+            parameters_id = self.store.available_parameters.loc[self.store.available_parameters['name'] == val,'id'].iloc[0]
             self.store.update_parameters_id(parameters_id = parameters_id, model_id = self.store.active_model['id'])
     
     def on_parameters_id_updated(self, data: dict = {}):
@@ -83,14 +83,14 @@ class parameters_tab(QWidget):
                 if parameters_path.empty:
                     self.store.fetch_available_parameters(self.store.active_project['id'])
                 else:
-                    parameters_path = parameters_path.iloc[0]
-                    self.load_parameters(parameters_path)
+                    self.store.parameters = Parameters(parameters_path.iloc[0])
+                    self.load_parameters()
         else:
             print(data['error'])
     
     def on_available_parameters_fetched(self, data: dict = {}):
         if data['success']:
-            self.load_data_widget.update_items(self.store.available_parameters['path'].tolist())
+            self.load_data_widget.update_items(self.store.available_parameters['name'].tolist())
             self.check_parameters_exists()
         
     def check_parameters_exists(self):
@@ -98,31 +98,46 @@ class parameters_tab(QWidget):
         if self.store.active_model is not None:
             if not pd.isnull(self.store.active_model['parameters_id']):
                 parameters_path = self.store.available_parameters.loc[self.store.available_parameters['id'] == self.store.active_model['parameters_id'], 'path']
+                parameters_name = self.store.available_parameters.loc[self.store.available_parameters['id'] == self.store.active_model['parameters_id'], 'name']
                 if parameters_path.empty:
                     self.store.update_parameters_id(parameters_id = None, model_id = self.store.active_model['id'])
                 else:
-                    parameters_path = parameters_path.iloc[0]
-                    self.load_data_widget.set_active_item(parameters_path, trigger_on_change_slot = False)
-                    self.load_parameters(parameters_path)
+                    self.store.parameters = Parameters(parameters_path.iloc[0])
+                    self.load_data_widget.set_active_item(parameters_name.iloc[0], trigger_on_change_slot = False)
+                    self.load_parameters()
     
     def on_import_new_ref_data_file(self, file_path: str = None):
         if file_path is not None:
             # Check if the file is readable
             try:
                 file_valid = True
-                Parameters(file_path)
+                file_exists = False
+                self.store.parameters = Parameters(file_path)
             except Exception:
                 file_valid = False
             
             # If the file is valid, load it, otherwise show a warning message
             if file_valid:
-                self.store.add_available_parameters(path = file_path, project_id = self.store.active_project['id'])
+                new_file_path = Path.joinpath(self.store.active_project_common_parameters_directory_path, Path(file_path).name)
+                if Path.exists(new_file_path):
+                    if file_path in self.store.available_parameters['original_path'].tolist():
+                        file_exists = True
+                    else:
+                        new_file_path = find_max_suffix(self.store.active_project_common_parameters_directory_path, Path(file_path).name)
+                if file_exists:
+                    warning = {'title': 'Parameters import error',
+                               'message': 'File already exists',
+                               'explanation': f'You already have a parameters file with the name {file_path} for this project. Please specify a different file.'}
+                    self.parameters_warning.emit(warning)
+                else:
+                    new_file_path = str(new_file_path)
+                    self.store.parameters.write_to_file(new_file_path)
+                    self.store.add_available_parameters(path = file_path, name = file_path, original_path = file_path, project_id = self.store.active_project['id'])
             else:
                 warning = {'title': 'Parameters import error',
                            'message': 'File could not be read',
                            'explanation': f'The file {file_path} is not a valid parameters file. Please see the documentation about the correct format of the parameters file.'}
-                self.parameters_warning.emit(warning)
-                
+                self.parameters_warning.emit(warning)                
             
     def on_available_parameters_added(self, data: dict = {}):
         if data['success']:

@@ -1,11 +1,11 @@
-id,category,name
-1,Transistors,BSIM4
-2,Transistors,BSIM3
-3,Transistors,BSIMBULK
-4,Transistors,BSIM CMG
-5,Transistors,Level 1
-6,Transistors,Level 3
-7,Pasive elements,Resistor
-8,Pasive elements,Capacitor
-9,Pasive elements,Inductor
-10,Pasive elements,Diode
+id,category,name,model_file_path,testbenches_file_path
+1,Transistors,BSIM4,/home/gazi/Desktop/Work/custom_packages/aivalanche/aivalanche_app/src/aivalanche_app/data_store/templates/bsim4/nmos/dut.cir,/home/gazi/Desktop/Work/custom_packages/aivalanche/aivalanche_app/src/aivalanche_app/data_store/templates/bsim4/nmos/testbenches.json
+2,Transistors,BSIM3,,
+3,Transistors,BSIMBULK,,
+4,Transistors,BSIM CMG,,
+5,Transistors,Level 1,,
+6,Transistors,Level 3,,
+7,Pasive elements,Resistor,,
+8,Pasive elements,Capacitor,,
+9,Pasive elements,Inductor,,
+10,Pasive elements,Diode,/home/gazi/Desktop/Work/custom_packages/aivalanche/aivalanche_app/src/aivalanche_app/data_store/templates/diode/dut.cir,/home/gazi/Desktop/Work/custom_packages/aivalanche/aivalanche_app/src/aivalanche_app/data_store/templates/diode/testbenches.json

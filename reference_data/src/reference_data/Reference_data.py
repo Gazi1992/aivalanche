@@ -7,7 +7,7 @@ Inputs:
 '''
 
 #%% Imports
-import pandas as pd, numpy as np, json
+import pandas as pd, numpy as np, json, re
 
 
 #%% differential_evolution class
@@ -44,6 +44,14 @@ class Reference_data:
     @property
     def nr_curves(self):
         return len(self.curves.index)
+    
+    @property
+    def group_types(self):
+        return sorted(list(set(self.groups['group_type'])))
+    
+    @property
+    def columns(self):
+        return list(self.data.columns)
     
     # Set file and parse the file
     def set_file(self, file: str = None):
@@ -163,8 +171,36 @@ class Reference_data:
         mask = self.data.eval(condition)
         for col, val in zip(update_columns, update_values):
             self.data.loc[mask, col] = val
+    
+    # write the data into a file
+    def write_to_file(self, file_path: str = None, include_simulation: bool = False, x_values_simulation: str = 'x_values_simulation', y_values_simulation: str = 'y_values_simulation',):          
+        processed_data = json.dumps(self.raw_data, indent = 4)
+        
+        # Find and replace newline characters in x_values
+        pattern = r'"x_values": \[\n(\s*[^]]+,\n)+\s*[^]]+\s*\]'
+        replacement = lambda m: re.sub(r'[\n\s]+', ' ', m.group())
+        processed_data = re.sub(pattern, replacement, processed_data)
+        
+        # Find and replace newline characters in y_values
+        pattern = r'"y_values": \[\n(\s*[^]]+,\n)+\s*[^]]+\s*\]'
+        replacement = lambda m: re.sub(r'[\n\s]+', ' ', m.group())
+        processed_data = re.sub(pattern, replacement, processed_data)
+        
+        if include_simulation:
+            # Find and replace newline characters in x_values_simulation
+            pattern = r'"x_values_simulation": \[\n(\s*[^]]+,\n)+\s*[^]]+\s*\]'
+            replacement = lambda m: re.sub(r'[\n\s]+', ' ', m.group())
+            processed_data = re.sub(pattern, replacement, processed_data)
             
-
+            # Find and replace newline characters in y_values_simulation
+            pattern = r'"y_values_simulation": \[\n(\s*[^]]+,\n)+\s*[^]]+\s*\]'
+            replacement = lambda m: re.sub(r'[\n\s]+', ' ', m.group())
+            processed_data = re.sub(pattern, replacement, processed_data)
+            
+        # Open a file in write mode
+        with open(file_path, 'w') as file:
+            file.write(processed_data)
+        
 # custom exception class for missing key
 class key_missing_exception(Exception):
     def __init__(self, message):

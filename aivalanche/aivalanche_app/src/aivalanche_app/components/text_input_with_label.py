@@ -2,12 +2,14 @@ from PySide6.QtWidgets import QWidget, QLineEdit, QLabel
 from aivalanche_app.components.custom_layouts import v_layout, h_layout
 
 class text_input_with_label(QWidget):
-    def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder',
+    def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder', initial_value: str = None, text_edit_width: int = None,
                  label_position: str = 'top', spacing: int = 5, on_change: callable = None, object_name: str = None, tooltip: str = None):
         super().__init__(parent = parent)
         
         self.label = label
         self.placeholder = str(placeholder)
+        self.initial_value = initial_value
+        self.text_edit_width = text_edit_width
         self.label_position = label_position
         self.spacing = spacing
         self.on_change = on_change
@@ -28,6 +30,12 @@ class text_input_with_label(QWidget):
         
         label_widget = QLabel(parent = self, text = self.label)
         text_edit_widget = QLineEdit(parent = self, placeholderText = self.placeholder)
+        
+        if self.text_edit_width is not None:
+            text_edit_widget.setFixedWidth(self.text_edit_width)
+        
+        if self.initial_value is not None:
+            text_edit_widget.setText(str(self.initial_value))
         
         if self.label_position in ['top', 'left']:
             layout.addWidget(label_widget, 0)

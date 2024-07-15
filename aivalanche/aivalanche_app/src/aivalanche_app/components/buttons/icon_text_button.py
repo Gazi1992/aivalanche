@@ -114,7 +114,6 @@ class icon_text_button(QPushButton):
             else:
                 self.text_alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignHCenter
 
-
     # Set button dimensions
     def set_button_dimensions(self):        
         # Set width
@@ -149,13 +148,11 @@ class icon_text_button(QPushButton):
                 else:
                     self.setMinimumHeight(self.icon_widget.height() + self.icon_text_spacing + self.text_widget.sizeHint().height() + self.padding_vertical)
         
-        
     # Add icon
     def create_icon(self):
         self.icon_widget = custom_image(self, image_path = self.icon_path, image_width = self.icon_width, image_height = self.icon_height, resize = self.icon_resize, on_click = self.click)
         if self.object_name is not None:
             self.icon_widget.setObjectName(self.object_name)
-            
             
     # Add text
     def create_text(self):
@@ -171,7 +168,6 @@ class icon_text_button(QPushButton):
         if self.object_name is not None:
             self.text_widget.setObjectName(self.object_name)
         
-        
     # Set action
     def set_action(self):
         if self.editable:
@@ -181,7 +177,6 @@ class icon_text_button(QPushButton):
             if self.on_click is not None:
                 self.clicked.connect(self.on_click)
     
-    
     # Create layout
     def create_layout(self):
         if self.icon_path is not None and self.text is not None:
@@ -189,7 +184,6 @@ class icon_text_button(QPushButton):
         else:
             self.layout = h_layout(self)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    
     
     # Add icon and/or text to layout
     def add_icon_or_text(self):
@@ -205,17 +199,14 @@ class icon_text_button(QPushButton):
                 self.layout.addWidget(self.text_widget, 1)
                 self.layout.addWidget(self.icon_widget, 0)
 
-
     # Create only icon button.
     def create_icon_button(self):
         self.create_icon()
-        
         
     # Create only text button.    
     def create_text_button(self):
         self.set_text_alignment()
         self.create_text()
-
 
     # Create icon and text button.
     def create_icon_text_button(self):
@@ -224,14 +215,12 @@ class icon_text_button(QPushButton):
         self.set_text_alignment()                   
         self.create_icon()
         self.create_text()
-        
     
     def set_state(self, state: bool = True):
         if state != self.is_enabled:
             self.is_enabled = state
             self.setEnabled(self.is_enabled)
             self.adjust_opacity()
-        
     
     def adjust_opacity(self):
         if self.is_enabled:

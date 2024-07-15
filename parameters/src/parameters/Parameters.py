@@ -34,12 +34,14 @@ class Parameters:
     def nr_parameters(self):
         return len(self.all_parameters.index)
     
+    @property
+    def columns(self):
+        return list(self.all_parameters.columns)
     
     # Set file and parse the file
     def set_file(self, file: str = None):
         self.file = file
         self.parse_file()
-        
         
     # Parse the file and save the data into the respective dataframes
     def parse_file(self):
@@ -48,7 +50,7 @@ class Parameters:
                 self.parse_json()
             elif self.file.split('.')[-1] == 'csv':
                 self.parse_csv()
-    
+
 
     # Convert json file to pandas dataframe
     def parse_json(self):
@@ -61,8 +63,7 @@ class Parameters:
             
             if 'mode' not in self.all_parameters.columns:
                 self.all_parameters['mode'] = 'variable'
-                
-            
+
     # Convert csv file to pandas dataframe
     def parse_csv(self):
         self.raw_data = pd.read_csv(filepath_or_buffer = self.file, comment = '#') 
@@ -90,7 +91,7 @@ class Parameters:
             return random.uniform(row['min'], row['max'])
 
     # Write parameters to file
-    def write_parameters_to_file(self, file_path: str = None):
+    def write_to_file(self, file_path: str = None):
         if self.file.split('.')[-1] == 'json':
             self.all_parameters.to_json(path_or_buf = file_path, orient = 'records')
         elif self.file.split('.')[-1] == 'csv':

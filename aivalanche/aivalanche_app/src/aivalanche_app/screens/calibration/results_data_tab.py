@@ -79,19 +79,16 @@ class results_data_tab(QSplitter):
        self.setStretchFactor(1, 1)
        
        self.check_empty_plot_widget()
-           
    
    def check_empty_plot_widget(self):
        if self.nr_plots == 0:
            self.show_placeholder_plot()
            
-
    def show_placeholder_plot(self):
        self.plots_widget.addItem(self.placeholder_plot, row = 0, col = 0)
        self.placeholder_plot_visible = True
        if len(self.plots_widget_height_array) > 0:
            self.plots_widget.setFixedHeight(self.plots_widget_height_array[0])
-
 
    def load_reference_data(self, file):
        if os.path.exists(file):
@@ -104,7 +101,6 @@ class results_data_tab(QSplitter):
            self.reference_data.data['plot'] = self.reference_data.data['group_id'] == min_group_id
            self.table.update_data(self.reference_data.data)
            self.update_plots(group_id = min_group_id)
-
    
    def on_checkbox_click(self, data: dict = None):
        row = data['row_index']
@@ -116,7 +112,6 @@ class results_data_tab(QSplitter):
            group_id = self.reference_data.data.iloc[row]['group_id']
            curve_id = self.reference_data.data.iloc[row]['curve_id']
            self.update_plots(group_id, curve_id, state)
-
    
    def update_plots(self, group_id = None, curve_id = None, state = None):
        if group_id in self.plots:
@@ -134,12 +129,10 @@ class results_data_tab(QSplitter):
        else:
            self.add_plot(group_id)
            
-           
    def clear_all_plots(self):
        self.plots_widget.ci.clear()
        self.plots = []
        self.placeholder_plot_visible = False
-       
            
    def add_plot(self, group_id = None):
        
@@ -191,7 +184,6 @@ class results_data_tab(QSplitter):
        # self.plots_widget.setMinimumHeight(self.plots_widget.sizeHint().height())
        # self.plots_widget.getItem(0, 0).height()
        # self.plots_widget.height()
-          
    
    def add_curve_to_plot(self, plot, data):
        if 'extra_var_name' in data and not pd.isna(data['extra_var_name']):
@@ -200,11 +192,9 @@ class results_data_tab(QSplitter):
            label = f"{data['curve_id']}"
                
        plot.add_scatter_plot(x = data['x_values'], y = data['y_values'], id = data['curve_id'], label = label, symbol = 'o', symbolPen = None)
-       
    
    def remove_curve_from_plot(self, plot, curve_id):
        plot.remove_curve(id = curve_id)
-       
    
    def remove_plot(self, group_id = None):
        if group_id in self.plots:
@@ -218,7 +208,6 @@ class results_data_tab(QSplitter):
            self.plots_widget.setFixedHeight(self.plots_widget_height_array[self.nr_plots - 1])
    
            self.check_empty_plot_widget()
-
        
    def shift_plots_left(self, start_index = -1):
        if start_index > 0:
@@ -243,12 +232,10 @@ class results_data_tab(QSplitter):
            
            # delete the last element of the plots, since it is duplicated to the left
            del self.plots[-1]
-                      
    
    def get_plot_from_index(self, index = -1):
        if index >= 0:
            return self.get_plot_from_group_id(self.plots[index])
-   
    
    def get_plot_from_group_id(self, group_id = None):
        if group_id in self.plots:
@@ -256,18 +243,12 @@ class results_data_tab(QSplitter):
            row, col = self.get_plot_row_col_from_index(index)
            return self.plots_widget.getItem(row, col)
        
-       
    def get_plot_index_from_group_id(self, group_id = None):
        if group_id in self.plots:
            return self.plots.index(group_id)
        return -1
-       
    
    def get_plot_row_col_from_index(self, index):
        row = index // 2
        col = index % 2
        return row, col
-   
-   
-
-           

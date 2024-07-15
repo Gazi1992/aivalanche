@@ -134,7 +134,7 @@ class my_projects(QWidget):
         if res['success']:
             self.loading = False
             self.error = None
-            self.store.fetch_projects()
+            self.update_projects()
         else:
             self.error = res['error']
             self.loading = False
@@ -149,6 +149,7 @@ class my_projects(QWidget):
         self.new_project_dialog.exec()
 
     def on_new_project_confirm(self, project_title):
+        self.new_project_title = project_title
         self.store.create_project(project_title)
 
     def on_new_project_cancel(self, project_title):
@@ -162,3 +163,4 @@ class my_projects(QWidget):
             self.store.set_active_model(None)
             self.store.fetch_available_reference_data(project_id = self.store.active_project['id'])
             self.store.fetch_available_parameters(project_id = self.store.active_project['id'])
+            self.store.fetch_available_model_files(project_id = self.store.active_project['id'])

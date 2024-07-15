@@ -6,8 +6,10 @@ from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
-from reference_data import Reference_data
-import pyqtgraph as pg, pandas as pd, os, math
+from reference_data.Reference_data import Reference_data
+from aivalanche_app.helper_functions import find_max_suffix
+from pathlib import Path
+import pyqtgraph as pg, pandas as pd, math
 
 class reference_data_tab(QSplitter):
     reference_data_warning = Signal(dict)    
@@ -26,10 +28,7 @@ class reference_data_tab(QSplitter):
         self.store.active_model_changed.connect(self.check_reference_data_exists)
         
         self.style = self.store.style
-        
-        self.reference_data_file = None
-        self.reference_data = None
-        
+                
         self.plots = []
         self.min_plot_height = 500
         self.plot_spacing = 20
@@ -40,7 +39,6 @@ class reference_data_tab(QSplitter):
         self.placeholder_plot_visible = False
         
         self.init_ui()
-    
     
     @property
     def nr_plots(self):
@@ -74,7 +72,7 @@ class reference_data_tab(QSplitter):
         right_widget.setLayout(right_layout)
         
         # Create a scroll area
-        scroll_area = custom_scroll_area(parent = self, on_resize_event = self.on_scroll_area_resize_event) #QScrollArea()
+        scroll_area = custom_scroll_area(parent = self, on_resize_event = self.on_scroll_area_resize_event)
         scroll_area.setContentsMargins(0, 0, 0, 0)
         right_layout.addWidget(scroll_area)
         
@@ -103,21 +101,22 @@ class reference_data_tab(QSplitter):
         self.load_data_widget.set_active_item(None)
         self.check_empty_plot_widget()
     
-    def load_reference_data(self, file):
-        if os.path.exists(file):
-            self.clear_all_plots()
-            self.reference_data = Reference_data(file)
-            min_group_id = self.reference_data.data['group_id'].min()
-            self.reference_data.data.insert(0, 'include', True)
-            self.reference_data.data.insert(1, 'plot', False)
-            self.reference_data.data.insert(2, 'calibrate', True)
-            self.reference_data.data['plot'] = self.reference_data.data['group_id'] == min_group_id
-            self.table.update_data(self.reference_data.data)
-            self.update_plots(group_id = min_group_id)
+    def load_reference_data(self):
+        self.clear_all_plots()
+        min_group_id = self.store.reference_data.data['group_id'].min()
+        if 'include' not in self.store.reference_data.columns:
+            self.store.reference_data.data.insert(0, 'include', True)
+        if 'plot' not in self.store.reference_data.columns:
+            self.store.reference_data.data.insert(1, 'plot', False)
+        if 'calibrate' not in self.store.reference_data.columns:
+            self.store.reference_data.data.insert(2, 'calibrate', True)
+        self.store.reference_data.data['plot'] = self.store.reference_data.data['group_id'] == min_group_id
+        self.table.update_data(self.store.reference_data.data)
+        self.update_plots(group_id = min_group_id)
     
     def on_combo_box_changed(self, val):
         if val is not None and len(val) > 0:
-            reference_data_id = self.store.available_reference_data.loc[self.store.available_reference_data['path'] == val,'id'].iloc[0]
+            reference_data_id = self.store.available_reference_data.loc[self.store.available_reference_data['name'] == val,'id'].iloc[0]
             self.store.update_reference_data_id(reference_data_id = reference_data_id, model_id = self.store.active_model['id'])
     
     def on_reference_data_id_updated(self, data: dict = {}):
@@ -127,14 +126,14 @@ class reference_data_tab(QSplitter):
                 if reference_data_path.empty:
                     self.store.fetch_available_reference_data(self.store.active_project['id'])
                 else:
-                    reference_data_path = reference_data_path.iloc[0]
-                    self.load_reference_data(reference_data_path)
+                    self.store.reference_data = Reference_data(reference_data_path.iloc[0])
+                    self.load_reference_data()
         else:
             print(data['error'])
     
     def on_available_reference_data_fetched(self, data: dict = {}):
         if data['success']:
-            self.load_data_widget.update_items(self.store.available_reference_data['path'].tolist())
+            self.load_data_widget.update_items(self.store.available_reference_data['name'].tolist())
             self.check_reference_data_exists()
         
     def check_reference_data_exists(self):
@@ -142,32 +141,47 @@ class reference_data_tab(QSplitter):
         if self.store.active_model is not None:
             if not pd.isnull(self.store.active_model['reference_data_id']):
                 reference_data_path = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'path']
+                reference_data_name = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'name']
                 if reference_data_path.empty:
                     self.store.update_reference_data_id(reference_data_id = None, model_id = self.store.active_model['id'])
                 else:
-                    reference_data_path = reference_data_path.iloc[0]
-                    self.load_data_widget.set_active_item(reference_data_path, trigger_on_change_slot = False)
-                    self.load_reference_data(reference_data_path)
+                    self.store.reference_data = Reference_data(reference_data_path.iloc[0])
+                    self.load_data_widget.set_active_item(reference_data_name.iloc[0], trigger_on_change_slot = False)
+                    self.load_reference_data()
     
     def on_import_new_ref_data_file(self, file_path: str = None):
         if file_path is not None:
             # Check if the file is readable
             try:
                 file_valid = True
-                Reference_data(file_path)
+                file_exists = False
+                self.store.reference_data = Reference_data(file_path)
             except Exception:
                 file_valid = False
             
             # If the file is valid, load it, otherwise show a warning message
             if file_valid:
-                self.store.add_available_reference_data(path = file_path, project_id = self.store.active_project['id'])
+                new_file_path = Path.joinpath(self.store.active_project_common_reference_data_directory_path, Path(file_path).name)
+                if Path.exists(new_file_path):
+                    if file_path in self.store.available_reference_data['original_path'].tolist():
+                        file_exists = True
+                    else:
+                        new_file_path = find_max_suffix(self.store.active_project_common_reference_data_directory_path, Path(file_path).name)
+                if file_exists:
+                    warning = {'title': 'Reference data import error',
+                               'message': 'File already exists',
+                               'explanation': f'You already have a reference data file with the name {file_path} for this project. Please specify a different file.'}
+                    self.reference_data_warning.emit(warning)
+                else:
+                    new_file_path = str(new_file_path)
+                    self.store.reference_data.write_to_file(new_file_path)
+                    self.store.add_available_reference_data(path = new_file_path, name = file_path, original_path = file_path, project_id = self.store.active_project['id'])
             else:
                 warning = {'title': 'Reference data import error',
                            'message': 'File could not be read',
                            'explanation': f'The file {file_path} is not a valid reference data file. Please see the documentation about the correct format of the reference_data file.'}
                 self.reference_data_warning.emit(warning)
-                
-            
+
     def on_available_reference_data_added(self, data: dict = {}):
         if data['success']:
             self.store.update_reference_data_id(reference_data_id = data['data']['id'], model_id = self.store.active_model['id'])
@@ -191,10 +205,10 @@ class reference_data_tab(QSplitter):
         column = data['column_index']
         column_name = data['column_name']
         state = data['state']
-        self.reference_data.data.iloc[row, column] = state
+        self.store.reference_data.data.iloc[row, column] = state
         if column_name == 'plot':
-            group_id = self.reference_data.data.iloc[row]['group_id']
-            curve_id = self.reference_data.data.iloc[row]['curve_id']
+            group_id = self.store.reference_data.data.iloc[row]['group_id']
+            curve_id = self.store.reference_data.data.iloc[row]['curve_id']
             self.update_plots(group_id, curve_id, state)
 
     def update_plots(self, group_id = None, curve_id = None, state = None):
@@ -207,7 +221,7 @@ class reference_data_tab(QSplitter):
                     plot = self.get_plot_from_group_id(group_id)
                     self.remove_curve_from_plot(plot, curve_id)
             else:
-                data = self.reference_data.data[(self.reference_data.data['group_id'] == group_id) & (self.reference_data.data['curve_id'] == curve_id)]
+                data = self.store.reference_data.data[(self.store.reference_data.data['group_id'] == group_id) & (self.store.reference_data.data['curve_id'] == curve_id)]
                 plot = self.get_plot_from_group_id(group_id)
                 self.add_curve_to_plot(plot, data.squeeze())
         else:
@@ -226,7 +240,7 @@ class reference_data_tab(QSplitter):
             return
 
         # get the group
-        filtered_data = self.reference_data.data[self.reference_data.data['group_id'] == group_id]
+        filtered_data = self.store.reference_data.data[self.store.reference_data.data['group_id'] == group_id]
         if len(filtered_data.index) == 0:
             return
         
@@ -255,7 +269,7 @@ class reference_data_tab(QSplitter):
         self.update_plots_widget_height()
             
         # update the table plot checkboxes
-        self.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
+        self.store.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
         self.table.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
         
         # self.plots_widget.ci.setBorder(color = 'r')

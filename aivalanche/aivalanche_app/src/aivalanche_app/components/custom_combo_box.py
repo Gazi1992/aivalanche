@@ -6,7 +6,7 @@ from aivalanche_app.paths import delete_1_icon_path, delete_1_hover_icon_path, d
 class custom_combo_box(QComboBox):
     def __init__(self, parent = None, items: list = [], active_item: str = None, placeholder: str = 'Select',
                  on_change: callable = None, is_enabled: bool = True, is_editable: bool = True, object_name: str = None,
-                 has_delete_button: bool = False, on_delete_button_clicked: callable = None,
+                 has_delete_button: bool = False, on_delete_button_clicked: callable = None, disable_wheel_event: bool = True,
                  horizontal_size_policy = QSizePolicy.Policy.Expanding, vertical_size_policy = QSizePolicy.Policy.Fixed):
                 
         super().__init__(parent)
@@ -21,6 +21,7 @@ class custom_combo_box(QComboBox):
         self.is_enabled = None
         self.on_change = on_change
         self.has_delete_button = has_delete_button
+        self.disable_wheel_event = disable_wheel_event
         self.opacity_effect = QGraphicsOpacityEffect(self)
         
         if is_editable:
@@ -50,6 +51,12 @@ class custom_combo_box(QComboBox):
             self.on_delete_button_clicked = on_delete_button_clicked
             self.setMouseTracking(True)
             # self.setContentsMargins(0, 50, 0, 0)
+    
+    def wheelEvent(self, event):
+        if self.disable_wheel_event:
+            event.ignore()
+        else:
+            super().wheelEvent(event)
     
     def update_items(self, items: list = [], active_item: str = None, trigger_on_change_slot: bool = False):
         self.clear()

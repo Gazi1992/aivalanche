@@ -32,7 +32,6 @@ from pyDOE import lhs
 from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
 from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram
 
-
 #%% differential_evolution class
 
 class Differential_evolution:
@@ -254,7 +253,6 @@ class Differential_evolution:
     def save_metrics(self, metrics):
         self.trials_metric = np.array(metrics)
 
-
     # Prepare first iteration
     def prepare_first_iter(self):
         self.iter_no_improvement = 0
@@ -266,7 +264,6 @@ class Differential_evolution:
         self.targets_metric = np.full((self.pop_size), None)
         self.generate_donors()
         self.generate_trials()
-
 
     # Prepare next iteration
     def prepare_next_iter(self):
@@ -280,7 +277,6 @@ class Differential_evolution:
             self.set_boundaries()
         self.generate_donors()
         self.generate_trials()
-
 
     # Calculate the boundaries for each parameter
     def set_boundaries(self):
@@ -317,7 +313,6 @@ class Differential_evolution:
                     # save the new boundaries in the history
                     self.update_history_boundaries()
 
-
     # Get unscaled array
     def get_unscaled_arr(self, arr):
         temp = np.copy(arr)
@@ -331,8 +326,7 @@ class Differential_evolution:
             else:
                 temp[i] = val
         return temp
-    
-    
+
     # Get the trials as a list of dictionaries
     def get_trials_unscaled(self):
         new_trials = []
@@ -340,8 +334,7 @@ class Differential_evolution:
             tmp = {key: val for key, val in zip(self.parameter_names, values)}
             new_trials.append(tmp)
         return new_trials
-    
-    
+
     # Get all survivors
     def get_all_survivors(self):
         data = []
@@ -368,13 +361,11 @@ class Differential_evolution:
                                      data = data)
 
         return all_survivors
-    
-    
+
     # Get best parameters as a dictionary
     def get_best_parameters(self):
         return {key: val for key, val in zip(self.parameter_names, self.best_unscaled)}
-    
-    
+
     # Generate a mutation
     def generate_mutations(self, dice: np.array = None):
         if dice is None:        
@@ -400,8 +391,7 @@ class Differential_evolution:
         donors_normed[violation_mask] = np.random.rand(np.sum(violation_mask))
                 
         return donors_normed
-    
-    
+
     # Generate a recombination between the target and the donor
     def generate_recombinations(self, dice: np.array = None):
         # get a random number for each parameter
@@ -412,8 +402,7 @@ class Differential_evolution:
         trials_normed = np.where(dice < self.recombination_factor, self.donors_normed, self.targets_normed)
 
         return trials_normed
-    
-    
+
     # Generate a donor for each target
     def generate_donors(self):
         # In the first iteration generate donor at random.
@@ -525,8 +514,7 @@ class Differential_evolution:
            self.survivors_normed = np.where(mask.reshape(-1,1), self.trials_normed, self.targets_normed)
            self.survivors = np.where(mask.reshape(-1,1), self.trials, self.targets)
            self.survivors_unscaled = np.where(mask.reshape(-1,1), self.trials_unscaled, self.targets_unscaled)
-          
-            
+
     # Determine the best parameters and metric
     def determine_best(self):
         # Get the index of the best survivor
@@ -550,7 +538,6 @@ class Differential_evolution:
             self.best_metric = self.survivors_metric[self.best_index]
             self.update_history_bests()
             self.better_solution_found = True
-                
 
     # Update the history trials
     def update_history_trials(self):
@@ -563,7 +550,6 @@ class Differential_evolution:
                                   data = [item for item in zipped])
         self.history['trials'] = pd.concat([self.history['trials'], new_trials]).reset_index(drop = True)
     
-    
     # Update the history bests
     def update_history_bests(self):
         new_best = pd.DataFrame(columns = ['iter', 'best_normed', 'best', 'best_unscaled', 'best_metric'],
@@ -574,7 +560,6 @@ class Differential_evolution:
                                          self.best_metric]])        
         self.history['bests'] = pd.concat([self.history['bests'], new_best]).reset_index(drop = True)
         
-        
     # Update the history boundaries
     def update_history_boundaries(self):
         new_boundaries = pd.DataFrame(columns = ['iter', 'boundaries_min', 'boundaries_max'],
@@ -582,7 +567,6 @@ class Differential_evolution:
                                                self.boundaries_min.tolist(),
                                                self.boundaries_max.tolist()]])
         self.history['boundaries'] = pd.concat([self.history['boundaries'], new_boundaries]).reset_index(drop = True)
-            
     
     def write_best_parameters_to_file(self, file_path: str = None):
         if file_path is not None:
@@ -598,7 +582,6 @@ class Differential_evolution:
                 print('ERROR on write_best_parameters_to_file:')
                 print(e)
                 pass
-            
     
     def write_population_to_file(self, file_path: str = None):
         if file_path is not None:
@@ -617,7 +600,6 @@ class Differential_evolution:
                 print(e)
                 pass
 
-
     def write_history_to_file(self, dir_path: str = None):
         if dir_path is not None:
             try:
@@ -631,7 +613,6 @@ class Differential_evolution:
                 print('ERROR on write_history_to_file:')
                 print(e)
                 pass
-
 
     def update_results_dir(self, new_results_dir: str = None):
         self.results_dir = new_results_dir

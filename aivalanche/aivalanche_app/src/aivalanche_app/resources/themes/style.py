@@ -6,7 +6,6 @@ from PySide6.QtGui import QColor
 ALL_THEMES = {'theme_1': theme_1_path}
 DEFAULT_THEME = 'theme_1'
 
-
 class style():
     def __init__(self, active_theme: str = None):
         self.read_all_themes()      
@@ -34,7 +33,6 @@ class style():
         my_dict['stylesheet'] = my_dict_module.stylesheet
         
         return my_dict
-    
     
     def set_active_theme(self, active_theme: str = None):
         self.active_theme = active_theme if active_theme is not None else DEFAULT_THEME

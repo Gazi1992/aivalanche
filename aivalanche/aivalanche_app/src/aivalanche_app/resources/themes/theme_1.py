@@ -94,7 +94,7 @@ stylesheet = f"""
     QDialog {{min-width: 500px; background-color: {colors['background_1']};}}
     
     /* Button */
-    QPushButton {{outline: none;}}
+    QPushButton {{outline: none; color: {colors['text']};}}
     QPushButton:hover {{background: {colors['button_hover']};}}
     QPushButton:pressed {{background: {colors['button_press']};}}
     QDialog QPushButton {{
@@ -165,7 +165,7 @@ stylesheet = f"""
     QComboBox:drop-down {{border: none; width: 20px; padding-right: 5px}}
 
     /* Radio button */
-    QRadioButton {{outline: none;}}
+    QRadioButton {{outline: none; color: {colors['text']};}}
     QRadioButton:indicator {{width: 15px; height: 15px;}}
     QRadioButton:indicator::unchecked {{image: url({radio_button_unchecked_path});}}
     QRadioButton:indicator:unchecked:hover {{image: url({radio_button_unchecked_hovered_path});}}
@@ -175,6 +175,7 @@ stylesheet = f"""
     QRadioButton:indicator:checked:pressed {{image: url({radio_button_checked_pressed_path});}}
     
     /* Checkbox */
+    QCheckBox {{color: {colors['text']};}}
     QCheckBox:indicator {{width: 15px; height: 15px;}}
     QCheckBox:indicator::unchecked {{image: url({checkbox_unchecked_path});}}
     QCheckBox:indicator:unchecked:hover {{image: url({checkbox_unchecked_hovered_path});}}
@@ -251,6 +252,7 @@ stylesheet = f"""
     QPushButton#add_loss_card_button {{
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {colors['button_1_color_1']}, stop:1 {colors['button_1_color_2']});
         border: 1px solid {colors['button_1_border']};
+        padding: 10px 30px;
         }}
     QPushButton#add_loss_card_button:hover {{background: {colors['button_hover']};}}
     QPushButton#add_loss_card_button:pressed {{background: {colors['button_press']};}}
@@ -262,4 +264,14 @@ stylesheet = f"""
     
     /* Error label */
     QLabel#error {{color: {colors['error_text']}; padding-left: 50px; padding-right: 50px; }}
+    
+    /* Loss function select all*/
+    QPushButton#loss_function_select_all {{
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {colors['button_1_color_1']}, stop:1 {colors['button_1_color_2']});
+        padding: 5px 10px;
+        border: 1px solid {colors['button_1_border']};
+        font-size: 9pt;
+        }}
+    QPushButton#loss_function_select_all:hover {{background: {colors['button_hover']};}}
+    QPushButton#loss_function_select_all:pressed {{background: {colors['button_press']};}}
 """

@@ -1,21 +1,23 @@
 from PySide6.QtWidgets import QWidget, QScrollArea, QFrame, QSizePolicy
 from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QPainter, QPixmap
-from aivalanche_app.components.custom_layouts import h_layout, v_layout
+from aivalanche_app.components.custom_layouts import h_layout, v_layout, g_layout, clear_layout
 from aivalanche_app.components.custom_combo_box_with_label import custom_combo_box_with_label
 from aivalanche_app.components.text_input_with_label import text_input_with_label
 from aivalanche_app.components.custom_label import custom_label
 from aivalanche_app.components.custom_combo_box import custom_combo_box
-from aivalanche_app.components.buttons.custom_icon_button import custom_icon_button
-from aivalanche_app.paths import plus_icon_path, plus_hover_icon_path, plus_press_icon_path, delete_1_icon_path, delete_1_hover_icon_path, delete_1_press_icon_path
+from aivalanche_app.components.custom_checkbox_with_text import custom_checkbox_with_text
+from aivalanche_app.components.buttons.text_button import text_button
+from aivalanche_app.paths import delete_1_icon_path, delete_1_hover_icon_path, delete_1_press_icon_path
 import uuid, functools
 
 class loss_part_card(QFrame):
-    def __init__(self, parent = None, id: str = None, weight: float = 1, norm: bool = True, transforms_available: list[str] = [], groups: list[str] = [], object_name: str = None, on_delete_button_clicked: callable = None):
+    def __init__(self, parent = None, id: str = None, weight: float = 1, norm: bool = True, transforms_available: list[str] = [],
+                 groups: list[str] = [], object_name: str = None, on_delete_button_clicked: callable = None):
         super().__init__(parent = parent)
         
         if len(transforms_available) == 0:
-            transforms_available = ['none', 'log']
+            transforms_available = ['none', 'log', 'abs', '1st derivative', '2nd derivative']
         
         self.id = id
         self.weight = weight
@@ -24,7 +26,6 @@ class loss_part_card(QFrame):
         self.groups = groups
         self.object_name = object_name
         self.on_delete_button_clicked = on_delete_button_clicked
-        self.group_types = {}
         
         if self.object_name is not None:
             self.setObjectName(self.object_name)
@@ -41,89 +42,98 @@ class loss_part_card(QFrame):
         
         self.init_ui()
         
-    
     def init_ui(self):
-        layout = v_layout(spacing = 5)
-        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         
-        top_layout = h_layout(spacing = 10)
-        layout.addLayout(top_layout)
+        layout = h_layout(spacing = 10)
+        self.setLayout(layout)
+        self.setFixedHeight(170)
+
+        left_layout = v_layout(spacing = 0, alignment = Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(left_layout, 0)
+        
+        property_width = 150
         
         # id
-        id_widget = text_input_with_label(parent = self, label = 'id', label_position = 'top', placeholder = 'enter an id')
-        top_layout.addWidget(id_widget, 1)
+        id_widget = text_input_with_label(parent = self, label = 'id', label_position = 'left', spacing = 10, placeholder = 'enter an id', text_edit_width = property_width)
+        left_layout.addWidget(id_widget, 1)
         
         # weight
-        weight_widget = text_input_with_label(parent = self, label = 'weight', label_position = 'top', placeholder = '1')
-        top_layout.addWidget(weight_widget, 1)
+        weight_widget = text_input_with_label(parent = self, label = 'weight', label_position = 'left', spacing = 10, placeholder = '1', text_edit_width = property_width)
+        left_layout.addWidget(weight_widget, 1)
         
         # norm
-        norm_widget = custom_combo_box_with_label(parent = self, label = 'norm', label_position = 'top', items = ['True', 'False'])
-        top_layout.addWidget(norm_widget, 1)
+        norm_widget = custom_combo_box_with_label(parent = self, label = 'norm', label_position = 'left', spacing = 10, items = ['True', 'False'], combo_box_width = property_width)
+        left_layout.addWidget(norm_widget, 1)
         
         # transform
-        transform_widget = custom_combo_box_with_label(parent = self, label = 'transform', label_position = 'top', items = self.transforms_available)
-        top_layout.addWidget(transform_widget, 1)
+        transform_widget = custom_combo_box_with_label(parent = self, label = 'transform', label_position = 'left', spacing = 10, items = self.transforms_available, combo_box_width = property_width)
+        left_layout.addWidget(transform_widget, 1)
+        
+        # Separation line
+        line = QFrame(self)
+        line.setFixedWidth(1)
+        line.setStyleSheet("background-color: rgba(6, 34, 121, 128); border: none; margin:")
+        layout.addWidget(line)
+        
+        # right layout
+        right_layout = v_layout(spacing = 10, alignment = Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(right_layout, 1)
+        
+        # right header layout
+        right_header_layout = h_layout()
+        right_layout.addLayout(right_header_layout)
         
         # group types
         group_types_label = custom_label(text = 'Group types')
-        layout.addWidget(group_types_label)
+        right_header_layout.addWidget(group_types_label, alignment = Qt.AlignmentFlag.AlignVCenter)
+        
+        # select/unselect all button
+        self.select_all_button = text_button(parent = self, label = 'Select all', switch_label = 'Unselect all', object_name = 'loss_function_select_all', on_click = self.on_select_all)
+        right_header_layout.addWidget(self.select_all_button, alignment = Qt.AlignmentFlag.AlignVCenter)
+        
+        right_header_layout.addSpacing(30)
         
         # scroll area for group types
         self.scroll_area = QScrollArea(parent = self)
         self.scroll_area.setContentsMargins(0, 0, 0, 0)
         self.scroll_area.setWidgetResizable(True)
-        layout.addWidget(self.scroll_area)
+        self.scroll_area.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        right_layout.addWidget(self.scroll_area)
         
-        # Create right widget
+        # Create scroll widget
         self.scroll_widget = QWidget(self)
-        self.scroll_area.resizeEvent = self.on_scroll_widget_resize
-        self.scroll_layout = h_layout(spacing = 5, alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.scroll_layout = g_layout(vertical_spacing = 5, alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.scroll_widget.setLayout(self.scroll_layout)
         self.scroll_area.setWidget(self.scroll_widget)
         
-        # add button
-        add_group_button = custom_icon_button(parent = self,
-                                              icon_path = plus_icon_path,
-                                              icon_hover_path = plus_hover_icon_path,
-                                              icon_press_path = plus_press_icon_path,
-                                              object_name = 'add_group_type',
-                                              on_click = self.add_group_type_button_click)       
-        self.scroll_layout.addWidget(add_group_button)
+        self.update_groups(self.groups)
+    
+    def update_groups(self, groups: list[str] = []):        
+        self.groups_checkboxes = {}
+        self.groups_checkboxes_widgets = {}
+        self.groups = groups
+        clear_layout(self.scroll_layout)
+        for index, group in enumerate(self.groups):
+            self.groups_checkboxes_widgets[group] = custom_checkbox_with_text(parent = self, text = group, on_click = self.on_group_selected)
+            row = index // 3
+            col = index % 3
+            self.scroll_layout.addWidget(self.groups_checkboxes_widgets[group], row, col)  
+            self.groups_checkboxes[group] = False
+    
+    def on_group_selected(self, state, text):
+        self.groups_checkboxes[text] = state
+        # Check if the select_all button needs to be updated
+        values = self.groups_checkboxes.values()
+        label = self.select_all_button.text()
+        if (all(values) and label == 'Select all') or (not any(values) and label == 'Unselect all'):
+            self.select_all_button.switch_text()
         
-        # Add the first group type combo box
-        self.add_group_type_button_click()
-        self.scroll_area.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        
-
-    def add_group_type_button_click(self):
-        id = uuid.uuid4()
-        group_type_widget = custom_combo_box(parent = self,
-                                             placeholder = 'Select group type',
-                                             items = self.groups,
-                                             has_delete_button = True,
-                                             on_delete_button_clicked = functools.partial(self.on_delete_group_type, id),
-                                             horizontal_size_policy = QSizePolicy.Policy.Fixed)
-        self.group_types[id] = group_type_widget
-        self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, group_type_widget)
-        
-    def on_delete_group_type(self, id):
-        self.scroll_layout.removeWidget(self.group_types[id])
-        self.group_types[id].deleteLater()
-        del self.group_types[id]
-        
-        
-    def on_scroll_widget_resize(self, event):
-        self.on_scroll_bar_visibility_changed()
-        super().resizeEvent(event)
-        
-        
-    def on_scroll_bar_visibility_changed(self):
-        required_height = self.scroll_area.sizeHint().height()
-        if self.scroll_area.horizontalScrollBar().isVisible():
-            required_height += self.scroll_area.horizontalScrollBar().height()
-        if self.scroll_area.height() != required_height:
-            self.scroll_area.setFixedHeight(required_height)
+    def on_select_all(self, text):
+        state = text == 'Select all'
+        for key in self.groups_checkboxes_widgets.keys():
+            self.groups_checkboxes_widgets[key].set_state(state, emit_on_click = False)
+            self.groups_checkboxes[key] = state
             
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -141,7 +151,6 @@ class loss_part_card(QFrame):
         self.delete_button_rect = QRect(x, y, self.delete_button_width, self.delete_button_height)
         super().resizeEvent(event)
 
-    
     def mouseMoveEvent(self, event):
         if self.rect().contains(event.pos()):
             if not self.hovered:
@@ -159,7 +168,6 @@ class loss_part_card(QFrame):
         self.update()
         super().mouseMoveEvent(event)
 
-     
     def mousePressEvent(self, event):
         self.mouse_pressed = True
         if self.delete_button_rect.contains(event.pos()):
@@ -170,7 +178,6 @@ class loss_part_card(QFrame):
                 self.delete_button_icon_path = delete_1_icon_path
             super().mousePressEvent(event)
         self.update()
-
 
     def mouseReleaseEvent(self, event):
         self.mouse_pressed = False
@@ -184,8 +191,7 @@ class loss_part_card(QFrame):
         else:
             super().mouseReleaseEvent(event)
         self.update()
-
-            
+        
     def leaveEvent(self, event):
         if not self.mouse_pressed:
             if self.hovered:

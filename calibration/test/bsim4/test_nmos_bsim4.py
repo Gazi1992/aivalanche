@@ -128,7 +128,7 @@ cost_function_config = {'type': 'default',
                             }
                         ]}
 
-running_environment = 'kafka_aws' # [local, dask_local, kafka_local, kafka_aws]
+running_environment = 'dask_local' # [local, dask_local, kafka_local, kafka_aws]
 
 if __name__ == '__main__':
 

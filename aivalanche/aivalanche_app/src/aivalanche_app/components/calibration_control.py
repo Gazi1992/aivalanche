@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QLabel, QProgressBar, QHBoxLayout
 from PySide6.QtCore import Qt
 from aivalanche_app.components.custom_layouts import h_layout, v_layout
-from aivalanche_app.components.buttons.custom_icon_button import custom_icon_button
+from aivalanche_app.components.buttons.icon_button import icon_button
 from aivalanche_app.paths import play_icon_path, play_hover_icon_path, play_press_icon_path, \
                                  play_1_icon_path, play_1_hover_icon_path, play_1_press_icon_path, \
                                  pause_icon_path, pause_hover_icon_path, pause_press_icon_path, \
@@ -23,7 +23,7 @@ class calibration_control(QWidget):
         self.setLayout(layout)
         
         # single simulation button
-        single_simulation_button = custom_icon_button(parent = self,
+        single_simulation_button = icon_button(parent = self,
                                                       icon_path = play_1_icon_path,
                                                       icon_hover_path = play_1_hover_icon_path,
                                                       icon_press_path = play_1_press_icon_path,
@@ -32,7 +32,7 @@ class calibration_control(QWidget):
         layout.addWidget(single_simulation_button, alignment = Qt.AlignmentFlag.AlignBottom)
         
         # calibration button
-        calibration_button = custom_icon_button(parent = self,
+        calibration_button = icon_button(parent = self,
                                                 icon_path = play_icon_path,
                                                 icon_hover_path = play_hover_icon_path,
                                                 icon_press_path = play_press_icon_path,
@@ -41,7 +41,7 @@ class calibration_control(QWidget):
         layout.addWidget(calibration_button, alignment = Qt.AlignmentFlag.AlignBottom)
         
         # abort button
-        abort_button = custom_icon_button(parent = self,
+        abort_button = icon_button(parent = self,
                                           icon_path = stop_icon_path,
                                           icon_hover_path = stop_hover_icon_path,
                                           icon_press_path = stop_press_icon_path,

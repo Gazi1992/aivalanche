@@ -6,6 +6,10 @@ def convert_to_list_if_semi_colon(value):
         return value.split(';')
     return value
 
+# Function to replace the whitespaces with underlines
+def replace_space_with_underline(string: str = ''):
+    return string.replace(' ', '_')
+
 # Filter a dataframe by col_name and value
 def filter_df_by_col_name_and_val(df: pd.DataFrame, col_name: str, val: object, single: bool = True):
     filtered = df[df[col_name] == val]

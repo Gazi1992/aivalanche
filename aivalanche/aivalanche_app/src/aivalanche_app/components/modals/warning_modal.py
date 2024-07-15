@@ -52,7 +52,7 @@ class warning_modal(QDialog):
         right_layout.addWidget(self.message_label)
         
         # Explanation
-        self.explanation_label = custom_label(text = self.explanation, parent = self, font_size = 'small')
+        self.explanation_label = custom_label(text = self.explanation, parent = self, font_size = 'small', word_wrap = True)
         right_layout.addWidget(self.explanation_label)
         
         # Create layout for buttons

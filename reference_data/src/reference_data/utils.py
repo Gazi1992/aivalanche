@@ -1,6 +1,6 @@
 # Imports
 import json, re, pandas as pd
-from reference_data import Reference_data
+from reference_data.Reference_data import Reference_data
 
 
 # Write dataframe to file
