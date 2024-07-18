@@ -25,7 +25,7 @@ class reference_data_tab(QSplitter):
         self.store.fetch_available_reference_data_end.connect(self.on_available_reference_data_fetched)
         self.store.add_available_reference_data_end.connect(self.on_available_reference_data_added)
         self.store.update_reference_data_id_end.connect(self.on_reference_data_id_updated)
-        self.store.active_model_changed.connect(self.check_reference_data_exists)
+        self.store.active_model_change_end.connect(self.check_reference_data_exists)
         
         self.style = self.store.style
                 
@@ -140,14 +140,15 @@ class reference_data_tab(QSplitter):
         self.clear_data()
         if self.store.active_model is not None:
             if not pd.isnull(self.store.active_model['reference_data_id']):
-                reference_data_path = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'path']
-                reference_data_name = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'name']
-                if reference_data_path.empty:
-                    self.store.update_reference_data_id(reference_data_id = None, model_id = self.store.active_model['id'])
-                else:
-                    self.store.reference_data = Reference_data(reference_data_path.iloc[0])
-                    self.load_data_widget.set_active_item(reference_data_name.iloc[0], trigger_on_change_slot = False)
-                    self.load_reference_data()
+                if not pd.isnull(self.store.active_model['reference_data_id']):
+                    reference_data_path = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'path']
+                    reference_data_name = self.store.available_reference_data.loc[self.store.available_reference_data['id'] == self.store.active_model['reference_data_id'], 'name']
+                    if reference_data_path.empty:
+                        self.store.update_reference_data_id(reference_data_id = None, model_id = self.store.active_model['id'])
+                    else:
+                        self.store.reference_data = Reference_data(reference_data_path.iloc[0])
+                        self.load_data_widget.set_active_item(reference_data_name.iloc[0], trigger_on_change_slot = False)
+                        self.load_reference_data()
     
     def on_import_new_ref_data_file(self, file_path: str = None):
         if file_path is not None:

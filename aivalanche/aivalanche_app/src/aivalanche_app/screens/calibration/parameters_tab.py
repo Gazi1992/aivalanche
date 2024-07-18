@@ -23,7 +23,7 @@ class parameters_tab(QWidget):
         self.store.fetch_available_parameters_end.connect(self.on_available_parameters_fetched)
         self.store.add_available_parameters_end.connect(self.on_available_parameters_added)
         self.store.update_parameters_id_end.connect(self.on_parameters_id_updated)
-        self.store.active_model_changed.connect(self.check_parameters_exists)
+        self.store.active_model_change_end.connect(self.check_parameters_exists)
                 
         self.init_ui()
         

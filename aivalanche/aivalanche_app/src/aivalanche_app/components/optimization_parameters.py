@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QWidget, QLabel
 from aivalanche_app.components.custom_layouts import g_layout, clear_layout
 from aivalanche_app.components.text_input_with_label import text_input_with_label
 from aivalanche_app.components.combo_box_load_data_with_label import combo_box_load_data_with_label
+from aivalanche_app.helper_functions import positive_integer_validator, positive_number_validator, number_validator
 import pandas as pd
 from functools import partial
 
@@ -29,12 +30,14 @@ class optimization_parameters(QWidget):
                 column = index % 2
                 
                 if item['type'] in ['int', 'float', 'str']:
+                    validator = self.get_param_validator(item)
                     parameter_widget = text_input_with_label(parent = self,
                                                              label = item['name'].replace('_', ' '),
                                                              initial_value = item['value'],
                                                              label_position = 'top',
                                                              placeholder = item['default'],
                                                              on_change = partial(self.on_change, item['name']),
+                                                             validator = validator,
                                                              tooltip = item['explanation'] if not pd.isnull(item['explanation'] ) else None)
                 elif item['type'] == 'file':
                     filter = f"({','.join([f'*{format}' for format in item['file_type']])})"
@@ -51,6 +54,17 @@ class optimization_parameters(QWidget):
                     parameter_widget = QLabel(parent = self, text = item['name'])
                     
                 self.layout.addWidget(parameter_widget, row, column)
-        
+    
+    def get_param_validator(self, param: pd.Series = None):
+        name = param['name']
+        type = param['type']
+        validator = None
+        if type == 'int' and name in ['population_size', 'maximum_number_of_iterations', 'maximum_number_of_iterations_without_improvement', 'timeout']:
+            validator = positive_integer_validator(self)
+        elif type == 'float' and name in ['loss_threshold']:
+            validator = number_validator(self)
+        elif type == 'float' and name in ['muation_factor_1', 'muation_factor_2', 'muation_factor_3', 'recombination_factor', 'alpha', 'beta', 'gama', 'delta']:
+            validator = positive_number_validator(self)
+        return validator
         
         

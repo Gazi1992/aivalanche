@@ -4,10 +4,12 @@ from datetime import datetime
 from aivalanche_app.paths import dummy_data_path, projects_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.db import db
-from aivalanche_app.data_store.utils import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val, replace_space_with_underline
+from aivalanche_app.helper_functions import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val, replace_space_with_underline, dict_to_json
 from PySide6.QtCore import QObject, Signal
 
 class store(QObject):
+    show_snackbar = Signal(str)
+    
     fetch_available_optimizers_start = Signal()
     fetch_available_optimizers_end = Signal(object)
     
@@ -17,7 +19,8 @@ class store(QObject):
     validate_user_start = Signal(object)
     validate_user_end = Signal(object)
 
-    active_project_changed = Signal(object)
+    active_project_change_start = Signal(object)
+    active_project_change_end = Signal(object)
     fetch_projects_start = Signal(object)
     fetch_projects_end = Signal(object)
     create_project_start = Signal(object)
@@ -25,7 +28,8 @@ class store(QObject):
     create_project_directories_start = Signal(object)
     create_project_directories_end = Signal(object)
     
-    active_model_changed = Signal(object)
+    active_model_change_start = Signal(object)
+    active_model_change_end = Signal(object)
     fetch_models_start = Signal(object)
     fetch_models_end = Signal(object)
     create_model_start = Signal(object)
@@ -57,6 +61,13 @@ class store(QObject):
     update_model_file_id_end = Signal(object)
     update_model_template_start = Signal(object)
     update_model_template_end = Signal(object)
+    
+    fetch_available_testbenches_start = Signal(object)
+    fetch_available_testbenches_end = Signal(object)
+    add_available_testbenches_start = Signal(object)
+    add_available_testbenches_end = Signal(object)
+    update_testbenches_id_start = Signal(object)
+    update_testbenches_id_end = Signal(object)
     
     create_optimization_settings_file_start = Signal(object)
     create_optimization_settings_file_end = Signal(object)
@@ -168,7 +179,7 @@ class store(QObject):
         self.optimization_settings_path = None
         self.optimizers = None
         self.simulators = None
-        self.loss_function_parts = None
+        self.loss_function = None
         self.loss_function_groups = []
         
     def reset_available_model_data(self):
@@ -314,24 +325,29 @@ class store(QObject):
             self.validate_user_end.emit({'success': success, 'error': error, 'data': user})
 
     #%% Projects
-    def set_active_project(self, p: pd.Series = None):
+    def set_active_project(self, p: pd.Series = None, emit_signals: bool = True):
+        if p is None and self.active_project is None:
+            return
+        
+        if self.active_project is not None and self.active_project['id'] == p['id']:
+            return
+        
+        if emit_signals:
+            self.active_project_change_start.emit({'active_project': self.active_project})
+            
         if p is None:
-            self.active_project = None
-            self.active_project_directory_path = None
-            self.active_project_common_reference_data_directory_path = None
-            self.active_project_common_parameters_directory_path = None
-            self.active_project_common_models_directory_path = None
-            self.active_project_common_testbenches_directory_path = None
-            self.active_project_common_loss_functions_directory_path = None  
-        elif self.active_project is None or self.active_project['id'] != p['id']:
+            self.reset_active_project()
+        else:
             self.active_project = p
             self.active_project_directory_path = Path(p['path'])
             self.active_project_common_reference_data_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'reference_data')
             self.active_project_common_parameters_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'parameters')
             self.active_project_common_model_files_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'model_files')
             self.active_project_common_testbenches_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'testbenches')
-            self.active_project_common_loss_functions_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'loss_functions')  
-            self.active_project_changed.emit({'active_project': p})
+            self.active_project_common_loss_functions_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'loss_functions')
+        
+        if emit_signals:
+            self.active_project_change_end.emit({'active_project': self.active_project})
 
     def fetch_projects(self, emit_signals: bool = True):
         self._run_task(self._fetch_projects, emit_signals)
@@ -480,11 +496,20 @@ class store(QObject):
             self.create_project_directories_end.emit({'success': success, 'error': error, 'data': data})
         
     #%% Models
-    def set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True):
+    def set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True):        
+        if m is None and self.active_model is None:
+            return
+        
+        if self.active_model is not None and self.active_model['id'] == m['id'] and not override:
+            return
+        
+        if emit_signals:
+            self.active_model_change_start.emit({'active_model': self.active_model})
+            
         if m is None:
             self.reset_active_model()
             self.reset_model_data()
-        elif (self.active_model is None or self.active_model['id'] != m['id']) or override:
+        else:
             self.active_model = m
             self.active_model_directory_path = Path(m['path'])
             self.active_model_inputs_directory_path = Path.joinpath(self.active_model_directory_path, 'inputs')
@@ -494,10 +519,9 @@ class store(QObject):
                 self.create_optimization_settings_file()
             else:
                 if not override:
-                    self.fetch_optimization_settings()
-            
-            if emit_signals:
-                self.active_model_changed.emit({'active_model': m})
+                    self.fetch_optimization_settings(sync = False)
+        if emit_signals:
+            self.active_model_change_end.emit({'active_model': self.active_model})
     
     def fetch_model_templates(self, emit_signals: bool = True):
         self._run_task(self._fetch_model_templates, emit_signals)
@@ -1083,7 +1107,134 @@ class store(QObject):
         if emit_signals:
             self.update_model_template_end.emit({'success': success, 'error': error, 'data': data})
     
-            
+    #%% Tesbenches files
+    def fetch_available_testbenches(self, project_id: str = None, emit_signals: bool = True):
+        self._run_task(self._fetch_available_testbenches, project_id, emit_signals)
+        
+    def _fetch_available_testbenches(self, project_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.fetch_available_testbenches_start.emit({'project_id': project_id})
+    
+        success = True
+        error = None
+        available_testbenches = None
+        
+        if project_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_testbenches = pd.read_csv(self.available_testbenches_path)
+                available_testbenches = all_testbenches[(all_testbenches['project_id'] == project_id)]
+                available_testbenches_sorted = available_testbenches.sort_values(by = 'name', ascending = False, ignore_index = True)
+                available_testbenches = available_testbenches_sorted
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_testbenches_by_project_id(project_id)
+                if db_response['success']:
+                    available_testbenches = db_response['data']
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if success:
+            self.available_testbenches = available_testbenches
+        
+        if emit_signals:
+            self.fetch_available_testbenches_end.emit({'success': success, 'error': error, 'data': available_testbenches})
+    
+    def add_available_testbenches(self, path: str = None, name: str = None, original_path: str = None, project_id: str = None, emit_signals: bool = True):
+        self._run_task(self._add_available_testbenches, path, name, original_path, project_id, emit_signals)
+        
+    def _add_available_testbenches(self, path: str = None, name: str = None, original_path: str = None, project_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.add_available_testbenches_start.emit({'path': path, 'project_id': project_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if original_path is None:
+            original_path = path
+        
+        if path is None:
+            success = False
+            error = 'path is None!'
+        elif name is None:
+            success = False
+            error = 'name is None!'
+        elif project_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_testbenches = pd.read_csv(self.available_testbenches_path)
+                if name in all_testbenches[all_testbenches['project_id'] == project_id]['name'].tolist():
+                    success = False
+                    error = f'You already have a model file with the name {name} for the project {project_id}. Please specify a different file.'
+                else:
+                    new_testbenches = pd.DataFrame.from_dict([{'id': str(uuid.uuid4()),
+                                                              'path': path,
+                                                              'project_id': project_id,
+                                                              'name': name,
+                                                              'original_path': original_path}])
+                    all_testbenches = pd.concat((all_testbenches, new_testbenches))
+                    all_testbenches.to_csv(path_or_buf = self.available_testbenches_path, index = False)
+                    data = new_testbenches.squeeze()
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_testbenches_by_path_and_project_id(path, project_id)
+                if len(db_response['data'].index) == 0:
+                    db_response = self.db.add_testbenches_by_project_id(path, name, original_path, project_id)
+                    if db_response['success']:
+                        data = db_response['data']
+                    else:
+                        success = False
+                        error = db_response['error']
+                else:
+                    success = False
+                    error = f'You already have a model file with the name {name} for the project {project_id}. Please specify a different file.'
+        
+        if emit_signals:
+            self.add_available_testbenches_end.emit({'success': success, 'error': error, 'data': data})
+        
+    def update_testbenches_id(self, testbenches_id: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_testbenches_id, testbenches_id, model_id, emit_signals)
+    
+    def _update_testbenches_id(self, testbenches_id: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_testbenches_id_start.emit({'testbenches_id': testbenches_id, 'model_id': model_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        elif testbenches_id == self.models.loc[self.models['id'] == model_id, 'testbenches_id'].iloc[0]:
+            success = False
+            error = 'testbenches_id is the same as the one you are trying to set!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'testbenches_id'] = testbenches_id
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'testbenches_id'] = testbenches_id
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_testbenches_id_by_model_id(testbenches_id, model_id)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'testbenches_id'] = testbenches_id
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if emit_signals:
+            self.update_testbenches_id_end.emit({'success': success, 'error': error, 'data': data})
+    
     #%% Optimization settings   
     def create_optimization_settings_file(self, emit_signals: bool = True):
         self._run_task(self._create_optimization_settings_file, emit_signals)
@@ -1163,7 +1314,10 @@ class store(QObject):
         if emit_signals:
             self.update_optimization_settings_id_end.emit({'success': success, 'error': error, 'data': data})
             
-    def fetch_optimization_settings(self, emit_signals: bool = True):
+    def fetch_optimization_settings(self, emit_signals: bool = True, sync: bool = False):
+        if sync:
+            self._fetch_optimization_settings(emit_signals)
+        else:
             self._run_task(self._fetch_optimization_settings, emit_signals)
             
     def _fetch_optimization_settings(self, emit_signals: bool = True):
@@ -1196,18 +1350,34 @@ class store(QObject):
                 self.simulators['value'] = self.simulators['default']
                 self.active_optimizer = 'differential_evolution'
                 self.active_simulator = 'ngspice'
-                self.loss_function_parts = {}
-                if len(optimization_settings.keys()) > 0:    
-                    if 'active_optimizer' in optimization_settings.keys():
-                        self.active_optimizer = optimization_settings['active_optimizer']
-                    if 'active_simulator' in optimization_settings.keys():
-                        self.simulators = optimization_settings['active_simulator']
-                    if 'optimizers' in optimization_settings.keys():
-                        self.optimizers = optimization_settings['optimizers']
-                    if 'simulators' in optimization_settings.keys():
-                        self.simulators = optimization_settings['simulators']
+                self.loss_function = {'file': None, 'parts': {}}
+                if len(optimization_settings.keys()) > 0:
+                    # optimizer
+                    if 'optimizer' in optimization_settings.keys():
+                        optimizer = optimization_settings['optimizer']
+                        if 'active_optimizer' in optimizer.keys():
+                            self.active_optimizer = optimizer['active_optimizer']
+                            del optimizer['active_optimizer']
+                        for key, value in optimizer.items():
+                            self.optimizers.loc[(self.optimizers['optimizer'] == self.active_optimizer) & (self.optimizers['name'] == key), 'value'] = value
+                    
+                    # simulator
+                    if 'simulator' in optimization_settings.keys():
+                        simulator = optimization_settings['simulator']
+                        if 'active_simulator' in optimizer.keys():
+                            self.active_optimizer = simulator['active_simulator']
+                            del simulator['active_simulator']
+                        for key, value in optimizer.items():
+                            self.simulators.loc[(self.simulators['simulator'] == self.active_simulator) & (self.simulators['name'] == key), 'value'] = value
+                    
+                    # loss function
                     if 'loss_function' in optimization_settings.keys():
-                        self.simulators = optimization_settings['loss_function']
+                        loss_function = optimization_settings['loss_function']
+                        if 'file' in loss_function.keys():
+                            self.loss_function['file'] = loss_function['file']
+                        if 'parts' in loss_function.keys():
+                            for p in loss_function['parts']:
+                                self.loss_function['parts'][p['id']] = p
 
         if emit_signals:
             self.fetch_optimization_settings_end.emit({'success': success, 'error': error, 'data': data})
@@ -1223,6 +1393,44 @@ class store(QObject):
                 optimization_settings_path = db_response['data'].iloc[0]['path']
         return optimization_settings_path
     
-    
+    def write_optimization_settings_to_file(self):
+        optimization_settings = {}
+        # optimizer
+        if self.optimizers is not None:
+            optimization_settings['optimizer'] = {'active_optimizer': self.active_optimizer}
+            temp = self.optimizers[self.optimizers['optimizer'] == self.active_optimizer].set_index('name')
+            optimization_settings['optimizer'].update(temp['value'].to_dict())
         
+        # simulator
+        if self.simulators is not None:
+            optimization_settings['simulator'] = {'active_simulator': self.active_simulator}
+            temp = self.simulators[self.simulators['simulator'] == self.active_simulator].set_index('name')
+            optimization_settings['simulator'].update(temp['value'].to_dict())
+            
+        # loss function    
+        if self.loss_function is not None:
+            optimization_settings['loss_function'] = {'file': None, 'parts': []}
+            
+            if self.loss_function['file'] is not None:
+                optimization_settings['loss_function']['file'] = self.loss_function['file']
+                
+            for key, part in self.loss_function['parts'].items():
+                if len(part['group_types']) > 0:
+                    optimization_settings['loss_function']['parts'].append(part)
+                    
+            if len(optimization_settings['loss_function']['parts']) == 0 and optimization_settings['loss_function']['file'] is None:
+                del optimization_settings['loss_function']
+                    
+        # write to json file
+        if len(optimization_settings.keys()) > 0:
+            dict_to_json(optimization_settings, self.optimization_settings_path)
+                    
+    
+    #%% Extra functions
+    def on_app_exit(self):
+        print('Exiting the application...')
+        self.write_optimization_settings_to_file()
+        
+    def emit_show_snackbar(self, message = 'snackbar message'):
+        self.show_snackbar.emit(message)
                     

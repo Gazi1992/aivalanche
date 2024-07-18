@@ -1,9 +1,9 @@
 {
     "optimizer": {
         "active_optimizer": "differential_evolution",
-        "population_size": "12",
+        "population_size": "14",
         "loss_threshold": "1e-4",
-        "maximum_number_of_iterations": "200",
+        "maximum_number_of_iterations": "1000",
         "maximum_number_of_iterations_without_improvement": "100",
         "initial_population": "Select file",
         "muation_factor_1": "0.8",
@@ -19,28 +19,20 @@
         "file": null,
         "parts": [
             {
-                "id": "FWqihpCXxFNmky2RPcvCRS",
+                "id": "eT9bkseMVTvePHwwCnj8Jo",
                 "group_types": [
-                    "cgb_vgs_vbs",
-                    "cgd_vgs_vbs"
+                    "id_vd"
                 ],
                 "metric_type": "rmse",
-                "weight": 2.0,
-                "norm": "False",
+                "weight": 1.0,
+                "norm": "True",
                 "transform": "None",
                 "extra_args": {}
             },
             {
-                "id": "TrkchKFGoPc5JwkG6JPdDA",
+                "id": "jiiRH8mjvo4WuFtY6K4D7G",
                 "group_types": [
-                    "cgb_vgs_vbs",
-                    "cgd_vgs_vbs",
-                    "cgg_vgs_vbs",
-                    "cgs_vgs_vbs",
-                    "ciss_vds_vgs",
-                    "crss_vds_vgs",
-                    "ids_vds_vgs",
-                    "ids_vgs_vbs"
+                    "id_vd"
                 ],
                 "metric_type": "rmse",
                 "weight": 1.0,

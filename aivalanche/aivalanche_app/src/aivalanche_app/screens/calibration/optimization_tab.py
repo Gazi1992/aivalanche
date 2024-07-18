@@ -8,7 +8,7 @@ from aivalanche_app.components.optimization_parameters import optimization_param
 from aivalanche_app.components.loss_part_card import loss_part_card
 from aivalanche_app.components.buttons.text_button import text_button
 from aivalanche_app.data_store.store import store
-import uuid, functools
+import shortuuid, functools
 
 class optimization_tab(QWidget):
     
@@ -20,9 +20,9 @@ class optimization_tab(QWidget):
         
         self.store = store
         self.store.fetch_optimization_settings_end.connect(self.update_optimization_settings)
-                        
+        self.store.active_model_change_start.connect(self.on_changing_active_model)
+        self.loss_function_parts = {}
         self.init_ui()
-        
         
     def init_ui(self):
         layout = v_layout(alignment = Qt.AlignmentFlag.AlignTop)        
@@ -145,28 +145,52 @@ class optimization_tab(QWidget):
         self.update_simulator_parameters()
         
     def update_loss_function(self):
-        if len(self.store.loss_function_parts) == 0:
-            clear_layout(self.loss_function_cards_layout)
+        self.loss_function_parts = {}
+        clear_layout(self.loss_function_cards_layout)
+        if len(self.store.loss_function['parts'].keys()) == 0:
             self.on_add_loss_part_click()
+        else:
+            for id, part in self.store.loss_function['parts'].items():
+                self.add_new_loss_function_part(id, part)
 
     def load_custom_loss_function(self, text):
         print(text)
     
     def on_add_loss_part_click(self, text = ''):
-        id = uuid.uuid4()
-        loss_part_widget = loss_part_card(object_name = 'loss_card',
+        self.add_new_loss_function_part()
+        
+    def add_new_loss_function_part(self, id: str = None, part: dict = None):
+        part_id = shortuuid.uuid() if id is None else id
+        weight = part['weight'] if part is not None and 'weight' in part.keys() else 1
+        norm = part['norm'] if part is not None and 'norm' in part.keys() else True
+        transform = part['transform'] if part is not None and 'transform' in part.keys() else None
+        active_groups = part['group_types'] if part is not None and 'group_types' in part.keys() else []
+        loss_part_widget = loss_part_card(id = part_id, weight = weight, norm = norm, transform = transform,
+                                          active_groups = active_groups, 
                                           groups = self.store.loss_function_groups,
-                                          on_delete_button_clicked = functools.partial(self.on_delete_loss_part, id))
-        self.store.loss_function_parts[id] = loss_part_widget
+                                          object_name = 'loss_card',
+                                          on_delete_button_clicked = functools.partial(self.on_delete_loss_part, part_id),
+                                          on_change = functools.partial(self.on_loss_part_change, part_id))
+        self.loss_function_parts[part_id] = loss_part_widget
         self.loss_function_cards_layout.addWidget(loss_part_widget)
         
     def on_delete_loss_part(self, id):
-        self.loss_function_cards_layout.removeWidget(self.store.loss_function_parts[id])
-        self.store.loss_function_parts[id].deleteLater()
-        del self.store.loss_function_parts[id]
+        self.loss_function_cards_layout.removeWidget(self.loss_function_parts[id])
+        self.loss_function_parts[id].deleteLater()
+        del self.loss_function_parts[id]
+        if id in self.store.loss_function['parts'].keys():
+            del self.store.loss_function['parts'][id]
+        
         
     def on_optimizer_parameter_change(self, name, value):
         self.store.optimizers.loc[(self.store.optimizers['optimizer'] == self.store.active_optimizer) & (self.store.optimizers['name'] == name), 'value'] = value
     
     def on_simulator_parameter_change(self, name, value):
         self.store.simulators.loc[(self.store.simulators['simulator'] == self.store.active_simulator) & (self.store.simulators['name'] == name), 'value'] = value
+        
+    def on_changing_active_model(self):
+        self.store.write_optimization_settings_to_file()
+        
+    def on_loss_part_change(self, id, info):
+        if id in self.loss_function_parts.keys():
+            self.store.loss_function['parts'][id] = self.loss_function_parts[id].loss_part_info

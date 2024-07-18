@@ -15,7 +15,7 @@ class my_calibration(QWidget):
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
         self.store = store
-        self.store.active_model_changed.connect(self.reset_tab_to_reference_data)
+        self.store.active_model_change_end.connect(self.reset_tab_to_reference_data)
         
         if object_name is not None:
             self.setObjectName(object_name)

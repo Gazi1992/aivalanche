@@ -274,4 +274,12 @@ stylesheet = f"""
         }}
     QPushButton#loss_function_select_all:hover {{background: {colors['button_hover']};}}
     QPushButton#loss_function_select_all:pressed {{background: {colors['button_press']};}}
+    
+    QWidget#snackbar {{
+                background-color: red;
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+            }}
+
 """

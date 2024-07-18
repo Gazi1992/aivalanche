@@ -11,6 +11,7 @@ from pathlib import Path
 
 class model_tab(QWidget):
     model_file_warning = Signal(dict)
+    testbenches_warning = Signal(dict)
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
@@ -20,21 +21,20 @@ class model_tab(QWidget):
         
         self.store = store
         self.store.fetch_model_templates_end.connect(self.update_model_templates)
+        self.store.active_model_change_end.connect(self.check_model_file_and_testbenches_exists)
         self.store.fetch_available_model_files_end.connect(self.on_available_model_files_fetched)
         self.store.add_available_model_file_end.connect(self.on_available_model_file_added)
         self.store.update_model_file_id_end.connect(self.on_model_file_id_updated)
-        self.store.active_model_changed.connect(self.check_model_file_exists)
+        self.store.fetch_available_testbenches_end.connect(self.on_available_testbenches_fetched)
+        self.store.add_available_testbenches_end.connect(self.on_available_testbenches_added)
+        self.store.update_testbenches_id_end.connect(self.on_testbenches_id_updated)
         
         self.model = None
         self.testbenches = []
 
         self.init_ui()
-
-    def init_ui(self):
         
-        self.testbench_checkboxes = []
-        self.model_radiobuttons = []
-        
+    def init_ui(self):       
         self.model_buttons_group = QButtonGroup(self)
         self.model_buttons_group.buttonClicked.connect(self.on_model_template_clicked)
         
@@ -74,8 +74,8 @@ class model_tab(QWidget):
                                                            caption = 'Select testbenches file',
                                                            filter = 'json file (*.json)',
                                                            placeholder = 'Select testbenches file',
-                                                           # on_combo_box_changed = self.on_testbenches_combo_box_changed,
-                                                           # on_import_new_file = self.on_import_new_testbenches_file,
+                                                           on_combo_box_changed = self.on_testbenches_combo_box_changed,
+                                                           on_import_new_file = self.on_import_new_testbenches_file,
                                                            is_enabled = False,
                                                            object_name = 'round_combo_box',
                                                            is_editable = False)
@@ -128,10 +128,41 @@ class model_tab(QWidget):
     def clear_data(self):
         for button in self.model_buttons_group.buttons():
             button.setChecked(False)
-        self.load_model_widget.set_state(False)
-        self.load_testbenches_widget.set_state(False)
+    
+    def reset_load_widgets(self):
         self.load_model_widget.set_active_item(None)
         self.load_testbenches_widget.set_active_item(None)
+    
+    def check_model_file_and_testbenches_exists(self):        
+        self.clear_data()
+        if self.store.active_model is not None:
+            self.reset_load_widgets()
+            
+            # Model file
+            if not pd.isnull(self.store.active_model['model_file_id']):
+                model_file_path = self.store.available_model_files.loc[self.store.available_model_files['id'] == self.store.active_model['model_file_id'], 'path']
+                model_file_name = self.store.available_model_files.loc[self.store.available_model_files['id'] == self.store.active_model['model_file_id'], 'name']
+                if model_file_path.empty:
+                    self.store.update_model_file_id(model_file_id = None, model_id = self.store.active_model['id'])
+                else:
+                    self.store.model_file_path = model_file_path.iloc[0]
+                    self.load_model_widget.set_active_item(model_file_name.iloc[0], trigger_on_change_slot = False)
+            
+            # Testbenches file
+            if not pd.isnull(self.store.active_model['testbenches_id']):
+                testbenches_path = self.store.available_testbenches.loc[self.store.available_testbenches['id'] == self.store.active_model['testbenches_id'], 'path']
+                testbenches_name = self.store.available_testbenches.loc[self.store.available_testbenches['id'] == self.store.active_model['testbenches_id'], 'name']
+                if testbenches_path.empty:
+                    self.store.update_testbenches_id(testbenches_id = None, model_id = self.store.active_model['id'])
+                else:
+                    self.store.testbenches_path = testbenches_path.iloc[0]
+                    self.load_testbenches_widget.set_active_item(testbenches_name.iloc[0], trigger_on_change_slot = False)
+            
+            
+            if not pd.isnull(self.store.active_model['model_template']):
+                self.set_active_radio_button(self.store.active_model['model_template'])
+            elif not pd.isnull(self.store.active_model['model_file_id']) or not pd.isnull(self.store.active_model['testbenches_id']):
+                self.set_active_radio_button('Custom model')
     
     def on_model_combo_box_changed(self, val):
         if val is not None and len(val) > 0:
@@ -152,22 +183,7 @@ class model_tab(QWidget):
     def on_available_model_files_fetched(self, data: dict = {}):
         if data['success']:
             self.load_model_widget.update_items(self.store.available_model_files['name'].tolist())
-            self.check_model_file_exists()
-        
-    def check_model_file_exists(self):
-        self.clear_data()
-        if self.store.active_model is not None:
-            if not pd.isnull(self.store.active_model['model_template']):
-                self.set_active_radio_button(self.store.active_model['model_template'])
-            elif not pd.isnull(self.store.active_model['model_file_id']):
-                self.set_active_radio_button('Custom model')
-                model_file_path = self.store.available_model_files.loc[self.store.available_model_files['id'] == self.store.active_model['model_file_id'], 'path']
-                model_file_name = self.store.available_model_files.loc[self.store.available_model_files['id'] == self.store.active_model['model_file_id'], 'name']
-                if model_file_path.empty:
-                    self.store.update_model_file_id(model_file_id = None, model_id = self.store.active_model['id'])
-                else:
-                    self.store.model_file_path = model_file_path.iloc[0]
-                    self.load_model_widget.set_active_item(model_file_name.iloc[0], trigger_on_change_slot = False)
+            self.check_model_file_and_testbenches_exists()
     
     def on_available_model_file_added(self, data: dict = {}):
         if data['success']:
@@ -196,3 +212,52 @@ class model_tab(QWidget):
                 new_file_path = str(new_file_path)
                 shutil.copy(file_path, new_file_path)
                 self.store.add_available_model_file(path = new_file_path, name = file_path, original_path = file_path, project_id = self.store.active_project['id'])
+    
+    def on_testbenches_combo_box_changed(self, val):
+        if val is not None and len(val) > 0:
+            testbenches_id = self.store.available_testbenches.loc[self.store.available_testbenches['name'] == val,'id'].iloc[0]
+            self.store.update_testbenches_id(testbenches_id = testbenches_id, model_id = self.store.active_model['id'])
+    
+    def on_testbenches_id_updated(self, data: dict = {}):
+        if data['success']:
+            if not pd.isnull(self.store.active_model['testbenches_id']):
+                testbenches_path = self.store.available_testbenches.loc[self.store.available_testbenches['id'] == self.store.active_model['testbenches_id'], 'path'] 
+                if testbenches_path.empty:
+                    self.store.fetch_available_testbenches(self.store.active_project['id'])
+                else:
+                    self.store.testbenches_path = testbenches_path.iloc[0]
+        else:
+            print(data['error'])
+    
+    def on_available_testbenches_fetched(self, data: dict = {}):
+        if data['success']:
+            self.load_testbenches_widget.update_items(self.store.available_testbenches['name'].tolist())
+            self.check_model_file_and_testbenches_exists()                
+    
+    def on_available_testbenches_added(self, data: dict = {}):
+        if data['success']:
+            self.store.update_testbenches_id(testbenches_id = data['data']['id'], model_id = self.store.active_model['id'])
+        else:
+            warning = {'title': 'Testbenches add error',
+                       'message': 'Testbenches could not be added.',
+                       'explanation': data['error']}
+            self.testbenches_warning.emit(warning)
+    
+    def on_import_new_testbenches_file(self, file_path: str = None):
+        if file_path is not None:            
+            file_exists = False
+            new_file_path = Path.joinpath(self.store.active_project_common_testbenches_directory_path, Path(file_path).name)
+            if Path.exists(new_file_path):
+                if file_path in self.store.available_testbenches['original_path'].tolist():
+                    file_exists = True
+                else:
+                    new_file_path = find_max_suffix(self.store.active_project_common_testbenches_directory_path, Path(file_path).name)
+            if file_exists:
+                warning = {'title': 'Testbenches import error',
+                           'message': 'File already exists',
+                           'explanation': f'You already have a testbenches file with the name {file_path} for this project. Please specify a different file.'}
+                self.testbenches_warning.emit(warning)
+            else:
+                new_file_path = str(new_file_path)
+                shutil.copy(file_path, new_file_path)
+                self.store.add_available_testbenches(path = new_file_path, name = file_path, original_path = file_path, project_id = self.store.active_project['id'])

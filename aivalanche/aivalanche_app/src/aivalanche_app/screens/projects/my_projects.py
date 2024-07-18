@@ -26,7 +26,7 @@ class my_projects(QWidget):
         self.store.fetch_projects_end.connect(self.on_fetch_projects_end)
         self.store.create_project_start.connect(self.on_create_project_start)
         self.store.create_project_end.connect(self.on_create_project_end)
-        self.store.active_project_changed.connect(self.on_active_project_changed)
+        self.store.active_project_change_end.connect(self.on_active_project_changed)
         
         self._loading = False
         self._error = None
@@ -164,3 +164,4 @@ class my_projects(QWidget):
             self.store.fetch_available_reference_data(project_id = self.store.active_project['id'])
             self.store.fetch_available_parameters(project_id = self.store.active_project['id'])
             self.store.fetch_available_model_files(project_id = self.store.active_project['id'])
+            self.store.fetch_available_testbenches(project_id = self.store.active_project['id'])

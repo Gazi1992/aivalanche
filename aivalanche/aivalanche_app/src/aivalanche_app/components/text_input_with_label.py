@@ -3,7 +3,7 @@ from aivalanche_app.components.custom_layouts import v_layout, h_layout
 
 class text_input_with_label(QWidget):
     def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder', initial_value: str = None, text_edit_width: int = None,
-                 label_position: str = 'top', spacing: int = 5, on_change: callable = None, object_name: str = None, tooltip: str = None):
+                 label_position: str = 'top', spacing: int = 5, on_change: callable = None, object_name: str = None, tooltip: str = None, validator: object = None):
         super().__init__(parent = parent)
         
         self.label = label
@@ -15,6 +15,7 @@ class text_input_with_label(QWidget):
         self.on_change = on_change
         self.object_name = object_name
         self.tooltip = tooltip
+        self.validator = validator
         self.init_ui()
     
     def init_ui(self):
@@ -55,4 +56,7 @@ class text_input_with_label(QWidget):
             
         if self.tooltip is not None:
             self.setToolTip(self.tooltip)
+            
+        if self.validator is not None:
+            text_edit_widget.setValidator(self.validator)
            

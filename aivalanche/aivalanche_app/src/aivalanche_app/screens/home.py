@@ -4,7 +4,6 @@ from aivalanche_app.components.main_tabs import main_tabs
 from aivalanche_app.components.drawer import drawer
 from aivalanche_app.data_store.store import store
 
-
 class home(QSplitter):   
     
     go_to_log_in = Signal()

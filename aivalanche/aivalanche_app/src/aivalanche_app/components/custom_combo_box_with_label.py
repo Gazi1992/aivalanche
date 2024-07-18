@@ -2,10 +2,9 @@ from PySide6.QtWidgets import QWidget, QLabel
 from aivalanche_app.components.custom_layouts import v_layout, h_layout
 from aivalanche_app.components.custom_combo_box import custom_combo_box
 
-
 class custom_combo_box_with_label(QWidget):
     def __init__(self, parent = None, label: str = 'label', placeholder: str = 'placeholder', is_editable: bool = False, combo_box_width: int = None,
-                 items: list[str] = [], label_position: str = 'top', spacing: int = 5, on_change: callable = None, object_name: str = None):
+                 items: list[str] = [], active_item: str = None, label_position: str = 'top', spacing: int = 5, on_change: callable = None, object_name: str = None):
         super().__init__(parent = parent)
         
         self.label = label
@@ -13,6 +12,7 @@ class custom_combo_box_with_label(QWidget):
         self.is_editable = is_editable
         self.combo_box_width = combo_box_width
         self.items = items
+        self.active_item = active_item
         self.label_position = label_position
         self.spacing = spacing
         self.on_change = on_change
@@ -38,6 +38,7 @@ class custom_combo_box_with_label(QWidget):
         combo_box = custom_combo_box(parent = self,
                                      placeholder = self.placeholder,
                                      items = self.items,
+                                     active_item = self.active_item,
                                      is_editable = self.is_editable,
                                      on_change = self.on_change)
         

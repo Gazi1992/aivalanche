@@ -2,19 +2,21 @@ from PySide6.QtWidgets import QMainWindow, QMessageBox, QStackedWidget
 from aivalanche_app.screens.home import home
 from aivalanche_app.screens.log_in import log_in
 from aivalanche_app.data_store.store import store
-
+from aivalanche_app.components.snackbar import snackbar
 
 class main_window(QMainWindow):
     def __init__(self, store: store = None):
         super().__init__()
         self.store = store
+        self.store.show_snackbar.connect(self.show_snackbar)
+        
         self.setWindowTitle("aivalanche")
         # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.showMaximized()
-        self.init_ui()
         self.setObjectName('main_window')
         
-
+        self.init_ui()
+                
     def init_ui(self):        
         # Create the stacked widget
         self.stacked_widget = QStackedWidget(parent = self)
@@ -32,12 +34,12 @@ class main_window(QMainWindow):
         
         self.stacked_widget.setCurrentWidget(self.log_in_screen)
 
-
     def closeEvent(self, event):
         quit_msg = "Are you sure you want to exit the program?"
         reply = QMessageBox.question(self, 'Message', quit_msg, QMessageBox.Yes, QMessageBox.No)
     
         if reply == QMessageBox.Yes:
+            self.store.on_app_exit()
             event.accept()
         else:
             event.ignore()
@@ -49,7 +51,7 @@ class main_window(QMainWindow):
 
     def go_to_log_in(self):
         self.stacked_widget.setCurrentWidget(self.log_in_screen)
-        
-    # def update_store(self, data = dict):
-    #     self.store.update(data)
-    #     self.home_screen.print_user()
+    
+    def show_snackbar(self, message):
+        temp = snackbar(self, message = message)
+        temp.show_snackbar()
