@@ -5,5 +5,3 @@ Description: the calibration package provides methods for calibrating different 
 """
 
 __version__ = '1.0.0'
-
-from .Calibration import Calibration

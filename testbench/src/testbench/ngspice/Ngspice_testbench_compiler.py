@@ -8,7 +8,7 @@ from testbench.ngspice.utils import is_equidistant, get_curve_index, get_instanc
 class Ngspice_testbench_compiler():
     
     def __init__(self,
-                 testbenches_file: str = None,          # file where testbenches are defined
+                 file: str = None,          # file where testbenches are defined
                  reference_data: pd.DataFrame = None,   # dataframe of the reference data
                  max_testbenches_per_file = 1000,       # maximum testbenches per file
                  working_directory: str = None,         # the directory where to save the simulation files
@@ -18,7 +18,7 @@ class Ngspice_testbench_compiler():
                  inline: bool = False                   # if troue, then parse the dut file and write it into the testbench file
                  ):
         
-        self.testbenches_file = testbenches_file
+        self.file = file
         self.reference_data = reference_data
         self.max_testbenches_per_file = max_testbenches_per_file
         self.working_directory = working_directory
@@ -34,7 +34,7 @@ class Ngspice_testbench_compiler():
 
     def create_testbenches(self):
         self.deternime_curve_index()
-        self.parse_testbenches_file()        
+        self.parse_file()        
         self.determine_simulation_type()
         self.determine_file_id()
         self.build_circuit_and_results()
@@ -49,9 +49,9 @@ class Ngspice_testbench_compiler():
             self.reference_data['curve_index'] = self.reference_data.apply(lambda row: get_curve_index(row), axis = 1)
 
     # Read and parse the testbench file and save them in a dataframe
-    def parse_testbenches_file(self):
-        if self.testbenches_file is not None:
-            with open(self.testbenches_file) as json_file:
+    def parse_file(self):
+        if self.file is not None:
+            with open(self.file) as json_file:
                 self.testbenches_raw = json.load(json_file)
                 self.testbenches = pd.DataFrame.from_dict(self.testbenches_raw).explode('testbench_type', ignore_index=True)
 
@@ -108,6 +108,7 @@ class Ngspice_testbench_compiler():
                 data_split_2 = split_1.groupby(['x_values', 'testbench_type'], dropna = False)
                 for (x_values, testbench_type), split_2 in data_split_2:
                     self.set_file_id_for_split(split_2)
+        self.reference_data['x_values'] = self.reference_data['x_values'].apply(lambda x: list(x)) # Convert the x_values back to list
 
     # For each split, set the file_id
     def set_file_id_for_split(self, split):
@@ -613,8 +614,7 @@ class Ngspice_testbench_compiler():
                                  'rename_variables': [all_rename_variables],
                                  'calculate_variables': [all_calculate_variables]})
         self.files = pd.concat([self.files, new_file])
-        
-    
+
     def add_model_parameters_to_file(self):
         model_parameters_part = "** Model parameters start\n"
         if self.model_parameters is not None:

@@ -7,17 +7,13 @@ from aivalanche_app.paths import ascending_icon_path, descending_icon_path, chec
 from aivalanche_app.components.custom_checkbox import custom_checkbox, get_checkbox_icon
 from aivalanche_app.data_store.store import store
 
-
 class item_delegate(QStyledItemDelegate):
-    
     def __init__(self, parent):
-        
         super().__init__(parent)
         
         # Define checkbox icon dimension
         self.checkbox_width = 16
         self.checkbox_height = 16
-    
     
     def commit_and_close_editor_checkbox(self, state):
         editor = self.sender()
@@ -25,11 +21,10 @@ class item_delegate(QStyledItemDelegate):
         self.closeEditor.emit(editor)
         self.parent().edit(self.parent().currentIndex())
         
-    
     def createEditor(self, parent, option, index):
         if self.parent().model().edit_data[index.column()]:
             editor = QLineEdit(parent = parent)
-            # editor.setObjectName('table')
+            editor.editingFinished.connect(lambda: self.parent().model().on_text_change(editor.text(), index))
             return editor
         elif self.parent().model().checkbox_data[index.column()]:
             editor = custom_checkbox(parent = parent, state = index.data(Qt.EditRole), on_click = lambda state: self.parent().model().on_checkbox_click(state, index),
@@ -38,7 +33,6 @@ class item_delegate(QStyledItemDelegate):
             return editor
         return super().createEditor(parent, option, index)
     
-
     def setEditorData(self, editor, index):
         if self.parent().model().edit_data[index.column()]:
             editor.setText(index.data(Qt.DisplayRole))
@@ -47,7 +41,6 @@ class item_delegate(QStyledItemDelegate):
         else:
             super().setEditorData(editor, index)
 
-    
     def setModelData(self, editor, model, index):
         if self.parent().model().edit_data[index.column()]:
             model.setData(index, editor.text(), Qt.EditRole)
@@ -56,7 +49,6 @@ class item_delegate(QStyledItemDelegate):
         else:
             super().setModelData(editor, model, index)
 
-    
     def paint(self, painter, option, index):
         rect = option.rect    
         model = index.model()
@@ -73,8 +65,7 @@ class item_delegate(QStyledItemDelegate):
         # Set background color
         if index.row() % 2 == 1:
             painter.fillRect(rect, self.parent().style.get_qcolor_from_string(self.parent().style.colors['table_even_rows']))
-            
-            
+
     def editorEvent(self, event, model, option, index):
         if event.type() == QMouseEvent.MouseMove:
             if index.isValid():
@@ -91,10 +82,8 @@ class item_delegate(QStyledItemDelegate):
                         
         return super().editorEvent(event, model, option, index)
 
-
 class table_horizontal_header(QHeaderView):
     def __init__(self, parent):
-        
         super().__init__(Qt.Horizontal, parent)
         
         # Define checkbox icon dimension
@@ -123,17 +112,14 @@ class table_horizontal_header(QHeaderView):
     def initialize_checkbox_rects(self):
         self.checkbox_rects = [QRect(-1, -1, 0, 0)] * self.parent().model().columnCount()
 
-
     def update_section(self, logical_index):
         if logical_index is not None:
             self.updateSection(logical_index)
-
 
     def reset_bookkeeping_variables(self):
         self.checkbox_hovered_section = None
         self.checkbox_pressed_section = None
         self.pressed_section = None
-
 
     def mouseMoveEvent(self, event: QMouseEvent):
         super().mouseMoveEvent(event)
@@ -153,14 +139,12 @@ class table_horizontal_header(QHeaderView):
                     except Exception as e:
                         print(e)
 
-
     def leaveEvent(self, event):
         super().leaveEvent(event)
         if self.checkbox_hovered_section is not None:
             temp = self.checkbox_hovered_section
             self.reset_bookkeeping_variables()
             self.update_section(temp)
-
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -180,7 +164,6 @@ class table_horizontal_header(QHeaderView):
                                                          self.parent().model().index(self.parent().model().rowCount() - 1, logical_index)),
                                           QItemSelectionModel.ClearAndSelect)
 
-
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
@@ -193,9 +176,7 @@ class table_horizontal_header(QHeaderView):
             self.reset_bookkeeping_variables()
             self.update_section(temp)
 
-
     def paintSection(self, painter, rect, logicalIndex):     
-        
         # Set font to bold if is a cell corresponding to the header is selected, otherwise normal font.
         if self.parent():
            selected_columns = {index.column() for index in self.parent().selectedIndexes()}
@@ -278,14 +259,11 @@ class table_horizontal_header(QHeaderView):
         else:
             super().paintSection(painter, rect, logicalIndex)      
 
-
 class custom_table_model(QAbstractTableModel):
-    def __init__(self, data = None, on_checkbox_click: callable = None, on_header_checkbox_click: callable = None,
-                 default_nr_col = 6, default_nr_row = 10, checkbox_columns = None, no_edit_columns = None):
+    def __init__(self, data = None, on_change: callable = None, default_nr_col = 6, default_nr_row = 10, checkbox_columns = None, no_edit_columns = None):
         super().__init__()
         
-        self._on_checkbox_click = on_checkbox_click
-        self._on_header_checkbox_click = on_header_checkbox_click
+        self.on_change = on_change
         
         self.last_mouse_move_index = None
         
@@ -301,15 +279,12 @@ class custom_table_model(QAbstractTableModel):
             if self.edit_data[col] or self.checkbox_data[col]:
                 flags |= Qt.ItemIsEditable
             return flags
-        
     
     def rowCount(self, parent = QModelIndex()):
         return len(self._data)
 
-
     def columnCount(self, parent = QModelIndex()):
         return len(self._data.columns)
-
 
     def data(self, index, role = Qt.DisplayRole):
         if role == Qt.DisplayRole or role == Qt.EditRole:
@@ -319,13 +294,11 @@ class custom_table_model(QAbstractTableModel):
             return result
         return None
 
-    
     def setData(self, index, value, role = Qt.DisplayRole):
         if role == Qt.DisplayRole or role == Qt.EditRole:
             self._data.iloc[index.row(), index.column()] = value
             return True
         return super().setData(index, value, role)
-
 
     def headerData(self, section, orientation, role = Qt.DisplayRole):
         if role == Qt.DisplayRole:
@@ -335,22 +308,19 @@ class custom_table_model(QAbstractTableModel):
                 return str(self._data.index[section])
         return None
     
-        
     def initialize_table(self, data = None, checkbox_columns = None,  no_edit_columns = None):
         self.set_data(data)
         self.initialize_checkboxes(checkbox_columns)
         self.initialize_checkbox_header_status()
         self.initialize_edit_data(no_edit_columns)
         self.last_mouse_move_index = None
-    
-    
+
     def set_data(self, data = None):
         if data is None:
             empty_columns = [f'{i+1}' for i in range(self.default_nr_col)] 
             data = pd.DataFrame(columns = empty_columns, data = [[''] * self.default_nr_col for _ in range(self.default_nr_row)])
-        self._data = data
-    
-    
+        self._data = data.copy()
+
     def initialize_checkboxes(self, checkbox_columns = None):
         if checkbox_columns is None:
             checkbox_columns = [{'name': 'include', 'check_all': True},
@@ -369,7 +339,6 @@ class custom_table_model(QAbstractTableModel):
                 # self._data[item] = True if (self._data[item] == 'True' or self._data[item] == 1) else False
                 self.checkbox_header[index] = True if checkbox_columns_check_all[checkbox_columns_names.index(item)] else False
 
-
     def initialize_edit_data(self, no_edit_columns = None):
         if no_edit_columns is None:
             no_edit_columns = ['x_values', 'y_values']
@@ -382,11 +351,9 @@ class custom_table_model(QAbstractTableModel):
             if item in no_edit_columns or self.checkbox_data[index]:
                 self.edit_data[index] = False
 
-
     def initialize_checkbox_header_status(self):
         self.checkbox_header_status = [False] * self.columnCount()
-        
-    
+
     def on_checkbox_header_click(self, index):
         self.checkbox_header_status[index] = not self.checkbox_header_status[index]
         column_name = self._data.columns[index]
@@ -399,20 +366,28 @@ class custom_table_model(QAbstractTableModel):
         self.dataChanged.emit(top_left, bottom_right)
         
         # run callback if provided
-        if self._on_header_checkbox_click is not None:
-            self._on_header_checkbox_click({'state': state,
-                                            'column_index': index,
-                                            'column_name': column_name})        
+        if self.on_change is not None:
+            self.on_change({'type': 'header_checkbox_click',
+                            'state': state,
+                            'column_index': index,
+                            'column_name': column_name})        
 
-    
     def on_checkbox_click(self, state, index):
-        if self._on_checkbox_click is not None:
-            self._on_checkbox_click({'state': state,
-                                     'row_index': index.row(),
-                                     'column_index': index.column(),
-                                     'column_name': self._data.columns[index.column()]})
-    
-    
+        if self.on_change is not None:
+            self.on_change({'type': 'checkbox_click',
+                            'state': state,
+                            'row_index': index.row(),
+                            'column_index': index.column(),
+                            'column_name': self._data.columns[index.column()]})
+            
+    def on_text_change(self, text, index):
+        if self.on_change is not None:
+            self.on_change({'type': 'text_change',
+                            'text': text,
+                            'row_index': index.row(),
+                            'column_index': index.column(),
+                            'column_name': self._data.columns[index.column()]})
+
     # update data based on some given condition
     def update_by_condition(self, condition: str = None, update_columns: list = None, update_values: list = None):
         mask = self._data.eval(condition)
@@ -424,20 +399,16 @@ class custom_table_model(QAbstractTableModel):
         top_left = self.index(mask[mask].idxmin(), left)
         bottom_right = self.index(mask[mask].idxmax(), right)
         self.dataChanged.emit(top_left, bottom_right)
-        
-    
 
 class custom_table(QTableView):
-    def __init__(self, data = None, store: store = None, on_checkbox_click: callable = None, on_header_checkbox_click: callable = None, column_width_mode: str = 'Interactive'):       
+    def __init__(self, data = None, store: store = None, column_width_mode: str = 'Interactive', on_change: callable = None):       
         super().__init__()
         
         self.store = store
         self.style = self.store.style
         
         # Set model
-        self.setModel(custom_table_model(data = data,
-                                        on_checkbox_click = on_checkbox_click,
-                                        on_header_checkbox_click = on_header_checkbox_click))
+        self.setModel(custom_table_model(data = data, on_change = on_change))
         
         # Set header options
         self.setHorizontalHeader(table_horizontal_header(parent = self))
@@ -449,15 +420,11 @@ class custom_table(QTableView):
         elif column_width_mode == 'Stretch':
             self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-
         self.setItemDelegate(item_delegate(parent = self))
-        
         self.setMouseTracking(True)
-        
         self.last_mouse_move_index = None
         self.current_editor = None
-        
-        
+
     def update_data(self, data = None, checkbox_columns = None):
         self.model().layoutAboutToBeChanged.emit()
         self.last_mouse_move_index = None

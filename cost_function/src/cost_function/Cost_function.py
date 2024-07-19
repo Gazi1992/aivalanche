@@ -14,11 +14,9 @@ class Cost_function:
         self.parts = parts
         self.validate_parts()
         
-        
     def validate_parts(self):
         if self.parts is None:
             raise parts_missing('ERROR! Parts are missing. You need to provide a list of dicts, where each dict needs to have an id, group_types and metric_type.')
-
 
     # Reset the error metric dictionary
     def reset_error_metric(self):
@@ -27,7 +25,6 @@ class Cost_function:
             self.error_metric[part['id']] = None
         self.error_metric['total'] = None
         
-    
     # Calculate the error metric
     def run(self, data: pd.DataFrame = None, parameters: pd.DataFrame = None, overwrite: bool = False):
         # If no data is given, return HUGE_ERROR

@@ -51,7 +51,6 @@ class Parameters:
             elif self.file.split('.')[-1] == 'csv':
                 self.parse_csv()
 
-
     # Convert json file to pandas dataframe
     def parse_json(self):
         with open(self.file) as json_file:

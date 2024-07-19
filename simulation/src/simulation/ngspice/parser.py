@@ -1,7 +1,6 @@
 # Imports
 import pandas as pd, numpy as np, re
 
-
 # parse results
 def parse_results(file_path: str = None, simulation_type: str = 'dc_sweep', compact: bool = False,
                   rename_variables: dict = None, x_name: str = None, y_name: str = None):
@@ -19,7 +18,6 @@ def parse_results(file_path: str = None, simulation_type: str = 'dc_sweep', comp
     
     return results
     
-
 # parse dc_sweep results file
 def parse_dc_sweep(file_path: str = None, compact: bool = False, rename_variables: dict = None):
     try:
@@ -30,7 +28,7 @@ def parse_dc_sweep(file_path: str = None, compact: bool = False, rename_variable
             # the first column is to be ignores because it is the repetition of some other column
             columns = temp[0][1:]                                                       # first line has the columns names
             data = np.array(temp[1:]).astype(float)[:,1:]                               # the other lines have the values
-            # data = np.where(data == 'NAN', np.nan, data)                                # replace NAN whith numpy.nan
+            # data = np.where(data == 'NAN', np.nan, data)                              # replace NAN whith numpy.nan
             
             # save all the data
             results_extended = pd.DataFrame(columns = columns, data = data)

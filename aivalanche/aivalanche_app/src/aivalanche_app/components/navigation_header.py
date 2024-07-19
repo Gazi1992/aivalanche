@@ -6,7 +6,9 @@ from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.paths import search_icon_path
 
 class navigation_header(QWidget):
-    def __init__(self, parent = None, navigation_path: list[dict] = None, on_search_text_changed: callable = None, labels: list[str] = None, show_calibration_buttons: bool = False, object_name: str = None):
+    def __init__(self, parent = None, navigation_path: list[dict] = None, on_search_text_changed: callable = None,
+                 labels: list[str] = None, show_calibration_buttons: bool = False, object_name: str = None,
+                 on_single_simulation_button_press: callable = None):
         super().__init__(parent = parent)
         
         self.navigation_path = navigation_path
@@ -38,7 +40,8 @@ class navigation_header(QWidget):
         
         # Add calibration buttons
         if show_calibration_buttons:
-            calibration_control_widget = calibration_control(parent = self, object_name = 'calibration_control')
+            calibration_control_widget = calibration_control(parent = self, object_name = 'calibration_control',
+                                                             on_single_simulation_button_press = on_single_simulation_button_press)
             layout_top.addWidget(calibration_control_widget)        
         
         # Add the top layout

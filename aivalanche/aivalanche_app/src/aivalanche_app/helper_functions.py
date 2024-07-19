@@ -2,6 +2,12 @@ from pathlib import Path
 import re, json, pandas as pd
 from PySide6.QtGui import QValidator
 
+# update dataframe by a given condition
+def update_df_by_condition(df: pd.DataFrame = None, condition: str = None, update_columns: list = None, update_values: list = None):
+    mask = df.eval(condition)
+    for col, val in zip(update_columns, update_values):
+        df.loc[mask, col] = val
+
 # Function to convert semicolumn to list of items when reading a csv
 def convert_to_list_if_semi_colon(value):
     if isinstance(value, str) and ';' in value:

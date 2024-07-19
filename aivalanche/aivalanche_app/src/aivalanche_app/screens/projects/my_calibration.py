@@ -29,7 +29,7 @@ class my_calibration(QWidget):
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},
                                   {'text': self.store.active_project.title if self.store.active_project is not None else 'Models', 'on_click': self.on_models_press},
                                   {'text': self.store.active_model.title if self.store.active_model is not None else 'My model', 'on_click': None}]
-        self.header_widget = navigation_header(navigation_path = self.header_navigation, object_name = 'header', show_calibration_buttons = True)
+        self.header_widget = navigation_header(navigation_path = self.header_navigation, object_name = 'header', show_calibration_buttons = True, on_single_simulation_button_press = self.on_single_simulation_click)
         layout.addWidget(self.header_widget)
         self.update_header()
         
@@ -73,7 +73,6 @@ class my_calibration(QWidget):
         
         # Add the warning modal widget, which is to be shown in case smth goes wrong with the calibration setup
         self.warning_modal = warning_modal(parent = self)
-        
 
     # Update header
     def update_header(self):
@@ -152,7 +151,9 @@ class my_calibration(QWidget):
         
     def reset_tab_to_reference_data(self):
         self.reference_data_button.click()
-        
+    
+    def on_single_simulation_click(self):
+        self.store.start_single_simulation()
         
         
         

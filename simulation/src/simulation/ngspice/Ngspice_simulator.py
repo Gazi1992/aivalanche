@@ -13,12 +13,10 @@ from simulation.ngspice.parser import parse_results
 from simulation.ngspice.visualization import plot_results
 from testbench.ngspice import Ngspice_testbench_compiler
 
-
 #%% simulator class
 class Ngspice_simulator:
-    def __init__(self, timeout: int = 30):
+    def __init__(self, timeout: int = 300):
         self.timeout = timeout
-
 
     # Simulate one .cir file
     def simulate_single_file(self, file_path: str = None, results_dir: str = None, results_file_name: str = 'results.txt',
@@ -82,7 +80,6 @@ class Ngspice_simulator:
                 
             return None
 
-
     def simulate_testbenches(self, testbenches: Ngspice_testbench_compiler = None, timeout: int = None,
                              extract_results: bool = False, compact: bool = False, rename_variables: dict = None,
                              reference_data: pd.DataFrame = None, delete_files: bool = True, print_output: bool = True):
@@ -93,6 +90,7 @@ class Ngspice_simulator:
                                                    reference_data = reference_data, delete_files = delete_files, print_output = print_output)
             if reference_data is not None:
                 results = self.combine_simulation_with_reference_data(reference_data = reference_data, simulation_results = results)
+
             return results
         return None
 
@@ -187,7 +185,6 @@ class Ngspice_simulator:
 
         return results
 
-
     def combine_simulation_with_reference_data(self, reference_data: pd.DataFrame = None, simulation_results: list[pd.DataFrame] = None):
         reference_data = reference_data.copy()
         reference_data['x_values_simulation'] = None
@@ -205,7 +202,6 @@ class Ngspice_simulator:
         reference_data[['simulation_status', 'simulation_status_message']] = reference_data.apply(lambda row: self.check_simulation_validity(row), axis=1, result_type = 'expand')
 
         return reference_data
-        
         
     def check_simulation_validity(self, row):
         status = 'success'

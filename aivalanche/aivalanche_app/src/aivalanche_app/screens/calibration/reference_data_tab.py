@@ -7,7 +7,7 @@ from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
 from reference_data.Reference_data import Reference_data
-from aivalanche_app.helper_functions import find_max_suffix
+from aivalanche_app.helper_functions import find_max_suffix, update_df_by_condition
 from pathlib import Path
 import pyqtgraph as pg, pandas as pd, math
 
@@ -62,7 +62,7 @@ class reference_data_tab(QSplitter):
         left_layout.addWidget(self.load_data_widget, 0)
         
         # Create table
-        self.table = custom_table(store = self.store, on_checkbox_click = self.on_checkbox_click)
+        self.table = custom_table(store = self.store, on_change = self.on_table_change)
         left_layout.addWidget(self.table, 1)
         
         # Create right layout, where plots will be shown
@@ -201,6 +201,12 @@ class reference_data_tab(QSplitter):
         self.placeholder_plot_visible = True
         self.update_plots_widget_height() # update plots_widget heights
 
+    def on_table_change(self, data: dict = None):
+        if data['type'] == 'checkbox_click':
+            self.on_checkbox_click(data)
+        else:
+            print(data)
+
     def on_checkbox_click(self, data: dict = None):
         row = data['row_index']
         column = data['column_index']
@@ -270,7 +276,8 @@ class reference_data_tab(QSplitter):
         self.update_plots_widget_height()
             
         # update the table plot checkboxes
-        self.store.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
+        update_df_by_condition(df = self.store.reference_data.data, condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
+        # self.store.reference_data.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
         self.table.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
         
         # self.plots_widget.ci.setBorder(color = 'r')

@@ -8,16 +8,17 @@ from aivalanche_app.paths import play_icon_path, play_hover_icon_path, play_pres
                                  stop_icon_path, stop_hover_icon_path, stop_press_icon_path
 
 class calibration_control(QWidget):
-    def __init__(self, parent = None, object_name: str = None):
+    def __init__(self, parent = None, object_name: str = None, on_single_simulation_button_press: callable = None):
         super().__init__(parent = parent)
         
         self.object_name = object_name
         if object_name is not None:
             self.setObjectName(object_name)
+        
+        self.on_single_simulation_button_press = on_single_simulation_button_press
     
         self.init_ui()
 
-    
     def init_ui(self):
         layout = h_layout(spacing = 5, alignment = Qt.AlignmentFlag.AlignBottom)
         self.setLayout(layout)
@@ -28,7 +29,7 @@ class calibration_control(QWidget):
                                                       icon_hover_path = play_1_hover_icon_path,
                                                       icon_press_path = play_1_press_icon_path,
                                                       object_name = self.object_name,
-                                                      on_click = self.on_single_simulation_button_click)
+                                                      on_click = self.on_single_simulation_button_press)
         layout.addWidget(single_simulation_button, alignment = Qt.AlignmentFlag.AlignBottom)
         
         # calibration button

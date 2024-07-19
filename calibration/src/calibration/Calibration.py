@@ -19,20 +19,20 @@ import os, shutil, json, uuid, dask, time, pickle, logging, pandas as pd, asynci
 #%% calibration class
 class Calibration:
     def __init__(self,
-                 reference_data_file: str = None,
-                 parameters_file: str = None,
-                 testbenches_file: str = None,
+                 reference_data: str | Reference_data = None,
+                 parameters: str | Parameters = None,
+                 testbenches: str | Ngspice_testbench_compiler = None,
                  dut_file: str = None,
-                 dut_name: str = None,
+                 dut_name: str = 'dut',
                  results_dir: str = None,
                  optimizer_config: dict = None,
                  simulator_config: dict = None,
                  cost_function_config: dict = None,
                  running_environment = 'local'):
                 
-        self.reference_data_file = reference_data_file
-        self.parameters_file = parameters_file
-        self.testbenches_file = testbenches_file
+        self.reference_data = reference_data
+        self.parameters = parameters
+        self.testbenches = testbenches
         self.dut_file = dut_file
         self.dut_name = dut_name
         self.results_dir = results_dir
@@ -42,7 +42,7 @@ class Calibration:
         self.cost_function_config = cost_function_config
         
         self.running_environment = running_environment
-        self.running_environment_options = ('local', 'dask_local', 'kafka_local', 'kafka_aws')    
+        self.running_environment_options = ('local', 'dask_local', 'kafka_local')    
         self.dask_upload_files = []
         
         self.validate_simulator()
@@ -60,9 +60,6 @@ class Calibration:
         if self.running_environment not in self.running_environment_options:
             print(f'WARNING: running_environment must be on of te following: {self.running_environment_options}. Setting it to "local".')
             self.running_environment = 'local'
-        
-        if self.running_environment == 'dask_local':
-            self.cluster = init_dask(scale = 2)
         
         self.setup_logging()
         
@@ -87,24 +84,30 @@ class Calibration:
             raise cost_function_missing(f'ERROR! Cost function type has to be one of the following: {available_cost_functions}')
 
     def get_reference_data(self):
-        self.reference_data = Reference_data(file = self.reference_data_file)
+        if type(self.reference_data) == str:
+            self.reference_data = Reference_data(file = self.reference_data)
 
     def get_parameters(self):
-        self.parameters = Parameters(file = self.parameters_file)
+        if type(self.parameters) == str:
+            self.parameters = Parameters(file = self.parameters)
 
     def get_testbenches(self):
-        self.testbenches = Ngspice_testbench_compiler(testbenches_file = self.testbenches_file,
-                                                      reference_data = self.reference_data.data,
-                                                      dut_file = self.dut_file,
-                                                      dut_name = self.dut_name,
-                                                      model_parameters = self.parameters.get_default_parameters(),
-                                                      working_directory = self.output_path,
-                                                      inline = self.running_environment in ['dask_local', 'kafka'])
+        if type(self.testbenches) == str:
+            self.testbenches = Ngspice_testbench_compiler(file = self.testbenches,
+                                                          reference_data = self.reference_data.data,
+                                                          dut_file = self.dut_file,
+                                                          dut_name = self.dut_name,
+                                                          model_parameters = self.parameters.get_default_parameters(),
+                                                          working_directory = self.output_path,
+                                                          inline = self.running_environment in ['dask_local', 'kafka'])
         self.testbenches.create_testbenches()
         
     def get_simulator(self):
         if self.simulator_config['type'] == 'ngspice':
-            self.simulator = Ngspice_simulator()
+            if 'timeout' in self.simulator_config.keys():
+                self.simulator = Ngspice_simulator(timeout = self.simulator_config['timeout'])
+            else:
+                self.simulator = Ngspice_simulator()
     
     def get_optimizer(self):
         if self.optimizer_config['type'] == 'differential_evolution':
@@ -135,17 +138,6 @@ class Calibration:
     def run_no_parameter_simulation(self, plot: bool = False, delete_files: bool = False):
         self.testbenches.remove_model_parameters()
         simulation_results = run_single_simulation(testbenches = self.testbenches,
-                                             simulator = self.simulator,
-                                             reference_data = self.reference_data.data,
-                                             simulation_files_path = self.results_dir,
-                                             plot = plot,
-                                             delete_files = delete_files)
-        
-        error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results)
-        print(error_metric)
-
-    def run_default_simulation(self, plot: bool = False, delete_files: bool = False):
-        simulation_results = run_single_simulation(testbenches = self.testbenches,
                                                    simulator = self.simulator,
                                                    reference_data = self.reference_data.data,
                                                    simulation_files_path = self.results_dir,
@@ -153,7 +145,19 @@ class Calibration:
                                                    delete_files = delete_files)
         
         error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results)
-        print(error_metric)
+        return(error_metric)
+
+    def run_default_simulation(self, plot: bool = False, delete_files: bool = False, print_output: bool = True):
+        simulation_results = run_single_simulation(testbenches = self.testbenches,
+                                                   simulator = self.simulator,
+                                                   reference_data = self.reference_data.data,
+                                                   simulation_files_path = self.results_dir,
+                                                   plot = plot,
+                                                   delete_files = delete_files,
+                                                   print_output = print_output)
+        
+        error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results, parameters = self.parameters)
+        return(error_metric)
 
     def run_random_simulation(self, plot: bool = False, delete_files: bool = False):
         random_params = self.parameters.generate_random_parameters()
@@ -166,7 +170,7 @@ class Calibration:
                                                    delete_files = delete_files)
         
         error_metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results, parameters = random_params)
-        print(error_metric)
+        return(error_metric)
 
     def run_multiple_simulations(self, parameters: list[dict] = None, **kwargs):
         if self.running_environment == 'local':
@@ -175,8 +179,6 @@ class Calibration:
             return self.run_multiple_simulations_dask_local(parameters, **kwargs)
         elif self.running_environment == 'kafka_local':
             return self.run_multiple_simulations_kafka_local(parameters, **kwargs)
-        elif self.running_environment == 'kafka_aws':
-            return self.run_multiple_simulations_kafka_aws(parameters, **kwargs)    
     
     def run_multiple_simulations_local(self, parameters: list[dict] = None, **kwargs):
         start_time = time.time()
@@ -217,12 +219,10 @@ class Calibration:
                                                                   plot = False,
                                                                   delete_files = True,
                                                                   print_output = False) for param in parameters]
-        
         # Create error metric futures
         error_metric_futures = [dask.delayed(calculate_error_metrics)(cost_function = self.cost_function,
                                                                       data = sim_res,
                                                                       parameters = param) for sim_res, param in zip(simulation_futures, parameters)]
-        
         # Evaluate the futures
         error_metrics = dask.compute(error_metric_futures, scheduler = "threads", synchronous = True)
         
@@ -255,78 +255,37 @@ class Calibration:
             responses['error_metrics'].append(metric['error_metric'])
             responses['metrics'].append(metric['error_metric']['total'])
         return responses
-    
-    def run_multiple_simulations_kafka_aws(self, parameters: list[dict] = None, **kwargs):
-        responses = {'results': [], 'error_metrics': [], 'metrics': []}
-        for param in parameters:
-            input_dict = {'parameters': param,
-                          'testbenches': self.testbenches,
-                          'simulator': self.simulator,
-                          'reference_data': self.reference_data.data,
-                          'simulation_files_path': self.simulation_files_path,
-                          'cost_function': self.cost_function,
-                          'plot': False,
-                          'delete_files': True}
-            
-            # Send event to workers
-            event = {'type': 'simulation_data', 'data': input_dict, 'description': 'kot'}
-            topic = 'kot'
-            send_event_to_worker(topic, event)
-        
-        # wait for results
-        all_events_handled = False
-        results = [None] * len(parameters)
-        error_metrics = [None] * len(parameters)
-        error_metrics_total = [None] * len(parameters)
-        while not all_events_handled:
-            print('Checking for events to be handled by consumer.')
-            # {'data': pd:DataFrame, 'error_metrics': {....; 'total': float}}
-            
-            # results (data)
-            # error_metrics
-            # error_metrics_total = 
-            
-            
-        responses['results'] = results
-        responses['error_metrics'] = error_metrics
-        responses['metrics'] = error_metrics_total
-        return responses
 
     def calibrate(self):
+        if self.running_environment == 'dask_local':
+            self.cluster = init_dask(scale = 2)
         self.create_new_output_dir()
         self.validate_optimizer()
         self.get_optimizer()
-        self.write_input_to_files()
-        if self.running_environment == 'kafka_aws':
-            self.testbenches.update_working_directory('/app/simulation_files')
-            self.workers = asyncio.run(consumer_with_timeout(30))
-                
+        self.write_input_to_files()                
         self.optimizer.run_optimization()
         if self.running_environment == 'dask_local':
             close_dask(self.cluster)
         
     def create_new_output_dir(self):
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        
+
         self.output_path = os.path.join(self.results_dir, f"calibration_{timestamp}")
         os.makedirs(self.output_path)
-        
-        if self.running_environment == 'kafka_aws':
-            self.simulation_files_path = '/app/simulation_files'
-        else:
-            self.simulation_files_path = os.path.join(self.output_path, 'simulation_files')
-            os.mkdir(self.simulation_files_path)
-        
+
+        self.simulation_files_path = os.path.join(self.output_path, 'simulation_files')
+        os.mkdir(self.simulation_files_path)
+
         self.input_path = os.path.join(self.output_path, 'input')
         os.mkdir(self.input_path)
-        
+
         set_log_file(self.logging_config, os.path.join(self.output_path, 'calibrate.log'))
         self.testbenches.update_working_directory(new_working_dir = self.simulation_files_path)
         
     def write_input_to_files(self):
-        shutil.copy(self.reference_data_file, os.path.join(self.input_path, os.path.basename(self.reference_data_file)))
-        shutil.copy(self.parameters_file, os.path.join(self.input_path, os.path.basename(self.parameters_file)))
-        shutil.copy(self.testbenches_file, os.path.join(self.input_path, os.path.basename(self.testbenches_file)))
+        shutil.copy(self.reference_data.file, os.path.join(self.input_path, os.path.basename(self.reference_data.file)))
+        shutil.copy(self.parameters.file, os.path.join(self.input_path, os.path.basename(self.parameters.file)))
+        shutil.copy(self.testbenches.file, os.path.join(self.input_path, os.path.basename(self.testbenches.file)))
         shutil.copy(self.dut_file, os.path.join(self.input_path, os.path.basename(self.dut_file)))
         self.write_config_dict_to_file(config_dict = self.optimizer_config, file_path = os.path.join(self.input_path, 'optimizer_config.json'))
         self.write_config_dict_to_file(config_dict = self.cost_function_config, file_path = os.path.join(self.input_path, 'cost_function_config.json'))

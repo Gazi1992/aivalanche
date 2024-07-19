@@ -1,4 +1,4 @@
-from calibration import Calibration
+from calibration.Calibration import Calibration
 from reference_data.visualization import plot_all_groups
 from reference_data.utils import write_reference_data_to_file
 import os, numpy as np
@@ -131,10 +131,9 @@ cost_function_config = {'type': 'default',
 running_environment = 'dask_local' # [local, dask_local, kafka_local, kafka_aws]
 
 if __name__ == '__main__':
-
-    calibration = Calibration(reference_data_file = reference_data_file,
-                              parameters_file = parameters_file,
-                              testbenches_file = testbenches_file,
+    calibration = Calibration(reference_data = reference_data_file,
+                              parameters = parameters_file,
+                              testbenches = testbenches_file,
                               dut_file = dut_file,
                               dut_name = dut_name,
                               results_dir = results_dir,
@@ -145,8 +144,8 @@ if __name__ == '__main__':
     
     # calibration.run_no_parameter_simulation(plot = True)
     
-    # calibration.run_default_simulation(plot = True, delete_files = False)
+    calibration.run_default_simulation(plot = True, delete_files = False)
     
     # calibration.run_random_simulation(plot = True, delete_files = False)
     
-    calibration.calibrate()
+    # calibration.calibrate()

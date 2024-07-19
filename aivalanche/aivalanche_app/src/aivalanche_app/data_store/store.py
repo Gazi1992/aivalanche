@@ -4,11 +4,14 @@ from datetime import datetime
 from aivalanche_app.paths import dummy_data_path, projects_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.db import db
+from aivalanche_app.simulations.single_simulation import single_simulation
 from aivalanche_app.helper_functions import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val, replace_space_with_underline, dict_to_json
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QThread
 
 class store(QObject):
     show_snackbar = Signal(str)
+    
+    single_simulation_end = Signal()
     
     fetch_available_optimizers_start = Signal()
     fetch_available_optimizers_end = Signal(object)
@@ -108,6 +111,11 @@ class store(QObject):
         # Start the db_worker thread
         threading.Thread(target = self.db_worker, daemon = True).start()
         
+        # Single simulation
+        self.single_simulation = single_simulation(on_start = self.on_single_simulation_start,
+                                                   on_progress = self.on_single_simulation_progress,
+                                                   on_finish = self.on_single_simulation_finish,
+                                                   db_type = self.db_type)
     @property
     def reference_data(self):
         return self._reference_data
@@ -133,7 +141,19 @@ class store(QObject):
         elif self._model_template != value:
             self._model_template = value
             self.update_model_template(self._model_template, self.active_model['id'])
-        
+    
+    #%% DB worker
+    def db_worker(self):
+        while True:
+            task, args = self.queue.get()
+            try:
+                task(*args)
+            finally:
+                self.queue.task_done()
+                
+    def _run_task(self, task, *args):
+        self.queue.put((task, args))
+    
     #%% Reset functions
     def set_local_paths(self):
         self.users_path = Path.joinpath(dummy_data_path, 'users.csv')
@@ -154,19 +174,19 @@ class store(QObject):
         
     def reset_active_project(self):
         self.active_project = None
-        self.active_project_directory_path = None
-        self.active_project_common_reference_data_directory_path = None
-        self.active_project_common_parameters_directory_path = None
-        self.active_project_common_model_files_directory_path = None
-        self.active_project_common_testbenches_directory_path = None
-        self.active_project_common_loss_functions_directory_path = None
+        self.active_project_directory = None
+        self.active_project_common_reference_data_directory = None
+        self.active_project_common_parameters_directory = None
+        self.active_project_common_model_files_directory = None
+        self.active_project_common_testbenches_directory = None
+        self.active_project_common_loss_functions_directory = None
         
     def reset_active_model(self):
         self.active_model = None
-        self.active_model_directory_path = None
-        self.active_model_inputs_directory_path = None
-        self.active_model_results_directory_path = None
-        self.active_model_simulation_files_directory_path = None
+        self.active_model_directory = None
+        self.active_model_inputs_directory = None
+        self.active_model_results_directory = None
+        self.active_model_simulation_files_directory = None
         
     def reset_model_data(self):
         self.model_file_path = None
@@ -181,6 +201,10 @@ class store(QObject):
         self.simulators = None
         self.loss_function = None
         self.loss_function_groups = []
+        self.simulation_input = None
+        self.single_simulation_results = None
+        self.calibration_results = None
+        self.calibration_status = None
         
     def reset_available_model_data(self):
         self.model_templates = pd.DataFrame()        
@@ -191,18 +215,6 @@ class store(QObject):
         self.available_testbenches = pd.DataFrame()
         self.available_optimizers = {}
         self.available_simulators = {}
-
-    #%% DB worker
-    def db_worker(self):
-        while True:
-            task, args = self.queue.get()
-            try:
-                task(*args)
-            finally:
-                self.queue.task_done()
-                
-    def _run_task(self, task, *args):
-        self.queue.put((task, args))
         
     #%% Optimizers
     def fetch_available_optimizers(self, emit_signals: bool = True):
@@ -339,12 +351,12 @@ class store(QObject):
             self.reset_active_project()
         else:
             self.active_project = p
-            self.active_project_directory_path = Path(p['path'])
-            self.active_project_common_reference_data_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'reference_data')
-            self.active_project_common_parameters_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'parameters')
-            self.active_project_common_model_files_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'model_files')
-            self.active_project_common_testbenches_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'testbenches')
-            self.active_project_common_loss_functions_directory_path = Path.joinpath(self.active_project_directory_path, 'common', 'loss_functions')
+            self.active_project_directory = Path(p['path'])
+            self.active_project_common_reference_data_directory = Path.joinpath(self.active_project_directory, 'common', 'reference_data')
+            self.active_project_common_parameters_directory = Path.joinpath(self.active_project_directory, 'common', 'parameters')
+            self.active_project_common_model_files_directory = Path.joinpath(self.active_project_directory, 'common', 'model_files')
+            self.active_project_common_testbenches_directory = Path.joinpath(self.active_project_directory, 'common', 'testbenches')
+            self.active_project_common_loss_functions_directory = Path.joinpath(self.active_project_directory, 'common', 'loss_functions')
         
         if emit_signals:
             self.active_project_change_end.emit({'active_project': self.active_project})
@@ -511,10 +523,10 @@ class store(QObject):
             self.reset_model_data()
         else:
             self.active_model = m
-            self.active_model_directory_path = Path(m['path'])
-            self.active_model_inputs_directory_path = Path.joinpath(self.active_model_directory_path, 'inputs')
-            self.active_model_results_directory_path = Path.joinpath(self.active_model_directory_path, 'results')
-            self.active_model_simulation_files_directory_path = Path.joinpath(self.active_model_directory_path, 'simulation_files')
+            self.active_model_directory = Path(m['path'])
+            self.active_model_inputs_directory = Path.joinpath(self.active_model_directory, 'inputs')
+            self.active_model_results_directory = Path.joinpath(self.active_model_directory, 'results')
+            self.active_model_simulation_files_directory = Path.joinpath(self.active_model_directory, 'simulation_files')
             if pd.isnull(self.active_model['optimization_settings_id']):
                 self.create_optimization_settings_file()
             else:
@@ -1107,6 +1119,12 @@ class store(QObject):
         if emit_signals:
             self.update_model_template_end.emit({'success': success, 'error': error, 'data': data})
     
+    def get_model_file_path(self):
+        if self.model_template is None:
+            return self.model_file_path
+        else:
+            return None
+    
     #%% Tesbenches files
     def fetch_available_testbenches(self, project_id: str = None, emit_signals: bool = True):
         self._run_task(self._fetch_available_testbenches, project_id, emit_signals)
@@ -1426,11 +1444,48 @@ class store(QObject):
             dict_to_json(optimization_settings, self.optimization_settings_path)
                     
     
+    #%% Single simulation
+    def on_single_simulation_start(self, data):
+        print('single_simulation_started')
+        print(data)
+        
+    def on_single_simulation_progress(self, data):
+        print('single_simulation_progress')
+
+    def on_single_simulation_finish(self, data):
+        self.single_simulation_results = data
+        self.single_simulation_end.emit()
+    
+    def start_single_simulation(self):
+        self.compile_simulation_input()
+        self.single_simulation.update_simulation_input(self.simulation_input)
+        self.single_simulation.start()
+    
     #%% Extra functions
+    def compile_simulation_input(self):
+        dut_file = self.get_model_file_path()
+        dut_name = 'dut'
+        running_environment = 'local'
+        simulator_config = {'type': self.active_simulator,
+                            'timeout': self.simulators.loc[(self.simulators['simulator'] == self.active_simulator) & (self.simulators['name'] == 'timeout'), 'value'].values[0]}
+        cost_function_config = {'type': 'default',
+                                'parts': list(self.loss_function['parts'].values())}
+        print(self.parameters.all_parameters.dtypes)
+        self.simulation_input = {'reference_data': self.reference_data,
+                                 'parameters': self.parameters,
+                                 'testbenches': self.testbenches_path,
+                                 'dut_file': dut_file,
+                                 'dut_name': dut_name,
+                                 'results_dir': self.active_model_simulation_files_directory,
+                                 'simulator_config': simulator_config,
+                                 'cost_function_config': cost_function_config,
+                                 'running_environment': running_environment}
+    
     def on_app_exit(self):
         print('Exiting the application...')
         self.write_optimization_settings_to_file()
         
     def emit_show_snackbar(self, message = 'snackbar message'):
         self.show_snackbar.emit(message)
-                    
+    
+    

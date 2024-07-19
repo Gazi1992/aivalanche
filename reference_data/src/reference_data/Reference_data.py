@@ -9,8 +9,7 @@ Inputs:
 #%% Imports
 import pandas as pd, numpy as np, json, re
 
-
-#%% differential_evolution class
+#%% Referece_data class
 
 class Reference_data:
     def __init__(self,

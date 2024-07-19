@@ -20,9 +20,8 @@ data = ref_data.data
 
 
 #%% build testbenches for all the rows of the dataframe
-testbenches_file = 'testbenches.json'
-
-testbench_compiler = Ngspice_testbench_compiler(testbenches_file = testbenches_file,
+file = 'testbenches.json'
+testbench_compiler = Ngspice_testbench_compiler(file = file,
                                                 reference_data = data,
                                                 dut_file = 'dut.cir',
                                                 dut_name = 'dut',

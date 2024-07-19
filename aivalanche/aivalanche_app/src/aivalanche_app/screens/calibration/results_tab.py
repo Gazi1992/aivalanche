@@ -6,9 +6,7 @@ from aivalanche_app.components.results_tabs import results_tabs
 from aivalanche_app.constants.dimensions import CALIBRATION_TAB_BUTTON_WIDTH, CALIBRATION_TAB_BUTTON_HEIGHT
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 
-
 class results_tab(QWidget):
-    
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent = parent)
         
@@ -19,7 +17,6 @@ class results_tab(QWidget):
         self.style = self.store.style
         
         self.init_ui()
-        
     
     def init_ui(self):
         layout = v_layout()

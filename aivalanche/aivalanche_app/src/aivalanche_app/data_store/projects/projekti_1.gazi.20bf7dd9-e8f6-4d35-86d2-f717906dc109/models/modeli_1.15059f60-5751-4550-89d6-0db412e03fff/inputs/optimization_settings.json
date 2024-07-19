@@ -1,7 +1,7 @@
 {
     "optimizer": {
         "active_optimizer": "differential_evolution",
-        "population_size": "12",
+        "population_size": "100",
         "loss_threshold": "1e-4",
         "maximum_number_of_iterations": "200",
         "maximum_number_of_iterations_without_improvement": "100",
@@ -19,26 +19,8 @@
         "file": null,
         "parts": [
             {
-                "id": "FWqihpCXxFNmky2RPcvCRS",
-                "group_types": [
-                    "cgb_vgs_vbs",
-                    "cgd_vgs_vbs"
-                ],
-                "metric_type": "rmse",
-                "weight": 2.0,
-                "norm": "False",
-                "transform": "None",
-                "extra_args": {}
-            },
-            {
                 "id": "TrkchKFGoPc5JwkG6JPdDA",
                 "group_types": [
-                    "cgb_vgs_vbs",
-                    "cgd_vgs_vbs",
-                    "cgg_vgs_vbs",
-                    "cgs_vgs_vbs",
-                    "ciss_vds_vgs",
-                    "crss_vds_vgs",
                     "ids_vds_vgs",
                     "ids_vgs_vbs"
                 ],

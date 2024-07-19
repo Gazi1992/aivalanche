@@ -59,12 +59,23 @@ class parameters_tab(QWidget):
         top_layout.addWidget(import_default_button)
         
         # Create table
-        self.table = custom_table(store = self.store, column_width_mode = 'Stretch')
+        self.table = custom_table(store = self.store, column_width_mode = 'Stretch', on_change = self.on_table_change)
         layout.addWidget(self.table, 1)
 
     def clear_data(self):
         self.table.clear_data()
         self.load_data_widget.set_active_item(None)
+        
+    def on_table_change(self, data: dict = None):
+        if data['type'] == 'text_change':
+            row = data['row_index']
+            column = data['column_index']
+            text = data['text']
+            try:
+                text = float(data['text'])
+            except:
+                text = data['text']
+            self.store.parameters.all_parameters.iloc[row, column] = text
 
     def load_parameters(self):
         if 'include' not in self.store.parameters.columns:
