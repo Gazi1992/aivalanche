@@ -1,7 +1,12 @@
 from pathlib import Path
 import re, json, pandas as pd
 from PySide6.QtGui import QValidator
+from datetime import datetime
 
+# Get current timestamp in dd_mm_yyyy-hh_mm_ss
+def get_current_timestamp():
+    return datetime.now().strftime("%d_%m_%Y-%H_%M_%S")
+    
 # update dataframe by a given condition
 def update_df_by_condition(df: pd.DataFrame = None, condition: str = None, update_columns: list = None, update_values: list = None):
     mask = df.eval(condition)

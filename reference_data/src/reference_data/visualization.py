@@ -1,7 +1,7 @@
 #%% Imports
-import os, pandas as pd, matplotlib.pyplot as plt
+import os, pandas as pd, matplotlib, matplotlib.pyplot as plt
 from matplotlib.style import context
-
+matplotlib.use('Agg')
 
 #%% Plot one group
 def plot_group(group: pd.DataFrame = None, save_dir: str = None, extra_legend: list[str] = [], scientific_y_axis: bool = True):

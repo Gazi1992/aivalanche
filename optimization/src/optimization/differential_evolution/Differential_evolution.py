@@ -76,25 +76,27 @@ class Differential_evolution:
         self.callback_after_better_solution_found = callback_after_better_solution_found
         
         self.parameters = parameters
-        self.pop_size = pop_size
+        self.pop_size = int(pop_size)
         self.opt_min_or_max = opt_min_or_max
-        self.mutation_factor_1 = mutation_factor_1
-        self.mutation_factor_2 = mutation_factor_2
-        self.mutation_factor_3 = mutation_factor_3
-        self.recombination_factor = recombination_factor        
+        self.mutation_factor_1 = float(mutation_factor_1)
+        self.mutation_factor_2 = float(mutation_factor_2)
+        self.mutation_factor_3 = float(mutation_factor_3)
+        self.recombination_factor = float(recombination_factor        )
         
-        self.max_iterations = max_iterations
-        self.metric_threshold = metric_threshold
-        self.max_iter_without_improvement = max_iter_without_improvement
+        self.max_iterations = int(max_iterations)
+        self.metric_threshold = float(metric_threshold)
+        self.max_iter_without_improvement = int(max_iter_without_improvement)
         
-        self.init_pop = init_pop
+        self.init_pop = init_pop if init_pop is not None and os.path.exists(init_pop) else None
         if isinstance(self.init_pop, str):
             if self.init_pop.split('.')[-1] == 'csv':
                 self.init_pop = pd.read_csv(filepath_or_buffer = self.init_pop)
-        self.init_pop_out_of_range_param = init_pop_out_of_range_param
-        self.defaults_in_init_pop = defaults_in_init_pop
+            else:
+                self.init_pop = None
+        self.init_pop_out_of_range_param = str(init_pop_out_of_range_param)
+        self.defaults_in_init_pop = bool(defaults_in_init_pop)
         
-        self.adaptive_boundaries = adaptive_boundaries
+        self.adaptive_boundaries = bool(adaptive_boundaries)
         self.adaptive_boundaries_edge_threshold = adaptive_boundaries_edge_threshold
         self.adaptive_boundaries_pop_quantitle = adaptive_boundaries_pop_quantitle
         self.adaptive_boundaries_extention = adaptive_boundaries_extention
@@ -141,7 +143,6 @@ class Differential_evolution:
                                **self.eval_func_args}
             responses = self.eval_func(parameters = parameters, **extra_arguments)  # run the evaluation function
             
-            start_time = time.time()
             self.save_metrics(responses['metrics'])                                 # save the metrics
             
             self.determine_survivors()                                              # determine the survivors
@@ -149,23 +150,23 @@ class Differential_evolution:
             self.update_history_trials()                                            # append the trials to the history trials
                         
             # Run the callback
-            if self.iter == 1:
-                if self.callback_after_first_iter is not None:
+            if self.iter == 1 and self.callback_after_first_iter is not None:
                     self.callback_after_first_iter(parameters = parameters,
                                                    responses = responses,
                                                    iteration = self.iter,
                                                    best_parameters = self.best_unscaled,
                                                    best_metric = self.best_metric,
                                                    **self.eval_func_args)
-            else:
-                if self.callback_after_each_iter is not None:
-                    self.callback_after_each_iter(parameters = parameters,
-                                                  responses = responses,
-                                                  iteration = self.iter,
-                                                  best_parameters = self.best_unscaled,
-                                                  best_metric = self.best_metric,
-                                                  better_solution_found = self.better_solution_found,
-                                                  **self.eval_func_args)
+            
+            if self.callback_after_each_iter is not None:
+                self.callback_after_each_iter(parameters = parameters,
+                                              responses = responses,
+                                              iteration = self.iter,
+                                              best_parameters = self.best_unscaled,
+                                              best_metric = self.best_metric,
+                                              better_solution_found = self.better_solution_found,
+                                              trials = self.history['trials'],
+                                              **self.eval_func_args)
             
             if self.better_solution_found:
                 if self.results_dir is not None:
@@ -206,8 +207,6 @@ class Differential_evolution:
             
             # Generate new trials
             self.prepare_next_iter()
-            end_time = time.time()
-            print('de time: ', end_time - start_time)
         
         # once the stop criteria is reached
         self.show_final_result()

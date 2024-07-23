@@ -2,7 +2,6 @@
 import json, re, pandas as pd
 from reference_data.Reference_data import Reference_data
 
-
 # Write dataframe to file
 def write_reference_data_to_file(data: pd.DataFrame = None, file_path: str = None,
                                  title: str = '', description: str = '', device_type: str = '',

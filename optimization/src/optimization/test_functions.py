@@ -1,7 +1,8 @@
 #%% Imports
-import numpy as np, matplotlib.pyplot as plt
+import numpy as np, matplotlib, matplotlib.pyplot as plt
 from matplotlib.style import context
 from matplotlib import cm
+matplotlib.use('Agg')
 
 
 #%% Quadratic function - min at (0, 0, 0)

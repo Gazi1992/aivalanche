@@ -144,7 +144,7 @@ if __name__ == '__main__':
     
     # calibration.run_no_parameter_simulation(plot = True)
     
-    calibration.run_default_simulation(plot = True, delete_files = False)
+    calibration.run_default_simulation(plot = True, delete_files = False, print_output = False)
     
     # calibration.run_random_simulation(plot = True, delete_files = False)
     

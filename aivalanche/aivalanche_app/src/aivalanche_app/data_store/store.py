@@ -1,17 +1,51 @@
-import json, pandas as pd, threading, uuid, queue
+import json, pandas as pd, threading, uuid, queue, shutil, numpy as np
 from pathlib import Path
 from datetime import datetime
 from aivalanche_app.paths import dummy_data_path, projects_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.db import db
 from aivalanche_app.simulations.single_simulation import single_simulation
-from aivalanche_app.helper_functions import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val, replace_space_with_underline, dict_to_json
-from PySide6.QtCore import QObject, Signal, QThread
+from aivalanche_app.simulations.model_calibration import model_calibration
+from aivalanche_app.helper_functions import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val, replace_space_with_underline, dict_to_json, get_current_timestamp
+from reference_data.Reference_data import Reference_data
+from reference_data.utils import write_reference_data_to_file
+from PySide6.QtCore import QObject, Signal, QThread, QTimer
+
+class db_thread(QThread):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tasks = []
+
+    def run(self):
+        while True:
+            if self.tasks:
+                task, args = self.tasks.pop(0)
+                try:
+                    task(*args)
+                except Exception as e:
+                    print(e)
+                    pass
+            else:
+                self.msleep(100)  # Sleep for 100ms when no tasks are available
+
+    def add_task(self, task, *args):
+        self.tasks.append((task, args))
 
 class store(QObject):
     show_snackbar = Signal(str)
     
-    single_simulation_end = Signal()
+    # Single simulation
+    single_simulation_start = Signal(object)
+    single_simulation_progress = Signal(object)
+    single_simulation_end = Signal(object)
+    single_simulation_error = Signal(object)
+    
+    # Calibration
+    calibration_start = Signal(object)
+    calibration_progress = Signal(object)
+    calibration_end = Signal(object)
+    calibration_error = Signal(object)
+    calibration_abort = Signal(object)
     
     fetch_available_optimizers_start = Signal()
     fetch_available_optimizers_end = Signal(object)
@@ -19,9 +53,11 @@ class store(QObject):
     fetch_available_simulators_start = Signal()
     fetch_available_simulators_end = Signal(object)
     
+    # User
     validate_user_start = Signal(object)
     validate_user_end = Signal(object)
 
+    # Project
     active_project_change_start = Signal(object)
     active_project_change_end = Signal(object)
     fetch_projects_start = Signal(object)
@@ -31,6 +67,7 @@ class store(QObject):
     create_project_directories_start = Signal(object)
     create_project_directories_end = Signal(object)
     
+    # Model
     active_model_change_start = Signal(object)
     active_model_change_end = Signal(object)
     fetch_models_start = Signal(object)
@@ -41,7 +78,18 @@ class store(QObject):
     fetch_model_templates_end = Signal(object)
     create_model_directories_start = Signal(object)
     create_model_directories_end = Signal(object)
+    update_model_status_start = Signal(object)
+    update_model_status_end = Signal(object)
+    update_model_max_iteration_start = Signal(object)
+    update_model_max_iteration_end = Signal(object)
+    update_model_iteration_and_loss_start = Signal(object)
+    update_model_iteration_and_loss_end = Signal(object)
+    fetch_model_results_start = Signal()
+    fetch_model_results_end = Signal()
+    overwrite_calibration_results_start = Signal(object)
+    overwrite_calibration_results_end = Signal(object)
     
+    # Reference data
     fetch_available_reference_data_start = Signal(object)
     fetch_available_reference_data_end = Signal(object)
     add_available_reference_data_start = Signal(object)
@@ -49,6 +97,7 @@ class store(QObject):
     update_reference_data_id_start = Signal(object)
     update_reference_data_id_end = Signal(object)
     
+    # Parameters
     fetch_available_parameters_start = Signal(object)
     fetch_available_parameters_end = Signal(object)
     add_available_parameters_start = Signal(object)
@@ -56,6 +105,7 @@ class store(QObject):
     update_parameters_id_start = Signal(object)
     update_parameters_id_end = Signal(object)
     
+    # Model files
     fetch_available_model_files_start = Signal(object)
     fetch_available_model_files_end = Signal(object)
     add_available_model_file_start = Signal(object)
@@ -65,6 +115,7 @@ class store(QObject):
     update_model_template_start = Signal(object)
     update_model_template_end = Signal(object)
     
+    # Testbenches
     fetch_available_testbenches_start = Signal(object)
     fetch_available_testbenches_end = Signal(object)
     add_available_testbenches_start = Signal(object)
@@ -72,12 +123,35 @@ class store(QObject):
     update_testbenches_id_start = Signal(object)
     update_testbenches_id_end = Signal(object)
     
+    # Optimization settings
     create_optimization_settings_file_start = Signal(object)
     create_optimization_settings_file_end = Signal(object)
     update_optimization_settings_id_start = Signal(object)
     update_optimization_settings_id_end = Signal(object)
     fetch_optimization_settings_start = Signal(object)
     fetch_optimization_settings_end = Signal(object)
+    
+    # Single simulation results
+    create_single_simulation_results_file_start = Signal()
+    create_single_simulation_results_file_end = Signal(object)
+    update_single_simulation_results_start = Signal()
+    update_single_simulation_results_end = Signal()
+    update_single_simulation_results_id_start = Signal(object)
+    update_single_simulation_results_id_end = Signal(object)
+    fetch_single_simulation_results_files_start = Signal(object)
+    fetch_single_simulation_results_files_end = Signal(object)
+    
+    # Calibration results
+    create_calibration_results_file_start = Signal()
+    create_calibration_results_file_end = Signal(object)
+    update_calibration_results_file_start = Signal()
+    update_calibration_results_file_end = Signal(object)
+    update_calibration_results_start = Signal()
+    update_calibration_results_end = Signal()
+    update_calibration_results_id_start = Signal(object)
+    update_calibration_results_id_end = Signal(object)
+    fetch_calibration_results_files_start = Signal(object)
+    fetch_calibration_results_files_end = Signal(object)
     
     def __init__(self, db_type: str = 'local_files', style: style = None,
                  on_query_success: callable = None, on_query_error: callable = None):
@@ -93,7 +167,6 @@ class store(QObject):
             self.db.connect_to_db()
             self.projects_directory_path = projects_path
 
-        # Initialize variables
         self.reset_user()
         
         self.projects = pd.DataFrame()
@@ -104,18 +177,10 @@ class store(QObject):
     
         self.reset_available_model_data()        
         self.reset_model_data()
-
-        # Queue to make sure the interaction to db is one at a time
-        self.queue = queue.Queue()
+                
+        self.start_db_thread()
         
-        # Start the db_worker thread
-        threading.Thread(target = self.db_worker, daemon = True).start()
-        
-        # Single simulation
-        self.single_simulation = single_simulation(on_start = self.on_single_simulation_start,
-                                                   on_progress = self.on_single_simulation_progress,
-                                                   on_finish = self.on_single_simulation_finish,
-                                                   db_type = self.db_type)
+    #%% Properties
     @property
     def reference_data(self):
         return self._reference_data
@@ -142,17 +207,17 @@ class store(QObject):
             self._model_template = value
             self.update_model_template(self._model_template, self.active_model['id'])
     
-    #%% DB worker
-    def db_worker(self):
-        while True:
-            task, args = self.queue.get()
-            try:
-                task(*args)
-            finally:
-                self.queue.task_done()
+    #%% Database thread
+    def start_db_thread(self):
+        self.db_thread = db_thread()
+        self.db_thread.start()
+        
+    def cleanup(self):
+        self.db_thread.quit()
+        self.db_thread.wait()
                 
     def _run_task(self, task, *args):
-        self.queue.put((task, args))
+        self.db_thread.add_task(task, *args)
     
     #%% Reset functions
     def set_local_paths(self):
@@ -166,6 +231,8 @@ class store(QObject):
         self.available_loss_function_path = Path.joinpath(dummy_data_path, 'loss_function_files.csv')
         self.available_optimizers_path = Path.joinpath(dummy_data_path, 'optimizers.csv')
         self.available_simulators_path = Path.joinpath(dummy_data_path, 'simulators.csv')
+        self.single_simulation_results_files_path = Path.joinpath(dummy_data_path, 'single_simulation_results_files.csv')
+        self.calibration_results_files_path = Path.joinpath(dummy_data_path, 'calibration_results_files.csv')
         self.optimization_settings_files_path = Path.joinpath(dummy_data_path, 'optimization_settings_files.csv')
         self.projects_directory_path = projects_path
     
@@ -185,8 +252,6 @@ class store(QObject):
         self.active_model = None
         self.active_model_directory = None
         self.active_model_inputs_directory = None
-        self.active_model_results_directory = None
-        self.active_model_simulation_files_directory = None
         
     def reset_model_data(self):
         self.model_file_path = None
@@ -201,11 +266,18 @@ class store(QObject):
         self.simulators = None
         self.loss_function = None
         self.loss_function_groups = []
+        self.reset_simulation_variables()
+        
+    def reset_simulation_variables(self):
         self.simulation_input = None
         self.single_simulation_results = None
         self.calibration_results = None
+        self.calibration_new_results = None
         self.calibration_status = None
-        
+        self.optimizer_config = None
+        self.simulator_config = None
+        self.cost_function_config = None
+                
     def reset_available_model_data(self):
         self.model_templates = pd.DataFrame()        
         self.available_reference_data = pd.DataFrame()
@@ -213,9 +285,228 @@ class store(QObject):
         self.available_loss_functions = pd.DataFrame()
         self.available_model_files = pd.DataFrame()
         self.available_testbenches = pd.DataFrame()
+        self.single_simulation_results_files = pd.DataFrame()
+        self.calibration_results_files = pd.DataFrame()
         self.available_optimizers = {}
         self.available_simulators = {}
+
+    #%% Single simulation
+    def init_single_simulation(self):
+        self.single_simulation = single_simulation()
+        self.single_simulation_timer = QTimer(self)
+        self.single_simulation_timer.timeout.connect(self.check_single_simulation_status)
+        self.single_simulation_timer.start(2000)
         
+    def start_single_simulation(self, sync: bool = False):
+        try:
+            self.init_single_simulation()
+            if self.single_simulation is not None:
+                single_simulation_path = self.create_single_simulation_directory()
+                shutil.copy(self.optimization_settings_path, Path.joinpath(single_simulation_path, 'inputs', Path(self.optimization_settings_path).name))
+                self.compile_simulation_input(files_path = single_simulation_path)
+                self.single_simulation.update_simulation_input(self.simulation_input)
+                if sync:
+                    self.single_simulation.run()
+                else:
+                    self.single_simulation.start()
+                self.on_single_simulation_start({'model_id': self.active_model['id']})
+        except Exception as e:
+            print('ERROR at start_single_simulation!')
+            print(e)
+            
+    def check_single_simulation_status(self):
+        if not self.single_simulation.is_running():
+            self.single_simulation_timer.stop()
+        data = self.single_simulation.get_result()
+        if data is not None:
+            status = data['status']
+            if status == 'error':
+                self.on_single_simulation_error(data)
+            elif status == 'finish':
+                self.on_single_simulation_finish(data)
+    
+    def on_single_simulation_error(self, data):
+        self.update_model_status('single simulation error', data['model_id'])
+        self.single_simulation_error.emit(data)
+        
+    def on_single_simulation_start(self, data):
+        self.update_model_status('single simulation in progress', data['model_id'])
+        self.single_simulation_start.emit(data)
+
+    def on_single_simulation_finish(self, data):
+        model_id = data['model_id']
+        results_dir = data['results_dir']
+        results = data['results']
+        loss = data['loss']
+        self.update_model_status('single simulation finished', model_id)
+        self.create_single_simulation_results_file(results = results,
+                                                   path = Path.joinpath(results_dir, 'results.json'),
+                                                   model_id = model_id)
+        if model_id == self.active_model['id']:
+            try:
+                results['plot'] = self.single_simulation_results['plot'] # keep the plots if there were any before
+            except:
+                pass
+            self.single_simulation_results = results
+            # Keep only the columns that are important to show
+            columns = list(self.reference_data.data.columns) + ['x_values_simulation', 'y_values_simulation']
+            columns.remove('calibrate')
+            columns.remove('include')
+            self.single_simulation_results = self.single_simulation_results[columns]
+        
+        if self.single_simulation.is_running():
+            self.single_simulation.terminate()
+            
+        self.single_simulation_end.emit({'model_id': model_id})
+    
+    def create_single_simulation_directory(self):
+        timestamp = get_current_timestamp()
+        model_path = Path(self.active_model['path'])
+        
+        single_simulation_path = Path.joinpath(model_path, f'single_simulation_{timestamp}')
+        if not Path.exists(single_simulation_path):
+            Path.mkdir(single_simulation_path)
+            
+        simulation_files_path = Path.joinpath(single_simulation_path, 'simulation_files')
+        if not Path.exists(simulation_files_path):
+            Path.mkdir(simulation_files_path)
+            
+        results_path = Path.joinpath(single_simulation_path, 'results')
+        if not Path.exists(results_path):
+            Path.mkdir(results_path)
+        
+        inputs_path = Path.joinpath(single_simulation_path, 'inputs')
+        if not Path.exists(inputs_path):
+            Path.mkdir(inputs_path)
+        
+        return single_simulation_path
+
+    #%% Calibration
+    def init_model_calibration(self):        
+        self.model_calibration = model_calibration()
+        self.calibration_timer = QTimer(self)
+        self.calibration_timer.timeout.connect(self.check_calibration_status)
+        self.calibration_timer.start(2000)
+        
+    def start_calibration(self, sync: bool = False):
+        self.init_model_calibration()
+        if self.model_calibration:
+            calibration_path = self.create_calibration_directory()
+            shutil.copy(self.optimization_settings_path, Path.joinpath(calibration_path, 'inputs', Path(self.optimization_settings_path).name))
+            self.compile_simulation_input(files_path = calibration_path)
+            self.model_calibration.update_simulation_input(self.simulation_input)
+            if sync:
+                self.model_calibration.run()
+            else:
+                self.model_calibration.start()
+            self.on_calibration_start({'model_id': self.active_model['id']})
+        
+    def abort_calibration(self):
+        if self.model_calibration.is_running():
+            self.model_calibration.terminate()
+            self.on_calibration_abort({'model_id': self.active_model['id']})
+            
+    def check_calibration_status(self):
+        if not self.model_calibration.is_running():
+            self.calibration_timer.stop()
+        data = self.model_calibration.get_result()
+        if data is not None:
+            status = data['status']
+            if status == 'error':
+                self.on_calibration_error(data)
+            elif status == 'progress':
+                self.on_calibration_progress(data)
+            elif status == 'finish':
+                self.on_calibration_finish(data)
+    
+    def on_calibration_start(self, data):
+        model_id = data['model_id']
+        self.update_model_status('starting calibration', model_id)
+        self.calibration_start.emit(data)
+        
+    def on_calibration_progress(self, data):
+        model_id = data['model_id']
+        iteration = data['iteration']
+        max_iterations = data['max_iterations']
+        best_loss = data['best_loss']
+        best_results = data['best_results']
+        better_solution_found = data['better_solution_found']
+        results_dir = data['results_dir']
+        trials = data['trials']
+        
+        self.update_model_status('calibration in progress', model_id)
+        self.update_model_iteration_and_loss(iteration, best_loss, model_id)
+        
+        if iteration == 1:
+            self.create_calibration_results_file(results = best_results,
+                                                 path = Path.joinpath(results_dir, 'results.json'),
+                                                 model_id = model_id)
+            if model_id == self.active_model['id']:
+                try:
+                    best_results['plot'] = self.calibration_results['plot']
+                except:
+                    pass
+                self.calibration_results = best_results
+                # Keep only the columns that are important to show
+                columns = list(self.reference_data.data.columns) + ['x_values_simulation', 'y_values_simulation']
+                columns.remove('calibrate')
+                columns.remove('include')
+                self.calibration_results = self.calibration_results[columns]
+        elif better_solution_found and iteration > 1:
+            self.update_calibration_results_file(results = best_results,
+                                                 path = Path.joinpath(results_dir, 'results.json'),
+                                                 model_id = model_id)  
+            if model_id == self.active_model['id']:
+                self.calibration_new_results = best_results            
+                # Keep only the columns that are important to show
+                columns = list(self.reference_data.data.columns) + ['x_values_simulation', 'y_values_simulation']
+                columns.remove('calibrate')
+                columns.remove('include')
+                self.calibration_new_results = self.calibration_new_results[columns]
+    
+        self.calibration_progress.emit({'model_id': model_id, 'iteration': iteration,
+                                        'max_iterations': max_iterations, 'better_solution_found': better_solution_found})
+
+    def on_calibration_finish(self, data):
+        model_id = data['model_id']
+        self.update_model_status('calibration finished', model_id)
+        if self.model_calibration.is_running():
+            self.model_calibration.terminate()
+        self.calibration_end.emit({'model_id': model_id})
+        
+    def on_calibration_abort(self, data):
+        model_id = data['model_id']
+        self.update_model_status('calibration aborted', model_id)
+        self.calibration_abort.emit(data)
+        
+    def on_calibration_error(self, data):
+        print(data)
+        model_id = data['model_id']
+        self.update_model_status('calibration error', model_id)
+        self.calibration_error.emit(data)
+
+    def create_calibration_directory(self):
+        timestamp = get_current_timestamp()
+        model_path = Path(self.active_model['path'])
+        
+        calibration_path = Path.joinpath(model_path, f'calibration_{timestamp}')
+        if not Path.exists(calibration_path):
+            Path.mkdir(calibration_path)
+            
+        simulation_files_path = Path.joinpath(calibration_path, 'simulation_files')
+        if not Path.exists(simulation_files_path):
+            Path.mkdir(simulation_files_path)
+            
+        results_path = Path.joinpath(calibration_path, 'results')
+        if not Path.exists(results_path):
+            Path.mkdir(results_path)
+        
+        inputs_path = Path.joinpath(calibration_path, 'inputs')
+        if not Path.exists(inputs_path):
+            Path.mkdir(inputs_path)
+        
+        return calibration_path
+
     #%% Optimizers
     def fetch_available_optimizers(self, emit_signals: bool = True):
         self._run_task(self._fetch_available_optimizers, emit_signals)
@@ -511,8 +802,8 @@ class store(QObject):
     def set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True):        
         if m is None and self.active_model is None:
             return
-        
-        if self.active_model is not None and self.active_model['id'] == m['id'] and not override:
+                
+        if self.active_model is not None and m is not None and self.active_model['id'] == m['id'] and not override:
             return
         
         if emit_signals:
@@ -525,13 +816,12 @@ class store(QObject):
             self.active_model = m
             self.active_model_directory = Path(m['path'])
             self.active_model_inputs_directory = Path.joinpath(self.active_model_directory, 'inputs')
-            self.active_model_results_directory = Path.joinpath(self.active_model_directory, 'results')
-            self.active_model_simulation_files_directory = Path.joinpath(self.active_model_directory, 'simulation_files')
             if pd.isnull(self.active_model['optimization_settings_id']):
                 self.create_optimization_settings_file()
             else:
                 if not override:
                     self.fetch_optimization_settings(sync = False)
+                    self.fetch_model_results(model_id = self.active_model['id'])
         if emit_signals:
             self.active_model_change_end.emit({'active_model': self.active_model})
     
@@ -626,6 +916,9 @@ class store(QObject):
                                                          'created_at': formatted_time,
                                                          'last_modified_at': formatted_time,
                                                          'title': title,
+                                                         'status': 'setup',
+                                                         'max_iterations': 1000,
+                                                         'iter': 0,
                                                          'labels': ''}])
                     all_models = pd.concat((all_models, new_model))
                     all_models.to_csv(path_or_buf = self.models_path, index = False)
@@ -670,13 +963,9 @@ class store(QObject):
                     project_path = Path(self.active_project['path'])
                     model_path = Path.joinpath(project_path, 'models', f'{replace_space_with_underline(title)}.{model_id}')
                     inputs_path = Path.joinpath(model_path, 'inputs')
-                    results_path = Path.joinpath(model_path, 'results')
-                    simulation_files_path = Path.joinpath(model_path, 'simulation_files')
                     try:
                         Path.mkdir(model_path)
                         Path.mkdir(inputs_path)
-                        Path.mkdir(results_path)
-                        Path.mkdir(simulation_files_path)
                         if self.db_type == 'local_files':
                             all_models = pd.read_csv(self.models_path)
                             all_models.loc[all_models['id'] == model_id, 'path'] = model_path
@@ -698,7 +987,134 @@ class store(QObject):
                 
         if emit_signals:
             self.create_model_directories_end.emit({'success': success, 'error': error, 'data': data})
+    
+    def update_model_status(self, status: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_model_status, status, model_id, emit_signals)
+        
+    def _update_model_status(self, status: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_model_status_start.emit({'status': status, 'model_id': model_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'status'] = status
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'status'] = status
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_model_status_by_id(model_id, status)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'status'] = status
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if emit_signals:
+            self.update_model_status_end.emit({'success': success, 'error': error, 'model_id': model_id, 'data': data})
+            
+    def update_model_max_iteration(self, max_iteration: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_model_max_iteration, max_iteration, model_id, emit_signals)
+        
+    def _update_model_max_iteration(self, max_iteration: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_model_max_iteration_start.emit({'max_iteration': max_iteration, 'model_id': model_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'max_iteration'] = max_iteration
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'max_iteration'] = max_iteration
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_model_max_iteration_by_id(model_id, max_iteration)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'max_iteration'] = max_iteration
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if emit_signals:
+            self.update_model_max_iteration_end.emit({'success': success, 'error': error, 'model_id': model_id, 'data': data})
+            
+    def update_model_iteration_and_loss(self, iteration: int = None, loss: float = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_model_iteration_and_loss, iteration, loss, model_id, emit_signals)
+        
+    def _update_model_iteration_and_loss(self, iteration: int = None, loss: float = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_model_iteration_and_loss_start.emit({'iteration': iteration, 'loss': loss, 'model_id': model_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'iteration'] = iteration
+                all_models.loc[all_models['id'] == model_id, 'loss'] = loss
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'iteration'] = iteration
+                self.models.loc[self.models['id'] == model_id, 'loss'] = loss
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_model_iteration_and_loss_by_id(model_id, iteration, loss)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'iteration'] = iteration
+                    self.models.loc[self.models['id'] == model_id, 'loss'] = loss
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if emit_signals:
+            self.update_model_iteration_and_loss_end.emit({'success': success, 'error': error, 'model_id': model_id, 'data': data})
 
+    def fetch_model_results(self, model_id: str = None, emit_signals: bool = True, sync: bool = False):
+        if sync:
+            self._fetch_model_results(model_id, emit_signals)
+        else:
+            self._run_task(self._fetch_model_results, emit_signals)
+        
+    def _fetch_model_results(self, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.fetch_model_results_start.emit()
+            
+        self._fetch_calibration_results_files(model_id = model_id, emit_signals = False)
+        self._fetch_single_simulation_results_files(model_id = model_id, emit_signals = False)
+        
+        if emit_signals:
+            self.fetch_model_results_end.emit()
+        
     #%% Reference data files
     def fetch_available_reference_data(self, project_id: str = None, emit_signals: bool = True):
         self._run_task(self._fetch_available_reference_data, project_id, emit_signals)
@@ -1442,45 +1858,400 @@ class store(QObject):
         # write to json file
         if len(optimization_settings.keys()) > 0:
             dict_to_json(optimization_settings, self.optimization_settings_path)
-                    
-    
-    #%% Single simulation
-    def on_single_simulation_start(self, data):
-        print('single_simulation_started')
-        print(data)
-        
-    def on_single_simulation_progress(self, data):
-        print('single_simulation_progress')
+            if 'maximum_number_of_iterations' in optimization_settings.keys():
+                self.update_model_max_iteration(optimization_settings['maximum_number_of_iterations'], self.active_model['id'])
 
-    def on_single_simulation_finish(self, data):
-        self.single_simulation_results = data
-        self.single_simulation_end.emit()
-    
-    def start_single_simulation(self):
-        self.compile_simulation_input()
-        self.single_simulation.update_simulation_input(self.simulation_input)
-        self.single_simulation.start()
-    
-    #%% Extra functions
-    def compile_simulation_input(self):
+    #%% Simulation input
+    def compile_simulation_input(self, files_path = None):
+        if files_path is None:
+            files_path = self.active_model_results_directory
+        results_path = Path.joinpath(files_path, 'results') 
+        simulation_files_path = Path.joinpath(files_path, 'simulation_files')
+        inputs_path = Path.joinpath(files_path, 'inputs')
+        
+        self.compile_simulator_config()
+        self.compile_optimizer_config()
+        self.compile_cost_function_config()
         dut_file = self.get_model_file_path()
         dut_name = 'dut'
-        running_environment = 'local'
-        simulator_config = {'type': self.active_simulator,
-                            'timeout': self.simulators.loc[(self.simulators['simulator'] == self.active_simulator) & (self.simulators['name'] == 'timeout'), 'value'].values[0]}
-        cost_function_config = {'type': 'default',
-                                'parts': list(self.loss_function['parts'].values())}
-        print(self.parameters.all_parameters.dtypes)
-        self.simulation_input = {'reference_data': self.reference_data,
+        if self.db_type in ['local_files', 'local_mysql_db']:
+            running_environment = 'local' 
+        else:
+            running_environment = None
+        self.simulation_input = {'model_id': self.active_model['id'],
+                                 'max_iterations': self.optimizer_config['max_iterations'],
+                                 'reference_data': self.reference_data,
                                  'parameters': self.parameters,
                                  'testbenches': self.testbenches_path,
                                  'dut_file': dut_file,
                                  'dut_name': dut_name,
-                                 'results_dir': self.active_model_simulation_files_directory,
-                                 'simulator_config': simulator_config,
-                                 'cost_function_config': cost_function_config,
+                                 'results_dir': results_path,
+                                 'inputs_dir': inputs_path,
+                                 'simulation_files_dir': simulation_files_path,
+                                 'simulator_config': self.simulator_config,
+                                 'optimizer_config': self.optimizer_config,
+                                 'cost_function_config': self.cost_function_config,
                                  'running_environment': running_environment}
+        self.write_optimization_settings_to_file()
     
+    def compile_simulator_config(self):
+        self.simulator_config = {'type': self.active_simulator}
+        temp = self.simulators.copy()
+        temp.set_index('name', inplace = True)
+        temp = temp.loc[temp['simulator'] == self.active_simulator, 'value'].to_dict()
+        self.simulator_config.update(temp)
+        
+    def compile_optimizer_config(self):
+        self.optimizer_config = {'type': self.active_optimizer,
+                                 'results_dir': self.active_model_directory}
+        temp = self.optimizers.copy()
+        temp.set_index('name', inplace = True)
+        temp = temp.loc[temp['optimizer'] == self.active_optimizer, 'value'].to_dict()
+        key_mapping = {'population_size': 'pop_size',
+                       'maximum_number_of_iterations': 'max_iterations',
+                       'maximum_number_of_iterations_without_improvement': 'max_iter_without_improvement',
+                       'initial_population': 'init_pop',
+                       'loss_threshold': 'metric_threshold'}
+        new_dict = {key_mapping.get(k, k): v for k, v in temp.items()}
+        self.optimizer_config.update(new_dict)
+        
+    def compile_cost_function_config(self):
+        self.cost_function_config = {'type': 'default',
+                                     'parts': list(self.loss_function['parts'].values())}
+    
+    #%% Single simulation results
+    def update_single_simulation_results(self, emit_signals: bool = True):
+        if emit_signals:
+            self.update_single_simulation_results_start.emit()
+        
+        self.single_simulation_results = None
+        
+        single_simulation_results_id = self.active_model['single_simulation_results_id']
+        if not pd.isnull(single_simulation_results_id):
+            single_simulation_results_path = self.single_simulation_results_files.loc[self.single_simulation_results_files['id'] == single_simulation_results_id, 'path'].values
+            if len(single_simulation_results_path) >= 1:                
+                single_simulation_results_path = single_simulation_results_path[0]            
+                if Path.exists(Path(single_simulation_results_path)):
+                    temp = Reference_data(file = single_simulation_results_path)
+                    self.single_simulation_results = temp.data
+        
+        if emit_signals:
+            self.update_single_simulation_results_end.emit()
+    
+    def fetch_single_simulation_results_files(self, model_id: str = None, emit_signals: bool = True, sync: bool = False):
+        if sync:
+            self._fetch_single_simulation_results_files(model_id, emit_signals)
+        else:
+            self._run_task(self._fetch_single_simulation_results_files, model_id, emit_signals)
+        
+    def _fetch_single_simulation_results_files(self, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.fetch_single_simulation_results_files_start.emit({'model_id': model_id})
+        
+        success = True
+        error = None
+        single_simulation_results_files = None
+        
+        if model_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                single_simulation_results_files = pd.read_csv(self.single_simulation_results_files_path)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_single_simulation_results()
+                if db_response['success']:
+                    single_simulation_results_files = db_response['data']
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if success:
+            self.single_simulation_results_files = single_simulation_results_files
+            self.update_single_simulation_results()
+        
+        if emit_signals:
+            self.fetch_single_simulation_results_files_end.emit({'success': success, 'error': error, 'data': single_simulation_results_files})
+    
+    def create_single_simulation_results_file(self, results: pd.DataFrame = None, path: str = None, model_id: str = None, emit_signals: bool = True, sync: bool = False):
+        if sync:
+            self._create_single_simulation_results_file(results, path, model_id, emit_signals)
+        else:
+            self._run_task(self._create_single_simulation_results_file, results, path, model_id, emit_signals)
+    
+    def _create_single_simulation_results_file(self, results: pd.DataFrame = None, path: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.create_single_simulation_results_file_start.emit()
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        elif results is None:
+            success = False
+            error = 'results is None!'
+        elif path is None:
+            success = False
+            error = 'path is None!'
+        else:
+            # Create the file
+            write_reference_data_to_file(data = results,
+                                         file_path = path,
+                                         include_simulation = 'True',
+                                         operating_conditions = ['temp', 'vbs', 'vds', 'vgs', 'frequency'],
+                                         instance_parameters = ['w', 'l', 'm', 'area'])
+            
+            # Add it to the single_simulation_results_files and update the model
+            if self.db_type == 'local_files':
+                    id = str(uuid.uuid4())
+                    new_single_simulation_results_file = pd.DataFrame.from_dict([{'id': id,
+                                                                                  'path': path,
+                                                                                  'model_id': model_id}])
+                    self.single_simulation_results_files = pd.concat((self.single_simulation_results_files, new_single_simulation_results_file))
+                    self.single_simulation_results_files.to_csv(path_or_buf = self.single_simulation_results_files_path, index = False)
+                    data = new_single_simulation_results_file.squeeze()   
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.add_single_simulation_results(path, model_id)
+                if db_response['success']:
+                    data = db_response['data']
+                    id = data['id']
+                else:
+                    success = False
+                    error = db_response['error']
+                    
+            if success:
+                self.update_single_simulation_results_id(id, model_id)
+                    
+        if emit_signals:
+            self.create_single_simulation_results_file_end.emit({'success': success, 'error': error, 'data': data})
+    
+    def update_single_simulation_results_id(self, single_simulation_results_id: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_single_simulation_results_id, single_simulation_results_id, model_id, emit_signals)
+        
+    def _update_single_simulation_results_id(self, single_simulation_results_id: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_single_simulation_results_id_start.emit({'single_simulation_results_id': single_simulation_results_id, 'model_id': model_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'single_simulation_results_id'] = single_simulation_results_id
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'single_simulation_results_id'] = single_simulation_results_id
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_single_simulation_results_id_by_model_id(single_simulation_results_id, model_id)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'single_simulation_results_id'] = single_simulation_results_id
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if emit_signals:
+            self.update_single_simulation_results_id_end.emit({'success': success, 'error': error, 'data': data})
+            
+    #%% Calibration results
+    def update_calibration_results(self, emit_signals: bool = True):
+        if emit_signals:
+            self.update_calibration_results_start.emit()
+        
+        self.calibration_results = None
+        
+        calibration_results_id = self.active_model['calibration_results_id']
+        if not pd.isnull(calibration_results_id):
+            calibration_results_path = self.calibration_results_files.loc[self.calibration_results_files['id'] == calibration_results_id, 'path'].values
+            if len(calibration_results_path) >= 1:                
+                calibration_results_path = calibration_results_path[0]            
+                if Path.exists(Path(calibration_results_path)):
+                    temp = Reference_data(file = calibration_results_path)
+                    self.calibration_results = temp.data
+        
+        if emit_signals:
+            self.update_calibration_results_end.emit()
+    
+    def fetch_calibration_results_files(self, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._fetch_calibration_results_files, model_id, emit_signals)
+        
+    def _fetch_calibration_results_files(self, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.fetch_calibration_results_files_start.emit({'model_id': model_id})
+        
+        success = True
+        error = None
+        calibration_results_files = None
+        
+        if model_id is None:
+            success = False
+            error = 'project_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                calibration_results_files = pd.read_csv(self.calibration_results_files_path)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.fetch_calibration_results()
+                if db_response['success']:
+                    calibration_results_files = db_response['data']
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if success:
+            self.calibration_results_files = calibration_results_files
+            self.update_calibration_results()
+        
+        if emit_signals:
+            self.fetch_calibration_results_files_end.emit({'success': success, 'error': error, 'data': calibration_results_files})
+    
+    def create_calibration_results_file(self, results: pd.DataFrame = None, path: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._create_calibration_results_file, results, path, model_id, emit_signals)
+    
+    def _create_calibration_results_file(self, results: pd.DataFrame = None, path: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.create_calibration_results_file_start.emit()
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        elif results is None:
+            success = False
+            error = 'results is None!'
+        elif path is None:
+            success = False
+            error = 'path is None!'
+        else:
+            # Create the file
+            write_reference_data_to_file(data = results,
+                                         file_path = path,
+                                         include_simulation = 'True',
+                                         operating_conditions = ['temp', 'vbs', 'vds', 'vgs', 'frequency'],
+                                         instance_parameters = ['w', 'l', 'm', 'area'])
+            
+            # Add it to the calibration_results_files and update the model
+            if self.db_type == 'local_files':
+                    id = str(uuid.uuid4())
+                    new_calibration_results_file = pd.DataFrame.from_dict([{'id': id,
+                                                                                  'path': path,
+                                                                                  'model_id': model_id}])
+                    self.calibration_results_files = pd.concat((self.calibration_results_files, new_calibration_results_file))
+                    self.calibration_results_files.to_csv(path_or_buf = self.calibration_results_files_path, index = False)
+                    data = new_calibration_results_file.squeeze()   
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.add_calibration_results(path, model_id)
+                if db_response['success']:
+                    data = db_response['data']
+                    id = data['id']
+                else:
+                    success = False
+                    error = db_response['error']
+                    
+            if success:
+                self.update_calibration_results_id(id, model_id)
+                    
+        if emit_signals:
+            self.create_calibration_results_file_end.emit({'success': success, 'error': error, 'data': data})
+            
+    def update_calibration_results_file(self, results: pd.DataFrame = None, path: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_calibration_results_file, results, path, model_id, emit_signals)
+    
+    def _update_calibration_results_file(self, results: pd.DataFrame = None, path: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_calibration_results_file_start.emit()
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        elif results is None:
+            success = False
+            error = 'results is None!'
+        elif path is None:
+            success = False
+            error = 'path is None!'
+        else:
+            # Create the file
+            write_reference_data_to_file(data = results,
+                                         file_path = path,
+                                         include_simulation = 'True',
+                                         operating_conditions = ['temp', 'vbs', 'vds', 'vgs', 'frequency'],
+                                         instance_parameters = ['w', 'l', 'm', 'area'])
+                    
+        if emit_signals:
+            self.update_calibration_results_file_end.emit({'success': success, 'error': error, 'data': data})
+    
+    def update_calibration_results_id(self, calibration_results_id: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_calibration_results_id, calibration_results_id, model_id, emit_signals)
+        
+    def _update_calibration_results_id(self, calibration_results_id: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_calibration_results_id_start.emit({'calibration_results_id': calibration_results_id, 'model_id': model_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'calibration_results_id'] = calibration_results_id
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'calibration_results_id'] = calibration_results_id
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_calibration_results_id_by_model_id(calibration_results_id, model_id)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'calibration_results_id'] = calibration_results_id
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if emit_signals:
+            self.update_calibration_results_id_end.emit({'success': success, 'error': error, 'data': data})  
+    
+    def overwrite_calibration_results(self, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._overwrite_calibration_results, model_id, emit_signals)
+    
+    def _overwrite_calibration_results(self, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.overwrite_calibration_results_start.emit({'model_id': model_id})
+        
+        if model_id == self.active_model['id']:
+            if self.calibration_new_results is not None:
+                plot = np.array(self.calibration_results['plot'])
+                self.calibration_results = self.calibration_new_results.copy()
+                self.calibration_results['plot'] = plot
+                self.calibration_new_results = None
+                
+        if emit_signals:
+            self.overwrite_calibration_results_end.emit({'model_id': model_id})
+
+    #%% Extra functions
     def on_app_exit(self):
         print('Exiting the application...')
         self.write_optimization_settings_to_file()

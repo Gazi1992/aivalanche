@@ -197,12 +197,12 @@ class model_tab(QWidget):
     def on_import_new_model_file(self, file_path: str = None):
         if file_path is not None:            
             file_exists = False
-            new_file_path = Path.joinpath(self.store.active_project_common_model_files_directory_path, Path(file_path).name)
+            new_file_path = Path.joinpath(self.store.active_project_common_model_files_directory, Path(file_path).name)
             if Path.exists(new_file_path):
                 if file_path in self.store.available_model_files['original_path'].tolist():
                     file_exists = True
                 else:
-                    new_file_path = find_max_suffix(self.store.active_project_common_model_files_directory_path, Path(file_path).name)
+                    new_file_path = find_max_suffix(self.store.active_project_common_model_files_directory, Path(file_path).name)
             if file_exists:
                 warning = {'title': 'Model import error',
                            'message': 'File already exists',
@@ -246,12 +246,12 @@ class model_tab(QWidget):
     def on_import_new_testbenches_file(self, file_path: str = None):
         if file_path is not None:            
             file_exists = False
-            new_file_path = Path.joinpath(self.store.active_project_common_testbenches_directory_path, Path(file_path).name)
+            new_file_path = Path.joinpath(self.store.active_project_common_testbenches_directory, Path(file_path).name)
             if Path.exists(new_file_path):
                 if file_path in self.store.available_testbenches['original_path'].tolist():
                     file_exists = True
                 else:
-                    new_file_path = find_max_suffix(self.store.active_project_common_testbenches_directory_path, Path(file_path).name)
+                    new_file_path = find_max_suffix(self.store.active_project_common_testbenches_directory, Path(file_path).name)
             if file_exists:
                 warning = {'title': 'Testbenches import error',
                            'message': 'File already exists',

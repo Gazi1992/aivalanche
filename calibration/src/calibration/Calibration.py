@@ -12,7 +12,7 @@ from simulation.ngspice import Ngspice_simulator
 from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
 from datetime import datetime
-from copy import deepcopy
+from copy import copy, deepcopy
 import os, shutil, json, uuid, dask, time, pickle, logging, pandas as pd, asyncio
 
 
@@ -111,25 +111,33 @@ class Calibration:
     
     def get_optimizer(self):
         if self.optimizer_config['type'] == 'differential_evolution':
+            
+            temp = copy(self.optimizer_config)
+            del temp['type']
             self.optimizer = Differential_evolution(parameters = self.parameters.all_parameters,
                                                     eval_func = self.run_multiple_simulations,
                                                     eval_func_args = None,
-                                                    callback_after_first_iter = self.optimizer_config['callback_after_first_iter'],
-                                                    callback_after_each_iter = self.optimizer_config['callback_after_each_iter'],
-                                                    callback_after_last_iter = self.optimizer_config['callback_after_last_iter'],
-                                                    callback_after_better_solution_found = self.optimizer_config['callback_after_better_solution_found'],
-                                                    pop_size = self.optimizer_config['pop_size'],
-                                                    metric_threshold = self.optimizer_config['metric_threshold'],
-                                                    max_iterations = self.optimizer_config['max_iterations'],
-                                                    max_iter_without_improvement = self.optimizer_config['max_iter_without_improvement'],
-                                                    init_pop = self.optimizer_config['init_pop'],
-                                                    init_pop_out_of_range_param = self.optimizer_config['init_pop_out_of_range_param'],
-                                                    defaults_in_init_pop = self.optimizer_config['defaults_in_init_pop'],
-                                                    plot_parameter_evolution_period = self.optimizer_config['plot_parameter_evolution_period'],
-                                                    plot_survivor_metric_evolution_period = self.optimizer_config['plot_survivor_metric_evolution_period'],
-                                                    write_history_to_file_period = self.optimizer_config['write_history_to_file_period'],
-                                                    results_dir = self.optimizer_config['results_dir'],
-                                                    adaptive_boundaries = self.optimizer_config['adaptive_boundaries'])
+                                                    **temp)
+            
+            # self.optimizer = Differential_evolution(parameters = self.parameters.all_parameters,
+            #                                         eval_func = self.run_multiple_simulations,
+            #                                         eval_func_args = None,
+            #                                         callback_after_first_iter = self.optimizer_config['callback_after_first_iter'],
+            #                                         callback_after_each_iter = self.optimizer_config['callback_after_each_iter'],
+            #                                         callback_after_last_iter = self.optimizer_config['callback_after_last_iter'],
+            #                                         callback_after_better_solution_found = self.optimizer_config['callback_after_better_solution_found'],
+            #                                         pop_size = self.optimizer_config['pop_size'],
+            #                                         metric_threshold = self.optimizer_config['metric_threshold'],
+            #                                         max_iterations = self.optimizer_config['max_iterations'],
+            #                                         max_iter_without_improvement = self.optimizer_config['max_iter_without_improvement'],
+            #                                         init_pop = self.optimizer_config['init_pop'],
+            #                                         init_pop_out_of_range_param = self.optimizer_config['init_pop_out_of_range_param'],
+            #                                         defaults_in_init_pop = self.optimizer_config['defaults_in_init_pop'],
+            #                                         plot_parameter_evolution_period = self.optimizer_config['plot_parameter_evolution_period'],
+            #                                         plot_survivor_metric_evolution_period = self.optimizer_config['plot_survivor_metric_evolution_period'],
+            #                                         write_history_to_file_period = self.optimizer_config['write_history_to_file_period'],
+            #                                         results_dir = self.optimizer_config['results_dir'],
+            #                                         adaptive_boundaries = self.optimizer_config['adaptive_boundaries'])
     
     def get_cost_function(self):
         if self.cost_function_config['type'] == 'default':
@@ -148,10 +156,14 @@ class Calibration:
         return(error_metric)
 
     def run_default_simulation(self, plot: bool = False, delete_files: bool = False, print_output: bool = True):
+        simulation_files_dir = os.path.join(self.results_dir, 'simulation_files')
+        if not os.path.exists(simulation_files_dir):
+            simulation_files_dir = self.results_dir
+            
         simulation_results = run_single_simulation(testbenches = self.testbenches,
                                                    simulator = self.simulator,
                                                    reference_data = self.reference_data.data,
-                                                   simulation_files_path = self.results_dir,
+                                                   simulation_files_path = simulation_files_dir,
                                                    plot = plot,
                                                    delete_files = delete_files,
                                                    print_output = print_output)
@@ -181,19 +193,17 @@ class Calibration:
             return self.run_multiple_simulations_kafka_local(parameters, **kwargs)
     
     def run_multiple_simulations_local(self, parameters: list[dict] = None, **kwargs):
-        start_time = time.time()
         responses = {'results': [], 'error_metrics': [], 'metrics': []}
         for param in parameters:
             try:
-                start_time = time.time()
                 simulation_results = run_single_simulation(parameters = param, 
                                                            testbenches = self.testbenches,
                                                            simulator = self.simulator,
                                                            reference_data = self.reference_data.data,   
                                                            simulation_files_path = self.simulation_files_path,
                                                            plot = False,
-                                                           delete_files = False,
-                                                           print_output = True)
+                                                           delete_files = True,
+                                                           print_output = False)
                 metric = calculate_error_metrics(cost_function = self.cost_function, data = simulation_results, parameters = param)
             except Exception:
                 e_m = raise_exception('simulation_failed_exception')
@@ -203,8 +213,6 @@ class Calibration:
             responses['results'].append(metric['data'])
             responses['error_metrics'].append(metric['error_metric'])
             responses['metrics'].append(metric['error_metric']['total'])
-        end_time = time.time()
-        self.logger.info(f'simulation + metric time: {end_time - start_time}')
         return responses
     
     def run_multiple_simulations_dask_local(self, parameters: list[dict] = None, **kwargs):
@@ -256,13 +264,21 @@ class Calibration:
             responses['metrics'].append(metric['error_metric']['total'])
         return responses
 
-    def calibrate(self):
-        if self.running_environment == 'dask_local':
-            self.cluster = init_dask(scale = 2)
-        self.create_new_output_dir()
+    def calibrate(self, create_new_dir: bool = True, simulation_files_path: str = None, write_input_to_files: bool = True):
         self.validate_optimizer()
         self.get_optimizer()
-        self.write_input_to_files()                
+        if self.running_environment == 'dask_local':
+            self.cluster = init_dask(scale = 2)
+        if create_new_dir:
+            self.create_new_output_dir()
+        else:
+            if simulation_files_path is not None and os.path.exists(simulation_files_path):
+                self.simulation_files_path = simulation_files_path
+            else:
+                self.simulation_files_path = self.results_dir
+            self.testbenches.update_working_directory(new_working_dir = self.simulation_files_path)
+        if write_input_to_files:
+            self.write_input_to_files()     
         self.optimizer.run_optimization()
         if self.running_environment == 'dask_local':
             close_dask(self.cluster)
@@ -276,7 +292,7 @@ class Calibration:
         self.simulation_files_path = os.path.join(self.output_path, 'simulation_files')
         os.mkdir(self.simulation_files_path)
 
-        self.input_path = os.path.join(self.output_path, 'input')
+        self.input_path = os.path.join(self.output_path, 'inputs')
         os.mkdir(self.input_path)
 
         set_log_file(self.logging_config, os.path.join(self.output_path, 'calibrate.log'))

@@ -26,12 +26,12 @@ class my_models(QWidget):
         self.store.fetch_models_end.connect(self.on_fetch_models_end)
         self.store.create_model_start.connect(self.on_create_model_start)
         self.store.create_model_end.connect(self.on_create_model_end)
-        
-        self.init_ui()
-        
+                
         self._loading = False
         self._error = None        
         
+        self.init_ui()
+
     @property
     def loading(self):
         return self._loading
@@ -69,7 +69,7 @@ class my_models(QWidget):
         # Header Section
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},
                                   {'text': self.store.active_project.title if self.store.active_project is not None else 'Models', 'on_click': None}]
-        self.header_widget = navigation_header(navigation_path = self.header_navigation, on_search_text_changed = self.on_search, object_name = 'header')
+        self.header_widget = navigation_header(navigation_path = self.header_navigation, store = self.store, on_search_text_changed = self.on_search, object_name = 'header')
         layout.addWidget(self.header_widget)
         self.update_header()
         

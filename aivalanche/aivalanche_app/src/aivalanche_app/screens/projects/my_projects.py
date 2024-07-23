@@ -18,18 +18,18 @@ class my_projects(QWidget):
         super().__init__(parent)
         if object_name is not None:
             self.setObjectName(object_name)
-        
-        self.init_ui()        
-        
+                
         self.store = store
         self.store.fetch_projects_start.connect(self.on_fetch_projects_start)
         self.store.fetch_projects_end.connect(self.on_fetch_projects_end)
         self.store.create_project_start.connect(self.on_create_project_start)
         self.store.create_project_end.connect(self.on_create_project_end)
         self.store.active_project_change_end.connect(self.on_active_project_changed)
-        
+                
         self._loading = False
         self._error = None
+    
+        self.init_ui()        
     
     @property
     def loading(self):
@@ -68,7 +68,7 @@ class my_projects(QWidget):
 
         # Header Section
         header_navigation = [{'text': 'Projects', 'on_click': None}]
-        header_widget = navigation_header(navigation_path = header_navigation, on_search_text_changed = self.on_search, object_name = 'header')
+        header_widget = navigation_header(navigation_path = header_navigation, store = self.store, on_search_text_changed = self.on_search, object_name = 'header')
         layout.addWidget(header_widget)
         
         # Scrollable buttons Section

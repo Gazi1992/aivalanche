@@ -31,7 +31,7 @@ class log_in(QWidget):
         self.password = None
         
         # For debugging purposes
-        self.log_in_as_gazi()
+        # self.log_in_as_gazi()
 
     @property
     def loading(self):

@@ -162,12 +162,12 @@ class reference_data_tab(QSplitter):
             
             # If the file is valid, load it, otherwise show a warning message
             if file_valid:
-                new_file_path = Path.joinpath(self.store.active_project_common_reference_data_directory_path, Path(file_path).name)
+                new_file_path = Path.joinpath(self.store.active_project_common_reference_data_directory, Path(file_path).name)
                 if Path.exists(new_file_path):
                     if file_path in self.store.available_reference_data['original_path'].tolist():
                         file_exists = True
                     else:
-                        new_file_path = find_max_suffix(self.store.active_project_common_reference_data_directory_path, Path(file_path).name)
+                        new_file_path = find_max_suffix(self.store.active_project_common_reference_data_directory, Path(file_path).name)
                 if file_exists:
                     warning = {'title': 'Reference data import error',
                                'message': 'File already exists',

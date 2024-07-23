@@ -4,13 +4,15 @@ from aivalanche_app.components.calibration_control import calibration_control
 from aivalanche_app.constants.dimensions import HEADER_PADDING_LEFT, HEADER_PADDING_RIGHT, HEADER_PADDING_TOP, HEADER_PADDING_BOTTOM, SEARCH_BAR_HEIGHT, SEARCH_BAR_WIDTH, SEARCH_ICON_HEIGHT, SEARCH_ICON_WIDTH
 from aivalanche_app.components.buttons.icon_text_button import icon_text_button
 from aivalanche_app.paths import search_icon_path
+from aivalanche_app.data_store.store import store
 
 class navigation_header(QWidget):
-    def __init__(self, parent = None, navigation_path: list[dict] = None, on_search_text_changed: callable = None,
-                 labels: list[str] = None, show_calibration_buttons: bool = False, object_name: str = None,
-                 on_single_simulation_button_press: callable = None):
+    
+    def __init__(self, parent = None, store: store = None, navigation_path: list[dict] = None, on_search_text_changed: callable = None,
+                 labels: list[str] = None, show_calibration_buttons: bool = False, object_name: str = None):
         super().__init__(parent = parent)
         
+        self.store = store
         self.navigation_path = navigation_path
         if object_name is not None:
             self.setObjectName(object_name)
@@ -40,8 +42,7 @@ class navigation_header(QWidget):
         
         # Add calibration buttons
         if show_calibration_buttons:
-            calibration_control_widget = calibration_control(parent = self, object_name = 'calibration_control',
-                                                             on_single_simulation_button_press = on_single_simulation_button_press)
+            calibration_control_widget = calibration_control(parent = self, store = store, object_name = 'calibration_control')
             layout_top.addWidget(calibration_control_widget)        
         
         # Add the top layout

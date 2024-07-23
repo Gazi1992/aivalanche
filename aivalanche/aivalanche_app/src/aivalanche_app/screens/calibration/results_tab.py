@@ -14,6 +14,8 @@ class results_tab(QWidget):
             self.setObjectName(object_name)
         
         self.store = store
+        self.store.single_simulation_end.connect(self.on_single_simulation_finished)
+        self.store.calibration_progress.connect(self.on_calibration_progress)
         self.style = self.store.style
         
         self.init_ui()
@@ -63,3 +65,13 @@ class results_tab(QWidget):
             self.tabs.set_active_tab('results_progress_tab')
         else:
             self.results_progress_button.setChecked(True)
+            
+    def on_single_simulation_finished(self, data):
+        if data['model_id'] == self.store.active_model['id']:
+            self.on_results_data_click(True)
+            self.results_data_button.setChecked(True)
+
+    def on_calibration_progress(self, data):
+        if data['model_id'] == self.store.active_model['id'] and data['iteration'] == 1:
+            self.on_results_data_click(True)
+            self.results_data_button.setChecked(True)

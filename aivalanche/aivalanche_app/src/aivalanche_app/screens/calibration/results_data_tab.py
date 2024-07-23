@@ -1,11 +1,13 @@
 from PySide6.QtWidgets import QWidget, QSplitter
+from PySide6.QtCore import Qt
 from aivalanche_app.components.custom_layouts import v_layout
 from aivalanche_app.data_store.store import store
 from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
+from aivalanche_app.components.buttons.text_button import text_button
 from aivalanche_app.helper_functions import update_df_by_condition
-import pyqtgraph as pg, pandas as pd, math
+import pyqtgraph as pg, pandas as pd, math, numpy as np
 
 class results_data_tab(QSplitter):
     
@@ -17,7 +19,10 @@ class results_data_tab(QSplitter):
             self.setObjectName(object_name)
             
         self.store = store
-        self.store.single_simulation_end.connect(self.load_data)
+        self.store.single_simulation_end.connect(self.on_single_simulation_finished)
+        self.store.fetch_model_results_end.connect(self.on_model_results_fetched)
+        self.store.calibration_progress.connect((self.on_calibration_progress))
+        self.store.overwrite_calibration_results_end.connect(self.on_calibration_results_overwrite)
         
         self.style = self.store.style
                 
@@ -30,11 +35,22 @@ class results_data_tab(QSplitter):
         self.placeholder_plot = line_scatter_plot(x_axis_label = 'x', y_axis_label = 'y', style = self.style)
         self.placeholder_plot_visible = False
         
+        self._data = None
+        
         self.init_ui()
    
     @property
     def nr_plots(self):
         return len(self.plots)
+    
+    @property
+    def data(self):
+        return self._data
+    
+    @data.setter
+    def data(self, value):
+        self._data = value
+        self.load_data()
     
     def init_ui(self):
         # Create left widget
@@ -42,8 +58,12 @@ class results_data_tab(QSplitter):
         left_layout = v_layout(spacing = 20)
         left_widget.setLayout(left_layout)
         
+        # Create the update button
+        self.update_button = text_button(parent = self, label = 'Update results', object_name = 'add_loss_card_button', on_click = self.on_update_button_press, is_enabled = False)
+        left_layout.addWidget(self.update_button, alignment = Qt.AlignmentFlag.AlignLeft)
+        
         # Create table
-        self.table = custom_table(store = self.store)
+        self.table = custom_table(store = self.store, on_change = self.on_table_change)
         left_layout.addWidget(self.table, 1)
         
         # Create right layout, where plots will be shown
@@ -68,9 +88,29 @@ class results_data_tab(QSplitter):
         
         self.check_empty_plot_widget()
     
+    def on_table_change(self, data: dict = None):
+        if data['type'] == 'checkbox_click':
+            self.on_checkbox_click(data)
+        else:
+            print(data)
+
+    def on_checkbox_click(self, data: dict = None):
+        row = data['row_index']
+        column = data['column_index']
+        column_name = data['column_name']
+        state = data['state']
+        self._data.iloc[row, column] = state
+        if column_name == 'plot':
+            group_id = self._data.iloc[row]['group_id']
+            curve_id = self._data.iloc[row]['curve_id']
+            self.update_plots(group_id, curve_id, state)
+    
     def on_scroll_area_resize_event(self, event):  
         self.plots_scroll_area_height = event.size().height()
         self.update_plots_widget_height()              
+        
+    def on_update_button_press(self, text):
+        self.store.overwrite_calibration_results(model_id = self.store.active_model['id'])        
                 
     def update_plots_widget_height(self):
         min_plots_height = (self.min_plot_height + self.plot_spacing) * math.ceil(self.nr_plots / 2) 
@@ -79,49 +119,66 @@ class results_data_tab(QSplitter):
     def clear_data(self):
         self.clear_all_plots()
         self.table.clear_data()
-        self.load_data_widget.set_active_item(None)
         self.check_empty_plot_widget()
     
     def load_data(self):
-        self.clear_all_plots()
-        if 'plot' not in self.store.single_simulation_results['data'].columns:
-            self.store.single_simulation_results['data'].insert(1, 'plot', False)
-        min_group_id = self.store.single_simulation_results['data']['group_id'].min()
-        self.store.single_simulation_results['data']['plot'] = self.store.single_simulation_results['data']['group_id'] == min_group_id
-        self.table.update_data(self.store.single_simulation_results['data'])
-        self.update_plots(group_id = min_group_id)
-        
+        if self._data is not None and not self._data.empty:
+            self.clear_all_plots()
+            if 'plot' not in self._data.columns:
+                self._data.insert(0, 'plot', False)
+            self.table.update_data(self._data)
+            if not np.any(self._data['plot']): # if plots were previously visible
+                min_group_id = self._data['group_id'].min()
+                self._data['plot'] = self._data['group_id'] == min_group_id
+                self.update_plots(group_id = min_group_id)
+            else:
+                group_ids = self._data.loc[self._data['plot'], 'group_id'].unique()
+                for id in group_ids:
+                    self.update_plots(group_id = id)
+    
+    def on_model_results_fetched(self):
+        if self.store.calibration_results is not None:
+            self.data = self.store.calibration_results
+        elif self.store.single_simulation_results is not None:
+            self.data = self.store.single_simulation_results
+        else:
+            self.clear_data()
+            
+    def on_calibration_progress(self, data):
+        if data['model_id'] == self.store.active_model['id']:
+            if data['iteration'] == 1:
+                self.data = self.store.calibration_results
+            elif data['better_solution_found']:
+                self.update_button.set_enabled(True)
+                
+    def on_single_simulation_finished(self, data):
+        if data['model_id'] == self.store.active_model['id']:
+            self.data = self.store.single_simulation_results
+            
+    def on_calibration_results_overwrite(self, data):
+        if data['model_id'] == self.store.active_model['id']:
+            self.data = self.store.calibration_results
+            
     def check_empty_plot_widget(self):
         if self.nr_plots == 0:
             self.show_placeholder_plot()
-            
+
     def show_placeholder_plot(self):
         self.plots_widget.addItem(self.placeholder_plot, row = 0, col = 0)
         self.placeholder_plot_visible = True
         self.update_plots_widget_height() # update plots_widget heights
     
-    def on_checkbox_click(self, data: dict = None):
-        row = data['row_index']
-        column = data['column_index']
-        column_name = data['column_name']
-        state = data['state']
-        self.store.single_simulation_results['data'].iloc[row, column] = state
-        if column_name == 'plot':
-            group_id = self.store.single_simulation_results['data'].iloc[row]['group_id']
-            curve_id = self.store.single_simulation_results['data'].iloc[row]['curve_id']
-            self.update_plots(group_id, curve_id, state)
-    
     def update_plots(self, group_id = None, curve_id = None, state = None):
         if group_id in self.plots:
             if not state:
                 plot_item = self.get_plot_from_group_id(group_id)
-                if plot_item.nr_curves == 1:
+                if plot_item.nr_curves == 2:
                     self.remove_plot(group_id)
                 else:
                     plot = self.get_plot_from_group_id(group_id)
-                    self.remove_curve_from_plot(plot, curve_id)
+                    self.remove_curve_from_plot(plot, group_id, curve_id)
             else:
-                data = self.store.single_simulation_results['data'][(self.store.single_simulation_results['data']['group_id'] == group_id) & (self.store.single_simulation_results['data']['curve_id'] == curve_id)]
+                data = self._data[(self._data['group_id'] == group_id) & (self._data['curve_id'] == curve_id)]
                 plot = self.get_plot_from_group_id(group_id)
                 self.add_curve_to_plot(plot, data.squeeze())
         else:
@@ -131,6 +188,7 @@ class results_data_tab(QSplitter):
         self.plots_widget.ci.clear()
         self.plots = []
         self.placeholder_plot_visible = False
+        self.update_button.set_enabled(False)
     
     def add_plot(self, group_id = None):
         if self.placeholder_plot_visible:
@@ -140,7 +198,7 @@ class results_data_tab(QSplitter):
             return
     
         # get the group
-        filtered_data = self.store.single_simulation_results['data'][self.store.single_simulation_results['data']['group_id'] == group_id]
+        filtered_data = self._data[self._data['group_id'] == group_id]
         if len(filtered_data.index) == 0:
             return
         
@@ -151,7 +209,8 @@ class results_data_tab(QSplitter):
         title = f"{group_name} - {group_id}"
         x_axis_label = filtered_data.iloc[0]['x_name']
         y_axis_label = filtered_data.iloc[0]['y_name']
-        custom_plot =  line_scatter_plot(title = title, x_axis_label = x_axis_label, y_axis_label = y_axis_label, style = self.style)
+        custom_plot =  line_scatter_plot(title = title, x_axis_label = x_axis_label, y_axis_label = y_axis_label,
+                                         style = self.style, use_custom_legend = True, on_legend_item_click = self.on_legend_item_click)
         custom_plot.setMinimumHeight(self.min_plot_height)
         
         # add all the curves to the plot
@@ -169,25 +228,30 @@ class results_data_tab(QSplitter):
         self.update_plots_widget_height()
             
         # update the table plot checkboxes
-        update_df_by_condition(df = self.store.single_simulation_results['data'], condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
+        update_df_by_condition(df = self._data, condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
         self.table.update_by_condition(condition = f'group_id == {group_id}', update_columns = ['plot'], update_values = [True])
-        
-        # self.plots_widget.ci.setBorder(color = 'r')
-        # self.plots_widget.ci.height()
-        # self.plots_widget.ci.setSpacing(10)
-        # self.plots_widget.setMinimumHeight(self.plots_widget.sizeHint().height())
-        # self.plots_widget.getItem(0, 0).height()
-        # self.plots_widget.height()
+
+    def on_legend_item_click(self, item):
+        temp = item.id.split('_')
+        group_id = int(temp[0])
+        curve_id = temp[1]
+        curve_type = temp[2]
+        if curve_type == 'line':
+            scatter_plot_id = f'{group_id}_{curve_id}_scatter'
+            plot_item = self.get_plot_from_group_id(group_id)
+            plot_item.set_curve_visibility(scatter_plot_id, item.isVisible())
     
     def add_curve_to_plot(self, plot, data):
         if 'extra_var_name' in data and not pd.isna(data['extra_var_name']):
             label = f"{data['extra_var_name']} = {data['extra_var_value']}"
         else:
             label = f"{data['curve_id']}"
-        plot.add_scatter_plot(x = data['x_values'], y = data['y_values'], id = data['curve_id'], label = label, symbol = 'o', symbolPen = None)
+        plot.add_line_plot(x = data['x_values_simulation'], y = data['y_values_simulation'], id = f"{data['group_id']}_{data['curve_id']}_line", label = label, line_width = 2)
+        plot.add_scatter_plot(x = data['x_values'], y = data['y_values'], id = f"{data['group_id']}_{data['curve_id']}_scatter", add_to_legend = False, symbol = 'o', symbolPen = 'black', symbolBrush = None)
         
-    def remove_curve_from_plot(self, plot, curve_id):
-        plot.remove_curve(id = curve_id)
+    def remove_curve_from_plot(self, plot, group_id, curve_id):
+        plot.remove_curve(id = f'{group_id}_{curve_id}_line')
+        plot.remove_curve(id = f'{group_id}_{curve_id}_scatter')
         
     def remove_plot(self, group_id = None):
         if group_id in self.plots:

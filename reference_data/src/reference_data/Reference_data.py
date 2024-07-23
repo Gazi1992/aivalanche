@@ -120,6 +120,10 @@ class Reference_data:
                     if 'temp' not in temp_group_dict:
                         if temp_group_dict['extra_var_name'] == 'temp':
                             temp_curve_dict['temp'] = temp_curve_dict['extra_var_value']
+                            
+                    if 'x_values_simulation' in curve.keys() and 'y_values_simulation' in curve.keys():
+                        temp_curve_dict['x_values_simulation'] = curve['x_values_simulation']
+                        temp_curve_dict['y_values_simulation'] = curve['y_values_simulation']
                     
                     curve_info.append(temp_curve_dict)
                     

@@ -38,7 +38,6 @@ def load_fonts_from_directory(path):
                     print(f"Failed to load font: {font_path}")
     return font_families
 
-
 # TODO Make sure to close the app once the GUI closes.
 # This problem appeared when migrated from PyQt6 to PySide6.
 if not QApplication.instance():

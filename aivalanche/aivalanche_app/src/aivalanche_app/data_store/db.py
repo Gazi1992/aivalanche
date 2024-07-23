@@ -106,7 +106,7 @@ class db(QObject):
         return self.execute_query(query, 'fetch_models_by_project_id')
 
     def create_model_by_project_id(self, project_id: str = None, title: str = None):
-       query = f"insert into aivalanche_db.models (project_id, created_at, last_modified_at, title, labels, status) values ('{project_id}', now(), now(), '{title}', '', 'setup')"
+       query = f"insert into aivalanche_db.models (project_id, created_at, last_modified_at, title, labels, status, max_iterations, iteration) values ('{project_id}', now(), now(), '{title}', '', 'setup', '1000', '0')"
        return self.execute_query(query, 'create_model_by_project_id')
 
     def fetch_model_templates(self):
@@ -117,6 +117,30 @@ class db(QObject):
         if model_id is not None and path is not None:
             query = f"update aivalanche_db.models set path = '{path}' where id = '{model_id}'"
             return self.execute_query(query, 'update_model_path_by_id')
+        
+    def update_model_status_by_id(self, model_id: str = None, status: str = None):
+        if model_id is not None:
+            if status is None:
+                query = f"update aivalanche_db.models set status = NULL where id = '{model_id}'"
+            else:
+                query = f"update aivalanche_db.models set status = '{status}' where id = '{model_id}'"
+            return self.execute_query(query, 'update_model_status_by_id')
+    
+    def update_model_max_iteration_by_id(self, model_id: str = None, max_iteration: str = None):
+        if model_id is not None:
+            if max_iteration is None:
+                query = f"update aivalanche_db.models set max_iteration = NULL where id = '{model_id}'"
+            else:
+                query = f"update aivalanche_db.models set max_iteration = '{max_iteration}' where id = '{model_id}'"
+            return self.execute_query(query, 'update_model_max_iteration_by_id')
+    
+    def update_model_iteration_and_loss_by_id(self, model_id: str = None, iteration: int = None, loss: float = None):
+        if model_id is not None:
+            if iteration is None or loss is None:
+                query = f"update aivalanche_db.models set iteration = NULL, loss = NULL where id = '{model_id}'"
+            else:
+                query = f"update aivalanche_db.models set iteration = '{iteration}', loss = '{loss}' where id = '{model_id}'"
+            return self.execute_query(query, 'update_model_iteration_and_loss_by_id')
 
     #%% Reference data
     def fetch_reference_data_by_project_id(self, project_id: str = None):
@@ -230,3 +254,38 @@ class db(QObject):
         else:
             query = f"update aivalanche_db.models set optimization_settings_id = '{optimization_settings_id}' where id = '{model_id}'"
         return self.execute_query(query, 'update_optimization_settings_id_by_model_id')
+    
+    #%% Results
+    def fetch_single_simulation_results(self):
+        query = "select * from aivalanche_db.single_simulation_results_files"
+        return self.execute_query(query, 'fetch_single_simulation_results')
+    
+    def add_single_simulation_results(self, path: str = None, model_id: str = None):
+        id = str(uuid.uuid4())
+        query = f"insert into aivalanche_db.single_simulation_results_files (id, path, model_id) values ('{id}', '{path}', '(model_id')"
+        return_data = {'id': id, 'path': path, 'model_id': model_id}
+        return self.execute_query(query, 'add_single_simulation_results', return_data)
+    
+    def update_single_simulation_results_id_by_model_id(self, single_simulation_results_id: str = None, model_id: str = None):
+        if single_simulation_results_id is None:
+            query = f"update aivalanche_db.models set single_simulation_results_id = NULL where id = '{model_id}'"
+        else:
+            query = f"update aivalanche_db.models set single_simulation_results_id = '{single_simulation_results_id}' where id = '{model_id}'"
+        return self.execute_query(query, 'update_single_simulation_results_id_by_model_id')
+    
+    def fetch_calibration_results(self):
+        query = "select * from aivalanche_db.calibration_results_files"
+        return self.execute_query(query, 'fetch_calibration_results')
+    
+    def add_calibration_results(self, path: str = None, model_id: str = None):
+        id = str(uuid.uuid4())
+        query = f"insert into aivalanche_db.calibration_results_files (id, path, model_id) values ('{id}', '{path}', '(model_id')"
+        return_data = {'id': id, 'path': path, 'model_id': model_id}
+        return self.execute_query(query, 'add_calibration_results', return_data)
+    
+    def update_calibration_results_id_by_model_id(self, calibration_results_id: str = None, model_id: str = None):
+        if calibration_results_id is None:
+            query = f"update aivalanche_db.models set calibration_results_id = NULL where id = '{model_id}'"
+        else:
+            query = f"update aivalanche_db.models set calibration_results_id = '{calibration_results_id}' where id = '{model_id}'"
+        return self.execute_query(query, 'update_calibration_results_id_by_model_id')

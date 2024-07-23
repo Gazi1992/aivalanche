@@ -14,11 +14,15 @@ class my_calibration(QWidget):
     
     def __init__(self, parent = None, store: store = None, object_name: str = None):
         super().__init__(parent)
+        
         self.store = store
         self.store.active_model_change_end.connect(self.reset_tab_to_reference_data)
+        self.store.single_simulation_end.connect(self.on_single_simulation_finished)
+        self.store.calibration_progress.connect(self.on_calibration_first_iteration_finished)
         
         if object_name is not None:
             self.setObjectName(object_name)
+            
         self.init_ui()
             
     def init_ui(self):
@@ -29,7 +33,7 @@ class my_calibration(QWidget):
         self.header_navigation = [{'text': 'Projects', 'on_click': self.on_projects_press},
                                   {'text': self.store.active_project.title if self.store.active_project is not None else 'Models', 'on_click': self.on_models_press},
                                   {'text': self.store.active_model.title if self.store.active_model is not None else 'My model', 'on_click': None}]
-        self.header_widget = navigation_header(navigation_path = self.header_navigation, object_name = 'header', show_calibration_buttons = True, on_single_simulation_button_press = self.on_single_simulation_click)
+        self.header_widget = navigation_header(navigation_path = self.header_navigation, store = self.store, object_name = 'header', show_calibration_buttons = True)
         layout.addWidget(self.header_widget)
         self.update_header()
         
@@ -151,9 +155,16 @@ class my_calibration(QWidget):
         
     def reset_tab_to_reference_data(self):
         self.reference_data_button.click()
-    
-    def on_single_simulation_click(self):
-        self.store.start_single_simulation()
+        
+    def on_single_simulation_finished(self, data):
+        if data['model_id'] == self.store.active_model['id']:
+            self.on_results_click(True)
+            self.results_button.setChecked(True)
+            
+    def on_calibration_first_iteration_finished(self, data):
+        if data['model_id'] == self.store.active_model['id'] and data['iteration'] == 1:
+            self.on_results_click(True)
+            self.results_button.setChecked(True)
         
         
         
