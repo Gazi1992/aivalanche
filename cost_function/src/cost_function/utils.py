@@ -2,7 +2,6 @@
 import pandas as pd, numpy as np
 from cost_function.exceptions import raise_exception
 
-
 #%% Calculate the error metric for the given groups
 def calculate_error_metric(data: pd.DataFrame = None, parameters: pd.DataFrame = None, 
                            group_types: list[str] = None, metric_type: str = 'rmse', 
@@ -41,32 +40,27 @@ def calculate_error_metric(data: pd.DataFrame = None, parameters: pd.DataFrame =
     except Exception:
         error_metric = raise_exception('failed_error_metric_exception', None, group_types)
         return error_metric
-        
-    
+
 #%% Explode the dataframe
 def explode_dataframe(data: pd.DataFrame = None, explode_columns = ['x_values', 'y_values', 'x_values_simulated', 'y_values_simulated']):
     return data.explode(explode_columns).reset_index(drop=True)
 
-
 #%% Get the root mean squared between y_values and y_values_simulation
 def calculate_rmse(groups: pd.DataFrame = None):
-    
     if groups is None:
         return 0
-    
     groups = groups.copy()
-    
     groups['total_weight'] = groups['group_weight'] * groups['curve_weight']
-    
     groups['error_metric_not_weighted'] = groups.apply(lambda row: np.sqrt(np.nansum((row['y_values'] - row['y_values_simulation']) ** 2) / row['curve_length']), axis = 1)
-    
     groups['error_metric_weighted'] = groups['error_metric_not_weighted'] * groups['total_weight']
-    
     return np.sum(groups['error_metric_weighted']) / np.sum(groups['total_weight'])
-
 
 #%% Apply transformation to the y_values and y_values_simulation
 def transform_groups(groups: pd.DataFrame = None, transform: str = None):
+    if transform is not None:
+        transform = transform.lower()
+        if transform == 'none':
+            transform = None    
     
     AVAILABLE_TRANSFORMS = ['log', 'grad_1', 'grad_2']
     
@@ -108,7 +102,6 @@ def norm_groups(groups: pd.DataFrame = None):
     groups['y_values_simulation'] = (groups['y_values_simulation'] - groups['min_norm']) / (groups['max_norm'] - groups['min_norm'])
     
     return groups
-
 
 #%% Get only the relevant groups
 def filter_groups(all_groups: pd.DataFrame = None, relevant_groups: list[str] = None):

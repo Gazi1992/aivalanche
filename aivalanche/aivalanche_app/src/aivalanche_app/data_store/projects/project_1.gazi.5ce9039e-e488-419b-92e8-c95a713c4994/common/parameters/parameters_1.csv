@@ -1,0 +1,12 @@
+name,mode,min,default,max,scale
+bv,variable,100000.0,10000000000.0,1e+20,log
+ibv,variable,1e-06,0.001,0.1,log
+ikf,variable,1e-10,1e-05,0.1,log
+ikr,variable,1e-10,1e-05,0.1,log
+is,variable,1e-20,1e-14,1e-10,log
+jsw,variable,1e-20,1e-15,1e-10,log
+n,variable,0.5,1.0,2.0,lin
+nbv,variable,0.0,1.0,2.0,lin
+rs,variable,1e-10,1e-06,10000.0,log
+trs1,variable,1e-05,0.005,0.01,lin
+trs2,variable,1e-05,0.0005,0.001,lin

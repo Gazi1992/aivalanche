@@ -1,7 +1,6 @@
 #%% Imports
-import pandas as pd, matplotlib, matplotlib.pyplot as plt
+import pandas as pd, matplotlib.pyplot as plt
 from matplotlib.style import context
-matplotlib.use('Agg')
 
 #%% Plot the results
 def plot_results(device: str = None, characteristic_type: str = None, data: pd.DataFrame = None):

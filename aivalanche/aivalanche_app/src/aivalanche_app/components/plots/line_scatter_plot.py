@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import QMenu
 from aivalanche_app.paths import home_icon_path, log_x_icon_path, log_y_icon_path, lin_x_icon_path, lin_y_icon_path
 from aivalanche_app.components.plots.plot_button import plot_button
-from pyqtgraph import LegendItem, ItemSample, PlotDataItem, PlotItem
-from PySide6.QtCore import Signal
+from pyqtgraph import LegendItem, ItemSample, PlotDataItem, PlotItem, ViewBox
+from PySide6.QtCore import Signal, Qt
 import numpy as np
 
+# Custom legend item to emit events when clicked.
 class custom_legend_item(ItemSample):
     item_clicked = Signal(object)
     
@@ -15,6 +16,7 @@ class custom_legend_item(ItemSample):
         super().mouseClickEvent(event)
         self.item_clicked.emit(self.item)
 
+# Custom legend to enable the coupled behavior of line and scatter plots.
 class custom_legend(LegendItem):
     def __init__(self, *args, on_item_click: callable = None, **kwargs):
         self.on_item_click = on_item_click
@@ -25,16 +27,26 @@ class custom_legend(LegendItem):
         if self.on_item_click is not None and issubclass(self.sampleType, custom_legend_item):
             self.items[-1][0].item_clicked.connect(self.on_item_click)
 
+# Custom plot data item to give an id to each item.
 class custom_plot_data_item(PlotDataItem):
     def __init__(self, *args, id: str = None, **kwargs):
         self.id = id
         super().__init__(*args, **kwargs)
+
+# Custom class to zoom in and out only when ctrl key is pressed.
+class custom_viewbox(ViewBox):
+    def wheelEvent(self, ev, axis = None):
+        if ev.modifiers() == Qt.ControlModifier:
+            super().wheelEvent(ev)
+        else:
+            ev.ignore()
             
 class line_scatter_plot(PlotItem):
-    def __init__(self, parent = None, title = None, x_axis_label = None, y_axis_label = None, show_legend: bool = True,
+    def __init__(self, parent = None, title = 'title', x_axis_label = 'x axis', y_axis_label = 'y axis', show_legend: bool = True,
                  use_custom_legend: bool = False, on_legend_item_click: callable = None, style = None):
 
-        super().__init__(parent = parent, title = title)
+        custom_vb = custom_viewbox()
+        super().__init__(parent = parent, title = title, viewBox = custom_vb)     
         
         self.show_legend = show_legend
         self.use_custom_legend = use_custom_legend

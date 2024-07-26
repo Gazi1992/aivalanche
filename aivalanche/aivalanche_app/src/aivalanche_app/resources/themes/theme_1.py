@@ -240,6 +240,11 @@ stylesheet = f"""
     QPushButton#calibration_control:hover {{background-color: transparent;}}
     QPushButton#calibration_control:pressed {{background-color: transparent;}}
     
+    /* Refresh buttons */
+    QPushButton#refresh {{icon-size: 20px 20px;}}
+    QPushButton#refresh:hover {{background-color: transparent;}}
+    QPushButton#refresh:pressed {{background-color: transparent;}}
+    
     /* Round combo box */
     QComboBox#round_combo_box {{border-radius: 15px; padding-left: 10px; height: 20px;}}
     

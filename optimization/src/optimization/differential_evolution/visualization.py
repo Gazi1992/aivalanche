@@ -1,7 +1,6 @@
 #%% Imports
-import os, numpy as np, matplotlib, matplotlib.pyplot as plt
+import os, numpy as np, matplotlib.pyplot as plt
 from matplotlib.style import context
-matplotlib.use('Agg')
 
 #%% Plot metric evolution
 def plot_metric_evolution(iterations: np.array = None,

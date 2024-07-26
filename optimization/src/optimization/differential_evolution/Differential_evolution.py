@@ -215,7 +215,7 @@ class Differential_evolution:
                                           responses = responses,
                                           best_parameters = self.best_unscaled,
                                           best_metric = self.best_metric,
-                                          history = self.history,
+                                          trials = self.history['trials'],
                                           **self.eval_func_args)
             
     

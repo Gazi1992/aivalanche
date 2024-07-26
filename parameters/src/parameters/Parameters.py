@@ -31,6 +31,14 @@ class Parameters:
         return self.all_parameters[self.all_parameters['mode'] == 'variable']
     
     @property
+    def variable_parameters_names(self):
+        return self.variable_parameters['name'].tolist()
+    
+    @property
+    def nr_variable_parameters(self):
+        return len(self.variable_parameters.index)
+    
+    @property
     def nr_parameters(self):
         return len(self.all_parameters.index)
     
@@ -62,6 +70,8 @@ class Parameters:
             
             if 'mode' not in self.all_parameters.columns:
                 self.all_parameters['mode'] = 'variable'
+                
+            self.sort_parameters_by_name()
 
     # Convert csv file to pandas dataframe
     def parse_csv(self):
@@ -73,6 +83,8 @@ class Parameters:
         
         if 'mode' not in self.all_parameters.columns:
             self.all_parameters['mode'] = 'variable'
+            
+        self.sort_parameters_by_name()
 
     # Generate random parameters
     def generate_random_parameters(self):
@@ -95,3 +107,7 @@ class Parameters:
             self.all_parameters.to_json(path_or_buf = file_path, orient = 'records')
         elif self.file.split('.')[-1] == 'csv':
             self.all_parameters.to_csv(path_or_buf = file_path, index = False)
+            
+    # Sort parameters by name
+    def sort_parameters_by_name(self):
+        self.all_parameters = self.all_parameters.sort_values(by = 'name').reset_index(drop=True)

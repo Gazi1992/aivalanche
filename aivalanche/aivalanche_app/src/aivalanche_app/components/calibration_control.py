@@ -18,6 +18,7 @@ class calibration_control(QWidget):
         
         self.store = store
         self.store.update_model_status_end.connect(self.on_simulation_and_calibration_signals)
+        self.store.active_model_change_start.connect(self.on_active_model_about_to_change)
         self.store.active_model_change_end.connect(self.on_active_model_changed)
         self.store.calibration_progress.connect(self.on_calibration_progress)
         
@@ -55,31 +56,31 @@ class calibration_control(QWidget):
         self.setLayout(layout)
         
         # single simulation button
-        single_simulation_button = icon_button(parent = self,
-                                                      icon_path = play_1_icon_path,
-                                                      icon_hover_path = play_1_hover_icon_path,
-                                                      icon_press_path = play_1_press_icon_path,
-                                                      object_name = self.object_name,
-                                                      on_click = lambda: self.single_simulation_button_press.emit())
-        layout.addWidget(single_simulation_button, alignment = Qt.AlignmentFlag.AlignBottom)
+        self.single_simulation_button = icon_button(parent = self,
+                                                    icon_path = play_1_icon_path,
+                                                    icon_hover_path = play_1_hover_icon_path,
+                                                    icon_press_path = play_1_press_icon_path,
+                                                    object_name = self.object_name,
+                                                    on_click = lambda: self.single_simulation_button_press.emit())
+        layout.addWidget(self.single_simulation_button, alignment = Qt.AlignmentFlag.AlignBottom)
         
         # calibration button
-        calibration_button = icon_button(parent = self,
-                                                icon_path = play_icon_path,
-                                                icon_hover_path = play_hover_icon_path,
-                                                icon_press_path = play_press_icon_path,
-                                                object_name = self.object_name,
-                                                on_click = lambda: self.calibration_button_press.emit())
-        layout.addWidget(calibration_button, alignment = Qt.AlignmentFlag.AlignBottom)
+        self.calibration_button = icon_button(parent = self,
+                                              icon_path = play_icon_path,
+                                              icon_hover_path = play_hover_icon_path,
+                                              icon_press_path = play_press_icon_path,
+                                              object_name = self.object_name,
+                                              on_click = lambda: self.calibration_button_press.emit())
+        layout.addWidget(self.calibration_button, alignment = Qt.AlignmentFlag.AlignBottom)
         
         # abort button
-        abort_button = icon_button(parent = self,
-                                          icon_path = stop_icon_path,
-                                          icon_hover_path = stop_hover_icon_path,
-                                          icon_press_path = stop_press_icon_path,
-                                          object_name = self.object_name,
-                                          on_click = lambda: self.abort_button_press.emit())
-        layout.addWidget(abort_button, alignment = Qt.AlignmentFlag.AlignBottom)
+        self.abort_button = icon_button(parent = self,
+                                        icon_path = stop_icon_path,
+                                        icon_hover_path = stop_hover_icon_path,
+                                        icon_press_path = stop_press_icon_path,
+                                        object_name = self.object_name,
+                                        on_click = lambda: self.abort_button_press.emit())
+        layout.addWidget(self.abort_button, alignment = Qt.AlignmentFlag.AlignBottom)
         
         # add some space between the buttons and the progress bar
         layout.addSpacing(10)
@@ -111,6 +112,9 @@ class calibration_control(QWidget):
         self.progress_bar.setTextVisible(False)
         progress_layout.addWidget(self.progress_bar)
 
+    def on_active_model_about_to_change(self):
+        self.setVisible(False)
+
     def update_progress(self, value):
         if self.progress_value != value:
             self.progress_value = value
@@ -122,6 +126,8 @@ class calibration_control(QWidget):
             self.status = None
         
     def update_ui_based_on_status(self):
+        if not self.isVisible():
+            self.setVisible(True)
         self.progress_bar.setRange(self.progress_min, self.progress_max)
         self.progress_percentage_label.setVisible(False)
         
@@ -152,6 +158,12 @@ class calibration_control(QWidget):
             self.progress_bar.setValue(self.progress_value)
             self.progress_percentage_label.setText(self.progress_percentage)
             self.progress_percentage_label.setVisible(True)
+        elif self.status == 'calibration aborted':
+            self.update_progress(100)
+            self.progress_info_label.setText("Calibration aborted")
+            self.progress_bar.setValue(self.progress_value)
+            self.progress_percentage_label.setText(self.progress_percentage)
+            self.progress_percentage_label.setVisible(True)
         elif self.status == 'calibration finished':
             self.update_progress(100)
             self.progress_info_label.setText("Calibration finished")
@@ -162,6 +174,8 @@ class calibration_control(QWidget):
             self.update_progress(0)
             self.progress_info_label.setText("Model setup")
             self.progress_bar.setValue(self.progress_value)
+            
+        self.update_buttons()
             
     def on_simulation_and_calibration_signals(self, data):
         if data['model_id'] == self.store.active_model['id']:
@@ -175,4 +189,22 @@ class calibration_control(QWidget):
             self.progress_bar.setValue(self.progress_value)
             self.progress_percentage_label.setText(self.progress_percentage)
             self.progress_percentage_label.setVisible(True)
+            
+    def update_buttons(self):
+        try:
+            if self.store.model_calibration.is_running():
+                self.calibration_button.setEnabled(False)
+                self.abort_button.set_enabled(True)
+            else:
+                self.calibration_button.setEnabled(True)
+                self.abort_button.set_enabled(False)
+        except:
+            pass
         
+        try:
+            if self.store.single_simulation and self.store.single_simulation.is_running():
+                self.single_simulation_button.set_enabled(False)
+            else:
+                self.single_simulation_button.set_enabled(True)
+        except:
+            pass

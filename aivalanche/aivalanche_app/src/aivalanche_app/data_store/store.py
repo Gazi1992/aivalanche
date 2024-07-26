@@ -11,7 +11,8 @@ from reference_data.Reference_data import Reference_data
 from reference_data.utils import write_reference_data_to_file
 from PySide6.QtCore import QObject, Signal, QThread, QTimer
 
-class db_thread(QThread):
+# Data management thread
+class dm_thread(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.tasks = []
@@ -31,6 +32,7 @@ class db_thread(QThread):
     def add_task(self, task, *args):
         self.tasks.append((task, args))
 
+# All the calculations and data manipulations happen here.
 class store(QObject):
     show_snackbar = Signal(str)
     
@@ -178,7 +180,7 @@ class store(QObject):
         self.reset_available_model_data()        
         self.reset_model_data()
                 
-        self.start_db_thread()
+        self.start_dm_thread()
         
     #%% Properties
     @property
@@ -207,17 +209,17 @@ class store(QObject):
             self._model_template = value
             self.update_model_template(self._model_template, self.active_model['id'])
     
-    #%% Database thread
-    def start_db_thread(self):
-        self.db_thread = db_thread()
-        self.db_thread.start()
+    #%% Data management thread
+    def start_dm_thread(self):
+        self.dm_thread = dm_thread()
+        self.dm_thread.start()
         
-    def cleanup(self):
-        self.db_thread.quit()
-        self.db_thread.wait()
+    def cleanup_dm_thread(self):
+        self.dm_thread.quit()
+        # self.dm_thread.wait()
                 
     def _run_task(self, task, *args):
-        self.db_thread.add_task(task, *args)
+        self.dm_thread.add_task(task, *args)
     
     #%% Reset functions
     def set_local_paths(self):
@@ -270,13 +272,21 @@ class store(QObject):
         
     def reset_simulation_variables(self):
         self.simulation_input = None
-        self.single_simulation_results = None
-        self.calibration_results = None
-        self.calibration_new_results = None
         self.calibration_status = None
         self.optimizer_config = None
         self.simulator_config = None
         self.cost_function_config = None
+        self.reset_calibration_results()
+        self.reset_single_simulation_results()
+        
+    def reset_calibration_results(self):
+        self.calibration_results = None
+        self.calibration_results_survivors = None
+        self.calibration_results_trials = None
+        self.calibration_new_results = None
+        
+    def reset_single_simulation_results(self):
+        self.single_simulation_results = None
                 
     def reset_available_model_data(self):
         self.model_templates = pd.DataFrame()        
@@ -399,13 +409,23 @@ class store(QObject):
                 self.model_calibration.run()
             else:
                 self.model_calibration.start()
-            self.on_calibration_start({'model_id': self.active_model['id']})
-        
-    def abort_calibration(self):
-        if self.model_calibration.is_running():
-            self.model_calibration.terminate()
-            self.on_calibration_abort({'model_id': self.active_model['id']})
-            
+            self.on_calibration_start(self.simulation_input)
+    
+    def abort_calibration(self, emit_signals: bool = True):
+        self._run_task(self._abort_calibration, emit_signals)
+    
+    def _abort_calibration(self, emit_signals: bool = True):
+        try:
+            if self.model_calibration and self.model_calibration.is_running():
+                self.model_calibration.terminate()
+                if emit_signals:
+                    self.on_calibration_abort({'model_id': self.active_model['id']})
+        except:
+            pass
+    
+    # def check_calibration_status(self):
+    #     self._run_task(self.check_calibration_status)
+    
     def check_calibration_status(self):
         if not self.model_calibration.is_running():
             self.calibration_timer.stop()
@@ -420,11 +440,18 @@ class store(QObject):
                 self.on_calibration_finish(data)
     
     def on_calibration_start(self, data):
+        self._run_task(self._on_calibration_start, data)
+    
+    def _on_calibration_start(self, data):
+        self.reset_calibration_results()
         model_id = data['model_id']
         self.update_model_status('starting calibration', model_id)
         self.calibration_start.emit(data)
-        
+    
     def on_calibration_progress(self, data):
+        self._run_task(self._on_calibration_progress, data)
+    
+    def _on_calibration_progress(self, data):
         model_id = data['model_id']
         iteration = data['iteration']
         max_iterations = data['max_iterations']
@@ -432,12 +459,13 @@ class store(QObject):
         best_results = data['best_results']
         better_solution_found = data['better_solution_found']
         results_dir = data['results_dir']
-        trials = data['trials']
-        
+        self.calibration_results_survivors = data['survivors']
+        self.calibration_results_trials = data['trials']
+    
         self.update_model_status('calibration in progress', model_id)
         self.update_model_iteration_and_loss(iteration, best_loss, model_id)
         
-        if iteration == 1:
+        if iteration == 1 or self.calibration_results is None:
             self.create_calibration_results_file(results = best_results,
                                                  path = Path.joinpath(results_dir, 'results.json'),
                                                  model_id = model_id)
@@ -464,22 +492,39 @@ class store(QObject):
                 columns.remove('include')
                 self.calibration_new_results = self.calibration_new_results[columns]
     
-        self.calibration_progress.emit({'model_id': model_id, 'iteration': iteration,
-                                        'max_iterations': max_iterations, 'better_solution_found': better_solution_found})
+        self.calibration_progress.emit({'model_id': model_id, 'iteration': iteration, 'max_iterations': max_iterations,
+                                        'best_loss': best_loss, 'better_solution_found': better_solution_found})
 
     def on_calibration_finish(self, data):
+        self._run_task(self._on_calibration_finish, data)
+
+    def _on_calibration_finish(self, data):
         model_id = data['model_id']
+        iteration = data['iteration']
+        max_iterations = data['max_iterations']
+        best_loss = data['best_loss']
+        best_results = data['best_results']
+        better_solution_found = data['better_solution_found']
+        results_dir = data['results_dir']
+        self.calibration_results_survivors = data['survivors']
+        self.calibration_results_trials = data['trials']
         self.update_model_status('calibration finished', model_id)
         if self.model_calibration.is_running():
             self.model_calibration.terminate()
         self.calibration_end.emit({'model_id': model_id})
-        
+    
     def on_calibration_abort(self, data):
+        self._run_task(self._on_calibration_abort, data)
+    
+    def _on_calibration_abort(self, data):
         model_id = data['model_id']
         self.update_model_status('calibration aborted', model_id)
         self.calibration_abort.emit(data)
-        
+    
     def on_calibration_error(self, data):
+        self._run_task(self._on_calibration_error, data)
+    
+    def _on_calibration_error(self, data):
         print(data)
         model_id = data['model_id']
         self.update_model_status('calibration error', model_id)
@@ -799,7 +844,13 @@ class store(QObject):
             self.create_project_directories_end.emit({'success': success, 'error': error, 'data': data})
         
     #%% Models
-    def set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True):        
+    def set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True, sync = True):
+        if sync:
+            self._set_active_model(m, override, emit_signals)
+        else:
+            self._run_task(self._set_active_model, m, override, emit_signals)
+    
+    def _set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True):        
         if m is None and self.active_model is None:
             return
                 
@@ -2234,8 +2285,11 @@ class store(QObject):
         if emit_signals:
             self.update_calibration_results_id_end.emit({'success': success, 'error': error, 'data': data})  
     
-    def overwrite_calibration_results(self, model_id: str = None, emit_signals: bool = True):
-        self._run_task(self._overwrite_calibration_results, model_id, emit_signals)
+    def overwrite_calibration_results(self, model_id: str = None, emit_signals: bool = True, sync: bool = True):
+        if sync:
+            self._overwrite_calibration_results(model_id, emit_signals)
+        else:
+            self._run_task(self._overwrite_calibration_results, model_id, emit_signals)
     
     def _overwrite_calibration_results(self, model_id: str = None, emit_signals: bool = True):
         if emit_signals:
@@ -2255,6 +2309,9 @@ class store(QObject):
     def on_app_exit(self):
         print('Exiting the application...')
         self.write_optimization_settings_to_file()
+        self.cleanup_dm_thread()
+        self.abort_calibration()
+        
         
     def emit_show_snackbar(self, message = 'snackbar message'):
         self.show_snackbar.emit(message)

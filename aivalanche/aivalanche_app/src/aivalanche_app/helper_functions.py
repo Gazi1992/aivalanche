@@ -1,5 +1,5 @@
 from pathlib import Path
-import re, json, pandas as pd
+import re, json, pandas as pd, matplotlib.pyplot as plt, pyqtgraph as pg, numpy as np, math
 from PySide6.QtGui import QValidator
 from datetime import datetime
 
@@ -134,3 +134,36 @@ class number_validator(QValidator):
     def fixup(self, input_str):
         # Reset to the last valid value
         return self.last_valid_value
+    
+def plot_colormaps():
+    cmaps = pg.colormap.listMaps()
+    n = len(cmaps)
+    cols = 6
+    rows = math.ceil(n / cols)
+
+    fig, axs = plt.subplots(rows, cols, figsize=(16, 1*rows))
+    fig.subplots_adjust(hspace=0.4, wspace=0.1)
+
+    for idx, name in enumerate(cmaps):
+        row = idx // cols
+        col = idx % cols
+        ax = axs[row, col] if rows > 1 else axs[col]
+
+        cmap = pg.colormap.get(name)
+        lut = cmap.getLookupTable(0.0, 1.0, 256)
+        ax.imshow(lut[np.newaxis,:,:3], aspect='auto', extent=[0, 1, 0, 1])
+        ax.set_title(name, fontsize=8)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    # Remove any unused subplots
+    for idx in range(n, rows*cols):
+        row = idx // cols
+        col = idx % cols
+        if rows > 1:
+            fig.delaxes(axs[row, col])
+        else:
+            fig.delaxes(axs[col])
+
+    plt.tight_layout()
+    plt.show()

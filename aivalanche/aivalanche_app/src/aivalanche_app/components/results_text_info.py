@@ -19,12 +19,17 @@ class results_text_info(QWidget):
         self.update_value(value)
         
     def update_value(self, value):
-        if isinstance(value, str):
-            self.value_widget.setText(value)
-        elif isinstance(value, (int, float)):
-            self.value_widget.setText(f'{value:.4e}')
-        else:
-            self.value_widget.setText(str(value))
+        if value is None:
+            value = ''
+        if isinstance(value, int):
+            value = f'{value}'
+        if isinstance(value, float):
+            value = f'{value:.4e}'
+            
+        if value == '':
+            value = '----'
+        
+        self.value_widget.setText(str(value))
 
         
     

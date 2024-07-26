@@ -1,1 +1,0 @@
-topics = ['NEW_WORKER']

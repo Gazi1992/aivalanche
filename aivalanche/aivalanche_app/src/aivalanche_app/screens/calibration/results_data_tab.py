@@ -5,8 +5,9 @@ from aivalanche_app.data_store.store import store
 from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
-from aivalanche_app.components.buttons.text_button import text_button
+from aivalanche_app.components.buttons.icon_button import icon_button
 from aivalanche_app.helper_functions import update_df_by_condition
+from aivalanche_app.paths import refresh_icon_path, refresh_hovered_icon_path, refresh_pressed_icon_path
 import pyqtgraph as pg, pandas as pd, math, numpy as np
 
 class results_data_tab(QSplitter):
@@ -21,8 +22,10 @@ class results_data_tab(QSplitter):
         self.store = store
         self.store.single_simulation_end.connect(self.on_single_simulation_finished)
         self.store.fetch_model_results_end.connect(self.on_model_results_fetched)
-        self.store.calibration_progress.connect((self.on_calibration_progress))
+        self.store.calibration_progress.connect(self.on_calibration_progress)
+        self.store.calibration_start.connect(self.on_calibration_start)
         self.store.overwrite_calibration_results_end.connect(self.on_calibration_results_overwrite)
+        self.store.active_model_change_start.connect(self.on_acive_model_change)
         
         self.style = self.store.style
                 
@@ -55,12 +58,17 @@ class results_data_tab(QSplitter):
     def init_ui(self):
         # Create left widget
         left_widget = QWidget(parent = self)
-        left_layout = v_layout(spacing = 20)
+        left_layout = v_layout(spacing = 5)
         left_widget.setLayout(left_layout)
         
         # Create the update button
-        self.update_button = text_button(parent = self, label = 'Update results', object_name = 'add_loss_card_button', on_click = self.on_update_button_press, is_enabled = False)
-        left_layout.addWidget(self.update_button, alignment = Qt.AlignmentFlag.AlignLeft)
+        self.update_button = icon_button(parent = self,
+                                         icon_path = refresh_icon_path,
+                                         icon_hover_path = refresh_hovered_icon_path,
+                                         icon_press_path = refresh_pressed_icon_path,
+                                         object_name = 'refresh',
+                                         on_click = self.on_update_button_press)
+        left_layout.addWidget(self.update_button, alignment = Qt.AlignmentFlag.AlignRight)
         
         # Create table
         self.table = custom_table(store = self.store, on_change = self.on_table_change)
@@ -105,6 +113,9 @@ class results_data_tab(QSplitter):
             curve_id = self._data.iloc[row]['curve_id']
             self.update_plots(group_id, curve_id, state)
     
+    def on_acive_model_change(self):
+        self.clear_data()
+    
     def on_scroll_area_resize_event(self, event):  
         self.plots_scroll_area_height = event.size().height()
         self.update_plots_widget_height()              
@@ -117,6 +128,7 @@ class results_data_tab(QSplitter):
         self.plots_widget.setFixedHeight(max(self.plots_scroll_area_height, min_plots_height))
     
     def clear_data(self):
+        self._data = None
         self.clear_all_plots()
         self.table.clear_data()
         self.check_empty_plot_widget()
@@ -146,10 +158,13 @@ class results_data_tab(QSplitter):
             
     def on_calibration_progress(self, data):
         if data['model_id'] == self.store.active_model['id']:
-            if data['iteration'] == 1:
+            if data['iteration'] == 1 or self._data is None:
                 self.data = self.store.calibration_results
             elif data['better_solution_found']:
                 self.update_button.set_enabled(True)
+                
+    def on_calibration_start(self):
+        self._data = None
                 
     def on_single_simulation_finished(self, data):
         if data['model_id'] == self.store.active_model['id']:

@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue
 from calibration.Calibration import Calibration
-import queue, numpy as np
+import queue, numpy as np, pandas as pd
 
 class model_calibration:
     def __init__(self, simulation_input = None):
@@ -19,10 +19,11 @@ class model_calibration:
         metrics = kwargs['responses']['metrics']
         best_loss = kwargs['best_metric']
         best_results = results[np.argmin(metrics)]
-        # responses['results'][np.argmin(responses['metrics'])]
         better_solution_found = kwargs['better_solution_found']
         results_dir = self.simulation_input['results_dir']
-        trials = kwargs['trials']
+        survivors = self.get_all_survivors(kwargs['trials'])
+        survivors = survivors[['iter', 'survivor_metric']]
+        trials = self.get_trial_parameters(kwargs['trials'])
         res = {'status': 'progress',
                'model_id': model_id,
                'iteration': iteration,
@@ -30,6 +31,7 @@ class model_calibration:
                'best_results': best_results,
                'max_iterations': max_iterations,
                'better_solution_found': better_solution_found,
+               'survivors': survivors,
                'trials': trials,
                'results_dir': results_dir}
         self.result_queue.put(res)
@@ -37,16 +39,25 @@ class model_calibration:
     def callback_after_last_iter(self, **kwargs):
         iteration = kwargs['iteration']
         model_id = self.simulation_input['model_id']
+        max_iterations = self.simulation_input['max_iterations']
         results_dir = self.simulation_input['results_dir']
         results = kwargs['responses']['results']
         metrics = kwargs['responses']['metrics']
         best_loss = kwargs['best_metric']
         best_results = results[np.argmin(metrics)]
+        better_solution_found = True
+        survivors = self.get_all_survivors(kwargs['trials'])
+        survivors = survivors[['iter', 'survivor_metric']]
+        trials = self.get_trial_parameters(kwargs['trials'])
         res = {'status': 'finish',
                'model_id': model_id,
                'iteration': iteration,
                'best_loss': best_loss,
                'best_results': best_results,
+               'max_iterations': max_iterations,
+               'better_solution_found': better_solution_found,
+               'survivors': survivors,
+               'trials': trials,
                'results_dir': results_dir}
         self.result_queue.put(res)
             
@@ -94,23 +105,49 @@ class model_calibration:
     def is_running(self):
         return self.process is not None and self.process.is_alive()
 
-    def get_result(self):
-        item = None
-        try:
-            item = self.result_queue.get_nowait()
-        except queue.Empty:
-            pass
-        return item
+    def get_result(self):        
+        # Fetch all the items in the queue and use return only the last one.
+        items = []
+        while not self.result_queue.empty():
+            try:
+                items.append(self.result_queue.get_nowait())
+            except queue.Empty:
+                break  # This shouldn't happen, but just in case
         
-        # last_item = None
-        # while not self.result_queue.empty():
-        #     try:
-        #         last_item = self.result_queue.get_nowait()
-        #     except queue.Empty:
-        #         break  # This shouldn't happen, but just in case
-        # return last_item
+        item = None
+        if len(items) > 0:
+            item = items[-1]
+            item['better_solution_found'] = any([x['better_solution_found'] for x in items])
+        
+        return item
 
     def terminate(self):
         if self.process and self.process.is_alive():
             self.process.terminate()
-            self.process.join()
+            
+    def get_all_survivors(self, trials):
+        data = []
+        pop_size = len(trials[trials['iter'] == 1])
+        for row_idx, row in trials.iterrows():
+            if row_idx < pop_size:
+                data.append(row.tolist())
+            else:
+                if row['trial_metric'] < data[row_idx - pop_size][-1]:
+                    data.append(row.tolist())
+                else:
+                    temp = data[row_idx - pop_size].copy()
+                    temp[0] = row['iter']
+                    data.append(temp)
+        
+        all_survivors = pd.DataFrame(columns = ['iter', 'survivor_normed', 'survivor', 'survivor_unscaled', 'survivor_metric'],
+                                     data = data)
+
+        return all_survivors
+    
+    def get_trial_parameters(self, trials):
+        parameter_names = self.simulation_input['parameters'].variable_parameters_names
+        df_exploded = trials['trial_normed'].apply(pd.Series)
+        df_exploded = df_exploded.astype(float)
+        df_exploded.columns = parameter_names
+        df_exploded.reset_index(drop = True, inplace = True)
+        return df_exploded

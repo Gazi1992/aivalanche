@@ -72,6 +72,7 @@ class results_tab(QWidget):
             self.results_data_button.setChecked(True)
 
     def on_calibration_progress(self, data):
-        if data['model_id'] == self.store.active_model['id'] and data['iteration'] == 1:
-            self.on_results_data_click(True)
-            self.results_data_button.setChecked(True)
+        if data['model_id'] == self.store.active_model['id']:
+            if data['iteration'] == 1:
+                self.on_results_data_click(True)
+                self.results_data_button.setChecked(True)
