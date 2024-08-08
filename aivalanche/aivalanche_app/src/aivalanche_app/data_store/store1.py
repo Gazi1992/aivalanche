@@ -1,4 +1,4 @@
-import json, pandas as pd, threading, uuid, queue, shutil, numpy as np
+import json, pandas as pd, threading, uuid, queue, shutil, numpy as np, time
 from pathlib import Path
 from datetime import datetime
 from aivalanche_app.paths import dummy_data_path, projects_path
@@ -9,8 +9,30 @@ from aivalanche_app.simulations.model_calibration import model_calibration
 from aivalanche_app.helper_functions import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val, replace_space_with_underline, dict_to_json, get_current_timestamp
 from reference_data.Reference_data import Reference_data
 from reference_data.utils import write_reference_data_to_file
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QThread, QTimer
 
+# Data management thread
+class dm_thread(QThread):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tasks = []
+
+    def run(self):
+        while True:
+            if self.tasks:
+                task, args = self.tasks.pop(0)
+                try:
+                    task(*args)
+                except Exception as e:
+                    print(e)
+                    pass
+            else:
+                self.msleep(100)  # Sleep for 100ms when no tasks are available
+
+    def add_task(self, task, *args):
+        self.tasks.append((task, args))
+
+# All the calculations and data manipulations happen here.
 class store(QObject):
     show_snackbar = Signal(str)
     
@@ -25,8 +47,6 @@ class store(QObject):
     calibration_progress = Signal(object)
     calibration_end = Signal(object)
     calibration_error = Signal(object)
-    calibration_first_iteration_end = Signal(object)
-    calibration_better_solution_found = Signal(object)
     calibration_abort = Signal(object)
     
     fetch_available_optimizers_start = Signal()
@@ -62,8 +82,14 @@ class store(QObject):
     create_model_directories_end = Signal(object)
     update_model_status_start = Signal(object)
     update_model_status_end = Signal(object)
+    update_model_max_iteration_start = Signal(object)
+    update_model_max_iteration_end = Signal(object)
     update_model_iteration_and_loss_start = Signal(object)
     update_model_iteration_and_loss_end = Signal(object)
+    fetch_model_results_start = Signal()
+    fetch_model_results_end = Signal()
+    overwrite_calibration_results_start = Signal(object)
+    overwrite_calibration_results_end = Signal(object)
     
     # Reference data
     fetch_available_reference_data_start = Signal(object)
@@ -153,11 +179,8 @@ class store(QObject):
     
         self.reset_available_model_data()        
         self.reset_model_data()
-        
-        self.init_single_simulation()
-        self.init_model_calibration()
-        
-        self.start_db_thread()
+                
+        self.start_dm_thread()
         
     #%% Properties
     @property
@@ -186,21 +209,17 @@ class store(QObject):
             self._model_template = value
             self.update_model_template(self._model_template, self.active_model['id'])
     
-    #%% Database thread
-    def start_db_thread(self):
-        self.db_queue = queue.Queue() # db_queue to make sure the interaction to db is one at a time
-        threading.Thread(target = self.db_worker, daemon = True).start() # Start the db_worker thread
-    
-    def db_worker(self):
-        while True:
-            task, args = self.db_queue.get()
-            try:
-                task(*args)
-            finally:
-                self.db_queue.task_done()
+    #%% Data management thread
+    def start_dm_thread(self):
+        self.dm_thread = dm_thread()
+        self.dm_thread.start()
+        
+    def cleanup_dm_thread(self):
+        self.dm_thread.quit()
+        # self.dm_thread.wait()
                 
     def _run_task(self, task, *args):
-        self.db_queue.put((task, args))
+        self.dm_thread.add_task(task, *args)
     
     #%% Reset functions
     def set_local_paths(self):
@@ -253,13 +272,34 @@ class store(QObject):
         
     def reset_simulation_variables(self):
         self.simulation_input = None
-        self.single_simulation_results = None
-        self.calibration_results = None
-        self.calibration_new_results = None
         self.calibration_status = None
         self.optimizer_config = None
         self.simulator_config = None
         self.cost_function_config = None
+        self.reset_calibration_results()
+        self.reset_single_simulation_results()
+        
+    def reset_calibration_results(self):
+        self.calibration_results = None
+        self.calibration_results_survivors = None
+        self.calibration_results_trials = None
+        self.calibration_new_results = None
+        
+    def reset_model_calibration_threads(self):
+        if hasattr(self, 'model_calibration'):
+            del self.model_calibration
+            
+        if hasattr(self, 'calibration_check_timer'):
+            del self.calibration_check_timer
+        
+        self.model_calibration = None
+        self.calibration_check_timer = None
+        self.model_calibration_abort = False
+        self.calibration_check_thread = None
+        self.calibration_check_thread_abort = True
+        
+    def reset_single_simulation_results(self):
+        self.single_simulation_results = None
                 
     def reset_available_model_data(self):
         self.model_templates = pd.DataFrame()        
@@ -275,42 +315,70 @@ class store(QObject):
 
     #%% Single simulation
     def init_single_simulation(self):
-        self.single_simulation = single_simulation(on_start = self.on_single_simulation_start,
-                                                   on_progress = self.on_single_simulation_progress,
-                                                   on_finish = self.on_single_simulation_finish,
-                                                   on_error = self.on_single_simulation_error,
-                                                   db_type = self.db_type)
+        self.single_simulation = single_simulation()
+        self.single_simulation_timer = QTimer(self)
+        self.single_simulation_timer.timeout.connect(self.check_single_simulation_status)
+        self.single_simulation_timer.start(2000)
+        
+    def start_single_simulation(self, sync: bool = False):
+        try:
+            self.init_single_simulation()
+            if self.single_simulation is not None:
+                single_simulation_path = self.create_single_simulation_directory()
+                shutil.copy(self.optimization_settings_path, Path.joinpath(single_simulation_path, 'inputs', Path(self.optimization_settings_path).name))
+                self.compile_simulation_input(files_path = single_simulation_path)
+                self.single_simulation.update_simulation_input(self.simulation_input)
+                if sync:
+                    self.single_simulation.run()
+                else:
+                    self.single_simulation.start()
+                self.on_single_simulation_start({'model_id': self.active_model['id']})
+        except Exception as e:
+            print('ERROR at start_single_simulation!')
+            print(e)
+            
+    def check_single_simulation_status(self):
+        if not self.single_simulation.is_running():
+            self.single_simulation_timer.stop()
+        data = self.single_simulation.get_result()
+        if data is not None:
+            status = data['status']
+            if status == 'error':
+                self.on_single_simulation_error(data)
+            elif status == 'finish':
+                self.on_single_simulation_finish(data)
     
     def on_single_simulation_error(self, data):
-        self.update_model_status('single simulation error', data['simulation_input']['model_id'])
+        self.update_model_status('single simulation error', data['model_id'])
         self.single_simulation_error.emit(data)
         
     def on_single_simulation_start(self, data):
-        self.update_model_status('single simulation in progress', data['simulation_input']['model_id'])
+        self.update_model_status('single simulation in progress', data['model_id'])
         self.single_simulation_start.emit(data)
-        
-    def on_single_simulation_progress(self, data):
-        self.single_simulation_progress.emit(data)
 
     def on_single_simulation_finish(self, data):
-        model_id = data['simulation_input']['model_id']
-        results = data['data']
+        model_id = data['model_id']
+        results_dir = data['results_dir']
+        results = data['results']
+        loss = data['loss']
         self.update_model_status('single simulation finished', model_id)
         self.create_single_simulation_results_file(results = results,
-                                                   path = Path.joinpath(data['simulation_input']['results_dir'], 'results.json'),
-                                                   model_id = model_id)  
+                                                   path = Path.joinpath(results_dir, 'results.json'),
+                                                   model_id = model_id)
         if model_id == self.active_model['id']:
             try:
                 results['plot'] = self.single_simulation_results['plot'] # keep the plots if there were any before
             except:
                 pass
             self.single_simulation_results = results
-                
             # Keep only the columns that are important to show
             columns = list(self.reference_data.data.columns) + ['x_values_simulation', 'y_values_simulation']
             columns.remove('calibrate')
             columns.remove('include')
             self.single_simulation_results = self.single_simulation_results[columns]
+        
+        if self.single_simulation.is_running():
+            self.single_simulation.terminate()
             
         self.single_simulation_end.emit({'model_id': model_id})
     
@@ -335,104 +403,169 @@ class store(QObject):
             Path.mkdir(inputs_path)
         
         return single_simulation_path
-    
-    def start_single_simulation(self, sync: bool = False):
-        try:
-            if self.single_simulation is not None:
-                single_simulation_path = self.create_single_simulation_directory()
-                shutil.copy(self.optimization_settings_path, Path.joinpath(single_simulation_path, 'inputs', Path(self.optimization_settings_path).name))
-                self.compile_simulation_input(files_path = single_simulation_path)
-                self.single_simulation.update_simulation_input(self.simulation_input)
-                if sync:
-                    self.single_simulation.run()
-                else:
-                    threading.Thread(target = self.single_simulation.run, daemon = True).start() # Start the single simulation thread thread
-        except Exception as e:
-            print('ERROR at start_single_simulation!')
-            print(e)
 
     #%% Calibration
     def init_model_calibration(self):
-        self.model_calibration = model_calibration(on_start = self.on_calibration_start,
-                                                   on_first_iteration_finish = self.on_calibration_first_iteration_finish,
-                                                   on_better_solution_found = self.on_calibration_better_solution_found,
-                                                   on_progress = self.on_calibration_progress,
-                                                   on_finish = self.on_calibration_finish,
-                                                   on_abort = self.on_calibration_abort,
-                                                   on_error = self.on_calibration_error,
-                                                   db_type = self.db_type)
+        self.reset_model_calibration_threads()
+        self.model_calibration = model_calibration()
+        self.calibration_check_timer = QTimer(self)
+        self.calibration_check_timer.timeout.connect(self.check_calibration_status)
+        self.calibration_check_timer.start(2000)
+        # self.calibration_check_thread_abort = False
+        # self.calibration_check_thread = threading.Thread(target = self.check_calibration_status_loop, daemon = True)
     
-    def on_calibration_start(self, data):
-        self.update_model_status('starting calibration', self.active_model['id'])
-        self.calibration_start.emit(data)
-        
-    def on_calibration_progress(self, data):
-        iteration = data['iteration']
-        if iteration > 1:
-            model_id = data['simulation_input']['model_id']
-            max_iterations = data['simulation_input']['max_iterations']
-            best_loss = data['best_metric']
-            self.update_model_iteration_and_loss(iteration, best_loss, model_id)
-            self.calibration_progress.emit({'model_id': model_id, 'iteration': iteration, 'max_iterations': max_iterations})
-        
-    def on_calibration_finish(self, data):
-        model_id = data['simulation_input']['model_id']
-        self.update_model_status('calibration finished', self.active_model['id'])
-        self.calibration_end.emit({'model_id': model_id})
-
-    def on_calibration_abort(self, data):
-        self.update_model_status('calibration aborted', self.active_model['id'])
-        self.calibration_abort.emit(data)
+    def stop_calibration_check_thread(self):
+        self.calibration_check_thread_abort = True
     
-    def on_calibration_error(self, data):
-        self.update_model_status('calibration error', self.active_model['id'])
-        self.calibration_error.emit(data)
+    def check_calibration_status_loop(self):
+        while not self.calibration_check_thread_abort:
+            print('calibration_check_thread_abort: ', self.calibration_check_thread_abort)
+            print('calibration thread alive: ', self.calibration_check_thread.is_alive())
+            if self.model_calibration and self.model_calibration.is_running():
+                self.check_calibration_status()
+            time.sleep(2)
+        print('calibration_check_thread_abort: ', self.calibration_check_thread_abort)
+        print('calibration thread alive: ', self.calibration_check_thread.is_alive())
         
-    def on_calibration_first_iteration_finish(self, data):
-        model_id = data['simulation_input']['model_id']
-        results = data['responses']['results']
-        best_loss = data['best_metric']
+    def check_calibration_status(self):
+        if self.model_calibration.is_running():
+            data = self.model_calibration.get_result()
+            if data is not None:
+                status = data['status']
+                if status == 'error':
+                    self.on_calibration_error(data)
+                elif status == 'progress' and not self.model_calibration_abort:
+                    self.on_calibration_progress(data)
+                elif status == 'finish':
+                    self.on_calibration_finish(data)
+        else:
+            print('model calibration stopped')
+            print(self.model_calibration)
+            self.calibration_check_timer.stop()
+        
+    def start_calibration(self, sync: bool = False):
+        self.init_model_calibration()
+        if self.model_calibration:
+            calibration_path = self.create_calibration_directory()
+            shutil.copy(self.optimization_settings_path, Path.joinpath(calibration_path, 'inputs', Path(self.optimization_settings_path).name))
+            self.compile_simulation_input(files_path = calibration_path)
+            self.model_calibration.update_simulation_input(self.simulation_input)
+            if sync:
+                self.model_calibration.run()
+            else:
+                self.model_calibration.start()
+            # self.calibration_check_thread.start()
+            self.on_calibration_start(self.simulation_input)
+    
+    def abort_calibration(self, emit_signals: bool = True, sync: bool = True):
+        if sync:
+            self._abort_calibration(emit_signals)
+        else:
+            self._run_task(self._abort_calibration, emit_signals)
+    
+    def _abort_calibration(self, emit_signals: bool = True):
+        if self.model_calibration and self.model_calibration.is_running():
+            print('abort signal sent')
+            self.model_calibration.abort()
+            self.model_calibration_abort = True
+            self.on_calibration_abort({'model_id': self.active_model['id']}, emit_signals)
+    
+    def on_calibration_start(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_start, data)
+    
+    def _on_calibration_start(self, data, emit_signals: bool = True):
+        self.reset_calibration_results()
+        self.update_model_status('starting calibration', data['model_id'])
+        if emit_signals:
+            self.calibration_start.emit(data)
+    
+    def on_calibration_progress(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_progress, data, emit_signals)
+    
+    def _on_calibration_progress(self, data, emit_signals: bool = True):
+        model_id = data['model_id']
         iteration = data['iteration']
-        best_results = results[data['responses']['metrics'].index(best_loss)]
+        max_iterations = data['max_iterations']
+        best_loss = data['best_loss']
+        best_results = data['best_results']
+        better_solution_found = data['better_solution_found']
+        results_dir = data['results_dir']
+        self.calibration_results_survivors = data['survivors']
+        self.calibration_results_trials = data['trials']
+    
         self.update_model_status('calibration in progress', model_id)
         self.update_model_iteration_and_loss(iteration, best_loss, model_id)
-        self.create_calibration_results_file(results = best_results,
-                                             path = Path.joinpath(data['simulation_input']['results_dir'], 'results.json'),
-                                             model_id = model_id)  
-        if model_id == self.active_model['id']:
-            try:
-                best_results['plot'] = self.calibration_results['plot'] # keep the plots if there were any before
-            except:
-                pass
-            self.calibration_results = best_results
-            # Keep only the columns that are important to show
-            columns = list(self.reference_data.data.columns) + ['x_values_simulation', 'y_values_simulation']
-            columns.remove('calibrate')
-            columns.remove('include')
-            self.calibration_results = self.calibration_results[columns]
-        self.calibration_first_iteration_end.emit({'model_id': model_id})
-    
-    def on_calibration_better_solution_found(self, data):
-        iteration = data['iteration']
-        if iteration > 1:
-            model_id = data['simulation_input']['model_id']
-            results = data['responses']['results']
-            best_loss = data['best_metric']
-            best_results = results[data['responses']['metrics'].index(best_loss)]
+        
+        if iteration == 1 or self.calibration_results is None:
+            self.create_calibration_results_file(results = best_results,
+                                                 path = Path.joinpath(results_dir, 'results.json'),
+                                                 model_id = model_id)
+            if model_id == self.active_model['id']:
+                try:
+                    best_results['plot'] = self.calibration_results['plot']
+                except:
+                    pass
+                self.calibration_results = best_results
+                # Keep only the columns that are important to show
+                columns = list(self.reference_data.data.columns) + ['x_values_simulation', 'y_values_simulation']
+                columns.remove('calibrate')
+                columns.remove('include')
+                self.calibration_results = self.calibration_results[columns]
+        elif better_solution_found and iteration > 1:
             self.update_calibration_results_file(results = best_results,
-                                                 path = Path.joinpath(data['simulation_input']['results_dir'], 'results.json'),
+                                                 path = Path.joinpath(results_dir, 'results.json'),
                                                  model_id = model_id)  
             if model_id == self.active_model['id']:
-                self.calibration_new_results = best_results
-                
+                self.calibration_new_results = best_results            
                 # Keep only the columns that are important to show
                 columns = list(self.reference_data.data.columns) + ['x_values_simulation', 'y_values_simulation']
                 columns.remove('calibrate')
                 columns.remove('include')
                 self.calibration_new_results = self.calibration_new_results[columns]
-                
-            self.calibration_better_solution_found.emit({'model_id': model_id})
+        
+        if emit_signals:
+            self.calibration_progress.emit({'model_id': model_id, 'iteration': iteration, 'max_iterations': max_iterations,
+                                            'best_loss': best_loss, 'better_solution_found': better_solution_found})
+
+    def on_calibration_finish(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_finish, data, emit_signals)
+
+    def _on_calibration_finish(self, data, emit_signals: bool = True):
+        model_id = data['model_id']
+        iteration = data['iteration']
+        max_iterations = data['max_iterations']
+        best_loss = data['best_loss']
+        best_results = data['best_results']
+        better_solution_found = data['better_solution_found']
+        results_dir = data['results_dir']
+        stop_reason = data['stop_reason']
+        status = 'calibration aborted' if stop_reason == 'optimization aborted' else 'calibration_finished'
+        self.calibration_results_survivors = data['survivors']
+        self.calibration_results_trials = data['trials']
+        self.update_model_status(status, model_id)
+        self.stop_calibration_check_thread()
+        if self.model_calibration.is_running():
+            self.model_calibration.terminate()
+        if emit_signals:
+            self.calibration_end.emit(data)
     
+    def on_calibration_abort(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_abort, data)
+    
+    def _on_calibration_abort(self, data, emit_signals: bool = True):
+        self.update_model_status('aborting calibration', data['model_id'])
+        if emit_signals:
+            self.calibration_abort.emit(data)
+    
+    def on_calibration_error(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_error, data, emit_signals)
+    
+    def _on_calibration_error(self, data, emit_signals: bool = True):
+        print(data)
+        self.update_model_status('calibration error', data['model_id'])
+        if emit_signals:
+            self.calibration_error.emit(data)
+
     def create_calibration_directory(self):
         timestamp = get_current_timestamp()
         model_path = Path(self.active_model['path'])
@@ -454,20 +587,6 @@ class store(QObject):
             Path.mkdir(inputs_path)
         
         return calibration_path
-    
-    def start_calibration(self, sync: bool = False):
-        if self.model_calibration:
-            calibration_path = self.create_calibration_directory()
-            shutil.copy(self.optimization_settings_path, Path.joinpath(calibration_path, 'inputs', Path(self.optimization_settings_path).name))
-            self.compile_simulation_input(files_path = calibration_path)
-            self.model_calibration.update_simulation_input(self.simulation_input)
-            if sync:
-                self.model_calibration.run()
-            else:
-                threading.Thread(target = self.model_calibration.run, daemon = True).start() # Start the single simulation thread thread
-                
-    def abort_calibration(self):
-        print('abort_calibration')
 
     #%% Optimizers
     def fetch_available_optimizers(self, emit_signals: bool = True):
@@ -761,7 +880,13 @@ class store(QObject):
             self.create_project_directories_end.emit({'success': success, 'error': error, 'data': data})
         
     #%% Models
-    def set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True):        
+    def set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True, sync = True):
+        if sync:
+            self._set_active_model(m, override, emit_signals)
+        else:
+            self._run_task(self._set_active_model, m, override, emit_signals)
+    
+    def _set_active_model(self, m: pd.Series = None, override: bool = False, emit_signals: bool = True):        
         if m is None and self.active_model is None:
             return
                 
@@ -783,8 +908,7 @@ class store(QObject):
             else:
                 if not override:
                     self.fetch_optimization_settings(sync = False)
-            self._fetch_single_simulation_results_files(model_id = self.active_model['id'])
-            self._fetch_calibration_results_files(model_id = self.active_model['id'])
+                    self.fetch_model_results(model_id = self.active_model['id'])
         if emit_signals:
             self.active_model_change_end.emit({'active_model': self.active_model})
     
@@ -987,6 +1111,42 @@ class store(QObject):
         if emit_signals:
             self.update_model_status_end.emit({'success': success, 'error': error, 'model_id': model_id, 'data': data})
             
+    def update_model_max_iteration(self, max_iteration: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_model_max_iteration, max_iteration, model_id, emit_signals)
+        
+    def _update_model_max_iteration(self, max_iteration: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_model_max_iteration_start.emit({'max_iteration': max_iteration, 'model_id': model_id})
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        else:
+            if self.db_type == 'local_files':
+                all_models = pd.read_csv(self.models_path)
+                all_models.loc[all_models['id'] == model_id, 'max_iteration'] = max_iteration
+                all_models.to_csv(path_or_buf = self.models_path, index = False)
+                self.models.loc[self.models['id'] == model_id, 'max_iteration'] = max_iteration
+                if self.active_model is not None and self.active_model['id'] == model_id:
+                    self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+            elif self.db_type == 'local_mysql_db':
+                db_response = self.db.update_model_max_iteration_by_id(model_id, max_iteration)
+                if db_response['success']:
+                    data = db_response['data']
+                    self.models.loc[self.models['id'] == model_id, 'max_iteration'] = max_iteration
+                    if self.active_model is not None and self.active_model['id'] == model_id:
+                        self.set_active_model(self.models[self.models['id'] == model_id].squeeze(), override = True, emit_signals = False)
+                else:
+                    success = False
+                    error = db_response['error']
+        
+        if emit_signals:
+            self.update_model_max_iteration_end.emit({'success': success, 'error': error, 'model_id': model_id, 'data': data})
+            
     def update_model_iteration_and_loss(self, iteration: int = None, loss: float = None, model_id: str = None, emit_signals: bool = True):
         self._run_task(self._update_model_iteration_and_loss, iteration, loss, model_id, emit_signals)
         
@@ -1026,6 +1186,22 @@ class store(QObject):
         if emit_signals:
             self.update_model_iteration_and_loss_end.emit({'success': success, 'error': error, 'model_id': model_id, 'data': data})
 
+    def fetch_model_results(self, model_id: str = None, emit_signals: bool = True, sync: bool = False):
+        if sync:
+            self._fetch_model_results(model_id, emit_signals)
+        else:
+            self._run_task(self._fetch_model_results, emit_signals)
+        
+    def _fetch_model_results(self, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.fetch_model_results_start.emit()
+            
+        self._fetch_calibration_results_files(model_id = model_id, emit_signals = False)
+        self._fetch_single_simulation_results_files(model_id = model_id, emit_signals = False)
+        
+        if emit_signals:
+            self.fetch_model_results_end.emit()
+        
     #%% Reference data files
     def fetch_available_reference_data(self, project_id: str = None, emit_signals: bool = True):
         self._run_task(self._fetch_available_reference_data, project_id, emit_signals)
@@ -1769,6 +1945,8 @@ class store(QObject):
         # write to json file
         if len(optimization_settings.keys()) > 0:
             dict_to_json(optimization_settings, self.optimization_settings_path)
+            if 'maximum_number_of_iterations' in optimization_settings.keys():
+                self.update_model_max_iteration(optimization_settings['maximum_number_of_iterations'], self.active_model['id'])
 
     #%% Simulation input
     def compile_simulation_input(self, files_path = None):
@@ -1783,7 +1961,10 @@ class store(QObject):
         self.compile_cost_function_config()
         dut_file = self.get_model_file_path()
         dut_name = 'dut'
-        running_environment = 'local'
+        if self.db_type in ['local_files', 'local_mysql_db']:
+            running_environment = 'local' 
+        else:
+            running_environment = None
         self.simulation_input = {'model_id': self.active_model['id'],
                                  'max_iterations': self.optimizer_config['max_iterations'],
                                  'reference_data': self.reference_data,
@@ -2140,17 +2321,33 @@ class store(QObject):
         if emit_signals:
             self.update_calibration_results_id_end.emit({'success': success, 'error': error, 'data': data})  
     
-    def overwrite_calibration_results(self):
-        if self.calibration_new_results is not None:
-            plot = np.array(self.calibration_results['plot'])
-            self.calibration_results = self.calibration_new_results.copy()
-            self.calibration_results['plot'] = plot
-            self.calibration_new_results = None
+    def overwrite_calibration_results(self, model_id: str = None, emit_signals: bool = True, sync: bool = True):
+        if sync:
+            self._overwrite_calibration_results(model_id, emit_signals)
+        else:
+            self._run_task(self._overwrite_calibration_results, model_id, emit_signals)
+    
+    def _overwrite_calibration_results(self, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.overwrite_calibration_results_start.emit({'model_id': model_id})
+        
+        if model_id == self.active_model['id']:
+            if self.calibration_new_results is not None:
+                plot = np.array(self.calibration_results['plot'])
+                self.calibration_results = self.calibration_new_results.copy()
+                self.calibration_results['plot'] = plot
+                self.calibration_new_results = None
+                
+        if emit_signals:
+            self.overwrite_calibration_results_end.emit({'model_id': model_id})
 
     #%% Extra functions
     def on_app_exit(self):
         print('Exiting the application...')
         self.write_optimization_settings_to_file()
+        self.cleanup_dm_thread()
+        self.abort_calibration()
+        
         
     def emit_show_snackbar(self, message = 'snackbar message'):
         self.show_snackbar.emit(message)

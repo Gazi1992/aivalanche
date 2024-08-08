@@ -7,9 +7,20 @@ from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.store import store
 import sys, pyqtgraph as pg, os
 
+import traceback
+from PySide6.QtCore import QBasicTimer
+
+def debug_start(self, msec, timerType=Qt.TimerType.CoarseTimer):
+    print("QBasicTimer.start called:")
+    traceback.print_stack()
+    original_start(self, msec, timerType)
+
+original_start = QBasicTimer.start
+QBasicTimer.start = debug_start
+
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias = True)
-pg.setConfigOption('background', (0, 0, 0, 0))
+pg.setConfigOption('background', (255, 255, 255, 0))
 pg.setConfigOption('foreground', 'k')
 
 # # Loop through all files in the specified folder

@@ -6,15 +6,14 @@ from testbench.ngspice import Ngspice_testbench_compiler
 from parameters.Parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
 from calibration.custom_dask import init_dask, close_dask
-from calibration.utils import run_single_simulation, calculate_error_metrics, test_ngspice, run_single_simulation_kafka_local
+from calibration.utils import run_single_simulation, calculate_error_metrics, run_single_simulation_kafka_local
 from calibration.logging import logging_config, set_log_file, set_log_level
 from simulation.ngspice import Ngspice_simulator
 from cost_function import Cost_function
 from cost_function.exceptions import raise_exception
 from datetime import datetime
-from copy import copy, deepcopy
-import os, shutil, json, uuid, dask, time, pickle, logging, pandas as pd, asyncio
-
+from copy import copy
+import os, shutil, json, uuid, dask, pickle, logging, pandas as pd, threading, time, queue
 
 #%% calibration class
 class Calibration:
@@ -28,7 +27,8 @@ class Calibration:
                  optimizer_config: dict = None,
                  simulator_config: dict = None,
                  cost_function_config: dict = None,
-                 running_environment = 'local'):
+                 running_environment = 'local',
+                 command_queue = None):
                 
         self.reference_data = reference_data
         self.parameters = parameters
@@ -44,6 +44,8 @@ class Calibration:
         self.running_environment = running_environment
         self.running_environment_options = ('local', 'dask_local', 'kafka_local')    
         self.dask_upload_files = []
+        
+        self.command_queue = command_queue
         
         self.validate_simulator()
         self.validate_cost_function()
@@ -62,6 +64,9 @@ class Calibration:
             self.running_environment = 'local'
         
         self.setup_logging()
+        
+        self.abort_flag = False
+        self.optimization_thread = None
         
     def setup_logging(self):
         self.logging_config = logging_config
@@ -118,27 +123,7 @@ class Calibration:
                                                     eval_func = self.run_multiple_simulations,
                                                     eval_func_args = None,
                                                     **temp)
-            
-            # self.optimizer = Differential_evolution(parameters = self.parameters.all_parameters,
-            #                                         eval_func = self.run_multiple_simulations,
-            #                                         eval_func_args = None,
-            #                                         callback_after_first_iter = self.optimizer_config['callback_after_first_iter'],
-            #                                         callback_after_each_iter = self.optimizer_config['callback_after_each_iter'],
-            #                                         callback_after_last_iter = self.optimizer_config['callback_after_last_iter'],
-            #                                         callback_after_better_solution_found = self.optimizer_config['callback_after_better_solution_found'],
-            #                                         pop_size = self.optimizer_config['pop_size'],
-            #                                         metric_threshold = self.optimizer_config['metric_threshold'],
-            #                                         max_iterations = self.optimizer_config['max_iterations'],
-            #                                         max_iter_without_improvement = self.optimizer_config['max_iter_without_improvement'],
-            #                                         init_pop = self.optimizer_config['init_pop'],
-            #                                         init_pop_out_of_range_param = self.optimizer_config['init_pop_out_of_range_param'],
-            #                                         defaults_in_init_pop = self.optimizer_config['defaults_in_init_pop'],
-            #                                         plot_parameter_evolution_period = self.optimizer_config['plot_parameter_evolution_period'],
-            #                                         plot_survivor_metric_evolution_period = self.optimizer_config['plot_survivor_metric_evolution_period'],
-            #                                         write_history_to_file_period = self.optimizer_config['write_history_to_file_period'],
-            #                                         results_dir = self.optimizer_config['results_dir'],
-            #                                         adaptive_boundaries = self.optimizer_config['adaptive_boundaries'])
-    
+
     def get_cost_function(self):
         if self.cost_function_config['type'] == 'default':
             self.cost_function = Cost_function(parts = self.cost_function_config['parts'])
@@ -278,11 +263,52 @@ class Calibration:
                 self.simulation_files_path = self.results_dir
             self.testbenches.update_working_directory(new_working_dir = self.simulation_files_path)
         if write_input_to_files:
-            self.write_input_to_files()     
-        self.optimizer.run_optimization()
+            self.write_input_to_files()    
+        
+        # Start optimization in a separate thread
+        self.optimization_thread = threading.Thread(target = self.run_optimization_thread)
+        self.optimization_thread.start()
+        
+        # Monitor the abort flag
+        while self.optimization_thread.is_alive():
+            if self.command_queue is not None:
+                try:
+                    command = self.command_queue.get_nowait()
+                    if command == 'abort':
+                        self.abort_flag = True
+                except queue.Empty:
+                    pass
+            
+            if self.abort_flag:
+                self.optimizer.abort_optimization()
+                break
+            time.sleep(0.1)  # Sleep to prevent busy waiting
+            # if i > 100:
+            #     self.abort_calibration()
+        # Wait for the optimization thread to finish
+        self.optimization_thread.join()
+
         if self.running_environment == 'dask_local':
             close_dask(self.cluster)
-        
+    
+    def abort_calibration(self):
+        self.abort_flag = True
+    
+    def run_optimization_thread(self):
+       self.optimizer.run_optimization()
+       
+    def check_for_abort(self):
+        if self.command_queue:
+            try:
+                command = self.command_queue.get_nowait()
+                if command == 'abort':
+                    print("Received abort command")
+                    self.abort_flag = True
+                    if hasattr(self, 'optimizer'):
+                        self.optimizer.abort_flag = True
+            except queue.Empty:
+                pass  # No command in the queue
+       
     def create_new_output_dir(self):
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 

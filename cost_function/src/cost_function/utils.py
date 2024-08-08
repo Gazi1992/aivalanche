@@ -34,7 +34,6 @@ def calculate_error_metric(data: pd.DataFrame = None, parameters: pd.DataFrame =
         else:
             error_metric = 0
 
-
         return error_metric
     
     except Exception:
@@ -50,10 +49,11 @@ def calculate_rmse(groups: pd.DataFrame = None):
     if groups is None:
         return 0
     groups = groups.copy()
+    groups = explode_values(groups)
     groups['total_weight'] = groups['group_weight'] * groups['curve_weight']
-    groups['error_metric_not_weighted'] = groups.apply(lambda row: np.sqrt(np.nansum((row['y_values'] - row['y_values_simulation']) ** 2) / row['curve_length']), axis = 1)
-    groups['error_metric_weighted'] = groups['error_metric_not_weighted'] * groups['total_weight']
-    return np.sum(groups['error_metric_weighted']) / np.sum(groups['total_weight'])
+    groups['difference_squared'] = ((groups['y_values'] - groups['y_values_simulation']) * groups['total_weight']) ** 2
+    error = np.sqrt(np.nanmean(groups['difference_squared']))
+    return error
 
 #%% Apply transformation to the y_values and y_values_simulation
 def transform_groups(groups: pd.DataFrame = None, transform: str = None):
@@ -108,7 +108,13 @@ def filter_groups(all_groups: pd.DataFrame = None, relevant_groups: list[str] = 
     filtered_groups = all_groups[all_groups['group_type'].isin(relevant_groups)]
     return filtered_groups
    
-
+#%% Explode the dataframe lists into separate rows.
+def explode_values(df, explode = ['x_values', 'y_values', 'x_values_simulation', 'y_values_simulation']):
+    df = df.reset_index(drop = True)
+    idx = df.index.repeat(df[explode[0]].str.len())
+    df1 = pd.concat([pd.DataFrame({x: np.concatenate(df[x].values)}) for x in explode], axis = 1)
+    df1.index = idx
+    return df1.join(df.drop(columns = explode), how = 'left')
 
    
     

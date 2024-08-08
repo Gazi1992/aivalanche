@@ -4,12 +4,13 @@ from optimization.differential_evolution import Differential_evolution
 from optimization.test_functions import evaluate_quadratic_3_variables, evaluate_beale_2_variables, evaluate_quadratic_4_variables, evaluate_sin_sqrt_2_variables, plot_sin_sqrt
 
 #%% Function selector
-function = evaluate_quadratic_3_variables
+function = evaluate_quadratic_4_variables
 adaptive_boundaries = False
 init_pop = None
 init_pop_out_of_range_param = 'keep'
 defaults_in_init_pop = False
-plot_parameter_evolution_period = 1
+use_population_prediction = True
+plot_parameter_evolution_period = 5
 plot_survivor_metric_evolution_period = None
 
 
@@ -127,6 +128,7 @@ diff_evolution = Differential_evolution(parameters = parameters,
                                         init_pop = init_pop,
                                         init_pop_out_of_range_param = init_pop_out_of_range_param,
                                         defaults_in_init_pop = defaults_in_init_pop,
+                                        use_population_prediction = use_population_prediction,
                                         plot_parameter_evolution_period = plot_parameter_evolution_period,
                                         plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
                                         adaptive_boundaries = adaptive_boundaries)

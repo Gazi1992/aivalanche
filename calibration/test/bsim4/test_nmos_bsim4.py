@@ -1,7 +1,7 @@
 from calibration.Calibration import Calibration
 from reference_data.visualization import plot_all_groups
 from reference_data.utils import write_reference_data_to_file
-import os, numpy as np
+import os, numpy as np, time
 
 def callback_after_first_iter(parameters: dict = None,
                               responses: dict = None,
@@ -72,7 +72,7 @@ optimizer_config = {'type': 'differential_evolution',
                     'callback_after_each_iter': callback_after_each_iter,
                     'callback_after_last_iter': callback_after_last_iter,
                     'callback_after_better_solution_found': callback_after_better_solution_found,
-                    'pop_size': 10,
+                    'pop_size': 20,
                     'metric_threshold': 1e-10,
                     'max_iterations': 10000,
                     'max_iter_without_improvement': 500,
@@ -84,7 +84,8 @@ optimizer_config = {'type': 'differential_evolution',
                     'plot_survivor_metric_evolution_period': 20,
                     'write_history_to_file_period': 20,
                     'results_dir': results_dir,
-                    'adaptive_boundaries': False}
+                    'adaptive_boundaries': False,
+                    'use_population_prediction': True}
 
 simulator_config = {'type': 'ngspice'}
 
@@ -128,6 +129,19 @@ cost_function_config = {'type': 'default',
                             }
                         ]}
 
+cost_function_config = {'type': 'default',
+                        'parts': [
+                            {
+                                'id': 'out_trans_char_lin',
+                                'group_types': ['ids_vds_vgs', 'ids_vgs_vbs'],
+                                'metric_type': 'rmse',
+                                'weight': 1,
+                                'norm': True,
+                                'transform': 'lin',
+                                'extra_args': {}
+                            }
+                        ]}
+
 running_environment = 'dask_local' # [local, dask_local, kafka_local, kafka_aws]
 
 if __name__ == '__main__':
@@ -144,8 +158,8 @@ if __name__ == '__main__':
     
     # calibration.run_no_parameter_simulation(plot = True)
     
-    calibration.run_default_simulation(plot = True, delete_files = False, print_output = False)
+    # calibration.run_default_simulation(plot = True, delete_files = False, print_output = False)
     
     # calibration.run_random_simulation(plot = True, delete_files = False)
     
-    # calibration.calibrate()
+    calibration.calibrate()

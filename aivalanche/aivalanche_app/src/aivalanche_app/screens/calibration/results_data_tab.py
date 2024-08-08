@@ -6,9 +6,10 @@ from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
 from aivalanche_app.components.buttons.icon_button import icon_button
+from aivalanche_app.components.plots.custom_graphics_layout_widget import custom_graphics_layout_widget
 from aivalanche_app.helper_functions import update_df_by_condition
 from aivalanche_app.paths import refresh_icon_path, refresh_hovered_icon_path, refresh_pressed_icon_path
-import pyqtgraph as pg, pandas as pd, math, numpy as np
+import pandas as pd, math, numpy as np
 
 class results_data_tab(QSplitter):
     
@@ -86,7 +87,7 @@ class results_data_tab(QSplitter):
         right_layout.addWidget(scroll_area)
         
         # Create a grid layout for plots
-        self.plots_widget = pg.GraphicsLayoutWidget()
+        self.plots_widget = custom_graphics_layout_widget()
         self.plots_widget.ci.setSpacing(self.plot_spacing)
         
         scroll_area.setWidget(self.plots_widget)

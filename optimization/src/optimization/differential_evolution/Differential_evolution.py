@@ -29,8 +29,9 @@ Inputs:
 #%% Imports
 import os, pandas as pd, numpy as np, time
 from pyDOE import lhs
-from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter
-from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram
+from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter, \
+                                                      get_gaussian_process_fit, get_exponential_or_linear_fit, smooth_data, exponential_func, linear_func
+from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram, plot_df, plot_parameter_fit, plot_quantile_fits
 
 #%% differential_evolution class
 
@@ -49,9 +50,9 @@ class Differential_evolution:
                  metric_threshold: float = 0,                           # when this threshold is reached, optimization stops  
                  max_iter_without_improvement: int = 50,                # when no improvement is seem in that many iterations, optimization stops
                  mutation_factor_1: float = 0.8,                        # the scaling factor for difference of the two random members
-                 mutation_factor_2: float = 0.8,                        # the scaling factor for difference of best and random member
+                 mutation_factor_2: float = 0.6,                        # the scaling factor for difference of best and random member
                  mutation_factor_3: float = 0,                          # the scaling factor for difference of current and random member
-                 recombination_factor: float = 0.9,                     # the factor used during trials generation
+                 recombination_factor: float = 0.95,                     # the factor used during trials generation
                  init_pop: pd.DataFrame = None,                         # initial population to be used in the first iteration of the optimization
                  init_pop_out_of_range_param: str = 'keep',             # what to do with the parameters of the initial population that are out of range; either 'keep' as is or replace with 'random' value
                  defaults_in_init_pop: bool = False,                    # when true, then use the default values of the parameters in the initial population
@@ -60,6 +61,13 @@ class Differential_evolution:
                  adaptive_boundaries_pop_quantitle: float = 0.7,        # when this quantile of the population is on the edge, the boundary is extended
                  adaptive_boundaries_extention: float = 0.1,            # how much is the min or max extended when the a parameter is considered on the edge
                  adaptive_boundaries_check_period: int = 10,            # check for adaptive boundaries periodically each that much iterations
+                 use_population_prediction: bool = False,
+                 population_prediction_back_window: int = 10,
+                 population_prediction_front_window: int = 10,
+                 population_prediction_period: int = 10,
+                 population_prediction_std_drop_threshold: float = 0.5,
+                 population_prediction_upper_quantile: float = 0.75,
+                 population_prediction_lower_quantile: float = 0.25,
                  plot_trial_metric_evolution_period: int = None,        # plot trial metric evolution when iteration is a multiple of this number
                  plot_survivor_metric_evolution_period: int = None,     # plot trial metric evolution when iteration is a multiple of this number
                  plot_parameter_evolution_period: int = None,           # plot parameter evolution when iteration is a multiple of this number
@@ -87,7 +95,12 @@ class Differential_evolution:
         self.metric_threshold = float(metric_threshold)
         self.max_iter_without_improvement = int(max_iter_without_improvement)
         
-        self.init_pop = init_pop if init_pop is not None and os.path.exists(init_pop) else None
+        self.init_pop = None
+        if isinstance(init_pop, str) and os.path.exists(init_pop):
+            self.init_pop = init_pop
+        elif isinstance(init_pop, pd.DataFrame):
+            self.init_pop = init_pop
+        
         if isinstance(self.init_pop, str):
             if self.init_pop.split('.')[-1] == 'csv':
                 self.init_pop = pd.read_csv(filepath_or_buffer = self.init_pop)
@@ -102,6 +115,14 @@ class Differential_evolution:
         self.adaptive_boundaries_extention = adaptive_boundaries_extention
         self.adaptive_boundaries_check_period = adaptive_boundaries_check_period
         
+        self.use_population_prediction = use_population_prediction
+        self.population_prediction_back_window = population_prediction_back_window
+        self.population_prediction_front_window = population_prediction_front_window
+        self.population_prediction_period = population_prediction_period
+        self.population_prediction_std_drop_threshold = population_prediction_std_drop_threshold
+        self.population_prediction_upper_quantile = population_prediction_upper_quantile
+        self.population_prediction_lower_quantile = population_prediction_lower_quantile
+        
         self.plot_trial_metric_evolution_period = int(plot_trial_metric_evolution_period) if plot_trial_metric_evolution_period is not None and plot_trial_metric_evolution_period > 0 else None
         self.plot_survivor_metric_evolution_period = int(plot_survivor_metric_evolution_period) if plot_survivor_metric_evolution_period is not None and plot_survivor_metric_evolution_period > 0 else None
         self.plot_parameter_evolution_period = int(plot_parameter_evolution_period) if plot_parameter_evolution_period is not None  and plot_parameter_evolution_period > 0 else None
@@ -110,6 +131,7 @@ class Differential_evolution:
         self.results_dir = results_dir
         
         self.iter = 0
+        self.abort_flag = False
         self.is_stop_criteria_reached = False
         self.stop_reason = ""
         
@@ -216,9 +238,9 @@ class Differential_evolution:
                                           best_parameters = self.best_unscaled,
                                           best_metric = self.best_metric,
                                           trials = self.history['trials'],
+                                          stop_reason = self.stop_reason,
                                           **self.eval_func_args)
             
-    
     # Print the final result
     def show_final_result(self):
         print("\n\n--------------------------- Optimization stopped ---------------------------\n\n")
@@ -228,25 +250,30 @@ class Differential_evolution:
         print(f"Best parameters: {self.best_unscaled}\n\n")
         print("--------------------------------------------------------------------------------\n\n")
     
-    
     # Set is_stop_criteria_reached
     def set_is_stop_criteria_reached(self):
-        if self.opt_min_or_max == 'min' and self.best_metric < self.metric_threshold:
+        if self.abort_flag:
             self.is_stop_criteria_reached = True
-            self.stop_reason = "Good Enough Metric reached"
+            self.stop_reason = "optimization aborted"
+        elif self.opt_min_or_max == 'min' and self.best_metric < self.metric_threshold:
+            self.is_stop_criteria_reached = True
+            self.stop_reason = "good enough metric reached"
         elif self.opt_min_or_max == 'max' and self.best_metric > self.metric_threshold:
             self.is_stop_criteria_reached = True
-            self.stop_reason = "Good Enough Metric reached"
+            self.stop_reason = "good enough metric reached"
         elif self.iter_no_improvement > self.max_iter_without_improvement:
             self.is_stop_criteria_reached = True
-            self.stop_reason = "Maximum number of iterations without improvement reached"
+            self.stop_reason = "maximum number of iterations without improvement reached"
         elif self.iter > self.max_iterations:
             self.iter -= 1
             self.is_stop_criteria_reached = True
-            self.stop_reason = "Maximum number of iterations reached"
+            self.stop_reason = "maximum number of iterations reached"
         else:
             self.is_stop_criteria_reached = False
-
+        
+    # Abort optimization
+    def abort_optimization(self):
+        self.abort_flag = True
 
     # Save metrics
     def save_metrics(self, metrics):
@@ -254,18 +281,19 @@ class Differential_evolution:
 
     # Prepare first iteration
     def prepare_first_iter(self):
-        self.iter_no_improvement = 0
-        self.iter += 1
-        self.set_boundaries()     
-        self.targets = np.full((self.pop_size, self.nr_parameters), None)
-        self.targets_unscaled = np.full((self.pop_size, self.nr_parameters), None)
-        self.targets_normed = np.full((self.pop_size, self.nr_parameters), None)
-        self.targets_metric = np.full((self.pop_size), None)
-        self.generate_donors()
-        self.generate_trials()
+        if not self.is_stop_criteria_reached:
+            self.iter_no_improvement = 0
+            self.iter += 1
+            self.set_boundaries()     
+            self.targets = np.full((self.pop_size, self.nr_parameters), None)
+            self.targets_unscaled = np.full((self.pop_size, self.nr_parameters), None)
+            self.targets_normed = np.full((self.pop_size, self.nr_parameters), None)
+            self.targets_metric = np.full((self.pop_size), None)
+            self.generate_donors()
+            self.generate_trials()
 
     # Prepare next iteration
-    def prepare_next_iter(self):
+    def prepare_next_iter(self):        
         self.iter += 1
         self.targets_normed = self.survivors_normed
         self.targets = self.survivors
@@ -274,8 +302,15 @@ class Differential_evolution:
         self.set_is_stop_criteria_reached()
         if self.adaptive_boundaries:
             self.set_boundaries()
-        self.generate_donors()
-        self.generate_trials()
+            
+        # apply population prediction
+        population_prediction_applied = False
+        if self.use_population_prediction and self.iter > 0 and self.iter % self.population_prediction_period == 0:
+            population_prediction_applied = self.apply_population_prediction()
+            
+        if not population_prediction_applied:
+            self.generate_donors()
+            self.generate_trials()
 
     # Calculate the boundaries for each parameter
     def set_boundaries(self):
@@ -369,9 +404,9 @@ class Differential_evolution:
     def generate_mutations(self, dice: np.array = None):
         if dice is None:        
             # throw the dice to get 3 random intigers between 0 and pop_size-1
-            # dice = [np.random.choice([j for j in range(self.pop_size) if j != i], size = (1, 3), replace = False) for i in range(self.pop_size)]
-            # dice = np.array(dice).reshape(-1,3)
-            dice = np.random.randint(self.pop_size, size = (self.pop_size, 3))            
+            dice = [np.random.choice([j for j in range(self.pop_size) if j != i], size = (1, 3), replace = False) for i in range(self.pop_size)]
+            dice = np.array(dice).reshape(-1,3)
+            # dice = np.random.randint(self.pop_size, size = (self.pop_size, 3))            
         
         # get random members
         temp = self.targets_normed[dice].reshape(-1,3,self.nr_parameters)
@@ -384,7 +419,7 @@ class Differential_evolution:
                        + self.mutation_factor_1 * (rand_mem_2 - rand_mem_3)
                        + self.mutation_factor_2 * (self.best_normed - rand_mem_1)
                        + self.mutation_factor_3 * (self.best_normed - self.targets_normed))
-        
+
         # if donor goes beyond [0,1], then assign it a random value
         violation_mask = (donors_normed > 1) | (donors_normed < 0)
         donors_normed[violation_mask] = np.random.rand(np.sum(violation_mask))
@@ -477,7 +512,7 @@ class Differential_evolution:
                     self.donors[-1] = np.array(self.parameters['value_scaled']).reshape(1,-1)
 
         else:
-            self.donors_normed = self.generate_mutations()                      # Generate mutations for each target            
+            self.donors_normed = self.generate_mutations()                      # Generate mutations for each target
             self.donors = np.apply_along_axis(func1d = unnorm_member,
                                               axis = 1,
                                               arr = self.donors_normed,
@@ -615,8 +650,224 @@ class Differential_evolution:
 
     def update_results_dir(self, new_results_dir: str = None):
         self.results_dir = new_results_dir
+    
+    def apply_population_prediction(self):
+        all_survivors = self.get_all_survivors() # get all survivors
+        all_survivors = all_survivors[all_survivors['iter'] > self.iter - self.population_prediction_back_window] # get only the last population_prediction_back_window iterations
+        all_survivors = all_survivors[['iter', 'survivor_normed']] # keep only the important columns
+        iter_index = all_survivors['iter'] # index to be saved for later
+        all_survivors = all_survivors['survivor_normed'].apply(pd.Series) # explode the values
+        all_survivors.columns = self.parameter_names # set column names
+        all_survivors.set_index(iter_index, inplace = True) # set index equal to iter
+
+        std = all_survivors.groupby('iter').std() # calculate the std
+        # std_smooth = std.apply(lambda col: smooth_data(col))
+        std_drop = std.apply(lambda col: col.values[-1] / col.values[0]) # calculate the drop in std
+        converging_parameters = std_drop[std_drop <= self.population_prediction_std_drop_threshold].index.to_list() # get the parameters which have a significant drop
         
+        if len(converging_parameters) == 0:
+            return False
         
+        # Calculate the lower and upper quantile for the converging parameters
+        lower_quantile = all_survivors[converging_parameters].groupby('iter').agg({col: lambda x: x.quantile(self.population_prediction_lower_quantile) for col in converging_parameters})
+        lower_quantile.reset_index(inplace = True, drop = True)
+        # lower_quantile_smooth = lower_quantile.apply(lambda col: smooth_data(col))
+
+        upper_quantile = all_survivors[converging_parameters].groupby('iter').agg({col: lambda x: x.quantile(self.population_prediction_upper_quantile) for col in converging_parameters})
+        upper_quantile.reset_index(inplace = True, drop = True)
+        # upper_quantile_smooth = upper_quantile.apply(lambda col: smooth_data(col))
+
+        # plot_df(std_smooth)
+        # plot_df(lower_quantile_smooth)
+        # plot_df(upper_quantile_smooth)
+        
+        # Get the min and max of the lower and upper quantile
+        lower_quantile_min_max = lower_quantile.apply(lambda col: pd.Series({'min': col.min(), 'max': col.max()}))
+        upper_quantile_min_max = upper_quantile.apply(lambda col: pd.Series({'min': col.min(), 'max': col.max()}))
+
+        # Norm the lower and upper quantile to [0, 1]
+        lower_quantile_normed = lower_quantile.apply(lambda col: (col - col.min())/(col.max() - col.min()))
+        upper_quantile_normed = upper_quantile.apply(lambda col: (col - col.min())/(col.max() - col.min()))
+        
+        # Fit the lower and upper quantile
+        lower_quantile_fit = lower_quantile_normed.apply(lambda col: get_exponential_or_linear_fit(np.array(lower_quantile_normed.index), np.array(col)))
+        lower_quantile_fit.set_index(pd.Index(['fit_parameters', 'fit_type']), inplace = True)
+        
+        upper_quantile_fit = upper_quantile_normed.apply(lambda col: get_exponential_or_linear_fit(np.array(upper_quantile_normed.index), np.array(col)))
+        upper_quantile_fit.set_index(pd.Index(['fit_parameters', 'fit_type']), inplace = True)
+        
+        # lower_quantile_gp = pd.DataFrame(lower_quantile_normed.apply(lambda col: get_gaussian_process_fit(np.array(lower_quantile_normed.index), np.array(col)))).T
+        # upper_quantile_gp = pd.DataFrame(upper_quantile_normed.apply(lambda col: get_gaussian_process_fit(np.array(upper_quantile_normed.index), np.array(col)))).T
+        
+        # Get the parameters that could be fit on the lower and upper quantile
+        common_columns = lower_quantile_fit.columns.intersection(upper_quantile_fit.columns).to_list()
+        lower_quantile_fit = lower_quantile_fit[common_columns]
+        upper_quantile_fit = upper_quantile_fit[common_columns]
+        
+        # update the converging parameters
+        converging_parameters = list(set(converging_parameters) & set(common_columns))
+                    
+        # Generate the fit data
+        x = np.linspace(start = 0, stop = len(lower_quantile.index) + self.population_prediction_front_window - 1, num = len(lower_quantile.index) + self.population_prediction_front_window)
+        lower_quantile_normed_fit_data = lower_quantile_fit.apply(lambda col: exponential_func(x, *col['fit_parameters']) if col['fit_type'] == 'exponential' else linear_func(x, *col['fit_parameters']))
+        upper_quantile_normed_fit_data = upper_quantile_fit.apply(lambda col: exponential_func(x, *col['fit_parameters']) if col['fit_type'] == 'exponential' else linear_func(x, *col['fit_parameters']))
+        
+        # x = np.linspace(start = 0, stop = len(lower_quantile.index) + self.population_prediction_front_window - 1, num = len(lower_quantile.index) + self.population_prediction_front_window).reshape(-1, 1)
+        # lower_quantile_normed_fit_data = lower_quantile_gp.apply(lambda col: col.values[0].predict(x))
+        # upper_quantile_normed_fit_data = upper_quantile_gp.apply(lambda col: col.values[0].predict(x))
+
+        # unnorm the fits
+        lower_quantile_fit_data = lower_quantile_normed_fit_data.apply(lambda col: lower_quantile_min_max.loc['min'][col.name] + col * (lower_quantile_min_max.loc['max'][col.name] - lower_quantile_min_max.loc['min'][col.name]))
+        upper_quantile_fit_data = upper_quantile_normed_fit_data.apply(lambda col: upper_quantile_min_max.loc['min'][col.name] + col * (upper_quantile_min_max.loc['max'][col.name] - upper_quantile_min_max.loc['min'][col.name]))
+
+        # plot_parameter_fit(lower_quantile, lower_quantile_fit_data)
+        # plot_parameter_fit(upper_quantile, upper_quantile_fit_data)
+        plot_quantile_fits(lower_quantile, upper_quantile, lower_quantile_fit_data, upper_quantile_fit_data)
+        
+        # remove any parameter whose lewr quantile fit is larger than the upper quantile fit
+        converging_parameters = ''
+        
+            
+        return False
+            
+
+        
+
+
+
+
+    
+    def applyAuroraAcceleration(self):
+        if((self.iteration >= self.auroraAccelerationStartThreshold) and (self.iteration % self.auroraAccelerationFrequency == 0)):
+            print('Aurora acceleration...')
+            # self.plotAllParamsEvolution()
+            # self.plotSingleParamAuroraEvolution('x', 500)
+            
+            SLOPE_UP = 1
+            SLOPE_DOWN = 2
+            SLOPE_ZERO_HIGH_STD = 3
+            SLOPE_ZERO_LOW_STD = 4
+ 
+            STD_SLOPE_THRESHOLD = 0.0025
+            STD_VALUE_THRESHOLD = 0.05
+            
+            MEAN_QUANTILE_LOW = 0.35
+            MEAN_QUANTILE_HIGH = 0.65
+            
+            std = np.stack(self.history.groupby('iteration').first()['survivorStd'])
+            std = pd.DataFrame(std, columns=self.factorNames).tail(self.auroraAccelerationBackWindow).reset_index().drop(columns=['index'], axis=0)
+            stdSmooth = std.apply(lambda col: self.smoothData(col), axis=0)
+            stdSmoothDiff = stdSmooth.apply(lambda col: self.diffData(col), axis=0)
+            
+            mean = np.stack(self.history.groupby('iteration').first()['survivorMean'])
+            mean = pd.DataFrame(mean, columns=self.factorNames).tail(self.auroraAccelerationBackWindow).reset_index().drop(columns=['index'], axis=0)
+            meanSmooth = mean.apply(lambda col: self.smoothData(col), axis=0)
+
+            temp = np.stack(self.history['survivorNormed'])
+            temp = pd.DataFrame(temp, columns=self.factorNames).set_index(self.history['iteration'])
+            
+            meanQuantileLow = temp.groupby('iteration').quantile(q=MEAN_QUANTILE_LOW).tail(self.auroraAccelerationBackWindow)
+            meanQuantileLowSmooth = meanQuantileLow.apply(lambda col: self.smoothData(col), axis=0)
+
+            meanQuantileHigh = temp.groupby('iteration').quantile(q=MEAN_QUANTILE_HIGH).tail(self.auroraAccelerationBackWindow)
+            meanQuantileHighSmooth = meanQuantileHigh.apply(lambda col: self.smoothData(col), axis=0)
+            
+            def getParamCategory(val, diff):
+                # temp = diff.mean()
+                temp = np.array(val)
+                temp = (temp[-1] - temp[0]) / temp.shape[0]
+                if(temp < -STD_SLOPE_THRESHOLD):
+                    category = SLOPE_DOWN
+                elif(temp > STD_SLOPE_THRESHOLD):
+                    category = SLOPE_UP
+                elif(temp > STD_VALUE_THRESHOLD):
+                    category = SLOPE_ZERO_HIGH_STD
+                else:
+                    category = SLOPE_ZERO_LOW_STD
+                return category
+            
+            paramsCategories = stdSmooth.apply(lambda col: getParamCategory(col, stdSmoothDiff[col.name]), axis=0)
+            
+            paramsSlopeDown = paramsCategories[paramsCategories == SLOPE_DOWN].index.values
+            print(f"Number of slope down parameters: {len(paramsSlopeDown)} / {len(self.factorNames)}")
+            if(paramsSlopeDown.size == 0):
+                print('No slope down parameters found')
+            else:
+                # paramsSlopeUp = paramsCategories[paramsCategories == SLOPE_UP].index.values
+                # paramsSlopeZeroLowStd = paramsCategories[paramsCategories == SLOPE_ZERO_LOW_STD].index.values
+                # paramsSlopeZeroHighStd = paramsCategories[paramsCategories == SLOPE_ZERO_HIGH_STD].index.values
+                
+                paramsSlopeDownStdSmooth = stdSmooth[paramsSlopeDown]
+                paramsSlopeDownMeanSmooth = meanSmooth[paramsSlopeDown]
+                paramsSlopeDownmeanQuantileLowSmooth = meanQuantileLowSmooth[paramsSlopeDown]
+                paramsSlopeDownmeanQuantileHighSmooth = meanQuantileHighSmooth[paramsSlopeDown]
+                
+                paramsSlopeDownPredictions = paramsSlopeDownStdSmooth.apply(lambda col: self.getPredictionsExpOrLinear(col, paramsSlopeDownMeanSmooth[col.name], paramsSlopeDownmeanQuantileLowSmooth[col.name], paramsSlopeDownmeanQuantileHighSmooth[col.name]), axis=0).set_index(pd.Index(['std_pred', 'mean_pred', 'meanQuantileLow_pred', 'meanQuantileHigh_pred']))              
+                # self.plotPredictionsExp(paramsSlopeDownStdSmooth, paramsSlopeDownMeanSmooth, paramsSlopeDownmeanQuantileLowSmooth, paramsSlopeDownmeanQuantileHighSmooth, paramsSlopeDownPredictions)
+
+                stdSlopeDown = paramsSlopeDownPredictions.loc['std_pred'].apply(lambda row: np.min(np.abs(row)))
+                stdModified = pd.DataFrame(stdSmooth.iloc[-1]).apply(lambda row: stdSlopeDown[row.name] if row.name in stdSlopeDown.index.values else row, axis=1)
+                if(isinstance(stdModified, pd.DataFrame)):
+                    stdModified = stdModified.iloc[:, 0]
+                
+                meanSlopeDown = paramsSlopeDownPredictions.loc['mean_pred'].apply(lambda row: row[-1])
+                meanModified = pd.DataFrame(meanSmooth.iloc[-1]).apply(lambda row: meanSlopeDown[row.name] if row.name in meanSlopeDown.index.values else row, axis=1)
+                if(isinstance(meanModified, pd.DataFrame)):
+                    meanModified = meanModified.iloc[:, 0]
+
+                meanQuantileLowSlopeDown = paramsSlopeDownPredictions.loc['meanQuantileLow_pred'].apply(lambda row: row[-1])
+                meanQuantileLowModified = pd.DataFrame(meanQuantileLowSmooth.iloc[-1]).apply(lambda row: meanQuantileLowSlopeDown[row.name] if row.name in meanQuantileLowSlopeDown.index.values else row, axis=1)
+                if(isinstance(meanQuantileLowModified, pd.DataFrame)):
+                    meanQuantileLowModified = meanQuantileLowModified.iloc[:, 0]
+
+                meanQuantileHighSlopeDown = paramsSlopeDownPredictions.loc['meanQuantileHigh_pred'].apply(lambda row: row[-1])
+                meanQuantileHighModified = pd.DataFrame(meanQuantileHighSmooth.iloc[-1]).apply(lambda row: meanQuantileHighSlopeDown[row.name] if row.name in meanQuantileHighSlopeDown.index.values else row, axis=1)
+                if(isinstance(meanQuantileHighModified, pd.DataFrame)):
+                    meanQuantileHighModified = meanQuantileHighModified.iloc[:, 0]
+
+                auroraTrialNormed = np.zeros([self.populationSize, len(self.factorNames)])
+                i = 0
+                for factor in self.factorNames:
+                    if(factor in meanSlopeDown.index.values):
+                        # temp = np.random.normal(meanModified[factor], stdModified[factor], self.populationSize)
+                        temp = np.random.uniform(meanQuantileLowModified[factor], meanQuantileHighModified[factor], self.populationSize)
+                    else:
+                        temp = np.full((self.populationSize,), meanModified[factor])
+                    auroraTrialNormed[:,i] = temp
+                    i = i + 1
+                auroraTrialNormed[0,:] = meanModified.values
+                self.auroraTrialNormed = auroraTrialNormed
+                auroraTrial = np.apply_along_axis(self.unnormMember, 1, auroraTrialNormed)
+                self.auroraTrial = auroraTrial
+                
+                auroraTrialFactors = []
+                temp = self.factors.copy()
+                for values in self.auroraTrial:
+                    temp['valueScaled'] = values
+                    temp['value'] = temp.apply(lambda row: self.unscaleParam(row, 'valueScaled'), axis=1)
+                    auroraTrialFactors.append(temp.copy())
+                
+                auroraResponse = self.evalFunc(auroraTrialFactors, *self.evalFuncArgs)
+                self.auroraResponse = auroraResponse
+                print(f"Best aurora result: {min(auroraResponse)}")
+                
+                numberOfMembersToSubstitute = np.int(self.populationSize * self.auroraAccelerationSubstituteQuantile)
+                auroraBestIndices = np.argsort(np.array(auroraResponse))[0:numberOfMembersToSubstitute]
+                randomIndices = np.random.choice(self.populationSize, numberOfMembersToSubstitute, replace=False)
+                
+                i = 0
+                numberOfBetterResults = 0
+                for index in randomIndices:
+                    if(auroraResponse[auroraBestIndices[i]] < self.trialResponse[index]):
+                        self.trialNormed[index, :] = auroraTrialNormed[auroraBestIndices[i], :]
+                        self.trial[index, :] = auroraTrial[auroraBestIndices[i], :]
+                        self.trialResponse[index] = auroraResponse[auroraBestIndices[i]]
+                        numberOfBetterResults = numberOfBetterResults + 1 
+                    i = i + 1
+                 
+                print(f"Number of better results: {numberOfBetterResults}")
+                
+                self.updateAuroraHistory()
         
         
         

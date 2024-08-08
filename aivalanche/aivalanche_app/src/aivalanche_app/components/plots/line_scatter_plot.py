@@ -36,6 +36,7 @@ class custom_plot_data_item(PlotDataItem):
 # Custom class to zoom in and out only when ctrl key is pressed.
 class custom_viewbox(ViewBox):
     def wheelEvent(self, ev, axis = None):
+        # super().wheelEvent(ev)
         if ev.modifiers() == Qt.ControlModifier:
             super().wheelEvent(ev)
         else:
@@ -45,8 +46,8 @@ class line_scatter_plot(PlotItem):
     def __init__(self, parent = None, title = 'title', x_axis_label = 'x axis', y_axis_label = 'y axis', show_legend: bool = True,
                  use_custom_legend: bool = False, on_legend_item_click: callable = None, style = None):
 
-        custom_vb = custom_viewbox()
-        super().__init__(parent = parent, title = title, viewBox = custom_vb)     
+        # custom_vb = custom_viewbox()
+        super().__init__(parent = parent, title = title)#, viewBox = custom_vb)     
         
         self.show_legend = show_legend
         self.use_custom_legend = use_custom_legend
@@ -83,8 +84,8 @@ class line_scatter_plot(PlotItem):
         # self.scale_y_button.clicked.connect(self.toggle_y_scale)    
         
         # self.scale_x_button = plot_button(image_file_1 = log_x_icon_path, image_file_2 = lin_x_icon_path, height = buttons_height, parent_item = self)
-        # self.scale_x_button.clicked.connect(self.toggle_x_scale)   
-
+        # self.scale_x_button.clicked.connect(self.toggle_x_scale)
+            
     @property
     def nr_curves(self):
         return len(self.plots.keys())

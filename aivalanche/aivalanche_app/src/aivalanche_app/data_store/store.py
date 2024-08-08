@@ -1,11 +1,11 @@
-import json, pandas as pd, threading, uuid, queue, shutil, numpy as np
+import json, pandas as pd, uuid, shutil, numpy as np, zmq, pickle
+from copy import copy
 from pathlib import Path
 from datetime import datetime
 from aivalanche_app.paths import dummy_data_path, projects_path
 from aivalanche_app.resources.themes.style import style
 from aivalanche_app.data_store.db import db
 from aivalanche_app.simulations.single_simulation import single_simulation
-from aivalanche_app.simulations.model_calibration import model_calibration
 from aivalanche_app.helper_functions import convert_to_list_if_semi_colon, filter_df_by_col_name_and_val, replace_space_with_underline, dict_to_json, get_current_timestamp
 from reference_data.Reference_data import Reference_data
 from reference_data.utils import write_reference_data_to_file
@@ -35,6 +35,7 @@ class dm_thread(QThread):
 # All the calculations and data manipulations happen here.
 class store(QObject):
     show_snackbar = Signal(str)
+    stop_calibration_timer = Signal()
     
     # Single simulation
     single_simulation_start = Signal(object)
@@ -169,6 +170,10 @@ class store(QObject):
             self.db.connect_to_db()
             self.projects_directory_path = projects_path
 
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REQ)
+        self.socket.connect("tcp://localhost:5555")
+        
         self.reset_user()
         
         self.projects = pd.DataFrame()
@@ -285,6 +290,12 @@ class store(QObject):
         self.calibration_results_trials = None
         self.calibration_new_results = None
         
+    def reset_model_calibration(self):             
+        self.model_calibration_id = None
+        self.model_calibration_running = False
+        self.status_check_timer = None
+        self.model_calibration_abort = False
+        
     def reset_single_simulation_results(self):
         self.single_simulation_results = None
                 
@@ -392,66 +403,106 @@ class store(QObject):
         return single_simulation_path
 
     #%% Calibration
-    def init_model_calibration(self):        
-        self.model_calibration = model_calibration()
-        self.calibration_timer = QTimer(self)
-        self.calibration_timer.timeout.connect(self.check_calibration_status)
-        self.calibration_timer.start(2000)
-        
-    def start_calibration(self, sync: bool = False):
-        self.init_model_calibration()
-        if self.model_calibration:
-            calibration_path = self.create_calibration_directory()
-            shutil.copy(self.optimization_settings_path, Path.joinpath(calibration_path, 'inputs', Path(self.optimization_settings_path).name))
-            self.compile_simulation_input(files_path = calibration_path)
-            self.model_calibration.update_simulation_input(self.simulation_input)
-            if sync:
-                self.model_calibration.run()
-            else:
-                self.model_calibration.start()
+    def check_calibration_status(self, sync: bool = False):
+        if sync:
+            self._check_calibration_status()
+        else:
+            self._run_task(self._check_calibration_status)
+    
+    def _check_calibration_status(self):
+        print('_check_calibration_status')
+        if hasattr(self, 'model_calibration_id'):
+            message = {
+                'command': 'check_calibration_status',
+                'calibration_id': self.model_calibration_id
+            }
+            self.socket.send(pickle.dumps(message))
+            response = pickle.loads(self.socket.recv())
+            if response is not None:
+                status = response['status']
+                if status == 'error':
+                    self.on_calibration_error(response)
+                elif status == 'progress' and not self.model_calibration_abort:
+                    self.on_calibration_progress(response)
+                elif status == 'finish':
+                    self.on_calibration_finish(response)
+    
+    def start_calibration(self, emit_signals: bool = True, sync: bool = True):
+        if sync:
+            self._start_calibration(emit_signals)
+        else:
+            self._run_task(self._start_calibration, emit_signals)
+    
+    def _start_calibration(self, emit_signals: bool = True):
+        self.reset_model_calibration()
+        calibration_path = self.create_calibration_directory()
+        shutil.copy(self.optimization_settings_path, Path.joinpath(calibration_path, 'inputs', Path(self.optimization_settings_path).name))
+        self.compile_simulation_input(files_path = calibration_path)        
+        calibration_id = copy(self.active_model['id'])
+        message = {
+            'command': 'start_calibration',
+            'calibration_id': calibration_id,
+            'simulation_input': self.simulation_input
+        }
+        self.socket.send(pickle.dumps(message))
+        response = pickle.loads(self.socket.recv())
+        if response['status'] == 'calibration_started':
+            self.model_calibration_id = calibration_id
             self.on_calibration_start(self.simulation_input)
-    
-    def abort_calibration(self, emit_signals: bool = True):
-        self._run_task(self._abort_calibration, emit_signals)
-    
-    def _abort_calibration(self, emit_signals: bool = True):
-        try:
-            if self.model_calibration and self.model_calibration.is_running():
-                self.model_calibration.terminate()
-                if emit_signals:
-                    self.on_calibration_abort({'model_id': self.active_model['id']})
-        except:
-            pass
-    
-    # def check_calibration_status(self):
-    #     self._run_task(self.check_calibration_status)
-    
-    def check_calibration_status(self):
-        if not self.model_calibration.is_running():
-            self.calibration_timer.stop()
-        data = self.model_calibration.get_result()
-        if data is not None:
-            status = data['status']
-            if status == 'error':
-                self.on_calibration_error(data)
-            elif status == 'progress':
-                self.on_calibration_progress(data)
-            elif status == 'finish':
-                self.on_calibration_finish(data)
-    
-    def on_calibration_start(self, data):
+            self.start_status_check_timer()
+            
+    def on_calibration_start(self, data, emit_signals: bool = True):
         self._run_task(self._on_calibration_start, data)
     
-    def _on_calibration_start(self, data):
+    def _on_calibration_start(self, data, emit_signals: bool = True):
         self.reset_calibration_results()
-        model_id = data['model_id']
-        self.update_model_status('starting calibration', model_id)
-        self.calibration_start.emit(data)
+        self.model_calibration_running = True
+        self.update_model_status('starting calibration', data['model_id'])
+        if emit_signals:
+            self.calibration_start.emit(data)
+            
+    def start_status_check_timer(self):
+        if self.status_check_timer is None:
+            self.status_check_timer = QTimer(self)
+            self.status_check_timer.timeout.connect(self.check_calibration_status)
+            self.stop_calibration_timer.connect(self.status_check_timer.stop)
+        self.status_check_timer.start(2000)
+
+    def stop_status_check_timer(self):
+        if self.status_check_timer is not None:
+            self.stop_calibration_timer.emit()
+            self.status_check_timer = None
+        
+    def abort_calibration(self, emit_signals: bool = True, sync: bool = False):
+        if sync:
+            self._abort_calibration(emit_signals)
+        else:
+            self._run_task(self._abort_calibration, emit_signals)
     
-    def on_calibration_progress(self, data):
-        self._run_task(self._on_calibration_progress, data)
+    def _abort_calibration(self, emit_signals: bool = True):
+        if hasattr(self, 'model_calibration_id'):
+            message = {
+                'command': 'abort_calibration',
+                'calibration_id': self.model_calibration_id
+            }
+            self.socket.send(pickle.dumps(message))
+            response = pickle.loads(self.socket.recv())
+            if response['status'] == 'calibration_abort_sent':
+                self.model_calibration_abort = True
+                self.on_calibration_abort({'model_id': self.active_model['id']})
+                    
+    def on_calibration_abort(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_abort, data)
     
-    def _on_calibration_progress(self, data):
+    def _on_calibration_abort(self, data, emit_signals: bool = True):
+        self.update_model_status('aborting calibration', data['model_id'])
+        if emit_signals:
+            self.calibration_abort.emit(data)
+    
+    def on_calibration_progress(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_progress, data, emit_signals)
+    
+    def _on_calibration_progress(self, data, emit_signals: bool = True):
         model_id = data['model_id']
         iteration = data['iteration']
         max_iterations = data['max_iterations']
@@ -491,44 +542,43 @@ class store(QObject):
                 columns.remove('calibrate')
                 columns.remove('include')
                 self.calibration_new_results = self.calibration_new_results[columns]
-    
-        self.calibration_progress.emit({'model_id': model_id, 'iteration': iteration, 'max_iterations': max_iterations,
-                                        'best_loss': best_loss, 'better_solution_found': better_solution_found})
+        
+        if emit_signals:
+            self.calibration_progress.emit({'model_id': model_id, 'iteration': iteration, 'max_iterations': max_iterations,
+                                            'best_loss': best_loss, 'better_solution_found': better_solution_found})
 
-    def on_calibration_finish(self, data):
-        self._run_task(self._on_calibration_finish, data)
+    def on_calibration_finish(self, data, emit_signals: bool = True, sync: bool = False):
+        if sync:
+            self._on_calibration_finish(data, emit_signals)
+        else:
+            self._run_task(self._on_calibration_finish, data, emit_signals)
 
-    def _on_calibration_finish(self, data):
+    def _on_calibration_finish(self, data, emit_signals: bool = True):
+        self.stop_calibration_timer.emit()
         model_id = data['model_id']
-        iteration = data['iteration']
-        max_iterations = data['max_iterations']
-        best_loss = data['best_loss']
-        best_results = data['best_results']
-        better_solution_found = data['better_solution_found']
-        results_dir = data['results_dir']
+        # iteration = data['iteration']
+        # max_iterations = data['max_iterations']
+        # best_loss = data['best_loss']
+        # best_results = data['best_results']
+        # better_solution_found = data['better_solution_found']
+        # results_dir = data['results_dir']
+        stop_reason = data['stop_reason']
+        status = 'calibration aborted' if stop_reason == 'optimization aborted' else 'calibration finished'
         self.calibration_results_survivors = data['survivors']
         self.calibration_results_trials = data['trials']
-        self.update_model_status('calibration finished', model_id)
-        if self.model_calibration.is_running():
-            self.model_calibration.terminate()
-        self.calibration_end.emit({'model_id': model_id})
+        self.update_model_status(status, model_id)
+        if emit_signals:
+            self.calibration_end.emit(data)
     
-    def on_calibration_abort(self, data):
-        self._run_task(self._on_calibration_abort, data)
+    def on_calibration_error(self, data, emit_signals: bool = True):
+        self._run_task(self._on_calibration_error, data, emit_signals)
     
-    def _on_calibration_abort(self, data):
-        model_id = data['model_id']
-        self.update_model_status('calibration aborted', model_id)
-        self.calibration_abort.emit(data)
-    
-    def on_calibration_error(self, data):
-        self._run_task(self._on_calibration_error, data)
-    
-    def _on_calibration_error(self, data):
+    def _on_calibration_error(self, data, emit_signals: bool = True):
         print(data)
-        model_id = data['model_id']
-        self.update_model_status('calibration error', model_id)
-        self.calibration_error.emit(data)
+        self.update_model_status('calibration error', data['model_id'])
+        self.stop_calibration_timer.emit()
+        if emit_signals:
+            self.calibration_error.emit(data)
 
     def create_calibration_directory(self):
         timestamp = get_current_timestamp()
@@ -2311,7 +2361,6 @@ class store(QObject):
         self.write_optimization_settings_to_file()
         self.cleanup_dm_thread()
         self.abort_calibration()
-        
         
     def emit_show_snackbar(self, message = 'snackbar message'):
         self.show_snackbar.emit(message)

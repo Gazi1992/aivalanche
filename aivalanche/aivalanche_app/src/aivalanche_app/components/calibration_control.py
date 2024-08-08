@@ -164,6 +164,9 @@ class calibration_control(QWidget):
             self.progress_bar.setValue(self.progress_value)
             self.progress_percentage_label.setText(self.progress_percentage)
             self.progress_percentage_label.setVisible(True)
+        elif self.status == 'aborting calibration':
+            self.progress_bar.setRange(0, 0)  # This makes the progress bar enter "busy" mode, i.e. loading
+            self.progress_info_label.setText("Aborting calibration...")
         elif self.status == 'calibration finished':
             self.update_progress(100)
             self.progress_info_label.setText("Calibration finished")
@@ -191,20 +194,37 @@ class calibration_control(QWidget):
             self.progress_percentage_label.setVisible(True)
             
     def update_buttons(self):
-        try:
-            if self.store.model_calibration.is_running():
-                self.calibration_button.setEnabled(False)
-                self.abort_button.set_enabled(True)
-            else:
-                self.calibration_button.setEnabled(True)
-                self.abort_button.set_enabled(False)
-        except:
-            pass
+        if self.status in ['starting calibration', 'aborting calibration']:
+            self.calibration_button.setEnabled(False)
+            self.single_simulation_button.set_enabled(False)
+            self.abort_button.set_enabled(False)
+        elif self.status == 'calibration in progress':
+            self.calibration_button.setEnabled(False)
+            self.single_simulation_button.set_enabled(False)
+            self.abort_button.set_enabled(True)
+        else:
+            self.calibration_button.setEnabled(True)
+            self.single_simulation_button.set_enabled(True)
+            self.abort_button.set_enabled(False)
         
-        try:
-            if self.store.single_simulation and self.store.single_simulation.is_running():
-                self.single_simulation_button.set_enabled(False)
-            else:
-                self.single_simulation_button.set_enabled(True)
-        except:
-            pass
+        # try:
+        #     if self.store.model_calibration_running():
+        #         self.calibration_button.setEnabled(False)
+        #         self.single_simulation_button.set_enabled(False)
+        #         self.abort_button.set_enabled(True)
+        #     else:
+        #         self.calibration_button.setEnabled(True)
+        #         self.single_simulation_button.set_enabled(True)
+        #         self.abort_button.set_enabled(False)
+        # except:
+        #     pass
+        
+        # try:
+        #     if self.store.single_simulation and self.store.single_simulation.is_running():
+        #         self.single_simulation_button.set_enabled(False)
+        #         self.calibration_button.setEnabled(False)
+        #     else:
+        #         self.single_simulation_button.set_enabled(True)
+        #         self.calibration_button.setEnabled(True)
+        # except:
+        #     pass

@@ -9,6 +9,7 @@ from aivalanche_app.components.plots.heatmap_plot import heatmap_plot
 from aivalanche_app.components.buttons.icon_button import icon_button
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
 from aivalanche_app.components.plots.plot_placeholder import plot_placeholder
+from aivalanche_app.components.plots.custom_graphics_layout_widget import custom_graphics_layout_widget
 from aivalanche_app.paths import refresh_icon_path, refresh_hovered_icon_path, refresh_pressed_icon_path
 import pyqtgraph as pg, numpy as np
 
@@ -51,7 +52,7 @@ class results_progress_tab(QSplitter):
         left_layout.addWidget(self.loss_evol_update_button, alignment = Qt.AlignmentFlag.AlignRight)
 
         # loss evolution  
-        loss_evolution_widget = pg.GraphicsLayoutWidget(parent = top_splitter)
+        loss_evolution_widget = custom_graphics_layout_widget(parent = top_splitter)
         self.le_plot = loss_evolution_plot(x_axis_label = 'Iteration', y_axis_label = 'Loss', style = self.style)
         self.le_plot .setMinimumHeight(200)
         loss_evolution_widget.addItem(self.le_plot , row = 0, col = 0)
@@ -115,7 +116,7 @@ class results_progress_tab(QSplitter):
         
         self.pe_placeholder = plot_placeholder(parent = self)
         
-        self.pe_widget = pg.GraphicsLayoutWidget()
+        self.pe_widget = custom_graphics_layout_widget()
         self.pe_widget.ci.setSpacing(0)
         self.pe_widget.ci.setContentsMargins(0, 0, 0, 0)
         

@@ -6,10 +6,11 @@ from aivalanche_app.components.plots.line_scatter_plot import line_scatter_plot
 from aivalanche_app.components.combo_box_load_data import combo_box_load_data
 from aivalanche_app.components.custom_table import custom_table
 from aivalanche_app.components.custom_scroll_area import custom_scroll_area
+from aivalanche_app.components.plots.custom_graphics_layout_widget import custom_graphics_layout_widget
 from reference_data.Reference_data import Reference_data
 from aivalanche_app.helper_functions import find_max_suffix, update_df_by_condition
 from pathlib import Path
-import pyqtgraph as pg, pandas as pd, math
+import pandas as pd, math
 
 class reference_data_tab(QSplitter):
     reference_data_warning = Signal(dict)    
@@ -77,7 +78,7 @@ class reference_data_tab(QSplitter):
         right_layout.addWidget(scroll_area)
         
         # Create a grid layout for plots
-        self.plots_widget = pg.GraphicsLayoutWidget()
+        self.plots_widget = custom_graphics_layout_widget()
         self.plots_widget.ci.setSpacing(self.plot_spacing)
         
         scroll_area.setWidget(self.plots_widget)
