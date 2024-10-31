@@ -17,6 +17,7 @@ class model_calibration:
         max_iterations = self.simulation_input['max_iterations']
         results = kwargs['responses']['results']
         metrics = kwargs['responses']['metrics']
+        best_parameters = kwargs['best_parameters']
         best_loss = kwargs['best_metric']
         best_results = results[np.argmin(metrics)]
         better_solution_found = kwargs['better_solution_found']
@@ -27,6 +28,7 @@ class model_calibration:
         res = {'status': 'progress',
                'model_id': model_id,
                'iteration': iteration,
+               'best_parameters': best_parameters,
                'best_loss': best_loss,
                'best_results': best_results,
                'max_iterations': max_iterations,
@@ -43,6 +45,7 @@ class model_calibration:
         results_dir = self.simulation_input['results_dir']
         results = kwargs['responses']['results']
         metrics = kwargs['responses']['metrics']
+        best_parameters = kwargs['best_parameters']
         best_loss = kwargs['best_metric']
         best_results = results[np.argmin(metrics)]
         better_solution_found = True
@@ -53,6 +56,7 @@ class model_calibration:
         res = {'status': 'finish',
                'model_id': model_id,
                'iteration': iteration,
+               'best_parameters': best_parameters,
                'best_loss': best_loss,
                'best_results': best_results,
                'max_iterations': max_iterations,

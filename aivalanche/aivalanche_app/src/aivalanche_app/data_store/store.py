@@ -155,6 +155,8 @@ class store(QObject):
     update_calibration_results_id_end = Signal(object)
     fetch_calibration_results_files_start = Signal(object)
     fetch_calibration_results_files_end = Signal(object)
+    update_best_parameters_file_start = Signal()
+    update_best_parameters_file_end = Signal(object)
     
     def __init__(self, db_type: str = 'local_files', style: style = None,
                  on_query_success: callable = None, on_query_error: callable = None):
@@ -512,7 +514,10 @@ class store(QObject):
         results_dir = data['results_dir']
         self.calibration_results_survivors = data['survivors']
         self.calibration_results_trials = data['trials']
-    
+        best_parameters = pd.DataFrame(columns = ['name', 'value'])
+        best_parameters['name'] = list(self.calibration_results_trials.columns)
+        best_parameters['value'] = data['best_parameters']
+
         self.update_model_status('calibration in progress', model_id)
         self.update_model_iteration_and_loss(iteration, best_loss, model_id)
         
@@ -534,7 +539,10 @@ class store(QObject):
         elif better_solution_found and iteration > 1:
             self.update_calibration_results_file(results = best_results,
                                                  path = Path.joinpath(results_dir, 'results.json'),
-                                                 model_id = model_id)  
+                                                 model_id = model_id)
+            self.update_best_parameters_file(parameters = best_parameters,
+                                             path = Path.joinpath(results_dir, 'best_parameters.csv'),
+                                             model_id = model_id)
             if model_id == self.active_model['id']:
                 self.calibration_new_results = best_results            
                 # Keep only the columns that are important to show
@@ -2298,6 +2306,36 @@ class store(QObject):
                     
         if emit_signals:
             self.update_calibration_results_file_end.emit({'success': success, 'error': error, 'data': data})
+    
+    def update_best_parameters_file(self, parameters = None, path: str = None, model_id: str = None, emit_signals: bool = True):
+        self._run_task(self._update_best_parameters_file, parameters, path, model_id, emit_signals)
+    
+    def _update_best_parameters_file(self, parameters = None, path: str = None, model_id: str = None, emit_signals: bool = True):
+        if emit_signals:
+            self.update_best_parameters_file_start.emit()
+        
+        success = True
+        error = None
+        data = None
+        
+        if model_id is None:
+            success = False
+            error = 'model_id is None!'
+        elif parameters is None:
+            success = False
+            error = 'results is None!'
+        elif path is None:
+            success = False
+            error = 'path is None!'
+        else:
+            # Create the file
+            self.write_parameters_to_file(parameters, path)
+                    
+        if emit_signals:
+            self.update_best_parameters_file_end.emit({'success': success, 'error': error, 'data': data})
+            
+    def write_parameters_to_file(self, parameters: pd.DataFrame = None, path: str = None):
+        parameters.to_csv(path, index = False)
     
     def update_calibration_results_id(self, calibration_results_id: str = None, model_id: str = None, emit_signals: bool = True):
         self._run_task(self._update_calibration_results_id, calibration_results_id, model_id, emit_signals)

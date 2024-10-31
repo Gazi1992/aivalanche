@@ -142,7 +142,8 @@ cost_function_config = {'type': 'default',
                             }
                         ]}
 
-running_environment = 'dask_local' # [local, dask_local, kafka_local, kafka_aws]
+running_environment = 'local' # [local, dask_local, kafka_local, kafka_aws]
+optimization_on_another_thread = False
 
 if __name__ == '__main__':
     calibration = Calibration(reference_data = reference_data_file,
@@ -154,7 +155,8 @@ if __name__ == '__main__':
                               simulator_config = simulator_config,
                               optimizer_config = optimizer_config,
                               cost_function_config = cost_function_config,
-                              running_environment = running_environment)
+                              running_environment = running_environment,
+                              optimization_on_another_thread = optimization_on_another_thread)
     
     # calibration.run_no_parameter_simulation(plot = True)
     

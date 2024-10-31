@@ -28,6 +28,7 @@ class Calibration:
                  simulator_config: dict = None,
                  cost_function_config: dict = None,
                  running_environment = 'local',
+                 optimization_on_another_thread: bool = True,
                  command_queue = None):
                 
         self.reference_data = reference_data
@@ -43,6 +44,7 @@ class Calibration:
         
         self.running_environment = running_environment
         self.running_environment_options = ('local', 'dask_local', 'kafka_local')    
+        self.optimization_on_another_thread = optimization_on_another_thread
         self.dask_upload_files = []
         
         self.command_queue = command_queue
@@ -265,29 +267,33 @@ class Calibration:
         if write_input_to_files:
             self.write_input_to_files()    
         
-        # Start optimization in a separate thread
-        self.optimization_thread = threading.Thread(target = self.run_optimization_thread)
-        self.optimization_thread.start()
-        
-        # Monitor the abort flag
-        while self.optimization_thread.is_alive():
-            if self.command_queue is not None:
-                try:
-                    command = self.command_queue.get_nowait()
-                    if command == 'abort':
-                        self.abort_flag = True
-                except queue.Empty:
-                    pass
+        if self.optimization_on_another_thread:
+            # Start optimization in a separate thread
+            self.optimization_thread = threading.Thread(target = self.run_optimization_thread)
+            self.optimization_thread.start()
             
-            if self.abort_flag:
-                self.optimizer.abort_optimization()
-                break
-            time.sleep(0.1)  # Sleep to prevent busy waiting
-            # if i > 100:
-            #     self.abort_calibration()
-        # Wait for the optimization thread to finish
-        self.optimization_thread.join()
-
+            # Monitor the abort flag
+            while self.optimization_thread.is_alive():
+                if self.command_queue is not None:
+                    try:
+                        command = self.command_queue.get_nowait()
+                        if command == 'abort':
+                            self.abort_flag = True
+                    except queue.Empty:
+                        pass
+                
+                if self.abort_flag:
+                    self.optimizer.abort_optimization()
+                    break
+                time.sleep(0.1)  # Sleep to prevent busy waiting
+                # if i > 100:
+                #     self.abort_calibration()
+                
+            # Wait for the optimization thread to finish
+            self.optimization_thread.join()
+        else:
+            self.optimizer.run_optimization()
+        
         if self.running_environment == 'dask_local':
             close_dask(self.cluster)
     

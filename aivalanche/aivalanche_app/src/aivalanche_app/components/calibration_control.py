@@ -49,7 +49,7 @@ class calibration_control(QWidget):
     def status(self, value):
         if self._status != value:
             self._status = value
-            self.update_ui_based_on_status()
+        self.update_ui_based_on_status()
         
     def init_ui(self):
         layout = h_layout(spacing = 5, alignment = Qt.AlignmentFlag.AlignBottom)
