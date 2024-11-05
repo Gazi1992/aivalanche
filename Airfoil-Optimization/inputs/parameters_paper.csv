@@ -1,0 +1,7 @@
+name,min,default,max,scale,mode
+ta_u,0.1,0.1584,0.4,linear,variable
+ta_l,0.1,0.1565,0.4,linear,variable
+tb_u,0.1,1.5,2,linear,variable
+tb_l,0.1,1.8255,2,linear,variable
+alpha_b,1,11.6983,30,linear,variable
+alpha_c,-15,3.827,15,linear,variable
