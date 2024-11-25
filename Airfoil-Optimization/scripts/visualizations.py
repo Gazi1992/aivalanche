@@ -3,10 +3,11 @@ Visualization functions for airfoil analysis including polar plots,
 pressure distribution, boundary layer properties, and parameter studies
 """
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt, os
 import numpy as np
 import plotly.graph_objects as go
 from nurbs import Nurbs
+import matplotlib.image as mpimg
 
 def rotate_coordinates(x, y, alpha):
     """
@@ -615,3 +616,485 @@ def create_optimization_video(df, normed_df, iter_min, iter_max, param_names, ou
             video.release()
             
         print(f'File saved to {output_path}')
+
+# def plot_airfoil_glowing(data, iteration = 5):
+#     # Get best design
+#     filtered_df = data[data['iter'] == iteration]
+#     best_design = filtered_df.loc[filtered_df['total_metric'].idxmin()]
+
+#     # Create airfoil coordinates
+#     param_dict = {
+#         'ta_u': best_design['ta_u'],
+#         'ta_l': best_design['ta_l'],
+#         'tb_u': best_design['tb_u'],
+#         'tb_l': best_design['tb_l'],
+#         'alpha_b': best_design['alpha_b'],
+#         'alpha_c': best_design['alpha_c']
+#     }
+#     airfoil = Nurbs(param_dict)
+#     coords = airfoil._spline()  
+    
+#     x_l = coords[0]
+#     y_l = coords[1]
+#     x_u = coords[2]
+#     y_u = coords[3]
+#     x = np.vstack((x_l, np.flip(x_u)))
+#     y = np.vstack((y_l, np.flip(y_u)))
+    
+#     # Create figure with higher DPI for sharper glow
+#     plt.rcParams.update({
+#         'figure.constrained_layout.use': False,
+#         'savefig.bbox': 'tight',
+#         'savefig.pad_inches': 0
+#     })
+    
+#     # Create figure without any borders
+#     fig = plt.figure(figsize=(10, 10), dpi=300)
+#     fig.patch.set_facecolor('black')
+#     fig.patch.set_alpha(0.0)
+    
+#     # Create axes that fill the entire figure
+#     ax = fig.add_axes([0, 0, 1, 1])
+#     ax.patch.set_alpha(0.0)
+    
+#     # Load background image and get its dimensions
+#     img = mpimg.imread('../inputs/background.png')
+#     img_height, img_width = img.shape[:2]
+#     img_aspect_ratio = img_width / img_height
+    
+#     # Get the airfoil bounds
+#     max_x = np.max(x)
+#     min_x = np.min(x)
+#     max_y = np.max(y)
+#     min_y = np.min(y)
+    
+#     # Calculate padding to ensure square aspect ratio for the plot
+#     x_range = max_x - min_x
+#     y_range = max_y - min_y
+#     max_range = max(x_range, y_range)
+#     padding = 0.2 * max_range
+    
+#     # Adjust bounds to be square
+#     x_center = (max_x + min_x) / 2
+#     y_center = (max_y + min_y) / 2
+#     min_x = x_center - max_range/2 - padding
+#     max_x = x_center + max_range/2 + padding
+#     min_y = y_center - max_range/2 - padding
+#     max_y = y_center + max_range/2 + padding
+    
+#     # Calculate background extent to maintain its aspect ratio
+#     plot_width = max_x - min_x
+#     plot_height = max_y - min_y
+#     plot_aspect_ratio = plot_width / plot_height
+    
+#     if img_aspect_ratio > plot_aspect_ratio:
+#         # Image is wider than plot: fit to height and center horizontally
+#         bg_height = max_y - min_y
+#         bg_width = bg_height * img_aspect_ratio
+#         bg_min_x = x_center - bg_width/2
+#         bg_max_x = x_center + bg_width/2
+#         bg_min_y = min_y
+#         bg_max_y = max_y
+#     else:
+#         # Image is taller than plot: fit to width and center vertically
+#         bg_width = max_x - min_x
+#         bg_height = bg_width / img_aspect_ratio
+#         bg_min_x = min_x
+#         bg_max_x = max_x
+#         bg_min_y = y_center - bg_height/2
+#         bg_max_y = y_center + bg_height/2
+    
+#     # Display background with proper extent and aspect ratio
+#     ax.imshow(img, extent=[bg_min_x, bg_max_x, bg_min_y, bg_max_y], 
+#               aspect='auto',
+#               interpolation='nearest')
+    
+#     # Create multi-layered glow effect
+#     alphas_base = np.linspace(0.01, 0.3, 10)
+#     linewidths_base = np.linspace(30, 15, 10)
+#     for alpha, lw in zip(alphas_base, linewidths_base):
+#         ax.plot(x, y, color='#003300', alpha=alpha, linewidth=lw)
+    
+#     alphas_mid = np.linspace(0.4, 0.6, 10)
+#     linewidths_mid = np.linspace(8, 4, 10)
+#     for alpha, lw in zip(alphas_mid, linewidths_mid):
+#         ax.plot(x, y, color='#00cc00', alpha=alpha, linewidth=lw)
+    
+#     alphas_top = np.linspace(0.1, 1, 10)
+#     linewidths_top = np.linspace(3, 1, 10)
+#     for alpha, lw in zip(alphas_top, linewidths_top):
+#         ax.plot(x, y, color='#00ff00', alpha=alpha, linewidth=lw)
+    
+#     # Central bright line
+#     ax.plot(x, y, color='#ffffff', linewidth=1, alpha=0.9)
+    
+#     # Set axis limits to the square plot area
+#     ax.set_xlim(min_x, max_x)
+#     ax.set_ylim(min_y, max_y)
+    
+#     # Remove ALL possible borders and margins
+#     plt.margins(0, 0)
+#     plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+    
+#     # Remove ticks, axis lines, and frame
+#     ax.set_xticks([])
+#     ax.set_yticks([])
+#     ax.set_frame_on(False)
+#     ax.set_axis_off()
+    
+#     # plt.show()
+    
+#     return fig
+    
+#     # If you need to save the figure:
+#     # plt.savefig('airfoil.png', 
+#     #             bbox_inches='tight',
+#     #             pad_inches=0,
+#     #             facecolor='black',
+#     #             edgecolor='none',
+#     #             transparent=True,
+#     #             dpi=300)
+
+def plot_airfoil_glowing(data, iteration=5, n_previous=10, min_alpha=0.05, max_alpha=0.5):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import gc
+    import matplotlib.image as mpimg
+    
+    # Clear any existing plots
+    plt.close('all')
+    gc.collect()
+    
+    # Get current design
+    filtered_df = data[data['iter'] == iteration]
+    best_design = filtered_df.loc[filtered_df['total_metric'].idxmin()]
+
+    # Create figure
+    plt.rcParams.update({
+        'figure.constrained_layout.use': False,
+        'savefig.bbox': 'tight',
+        'savefig.pad_inches': 0
+    })
+    
+    fig = plt.figure(figsize=(10, 10), dpi=300)
+    fig.patch.set_facecolor('black')
+    fig.patch.set_alpha(0.0)
+    
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.patch.set_alpha(0.0)
+    
+    # Create airfoil coordinates for plotting bounds
+    param_dict = {
+        'ta_u': best_design['ta_u'],
+        'ta_l': best_design['ta_l'],
+        'tb_u': best_design['tb_u'],
+        'tb_l': best_design['tb_l'],
+        'alpha_b': best_design['alpha_b'],
+        'alpha_c': best_design['alpha_c']
+    }
+    airfoil = Nurbs(param_dict)
+    coords = airfoil._spline()
+    
+    x_l = coords[0]
+    y_l = coords[1]
+    x_u = coords[2]
+    y_u = coords[3]
+    x = np.vstack((x_l, np.flip(x_u)))
+    y = np.vstack((y_l, np.flip(y_u)))
+    
+    del coords
+    del airfoil
+    
+    # Calculate plot bounds
+    max_x = np.max(x)
+    min_x = np.min(x)
+    max_y = np.max(y)
+    min_y = np.min(y)
+    
+    x_range = max_x - min_x
+    y_range = max_y - min_y
+    max_range = max(x_range, y_range)
+    padding = 0.2 * max_range
+    
+    x_center = (max_x + min_x) / 2
+    y_center = (max_y + min_y) / 2
+    min_x = x_center - max_range/2 - padding
+    max_x = x_center + max_range/2 + padding
+    min_y = y_center - max_range/2 - padding
+    max_y = y_center + max_range/2 + padding
+    
+    # Setup and draw background first
+    img = mpimg.imread('../inputs/background.png')
+    img_height, img_width = img.shape[:2]
+    img_aspect_ratio = img_width / img_height
+    
+    plot_width = max_x - min_x
+    plot_height = max_y - min_y
+    plot_aspect_ratio = plot_width / plot_height
+    
+    if img_aspect_ratio > plot_aspect_ratio:
+        bg_height = max_y - min_y
+        bg_width = bg_height * img_aspect_ratio
+        bg_min_x = x_center - bg_width/2
+        bg_max_x = x_center + bg_width/2
+        bg_min_y = min_y
+        bg_max_y = max_y
+    else:
+        bg_width = max_x - min_x
+        bg_height = bg_width / img_aspect_ratio
+        bg_min_x = min_x
+        bg_max_x = max_x
+        bg_min_y = y_center - bg_height/2
+        bg_max_y = y_center + bg_height/2
+    
+    ax.imshow(img, extent=[bg_min_x, bg_max_x, bg_min_y, bg_max_y], 
+              aspect='auto', interpolation='nearest')
+    del img
+    
+    # Plot previous designs if iteration > 0
+    if iteration > 0:
+        start_iter = max(0, iteration - n_previous)
+        prev_iters = range(start_iter, iteration)
+        valid_prev_designs = []
+        
+        # Collect valid previous designs
+        for prev_iter in prev_iters:
+            prev_filtered_df = data[data['iter'] <= prev_iter]
+            if not prev_filtered_df.empty:
+                valid_prev_designs.append(prev_filtered_df.loc[prev_filtered_df['total_metric'].idxmin()])
+        
+        # Calculate alpha values for previous designs
+        if valid_prev_designs:
+            alpha_values = np.linspace(min_alpha, max_alpha, len(valid_prev_designs))
+            
+            for prev_design, alpha in zip(valid_prev_designs, alpha_values):
+                param_dict = {
+                    'ta_u': prev_design['ta_u'],
+                    'ta_l': prev_design['ta_l'],
+                    'tb_u': prev_design['tb_u'],
+                    'tb_l': prev_design['tb_l'],
+                    'alpha_b': prev_design['alpha_b'],
+                    'alpha_c': prev_design['alpha_c']
+                }
+                airfoil = Nurbs(param_dict)
+                coords = airfoil._spline()
+                
+                x_l, y_l = coords[0], coords[1]
+                x_u, y_u = coords[2], coords[3]
+                x_prev = np.vstack((x_l, np.flip(x_u)))
+                y_prev = np.vstack((y_l, np.flip(y_u)))
+                
+                del coords, airfoil, x_l, y_l, x_u, y_u
+                
+                # Add glow effect for previous designs with reduced intensity
+                alpha_mult = alpha
+                
+                alphas_base = np.linspace(0.01, 0.3, 10) * alpha_mult
+                linewidths_base = np.linspace(30, 15, 10)
+                for a, lw in zip(alphas_base, linewidths_base):
+                    ax.plot(x_prev, y_prev, color='#003300', alpha=a, linewidth=lw)
+                
+                alphas_mid = np.linspace(0.4, 0.6, 10) * alpha_mult
+                linewidths_mid = np.linspace(8, 4, 10)
+                for a, lw in zip(alphas_mid, linewidths_mid):
+                    ax.plot(x_prev, y_prev, color='#00cc00', alpha=a, linewidth=lw)
+                
+                alphas_top = np.linspace(0.1, 1, 10) * alpha_mult
+                linewidths_top = np.linspace(3, 1, 10)
+                for a, lw in zip(alphas_top, linewidths_top):
+                    ax.plot(x_prev, y_prev, color='#00ff00', alpha=a, linewidth=lw)
+                    
+                del x_prev, y_prev
+    
+    # Create multi-layered glow effect for current design
+    alphas_base = np.linspace(0.01, 0.3, 10)
+    linewidths_base = np.linspace(30, 15, 10)
+    for alpha, lw in zip(alphas_base, linewidths_base):
+        ax.plot(x, y, color='#003300', alpha=alpha, linewidth=lw)
+    
+    alphas_mid = np.linspace(0.4, 0.6, 10)
+    linewidths_mid = np.linspace(8, 4, 10)
+    for alpha, lw in zip(alphas_mid, linewidths_mid):
+        ax.plot(x, y, color='#00cc00', alpha=alpha, linewidth=lw)
+    
+    alphas_top = np.linspace(0.1, 1, 10)
+    linewidths_top = np.linspace(3, 1, 10)
+    for alpha, lw in zip(alphas_top, linewidths_top):
+        ax.plot(x, y, color='#00ff00', alpha=alpha, linewidth=lw)
+    
+    # Central bright line for current design
+    ax.plot(x, y, color='#ffffff', linewidth=1, alpha=0.9)
+    
+    # Clean up large arrays
+    del x, y
+    
+    # Finalize plot
+    ax.set_xlim(min_x, max_x)
+    ax.set_ylim(min_y, max_y)
+    plt.margins(0, 0)
+    plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_frame_on(False)
+    ax.set_axis_off()
+    
+    gc.collect()
+    return fig
+
+def create_airfoil_optimization_video(data, parameter_names, output_path='opt.mp4', fps=5, working_dir = None):  # Increased default fps
+    """
+    Create a video of the optimization evolution
+    """
+    frame_args = {
+        'data': data,
+        # 'parameter_names': parameter_names
+    }
+    
+    create_video(
+        frame_generator_func=plot_airfoil_glowing, #plot_evolution_2d,
+        frame_generator_args=frame_args,
+        iterations=range(data['iter'].min(), data['iter'].max() + 1),
+        output_path=output_path,
+        fps=fps,
+        dpi=300,
+        working_dir = working_dir,
+        parallel=True
+        )
+
+def generate_single_frame_(iter_value, temp_dir, frame_generator_func, frame_generator_args):
+    """Memory-optimized helper function to generate and save a single frame"""
+    import matplotlib.pyplot as plt
+    import gc
+    
+    # Clear any existing figures
+    plt.close('all')
+    gc.collect()
+    
+    # Generate the figure
+    try:
+        fig = frame_generator_func(iteration=iter_value, **frame_generator_args)
+        frame_path = os.path.join(temp_dir, f'frame_{iter_value:04d}.png')
+        fig.savefig(frame_path, dpi=300, bbox_inches='tight')
+    finally:
+        plt.close('all')
+        if 'fig' in locals():
+            fig.clf()
+            del fig
+        gc.collect()
+    
+    return frame_path
+
+def create_video(frame_generator_func, frame_generator_args, iterations, output_path, 
+                working_dir=None, fps=5, parallel=True, max_workers=None, dpi=300,
+                batch_size=50):
+    """
+    Create a video processing frames in batches to manage memory
+    """
+    import tempfile
+    import cv2
+    import os
+    from tqdm import tqdm
+    import numpy as np
+    from PIL import Image
+    import gc
+    
+    if working_dir:
+        os.makedirs(working_dir, exist_ok=True)
+        frame_dir = working_dir
+        cleanup_dir = False
+    else:
+        temp_dir = tempfile.TemporaryDirectory()
+        frame_dir = temp_dir.name
+        cleanup_dir = True
+
+    try:
+        print("Generating frames...")
+        frame_paths = []
+        
+        # Convert iterations to list if it's a range
+        iterations = list(iterations)
+        
+        # Process frames in batches
+        for i in range(0, len(iterations), batch_size):
+            batch_iterations = iterations[i:i + batch_size]
+            
+            if parallel:
+                from concurrent.futures import ProcessPoolExecutor
+                with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                    futures = [
+                        executor.submit(
+                            generate_single_frame_, 
+                            iter_num, 
+                            frame_dir,
+                            frame_generator_func,
+                            frame_generator_args
+                        )
+                        for iter_num in batch_iterations
+                    ]
+                    for future in tqdm(futures, desc=f"Processing batch {i//batch_size + 1}"):
+                        frame_paths.append(future.result())
+            else:
+                for iter_num in tqdm(batch_iterations, 
+                                   desc=f"Processing batch {i//batch_size + 1}"):
+                    frame_path = generate_single_frame_(
+                        iter_num,
+                        frame_dir,
+                        frame_generator_func,
+                        frame_generator_args
+                    )
+                    frame_paths.append(frame_path)
+            
+            # Force garbage collection after each batch
+            gc.collect()
+        
+        frame_paths.sort()
+        
+        print("Creating output file...")
+        if output_path.endswith('.gif'):
+            with Image.open(frame_paths[0]) as img:
+                size = img.size
+            
+            frames = []
+            for frame_path in tqdm(frame_paths, desc="Reading frames"):
+                with Image.open(frame_path) as img:
+                    if img.size != size:
+                        img = img.resize(size, Image.Resampling.LANCZOS)
+                    frames.append(np.array(img))
+            
+            print("Saving GIF...")
+            imageio = __import__('imageio')
+            imageio.mimsave(output_path, frames, fps=fps)
+            
+            del frames
+            gc.collect()
+            
+        else:
+            first_frame = cv2.imread(frame_paths[0])
+            height, width, layers = first_frame.shape
+            
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            video = cv2.VideoWriter(
+                output_path, 
+                fourcc, 
+                fps, 
+                (width, height)
+            )
+            
+            if not video.isOpened():
+                raise RuntimeError("Failed to initialize VideoWriter")
+            
+            for frame_path in tqdm(frame_paths, desc="Adding frames to video"):
+                frame = cv2.imread(frame_path)
+                if frame.shape[:2] != (height, width):
+                    frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_LANCZOS4)
+                video.write(frame)
+                del frame
+            
+            video.release()
+            
+    finally:
+        if cleanup_dir:
+            temp_dir.cleanup()
+        gc.collect()
+            
+    print(f'File saved to {output_path}')

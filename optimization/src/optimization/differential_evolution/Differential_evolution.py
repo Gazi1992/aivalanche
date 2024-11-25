@@ -29,9 +29,12 @@ Inputs:
 #%% Imports
 import os, pandas as pd, numpy as np, time
 from pyDOE import lhs
+from scipy.stats.qmc import Sobol, Halton
 from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter, \
                                                       get_gaussian_process_fit, get_exponential_or_linear_fit, smooth_data, exponential_func, linear_func
-from optimization.differential_evolution.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram, plot_df, plot_parameter_fit, plot_quantile_fits
+from optimization.differential_evolution.visualization import plot_df, plot_parameter_fit, plot_quantile_fits
+from optimization.visualization import plot_metric_evolution, plot_parameter_evolution, plot_histogram
+
 
 #%% differential_evolution class
 
@@ -403,7 +406,28 @@ class Differential_evolution:
                                      data = data)
 
         return all_survivors
-
+    
+    # Get trials exploded
+    def get_all_trials_exploded(self):
+        data = self.history['trials'][['iter', 'trial_unscaled', 'trial_metric']]
+        result_df = pd.concat([data.drop('trial_unscaled', axis=1), 
+                               pd.DataFrame(data['trial_unscaled'].tolist(), columns = self.parameter_names)], axis=1)
+        result_df = result_df.rename(columns={'trial_metric': 'metric'})
+        result_df['iter'] = result_df['iter'].astype(int)
+        result_df = result_df[['iter'] + self.parameter_names + ['metric']]
+        return result_df
+        
+    # Get survivors exploded
+    def get_all_survivors_exploded(self):
+        data = self.get_all_survivors()
+        data = data[['iter', 'survivor_unscaled', 'survivor_metric']]
+        result_df = pd.concat([data.drop('survivor_unscaled', axis=1), 
+                               pd.DataFrame(data['survivor_unscaled'].tolist(), columns = self.parameter_names)], axis=1)
+        result_df = result_df.rename(columns={'survivor_metric': 'metric'})
+        result_df['iter'] = result_df['iter'].astype(int)
+        result_df = result_df[['iter'] + self.parameter_names + ['metric']]
+        return result_df
+    
     # Get best parameters as a dictionary
     def get_best_parameters(self):
         return {key: val for key, val in zip(self.parameter_names, self.best_unscaled)}
@@ -449,7 +473,9 @@ class Differential_evolution:
     def generate_donors(self):
         # In the first iteration generate donor at random.
         if(self.iter == 1):
-            self.donors_normed = lhs(self.nr_parameters, samples = self.pop_size, criterion = 'maximin') # Use latin-hyper-cube to generate the random samples
+            # self.donors_normed = lhs(self.nr_parameters, samples = self.pop_size, criterion = 'correlation') # Use latin-hyper-cube to generate the random samples
+            sampler = Halton(d=self.nr_parameters)
+            self.donors_normed = sampler.random(self.pop_size) # Use Halton to generate the random samples
             self.donors = np.apply_along_axis(func1d = unnorm_member,
                                               axis = 1,
                                               arr = self.donors_normed,

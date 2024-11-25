@@ -1,0 +1,19 @@
+{
+    "factors": 2,
+    "levels": 3,
+    "strength": 2,
+    "full_factorial_length": 9,
+    "oa_length": 9,
+    "generation_time": 0,
+    "oa": [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [1, 0],
+        [1, 1],
+        [1, 2],
+        [2, 0],
+        [2, 1],
+        [2, 2]
+    ]
+}

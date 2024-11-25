@@ -4,7 +4,7 @@ from optimization.differential_evolution import Differential_evolution
 from parameters.Parameters import Parameters
 from xfoil import XFoilAnalyzer, XFoilBatch, XFoilSettings
 from nurbs import Nurbs
-from visualizations import plot_airfoil, plot_polar, plot_pressure_distribution, plot_boundary_layer, create_optimization_summary, create_optimization_video
+from visualizations import create_airfoil_optimization_video, plot_airfoil, plot_airfoil_glowing, plot_polar, plot_pressure_distribution, plot_boundary_layer, create_optimization_summary, create_optimization_video
 
 #%% Helper functions
 def read_parameters(file):
@@ -222,40 +222,40 @@ all_results = []
 
 #%% Optimization process
 
-# Initialize analyzer and batch handler
-settings = XFoilSettings(working_dir = results_path)
-analyzer = XFoilAnalyzer(settings)
-batch_handler = XFoilBatch(analyzer)
+# # Initialize analyzer and batch handler
+# settings = XFoilSettings(working_dir = results_path)
+# analyzer = XFoilAnalyzer(settings)
+# batch_handler = XFoilBatch(analyzer)
 
-# Read parameters
-parameters = read_parameters(parameters_file)
+# # Read parameters
+# parameters = read_parameters(parameters_file)
 
-# Initialize optimizer
-diff_evolution = Differential_evolution(parameters = parameters.all_parameters,
-                                        eval_func = simulate_multiple_parameters,
-                                        eval_func_args = eval_func_args,
-                                        callback_after_each_iter = callback_after_each_iter,
-                                        pop_size = pop_size,
-                                        metric_threshold = metric_threshold,
-                                        max_iterations = max_iterations,
-                                        max_iter_without_improvement = max_iter_without_improvement,
-                                        init_pop = init_pop,
-                                        init_pop_out_of_range_param = init_pop_out_of_range_param,
-                                        defaults_in_init_pop = defaults_in_init_pop,
-                                        use_population_prediction = use_population_prediction,
-                                        plot_parameter_evolution_period = plot_parameter_evolution_period,
-                                        plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
-                                        adaptive_boundaries = adaptive_boundaries)
+# # Initialize optimizer
+# diff_evolution = Differential_evolution(parameters = parameters.all_parameters,
+#                                         eval_func = simulate_multiple_parameters,
+#                                         eval_func_args = eval_func_args,
+#                                         callback_after_each_iter = callback_after_each_iter,
+#                                         pop_size = pop_size,
+#                                         metric_threshold = metric_threshold,
+#                                         max_iterations = max_iterations,
+#                                         max_iter_without_improvement = max_iter_without_improvement,
+#                                         init_pop = init_pop,
+#                                         init_pop_out_of_range_param = init_pop_out_of_range_param,
+#                                         defaults_in_init_pop = defaults_in_init_pop,
+#                                         use_population_prediction = use_population_prediction,
+#                                         plot_parameter_evolution_period = plot_parameter_evolution_period,
+#                                         plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
+#                                         adaptive_boundaries = adaptive_boundaries)
 
-# Run optimization
-diff_evolution.run_optimization()
+# # Run optimization
+# diff_evolution.run_optimization()
 
-# Save the results into pcl files for later processing
-with open(os.path.join(results_path, 'diff_evolution.pcl'), 'wb') as f:
-    pcl.dump(diff_evolution, f)
+# # Save the results into pcl files for later processing
+# with open(os.path.join(results_path, 'diff_evolution.pcl'), 'wb') as f:
+#     pcl.dump(diff_evolution, f)
 
-with open(os.path.join(results_path, 'all_results.pcl'), 'wb') as f:
-    pcl.dump(all_results, f)
+# with open(os.path.join(results_path, 'all_results.pcl'), 'wb') as f:
+#     pcl.dump(all_results, f)
 
 #%% Visualize optimization
 
@@ -267,6 +267,7 @@ with open(os.path.join(results_path, 'diff_evolution.pcl'), 'rb') as f:
 with open(os.path.join(results_path, 'sim_results.pcl'), 'rb') as f:
     sim_results = pcl.load(f)
 
+#############################################################
 # Get all survivors that make sense
 survivors = diff_evolution.get_all_survivors()
 survivors = survivors[survivors['survivor_metric'] < 1e3]
@@ -297,6 +298,40 @@ df_exploded_normed = df_exploded_normed.astype(float)
 df_exploded_normed.columns = parameter_names
 # df_exploded_normed.reset_index(drop = True, inplace = True)
 df_exploded_normed['iter'] = survivors['iter']
+#############################################################
+
+#############################################################
+# # Get all trials that make sense
+# trials = diff_evolution.history['trials']
+# trials = trials[trials['trial_metric'] < 1e3]
+# # survivors = survivors[['iter', 'survivor_unscaled', 'survivor_metric']]
+
+# parameter_names = diff_evolution.parameter_names
+
+# # # Get the simulations to rerun
+# # df_exploded = survivors['survivor_unscaled'].apply(pd.Series)
+# # df_exploded = df_exploded.astype(float)
+# # df_exploded.columns = parameter_names
+# # df_exploded.reset_index(drop = True, inplace = True)
+# # df_exploded = df_exploded.drop_duplicates()
+
+# # params = df_exploded.to_dict('records')
+# # sim_results = simulate_batch(params, **eval_func_args)
+# # sim_results = calculate_metric(sim_results)
+
+# # Prepare the final dataframe
+# df_exploded = trials['trial_unscaled'].apply(pd.Series)
+# df_exploded = df_exploded.astype(float)
+# df_exploded.columns = parameter_names
+# # df_exploded.reset_index(drop = True, inplace = True)
+# df_exploded['iter'] = trials['iter']
+
+# df_exploded_normed = trials['trial_normed'].apply(pd.Series)
+# df_exploded_normed = df_exploded_normed.astype(float)
+# df_exploded_normed.columns = parameter_names
+# # df_exploded_normed.reset_index(drop = True, inplace = True)
+# df_exploded_normed['iter'] = trials['iter']
+#############################################################
 
 # Perform left merge
 merged_df = df_exploded.merge(sim_results, 
@@ -305,14 +340,21 @@ merged_df = df_exploded.merge(sim_results,
                     indicator=True)
 
 merged_df = merged_df.drop('_merge', axis=1)
+merged_df['iter'] = merged_df['iter'].astype(int)
 
-iter_start = 250
-iter_end = 485
+iter_start = 0
+iter_end = 2
 create_optimization_summary(merged_df[merged_df['iter'] >= iter_start], df_exploded_normed[df_exploded_normed['iter'] >= iter_start], iter_end, parameter_names)
 
-iter_min = merged_df['iter'].min()
-iter_max = merged_df['iter'].max()
-output_path = os.path.join(results_path, 'optimization_progress.mp4')
-create_optimization_video(merged_df, df_exploded_normed, iter_min, iter_max, parameter_names, output_path,
-                          n_previous=10, min_alpha=0.1, max_alpha=0.5, fps=10)
+# iter_min = merged_df['iter'].min()
+# iter_max = merged_df['iter'].max()
+# output_path = os.path.join(results_path, 'optimization_progress.mp4')
+# create_optimization_video(merged_df, df_exploded_normed, iter_min, iter_max, parameter_names, output_path,
+#                           n_previous=10, min_alpha=0.1, max_alpha=0.5, fps=10)
 
+# Plot gloing airfoil
+# plot_airfoil_glowing(merged_df, 10)
+
+data = merged_df[merged_df['iter'] < 500]
+# plot_airfoil_glowing(merged_df, 183)
+create_airfoil_optimization_video(data, parameter_names, output_path='opt.mp4', fps=7)
