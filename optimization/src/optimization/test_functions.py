@@ -144,7 +144,7 @@ if __name__ == '__main__':
         (Test_Functions.levy_n13, (-10, 10), (-10, 10), "Levy N.13 Function"),
         (Test_Functions.three_hump_camel, (-5, 5), (-5, 5), "Three-Hump Camel Function"),
         (Test_Functions.easom, (-100, 100), (-100, 100), "Easom Function"),
-        (Test_Functions.eggholder, (-512, 512), (-512, 512), "Eggholder Function")
+        (Test_Functions.eggholder, (450, 650), (300, 500), "Eggholder Function")
     ]
     
     # Create combined plots for each function

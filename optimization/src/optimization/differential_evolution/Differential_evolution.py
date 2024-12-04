@@ -210,7 +210,8 @@ class Differential_evolution:
             # plot trial metric evolution
             if self.plot_trial_metric_evolution_period is not None and self.iter % self.plot_trial_metric_evolution_period == 0:
                 plot_metric_evolution(iterations = self.history['trials']['iter'],
-                                      metrics = self.history['trials']['trial_metric'])
+                                      metrics = self.history['trials']['trial_metric'],
+                                      y_scale = 'lin')
                 
             # plot parameter evolution
             if self.plot_parameter_evolution_period is not None and self.iter % self.plot_parameter_evolution_period == 0:
@@ -416,6 +417,16 @@ class Differential_evolution:
         result_df['iter'] = result_df['iter'].astype(int)
         result_df = result_df[['iter'] + self.parameter_names + ['metric']]
         return result_df
+    
+    # Get trials normed exploded
+    def get_all_trials_normed_exploded(self):
+        data = self.history['trials'][['iter', 'trial_normed', 'trial_metric']]
+        result_df = pd.concat([data.drop('trial_normed', axis=1), 
+                               pd.DataFrame(data['trial_normed'].tolist(), columns = self.parameter_names)], axis=1)
+        result_df = result_df.rename(columns={'trial_metric': 'metric'})
+        result_df['iter'] = result_df['iter'].astype(int)
+        result_df = result_df[['iter'] + self.parameter_names + ['metric']]
+        return result_df
         
     # Get survivors exploded
     def get_all_survivors_exploded(self):
@@ -423,6 +434,17 @@ class Differential_evolution:
         data = data[['iter', 'survivor_unscaled', 'survivor_metric']]
         result_df = pd.concat([data.drop('survivor_unscaled', axis=1), 
                                pd.DataFrame(data['survivor_unscaled'].tolist(), columns = self.parameter_names)], axis=1)
+        result_df = result_df.rename(columns={'survivor_metric': 'metric'})
+        result_df['iter'] = result_df['iter'].astype(int)
+        result_df = result_df[['iter'] + self.parameter_names + ['metric']]
+        return result_df
+    
+    # Get survivors normed exploded
+    def get_all_survivors_normed_exploded(self):
+        data = self.get_all_survivors()
+        data = data[['iter', 'survivor_normed', 'survivor_metric']]
+        result_df = pd.concat([data.drop('survivor_normed', axis=1), 
+                               pd.DataFrame(data['survivor_normed'].tolist(), columns = self.parameter_names)], axis=1)
         result_df = result_df.rename(columns={'survivor_metric': 'metric'})
         result_df['iter'] = result_df['iter'].astype(int)
         result_df = result_df[['iter'] + self.parameter_names + ['metric']]

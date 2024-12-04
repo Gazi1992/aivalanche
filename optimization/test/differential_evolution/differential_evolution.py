@@ -73,7 +73,7 @@ FUNCTION_CONFIGS = {
     }
 }
 
-def evaluate_function(parameters: dict = None, function_name: str = None, **kwargs):
+def evaluate_function(parameters: dict = None, **kwargs):
     """
     Generic wrapper for all test functions.
     Args:
@@ -84,20 +84,22 @@ def evaluate_function(parameters: dict = None, function_name: str = None, **kwar
         Dictionary containing list of function values under 'metrics' key
     """
     print(f"kwargs: {kwargs}")
+    function_name = kwargs['function_name']
+    global_minimum_value = kwargs['global_minimum_value']
     response = {'metrics': []}
-    response['metrics'] = [FUNCTION_CONFIGS[function_name]['func'](item['x'], item['y']) 
-                          for item in parameters]
+    response['metrics'] = [np.abs(FUNCTION_CONFIGS[function_name]['func'](item['x'], item['y']) - global_minimum_value) for item in parameters]
     return response
 
 #%% Test configuration
-function_name = 'modified_himmelblau'  # Change this to test different functions
+function_name = 'rastrigin'  # Change this to test different functions
+global_minimum_value = FUNCTION_CONFIGS[function_name]['global_minimum_value']
 print(f"Testing {function_name} function")
 print(FUNCTION_CONFIGS[function_name]['info'])
 
 pop_size = 50
-metric_threshold = -1e10
+metric_threshold = 1e-4
 max_iterations = 1000
-max_iter_without_improvement = 50
+max_iter_without_improvement = 100
 
 adaptive_boundaries = False
 init_pop = None
@@ -128,9 +130,9 @@ def callback_after_each_iter(parameters: dict = None,
                             **kwargs):
     print(f'Iteration {iteration} completed.')
     print(f'Best metric: {best_metric}.')
-    if better_solution_found:
-        print(f'New best solution found: {best_parameters}')
-    print(f"kwargs: {kwargs}")
+    # if better_solution_found:
+    #     print(f'New best solution found: {best_parameters}')
+    # print(f"kwargs: {kwargs}")
 
 def callback_after_last_iter(iteration: int = None,
                             responses: dict = None,
@@ -160,7 +162,7 @@ if __name__ == '__main__':
     diff_evolution = Differential_evolution(
         parameters = parameters,
         eval_func = evaluate_function,
-        eval_func_args = {'function_name': function_name},
+        eval_func_args = {'function_name': function_name, 'global_minimum_value': global_minimum_value},
         callback_after_first_iter = callback_after_first_iter,
         callback_after_each_iter = callback_after_each_iter,
         callback_after_last_iter = callback_after_last_iter,
@@ -174,7 +176,8 @@ if __name__ == '__main__':
         use_population_prediction = use_population_prediction,
         plot_parameter_evolution_period = plot_parameter_evolution_period,
         plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
-        adaptive_boundaries = adaptive_boundaries
+        adaptive_boundaries = adaptive_boundaries,
+        mutation_factor_2 = 0.4,
     )
     
     diff_evolution.run_optimization()

@@ -20,7 +20,8 @@ def plot_metric_evolution(iterations: np.array = None,
             ax.set_title('Metric evolution')
             ax.set_xlabel('Iterations')
             ax.set_ylabel('Metrics')
-            ax.set_yscale(y_scale)
+            if y_scale == 'log':
+                ax.set_yscale('log')
             ax.grid(which = 'both', axis = 'both')
             if save_dir is not None:
                 try:
@@ -210,7 +211,7 @@ def plot_evolution_2d(data, function_configs, function_name, parameter_names, it
     return fig
 
 def plot_evolution_2d_with_metrics(data, function_configs, function_name, parameter_names, iteration=None, y_scale='log',
-                                   upper_threshold=1e10, lower_threshold=0, dpi=300):
+                                   upper_threshold=1e10, lower_threshold=-1e10, dpi=300):
     """
     Creates a figure with two subplots: 2D heatmap and metric evolution
     """
@@ -263,7 +264,7 @@ def plot_evolution_2d_with_metrics(data, function_configs, function_name, parame
         f'Iteration: {iteration}',
         f'Best found value: {best_point["metric"]:.4e}',
         f'Global minimum: {"unknown" if global_minimum_value is None else f"{global_minimum_value:.4e}"}',
-        f'Deviation: {np.abs(best_point["metric"] - global_minimum_value):.4e}' if global_minimum_value is not None else ''
+        f'Deviation: {best_point["metric"]:.4e}' if global_minimum_value is not None else ''
     ])
     legend_elements.append(plt.plot([], [], ' ')[0])
     legend_labels.append(info_str)
@@ -313,7 +314,7 @@ def create_plot_evolution_2d_video(data, function_configs, function_name, parame
         working_dir = working_dir
         )
 
-def generate_single_frame_(iter_value, temp_dir, frame_generator_func, frame_generator_args):
+def generate_single_frame(iter_value, temp_dir, frame_generator_func, frame_generator_args):
     """Memory-optimized helper function to generate and save a single frame"""
     import matplotlib.pyplot as plt
     

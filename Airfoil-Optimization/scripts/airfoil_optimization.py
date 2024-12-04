@@ -13,10 +13,10 @@ def read_parameters(file):
 def simulate_batch(parameters, **kwargs):    
     # Run batch simulation
     results_df = batch_handler.run_batch(param_list = parameters,
-                                         alpha = kwargs['alpha'],
-                                         Re = kwargs['Re'],
-                                         Mach = kwargs['Mach'],
-                                         show_progress = True)
+                                          alpha = kwargs['alpha'],
+                                          Re = kwargs['Re'],
+                                          Mach = kwargs['Mach'],
+                                          show_progress = True)
     return results_df
 
 def simulate_multiple_parameters(parameters, **kwargs):

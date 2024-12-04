@@ -1,0 +1,361 @@
+{
+    "reservoirs": {
+        "R1": {
+            "base_head": 74.27650570869446,
+            "coordinates": [
+                500.0,
+                -750.0
+            ]
+        }
+    },
+    "junctions": {
+        "J1": {
+            "elevation": 52.36245572566986,
+            "coordinates": [
+                500.0,
+                0.0
+            ],
+            "base_demand": 0.0
+        },
+        "J2": {
+            "elevation": 56.67554318904877,
+            "coordinates": [
+                1000.0,
+                0.0
+            ],
+            "base_demand": 0.0
+        },
+        "J3": {
+            "elevation": 11.377382576465607,
+            "coordinates": [
+                1500.0,
+                0.0
+            ],
+            "base_demand": 0.0
+        },
+        "J4": {
+            "elevation": -26.157565116882324,
+            "coordinates": [
+                2000.0,
+                0.0
+            ],
+            "base_demand": 0.0
+        },
+        "J5": {
+            "elevation": 39.88331288099289,
+            "coordinates": [
+                2000.0,
+                500.0
+            ],
+            "base_demand": 0.0
+        },
+        "J6": {
+            "elevation": 20.893107652664185,
+            "coordinates": [
+                2000.0,
+                1000.0
+            ],
+            "base_demand": 0.0
+        },
+        "J7": {
+            "elevation": 5.6464749574661255,
+            "coordinates": [
+                2500.0,
+                0.0
+            ],
+            "base_demand": 0.0
+        },
+        "J8": {
+            "elevation": -14.141462445259094,
+            "coordinates": [
+                2000.0,
+                -500.0
+            ],
+            "base_demand": 0.0
+        },
+        "J9": {
+            "elevation": -10.569382905960083,
+            "coordinates": [
+                2000.0,
+                -1000.0
+            ],
+            "base_demand": 0.0
+        }
+    },
+    "demand_nodes": {
+        "D1": {
+            "elevation": 33.54846492409706,
+            "coordinates": [
+                2500.0,
+                1000.0
+            ],
+            "base_demand": 30.0
+        },
+        "D2": {
+            "elevation": 30.854464899748564,
+            "coordinates": [
+                1500.0,
+                750.0
+            ],
+            "base_demand": 25.0
+        },
+        "D3": {
+            "elevation": 74.65692341327667,
+            "coordinates": [
+                1000.0,
+                250.0
+            ],
+            "base_demand": 20.0
+        },
+        "D4": {
+            "elevation": 5.570838153362274,
+            "coordinates": [
+                3000.0,
+                250.0
+            ],
+            "base_demand": 45.0
+        },
+        "D5": {
+            "elevation": 45.314461290836334,
+            "coordinates": [
+                250.0,
+                250.0
+            ],
+            "base_demand": 40.0
+        },
+        "D6": {
+            "elevation": 43.68236839771271,
+            "coordinates": [
+                1200.0,
+                -500.0
+            ],
+            "base_demand": 35.0
+        },
+        "D7": {
+            "elevation": -6.999446153640747,
+            "coordinates": [
+                2500.0,
+                -1000.0
+            ],
+            "base_demand": 60.0
+        },
+        "D8": {
+            "elevation": 12.12701827287674,
+            "coordinates": [
+                1350.0,
+                -1200.0
+            ],
+            "base_demand": 55.0
+        },
+        "D9": {
+            "elevation": 6.875405013561249,
+            "coordinates": [
+                2000.0,
+                -1500.0
+            ],
+            "base_demand": 50.0
+        }
+    },
+    "pipes": {
+        "P1": {
+            "start_node": "R1",
+            "end_node": "J1",
+            "length": 900.3840985072916,
+            "diameter": 500.0,
+            "roughness": 100.0,
+            "start_node_elevation": 74.27650570869446,
+            "end_node_elevation": 52.36245572566986
+        },
+        "P2": {
+            "start_node": "J2",
+            "end_node": "J3",
+            "length": 602.4572761873095,
+            "diameter": 500.0,
+            "roughness": 100.0,
+            "start_node_elevation": 56.67554318904877,
+            "end_node_elevation": 11.377382576465607
+        },
+        "P3": {
+            "start_node": "J3",
+            "end_node": "J4",
+            "length": 601.6882715406816,
+            "diameter": 500.0,
+            "roughness": 100.0,
+            "start_node_elevation": 11.377382576465607,
+            "end_node_elevation": -26.157565116882324
+        },
+        "P4": {
+            "start_node": "J4",
+            "end_node": "J5",
+            "length": 605.2110478965925,
+            "diameter": 400.0,
+            "roughness": 100.0,
+            "start_node_elevation": -26.157565116882324,
+            "end_node_elevation": 39.88331288099289
+        },
+        "P5": {
+            "start_node": "J6",
+            "end_node": "D1",
+            "length": 600.1921589103288,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": 20.893107652664185,
+            "end_node_elevation": 33.54846492409706
+        },
+        "P6": {
+            "start_node": "J6",
+            "end_node": "D2",
+            "length": 670.9268881472957,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": 20.893107652664185,
+            "end_node_elevation": 30.854464899748564
+        },
+        "P7": {
+            "start_node": "J2",
+            "end_node": "D3",
+            "length": 300.7749910648594,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": 56.67554318904877,
+            "end_node_elevation": 74.65692341327667
+        },
+        "P8": {
+            "start_node": "J4",
+            "end_node": "J7",
+            "length": 601.212571084199,
+            "diameter": 400.0,
+            "roughness": 100.0,
+            "start_node_elevation": -26.157565116882324,
+            "end_node_elevation": 5.6464749574661255
+        },
+        "P9": {
+            "start_node": "J7",
+            "end_node": "D4",
+            "length": 670.8203993902792,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": 5.6464749574661255,
+            "end_node_elevation": 5.570838153362274
+        },
+        "P10": {
+            "start_node": "J1",
+            "end_node": "D5",
+            "length": 424.34836029469585,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": 52.36245572566986,
+            "end_node_elevation": 45.314461290836334
+        },
+        "P11": {
+            "start_node": "J3",
+            "end_node": "D6",
+            "length": 700.7872725990618,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": 11.377382576465607,
+            "end_node_elevation": 43.68236839771271
+        },
+        "P12": {
+            "start_node": "J4",
+            "end_node": "J8",
+            "length": 600.1732390582886,
+            "diameter": 400.0,
+            "roughness": 100.0,
+            "start_node_elevation": -26.157565116882324,
+            "end_node_elevation": -14.141462445259094
+        },
+        "P13": {
+            "start_node": "J9",
+            "end_node": "D7",
+            "length": 600.0152931431985,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": -10.569382905960083,
+            "end_node_elevation": -6.999446153640747
+        },
+        "P14": {
+            "start_node": "J9",
+            "end_node": "D8",
+            "length": 816.5425784012233,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": -10.569382905960083,
+            "end_node_elevation": 12.12701827287674
+        },
+        "P15": {
+            "start_node": "J9",
+            "end_node": "D9",
+            "length": 600.3650736850055,
+            "diameter": 300.0,
+            "roughness": 100.0,
+            "start_node_elevation": -10.569382905960083,
+            "end_node_elevation": 6.875405013561249
+        }
+    },
+    "pumps": {
+        "PUMP1": {
+            "start_node": "J1",
+            "end_node": "J2",
+            "pump_curve_name": "PUMP1_CURVE",
+            "pump_curve_points": [
+                [
+                    0.0,
+                    60.0
+                ],
+                [
+                    50.0,
+                    42.0
+                ],
+                [
+                    100.0,
+                    24.0
+                ]
+            ],
+            "start_node_elevation": 52.36245572566986,
+            "end_node_elevation": 56.67554318904877
+        },
+        "PUMP2": {
+            "start_node": "J5",
+            "end_node": "J6",
+            "pump_curve_name": "PUMP2_CURVE",
+            "pump_curve_points": [
+                [
+                    0.0,
+                    40.0
+                ],
+                [
+                    25.0,
+                    28.0
+                ],
+                [
+                    50.0,
+                    16.0
+                ]
+            ],
+            "start_node_elevation": 39.88331288099289,
+            "end_node_elevation": 20.893107652664185
+        },
+        "PUMP3": {
+            "start_node": "J8",
+            "end_node": "J9",
+            "pump_curve_name": "PUMP3_CURVE",
+            "pump_curve_points": [
+                [
+                    0.0,
+                    40.0
+                ],
+                [
+                    25.0,
+                    28.0
+                ],
+                [
+                    50.0,
+                    16.0
+                ]
+            ],
+            "start_node_elevation": -14.141462445259094,
+            "end_node_elevation": -10.569382905960083
+        }
+    }
+}
