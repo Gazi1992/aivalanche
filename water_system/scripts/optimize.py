@@ -212,3 +212,4 @@ diff_evolution = Differential_evolution(parameters = parameters,
 diff_evolution.run_optimization()
 
 create_video_from_pngs(figures_path, output_path, output_name='water network optimization.mp4', fps=5)
+create_video_from_pngs(figures_path, output_path, output_name='water network optimization.gif', fps=5)

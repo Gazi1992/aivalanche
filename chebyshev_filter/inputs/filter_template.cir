@@ -1,0 +1,66 @@
+* 7th Order Chebyshev Filter with simplified op-amp
+.subckt OPAMP1 inp inn vdd vss out
+.param gain=<<gain>> rout=50
+E1 out1 0 inp inn {gain}
+Rout out1 out {rout}
+.ends
+
+* Input source
+V1 in 0 AC 1
+Vbias vbias 0 DC 2.5
+Vpos vcc 0 DC 15
+Vneg vee 0 DC -15
+
+* First Stage
+X11 2 1 vcc vee 3 OPAMP1
+R14 in 2 <<R14>>
+R11 vbias 1 <<R11>>
+C11 vbias 3 <<C11>>
+R13 3 4 <<R13>>
+R12 0 4 <<R12>>
+X12 5 4 vcc vee 6 OPAMP1
+C12 0 5 <<C12>>
+R15 6 7 <<R15>>
+X13 out1 7 vcc vee out1 OPAMP1
+R16 vcc 7 <<R16>>
+
+* Second Stage
+X21 9 8 vcc vee 10 OPAMP1
+R24 out1 9 <<R24>>
+R21 vbias 8 <<R21>>
+C21 vbias 10 <<C21>>
+R23 10 11 <<R23>>
+R22 0 11 <<R22>>
+X22 12 11 vcc vee 13 OPAMP1
+C22 0 12 <<C22>>
+R25 13 14 <<R25>>
+X23 out2 14 vcc vee out2 OPAMP1
+R26 vcc 14 <<R26>>
+
+* Third Stage
+X31 16 15 vcc vee 17 OPAMP1
+R34 out2 16 <<R34>>
+R31 vbias 15 <<R31>>
+C31 vbias 17 <<C31>>
+R33 17 18 <<R33>>
+R32 0 18 <<R32>>
+X32 19 18 vcc vee 20 OPAMP1
+C32 0 19 <<C32>>
+R35 20 21 <<R35>>
+X33 out3 21 vcc vee out3 OPAMP1
+R36 vcc 21 <<R36>>
+
+* Output Stage
+X41 output 22 vcc vee output OPAMP1
+R41 out3 22 <<R41>>
+R42 0 22 <<R42>>
+C41 0 22 <<C41>>
+
+* Analysis commands
+.control
+set units=degrees
+ac dec 100 1 1MEG
+wrdata filter_response.txt v(output)
+quit
+.endc
+.end

@@ -1250,11 +1250,14 @@ def plot_result(network, optimization_data = None, path = None):
             ax.plot(costs['iter'], costs['total_cost'], '-o', label = 'Total cost')
             ax.legend(loc = 'upper right')
             ax.set_xlabel('iteration')
+            plt.grid()
             plt.title('Cost of the network [milion €]', fontsize = 16)
         else:
             metrics = optimization_data['metrics']
-            ax.plot(metrics['iter'], metrics['metric'])
+            ax.plot(metrics['iter'], metrics['metric'], '-o')
             ax.set_xlabel('iteration')
+            ax.set_yscale('log')
+            plt.grid()
             plt.title('Constraints metric', fontsize = 16)
 
     # Add the parameters evolution
@@ -1294,7 +1297,7 @@ def plot_result(network, optimization_data = None, path = None):
     update_fontsize(figure, 11)
 
     if path is not None:
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, bbox_inches='tight', dpi=300)
 
     plt.show()
         
@@ -1304,7 +1307,7 @@ def update_fontsize(fig, fontsize):
     for ax in fig.get_axes():
         # Title
         if ax.get_title():
-            ax.set_title(ax.get_title(), fontsize=fontsize)
+            ax.set_title(ax.get_title(), fontsize=fontsize*1.2)
         
         # Axis labels
         ax.set_xlabel(ax.get_xlabel(), fontsize=fontsize)
@@ -1313,20 +1316,21 @@ def update_fontsize(fig, fontsize):
         # Tick labels
         ax.tick_params(axis='both', labelsize=fontsize)
         
-        # # Legend
-        # if ax.get_legend():
-        #     ax.legend(fontsize=fontsize)
+        # Legend - modify existing legend instead of creating new one
+        if ax.get_legend():
+            for text in ax.get_legend().get_texts():
+                text.set_fontsize(fontsize)
             
-        # # Colorbar if it exists
-        # if hasattr(ax, 'collections'):
-        #     for collection in ax.collections:
-        #         if collection.colorbar:
-        #             collection.colorbar.ax.tick_params(labelsize=fontsize)
+        # Colorbar if it exists
+        if hasattr(ax, 'collections'):
+            for collection in ax.collections:
+                if collection.colorbar:
+                    collection.colorbar.ax.tick_params(labelsize=fontsize)
         
-        # # Text annotations
-        # for artist in ax.get_children():
-        #     if isinstance(artist, plt.Text):
-        #         artist.set_fontsize(fontsize*0.8)
+        # Text annotations
+        for artist in ax.get_children():
+            if isinstance(artist, plt.Text):
+                artist.set_fontsize(fontsize*1.2)
     
 def create_realistic_network(x_min = -100, x_max = 3100, y_min = -1600, y_max = 1100, lacunarity = 0.2):
     # Create network model

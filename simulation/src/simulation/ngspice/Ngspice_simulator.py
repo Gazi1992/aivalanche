@@ -28,6 +28,9 @@ class Ngspice_simulator:
             
             if results_dir is None:
                 results_dir = os.path.dirname(file_path)
+                
+            if not os.path.exists(results_dir):
+                os.mkdir(results_dir)
             
             # copy the file to the results directory, if not already there
             new_file_path = os.path.join(results_dir, file_name)

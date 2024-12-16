@@ -7,7 +7,7 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 
 # Set transfor to 'None' for the lin parameter, to 'log' for positive parameter in log scale and to 'neglog' for negative parameter in log scale.
 def set_transform(parameter):
-    if parameter['scale'].lower() == 'log':
+    if parameter['scale'].lower() == 'log' or parameter['scale'].lower() == 'logarithmic':
         if parameter['min'] > 0 and parameter['max'] > 0:
             return 'log'
         elif parameter['min'] < 0 and parameter['max'] < 0:

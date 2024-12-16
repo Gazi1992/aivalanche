@@ -181,6 +181,7 @@ class Differential_evolution:
                                                    iteration = self.iter,
                                                    best_parameters = self.best_unscaled,
                                                    best_metric = self.best_metric,
+                                                   parameter_names = self.parameter_names,
                                                    **self.eval_func_args)
             
             if self.callback_after_each_iter is not None:
@@ -191,6 +192,7 @@ class Differential_evolution:
                                               best_metric = self.best_metric,
                                               better_solution_found = self.better_solution_found,
                                               trials = self.history['trials'],
+                                              parameter_names = self.parameter_names,
                                               **self.eval_func_args)
             
             if self.better_solution_found:
@@ -205,6 +207,7 @@ class Differential_evolution:
                                                               responses = responses,
                                                               best_parameters = self.best_unscaled,
                                                               best_metric = self.best_metric,
+                                                              parameter_names = self.parameter_names,
                                                               **self.eval_func_args)
                     
             # plot trial metric evolution
@@ -243,6 +246,7 @@ class Differential_evolution:
                                           best_metric = self.best_metric,
                                           trials = self.history['trials'],
                                           stop_reason = self.stop_reason,
+                                          parameter_names = self.parameter_names,
                                           **self.eval_func_args)
             
         # Show final plots

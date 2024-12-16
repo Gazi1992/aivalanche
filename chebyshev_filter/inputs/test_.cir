@@ -1,0 +1,111 @@
+* 7th Order Chebyshev Filter using UA741 op-amps
+
+* UA741 Op-amp model
+.model UA741 npn(Is=800.0E-18 Xti=3 Eg=1.11 Vaf=100 Bf=90 Ne=1.5 Ise=1.0E-16
++ Ikf=20 Xtb=1.5 Br=5 Nc=2 Isc=0 Ikr=0 Rc=0 Cjc=0 Mjc=.3333 Vjc=.75 Fc=.5
++ Cje=0 Mje=.3333 Vje=.75 Tr=10E-12 Tf=1.0E-9 Itf=1 Vtf=2 Xtf=6 Rb=0)
+*
+.subckt UA741    1   2   3   4   5
+*
+* connections:   non-inverting input
+*                   |  inverting input
+*                   |   |   positive power supply
+*                   |   |   |   negative power supply
+*                   |   |   |   |   output
+*                   |   |   |   |   |
+*                   1   2   3   4   5
+*
+  c1   11 12 8.661E-12
+  c2    6  7 30.00E-12
+  dc    5 53 dx
+  de   54  5 dx
+  dlp  90 91 dx
+  dln  92 90 dx
+  dp    4  3 dx
+  egnd 99  0 poly(2) (3,0) (4,0) 0 .5 .5
+  fb    7 99 poly(5) vb vc ve vlp vln 0 10.61E6 -10E6 10E6 10E6 -10E6
+  ga    6  0 11 12 188.5E-6
+  gcm   0  6 10 99 5.961E-9
+  iee  10  4 dc 15.16E-6
+  hlim 90  0 vlim 1K
+  q1   11  2 13 qx
+  q2   12  1 14 qx
+  r2    6  9 100.0E3
+  rc1   3 11 5.305E3
+  rc2   3 12 5.305E3
+  re1  13 10 1.836E3
+  re2  14 10 1.836E3
+  ree  10 99 13.19E6
+  ro1   8  5 50
+  ro2   7 99 100
+  rp    3  4 18.16E3
+  vb    9  0 dc 0
+  vc    3 53 dc 1
+  ve   54  4 dc 1
+  vlim  7  8 dc 0
+  vlp  91  0 dc 40
+  vln   0 92 dc 40
+.model dx D(Is=800.0E-18 Rs=1)
+.model qx NPN(Is=800.0E-18 Bf=93.75)
+.ends
+
+* Input source
+V1 in 0 AC 1
+Vbias vbias 0 DC 2.5
+Vpos vcc 0 DC 15
+Vneg vee 0 DC -15
+
+* First Stage
+X11 2 1 vcc vee 3 UA741
+R14 in 2 16.2k
+R11 vbias 1 95.3k
+C11 vbias 3 1200p
+R13 3 4 16.9k
+R12 0 4 16.9k
+X12 5 4 vcc vee 6 UA741
+C12 0 5 1200p
+R15 6 7 10k
+X13 out1 7 vcc vee out1 UA741
+R16 vcc 7 10k
+
+* Second Stage
+X21 9 8 vcc vee 10 UA741
+R24 out1 9 16.2k
+R21 vbias 8 26.7k
+C21 vbias 10 1800p
+R23 10 11 16.2k
+R22 0 11 16.2k
+X22 12 11 vcc vee 13 UA741
+C22 0 12 1800p
+R25 13 14 10k
+X23 out2 14 vcc vee out2 UA741
+R26 vcc 14 10k
+
+* Third Stage
+X31 16 15 vcc vee 17 UA741
+R34 out2 16 16.2k
+R31 vbias 15 12.7k
+C31 vbias 17 2200p
+R33 17 18 16.2k
+R32 0 18 16.2k
+X32 19 18 vcc vee 20 UA741
+C32 0 19 2200p
+R35 20 21 10k
+X33 out3 21 vcc vee out3 UA741
+R36 vcc 21 10k
+
+* Output Stage
+X41 output 22 vcc vee output UA741
+R41 out3 22 4.22k
+R42 0 22 12.2k
+C41 0 22 1200p
+
+* Analysis commands
+.control
+set units=degrees
+ac dec 100 1 1MEG
+wrdata filter_response.txt v(output)
+quit
+.endc
+
+.end

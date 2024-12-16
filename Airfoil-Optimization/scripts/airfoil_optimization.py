@@ -145,7 +145,7 @@ def total_metric(data):
         metric = data['geometry_metric']
     else:
         metric = data['ld_metric']
-    return metric   
+    return metric
     
 def calculate_metric(sim_results):
     results_df = sim_results
