@@ -51,13 +51,14 @@ def callback_after_each_iter(responses: dict = None,
         # Save the results file
         df = pd.DataFrame(columns = ['freq', 'magnitude', 'phase'],
                           data = np.vstack((best_result['freq'], best_result['magnitude_db'], best_result['phase'])).T)
+        df = df[df.index % 15 == 0]
         df.to_csv(os.path.join(output_path, 'best_result.csv'), index = False)
         
         # Save the best circuit
         replace_parameters(os.path.join(inputs_path, 'filter_template.cir'), best_params, output_path, filename = 'best_circuit.cir')
         
-        plot_magnitude(best_result)
-        plot_phase(best_result)
+        plot_magnitude(df, path = os.path.join(figures_path, 'magnitude.png'))
+        plot_phase(df, path = os.path.join(figures_path, 'phase.png'))
         
     print(f'Iter {iteration}: {best_metric}')
     

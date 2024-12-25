@@ -186,7 +186,7 @@ def parse_results_file(file):
     return results
 
 #%% Plotting
-def plot_magnitude(data, ref_data = None, ax = None):
+def plot_magnitude(data, ref_data = None, ax = None, path = None):
     if ax is not None:
         plt.sca(ax)
     else:
@@ -194,9 +194,13 @@ def plot_magnitude(data, ref_data = None, ax = None):
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
     
     if ref_data is not None:
-        # ax.scatter(ref_data['freq'], ref_data['magnitude'], marker='o', facecolors='none', edgecolors='black', label = 'Reference data')
-        ax.plot(ref_data['freq'], ref_data['magnitude'], label = 'Reference data')
-    ax.plot(data['freq'], data['magnitude_db'], label = 'Simulation data')
+        ax.scatter(ref_data['freq'], ref_data['magnitude'], marker='o', facecolors='none', edgecolors='black', label = 'Reference data')
+        # ax.plot(ref_data['freq'], ref_data['magnitude'], label = 'Reference data')
+   
+    if data is not None:
+        # ax.scatter(data['freq'], data['magnitude'], marker='o', label = 'Simulation data')
+        ax.plot(data['freq'], data['magnitude_db'], label = 'Simulation data')
+    
     # ax.axvline(x=data['cutoff_freq'], color='r', linestyle='--', label=f"-3dB at {data['cutoff_freq']:.1f} Hz")
     
     ax.set_xlabel('Frequency [Hz]')
@@ -205,11 +209,16 @@ def plot_magnitude(data, ref_data = None, ax = None):
     ax.set_xscale('log')
     plt.grid(which='major', linestyle='-', alpha=0.5)
     plt.grid(which='minor', axis='x', linestyle='--', alpha=0.3)
-    plt.legend(loc = 'upper right')
+    
+    if data is not None and ref_data is not None:
+        plt.legend(loc = 'upper right')
     
     # plt.show()
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
         
-def plot_phase(data, ref_data = None, ax = None):
+def plot_phase(data, ref_data = None, ax = None, path = None):
     if ax is not None:
         plt.sca(ax)
     else:
@@ -217,9 +226,13 @@ def plot_phase(data, ref_data = None, ax = None):
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
     
     if ref_data is not None:
-        # ax.scatter(ref_data['freq'], ref_data['phase'], marker='o', facecolors='none', edgecolors='black', label = 'Reference data')
-        ax.plot(ref_data['freq'], ref_data['phase'], label = 'Reference data')
-    ax.plot(data['freq'], data['phase'], label = 'Simulation data')
+        ax.scatter(ref_data['freq'], ref_data['phase'], marker='o', facecolors='none', edgecolors='black', label = 'Reference data')
+        # ax.plot(ref_data['freq'], ref_data['phase'], label = 'Reference data')
+        
+    if data is not None:
+        # ax.scatter(data['freq'], data['phase'], marker='o', label = 'Simulation data')
+        ax.plot(data['freq'], data['phase'], label = 'Simulation data')
+
     # ax.axvline(x=data['unity_gain_freq'], color='r', linestyle='--', label=f"unity gain at {data['unity_gain_freq']:.1f} Hz")
     
     ax.set_xlabel('Frequency [Hz]')
@@ -228,11 +241,15 @@ def plot_phase(data, ref_data = None, ax = None):
     ax.set_xscale('log')
     plt.grid(which='major', linestyle='-', alpha=0.5)
     plt.grid(which='minor', axis='x', linestyle='--', alpha=0.3)
-    plt.legend(loc = 'upper right')
+    if data is not None and ref_data is not None:
+        plt.legend(loc = 'upper right')
     
     # plt.show()
     
-def plot_trials(data, ax = None, path = None):
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
+    
+def plot_survivors(data, ax = None, path = None):
     if ax is not None:
         plt.sca(ax)
     else:
@@ -244,15 +261,56 @@ def plot_trials(data, ax = None, path = None):
     
     ax.set_xlabel('Iteration')
     ax.set_ylabel('Metric')
-    ax.set_title('Trial metric evolution')
+    ax.set_title('Survivor metric evolution')
     ax.set_yscale('log')
     plt.grid(which='major', linestyle='-', alpha=0.5)
     plt.grid(which='minor', axis='y', linestyle='--', alpha=0.3)
     
-    plt.show()
+    # plt.show()
     
     if path is not None:
         plt.savefig(path, bbox_inches='tight', dpi=300)
+        
+def plot_parameter_evolution(data, path = None):
+    
+    # Get primary monitor size
+    monitor = get_monitors()[0]
+    width = monitor.width / 100  # Convert pixels to inches (approximate)
+    height = monitor.height / 100
+    
+    figure = plt.figure(figsize=(width, height), dpi=300)
+    
+    # params = params[params['iter'] >= params['iter'].max() - 5]
+    params = data.drop(['iter', 'metric'], axis = 1)
+    param_names = list(params.columns)
+    n_params = len(param_names)
+    
+    left_margin = 0.1
+    right_margin = 0.1
+    bottom_margin = 0.1
+    top_margin = 0.1
+    all_param_width = 1 - left_margin - right_margin
+    param_width = all_param_width / n_params
+    param_height = 1 - top_margin - bottom_margin
+        
+    for i, p in enumerate(param_names):
+        values = params[p]
+        hist, edges = np.histogram(values, bins = 100, range = (0,1))
+        ax = figure.add_axes([left_margin + i * param_width, bottom_margin, param_width, param_height])
+        plt.sca(ax)
+        plt.imshow(np.atleast_2d(hist).T, extent = [0,1,0,1],
+                    aspect = "auto", origin = 'lower',
+                    cmap = 'YlGn')   
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xlabel(p)
+        
+        if i == n_params // 2:
+            ax.set_title('Parameter evolution')
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
+    
     
 def plot_results(sim_data, ref_data, optimization_data = None, path = None):
     

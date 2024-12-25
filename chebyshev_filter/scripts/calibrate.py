@@ -5,7 +5,7 @@ from datetime import datetime
 from multiprocessing import Pool
 from filter import single_simulation, simulate_multiple_parameters, plot_magnitude, \
                    plot_phase, replace_parameters, plot_results, create_video_from_pngs, \
-                   plot_trials
+                   plot_survivors, plot_parameter_evolution
 
 #%% Helper functions
 def create_output_folder(results_path):
@@ -13,9 +13,11 @@ def create_output_folder(results_path):
     folder_name = f"calibration_{timestamp}"
     output_path = os.path.join(results_path, folder_name)
     figures_path = os.path.join(output_path, 'figures')
+    figures_video_path = os.path.join(figures_path, 'video')
     os.makedirs(output_path, exist_ok=True)
     os.makedirs(figures_path, exist_ok=True)
-    return output_path, figures_path
+    os.makedirs(figures_video_path, exist_ok=True)
+    return output_path, figures_path, figures_video_path
 
 def read_parameters(file):
     params = Parameters(file)
@@ -32,7 +34,7 @@ def callback_after_each_iter(responses: dict = None,
                             **kwargs):
     global all_results
     global all_parameters
-    global all_trials
+    global all_survivors
     global all_metrics
     global best_metric
     global best_result
@@ -41,7 +43,7 @@ def callback_after_each_iter(responses: dict = None,
     
     # all_results.append(responses)
     all_parameters = diff_evolution.get_all_survivors_normed_exploded()
-    all_trials = diff_evolution.get_all_survivors_exploded()
+    all_survivors = diff_evolution.get_all_survivors_exploded()
     
     if better_solution_found:
         # Update best metric
@@ -73,8 +75,14 @@ def callback_after_each_iter(responses: dict = None,
     optimization_data = {'parameters': all_parameters,
                          'metrics': all_metrics}
     
-    plot_results(best_result, ref_data, optimization_data, path = os.path.join(figures_path, f'{iteration}.png'))
-    # plot_trials(all_trials, path = os.path.join(output_path, 'trials.png'))    
+    # Plots
+    plot_results(best_result, ref_data, optimization_data, path = os.path.join(figures_video_path, f'{iteration}.png'))
+    temp_path = os.path.join(figures_path, f'iteration_{iteration}')
+    os.makedirs(temp_path, exist_ok=True)
+    plot_magnitude(data = best_result, ref_data = ref_data, path = os.path.join(temp_path, 'magnitude.png'))
+    plot_phase(data = best_result, ref_data = ref_data, path = os.path.join(temp_path, 'phase.png'))
+    plot_parameter_evolution(data = all_parameters, path = os.path.join(temp_path, 'param_evolution.png') )  
+    plot_survivors(all_survivors, path = os.path.join(temp_path, 'survivors.png'))    
     
     print(f'Iter {iteration}: {best_metric}')
     
@@ -106,7 +114,7 @@ best_result = None
 all_results = []
 all_parameters = None
 all_metrics = pd.DataFrame()
-all_trials = pd.DataFrame()
+all_survivors = pd.DataFrame()
 
 #%% Test single simulation
 # parameters = read_parameters(parameters_file)
@@ -118,7 +126,7 @@ all_trials = pd.DataFrame()
 # plot_phase(res, ref_data)
 
 #%% Optimization process
-output_path, figures_path = create_output_folder(results_path)
+output_path, figures_path, figures_video_path = create_output_folder(results_path)
 ref_data = read_ref_data(ref_data_file)
 eval_func_args = {'template_file': template_file, 'results_path': output_path, 'ref_data': ref_data}
 
@@ -134,7 +142,7 @@ diff_evolution = Differential_evolution(parameters = parameters,
                                         metric_threshold = metric_threshold,
                                         max_iterations = max_iterations,
                                         max_iter_without_improvement = max_iter_without_improvement,
-                                        # mutation_factor_3 = 0,
+                                        mutation_factor_3 = 0,
                                         init_pop = init_pop,
                                         init_pop_out_of_range_param = init_pop_out_of_range_param,
                                         defaults_in_init_pop = defaults_in_init_pop,
@@ -146,6 +154,6 @@ diff_evolution = Differential_evolution(parameters = parameters,
 # Run optimization
 diff_evolution.run_optimization()
 
-create_video_from_pngs(figures_path, output_path, output_name='filter calibration.mp4', fps=5)
+create_video_from_pngs(figures_video_path, output_path, output_name='filter calibration.mp4', fps=5)
 
 

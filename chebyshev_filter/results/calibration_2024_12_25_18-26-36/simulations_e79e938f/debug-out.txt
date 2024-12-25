@@ -1,0 +1,143 @@
+**************** uncommented deck **************
+
+     1       1  * 7th order chebyshev filter with simplified op-amp
+     0       2  .param gmin=1e-12
+     0       3  .global gnd
+     2      18  .subckt opamp1 inp inn vdd vss out params: gain=1.0269231708423046 rout=50
+     4      26  e1 out1 0 inp inn {gain}
+     5      27  rout out1 out {rout}
+     6      28  .ends
+     9      30  v1 in 0 ac 1
+    10      31  vbias vbias 0 dc 2.5
+    11      32  vpos vcc 0 dc 15
+    12      33  vneg vee 0 dc -15
+    15      35  x11 2 1 vcc vee 3 opamp1 1.0269231708423046 50
+    16      36  r14 in 2 20359.4045596145
+    17      37  r11 vbias 1 59906.58493383882
+    18      38  c11 vbias 3 6.918207557348688e-10
+    19      39  r13 3 4 78566.72041477145
+    20      40  r12 0 4 13283.031717442913
+    21      41  x12 5 4 vcc vee 6 opamp1 1.0269231708423046 50
+    22      42  c12 0 5 4.592948654209142e-10
+    23      43  r15 6 7 57309.77931572339
+    24      44  x13 out1 7 vcc vee out1 opamp1 1.0269231708423046 50
+    25      45  r16 vcc 7 2945.4259802115816
+    28      47  x21 9 8 vcc vee 10 opamp1 1.0269231708423046 50
+    29      48  r24 out1 9 41592.56659867613
+    30      49  r21 vbias 8 34801.3694741953
+    31      50  c21 vbias 10 8.773403191145873e-10
+    32      51  r23 10 11 110349.71809128621
+    33      52  r22 0 11 73097.41057449165
+    34      53  x22 12 11 vcc vee 13 opamp1 1.0269231708423046 50
+    35      54  c22 0 12 3.53035883014852e-09
+    36      55  r25 13 14 5089.914490087628
+    37      56  x23 out2 14 vcc vee out2 opamp1 1.0269231708423046 50
+    38      57  r26 vcc 14 16878.116295157823
+    41      59  x31 16 15 vcc vee 17 opamp1 1.0269231708423046 50
+    42      60  r34 out2 16 18025.332481548565
+    43      61  r31 vbias 15 68617.9843947048
+    44      62  c31 vbias 17 1.3998955302120598e-09
+    45      63  r33 17 18 15009.288511776664
+    46      64  r32 0 18 14891.743500470891
+    47      65  x32 19 18 vcc vee 20 opamp1 1.0269231708423046 50
+    48      66  c32 0 19 9.704002419521523e-09
+    49      67  r35 20 21 39386.87055813493
+    50      68  x33 out3 21 vcc vee out3 opamp1 1.0269231708423046 50
+    51      69  r36 vcc 21 68029.78744931507
+    54      71  x41 output 22 vcc vee output opamp1 1.0269231708423046 50
+    55      72  r41 out3 22 1478.132866530284
+    56      73  r42 0 22 17259.715459035364
+    57      74  c41 0 22 1.2573867172331249e-10
+    60      76  .control
+    61      77  set units=degrees
+    62      78  ac dec 100 1 1meg
+    63      79  wrdata filter_response.txt v(output)
+    64      80  quit
+    65      81  .endc
+    67      83  .end
+
+****************** complete deck ***************
+
+     1       1  * 7th order chebyshev filter with simplified op-amp
+     0       2  .param gmin=1e-12
+     0       3  .global gnd
+     0       4  *param temp={temper}
+     1       5  *func temp() {temper}
+     0       6  *param vt={(temper+273.15)*8.6173303e-5}
+     2       7  *func vt() {(temper+273.15)*8.6173303e-5}
+     0       8  *func limit(x, a, b) { ternary_fcn(a>b,max(min(x,a),b),max(min(x,b),a))}
+     0       9  *func pwr(x, a) { pow(x,a)}
+     0      10  *func pwrs(x, a) { sgn(x)*pow(x,a)}
+     0      11  *func stp(x) { u(x)}
+     0      12  *func if(a, b, c) {ternary_fcn(a,b,c)}
+     0      13  *func int(x) { sign(x)*floor(abs(x))}
+     0      14  *func uplim(x, pos, z) { min(x,pos-z)+(1-(min(max(0,x-pos+z),2*z)/2/z-1)**2)*z }
+     0      15  *func dnlim(x, neg, z) { max(x,neg+z)-(1-(min(max(0,-x+neg+z),2*z)/2/z-1)**2)*z }
+     0      16  *func uplim_tanh(x, pos, z) { min(x,pos-z)+tanh(max(0,x-pos+z)/z)*z }
+     0      17  *func dnlim_tanh(x, neg, z) { max(x,neg+z)-tanh(max(0,neg+z-x)/z)*z }
+     2      18  .subckt opamp1 inp inn vdd vss out params: gain=1.0269231708423046 rout=50
+     3      19  *param gain=1.0269231708423046
+     3      20  *param rout=50
+     0      21  *param temp={temper}
+     0      22  *func temp() {temper}
+     0      23  *param vt={(temper+273.15)*8.6173303e-5}
+     1      24  *func vt() {(temper+273.15)*8.6173303e-5}
+     3      25  *param gain=1.0269231708423046 rout=50
+     4      26  e1 out1 0 inp inn {gain}
+     5      27  rout out1 out {rout}
+     6      28  .ends
+     8      29  * input source
+     9      30  v1 in 0 ac 1
+    10      31  vbias vbias 0 dc 2.5
+    11      32  vpos vcc 0 dc 15
+    12      33  vneg vee 0 dc -15
+    14      34  * first stage
+    15      35  x11 2 1 vcc vee 3 opamp1 1.0269231708423046 50
+    16      36  r14 in 2 20359.4045596145
+    17      37  r11 vbias 1 59906.58493383882
+    18      38  c11 vbias 3 6.918207557348688e-10
+    19      39  r13 3 4 78566.72041477145
+    20      40  r12 0 4 13283.031717442913
+    21      41  x12 5 4 vcc vee 6 opamp1 1.0269231708423046 50
+    22      42  c12 0 5 4.592948654209142e-10
+    23      43  r15 6 7 57309.77931572339
+    24      44  x13 out1 7 vcc vee out1 opamp1 1.0269231708423046 50
+    25      45  r16 vcc 7 2945.4259802115816
+    27      46  * second stage
+    28      47  x21 9 8 vcc vee 10 opamp1 1.0269231708423046 50
+    29      48  r24 out1 9 41592.56659867613
+    30      49  r21 vbias 8 34801.3694741953
+    31      50  c21 vbias 10 8.773403191145873e-10
+    32      51  r23 10 11 110349.71809128621
+    33      52  r22 0 11 73097.41057449165
+    34      53  x22 12 11 vcc vee 13 opamp1 1.0269231708423046 50
+    35      54  c22 0 12 3.53035883014852e-09
+    36      55  r25 13 14 5089.914490087628
+    37      56  x23 out2 14 vcc vee out2 opamp1 1.0269231708423046 50
+    38      57  r26 vcc 14 16878.116295157823
+    40      58  * third stage
+    41      59  x31 16 15 vcc vee 17 opamp1 1.0269231708423046 50
+    42      60  r34 out2 16 18025.332481548565
+    43      61  r31 vbias 15 68617.9843947048
+    44      62  c31 vbias 17 1.3998955302120598e-09
+    45      63  r33 17 18 15009.288511776664
+    46      64  r32 0 18 14891.743500470891
+    47      65  x32 19 18 vcc vee 20 opamp1 1.0269231708423046 50
+    48      66  c32 0 19 9.704002419521523e-09
+    49      67  r35 20 21 39386.87055813493
+    50      68  x33 out3 21 vcc vee out3 opamp1 1.0269231708423046 50
+    51      69  r36 vcc 21 68029.78744931507
+    53      70  * output stage
+    54      71  x41 output 22 vcc vee output opamp1 1.0269231708423046 50
+    55      72  r41 out3 22 1478.132866530284
+    56      73  r42 0 22 17259.715459035364
+    57      74  c41 0 22 1.2573867172331249e-10
+    59      75  * analysis commands
+    60      76  .control
+    61      77  set units=degrees
+    62      78  ac dec 100 1 1meg
+    63      79  wrdata filter_response.txt v(output)
+    64      80  quit
+    65      81  .endc
+    66      82  *end
+    67      83  .end
