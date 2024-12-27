@@ -1,5 +1,6 @@
 import pandas as pd, os, numpy as np, pickle as pcl, uuid, shutil
-from xfoil import XFoilAnalyzer, XFoilBatch, XFoilSettings, plot_results, kill_xfoil_processes
+from xfoil import XFoilAnalyzer, XFoilBatch, XFoilSettings, plot_results, kill_xfoil_processes, \
+                  plot_parameter_evolution, plot_survivors, plot_ld_evolution
 from parameters.Parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
 from datetime import datetime
@@ -11,9 +12,11 @@ def create_output_folder(results_path):
     folder_name = f"optimization_{timestamp}"
     output_path = os.path.join(results_path, folder_name)
     figures_path = os.path.join(output_path, 'figures')
+    figures_video_path = os.path.join(figures_path, 'video')
     os.makedirs(output_path, exist_ok=True)
     os.makedirs(figures_path, exist_ok=True)
-    return output_path, figures_path
+    os.makedirs(figures_video_path, exist_ok=True)
+    return output_path, figures_path, figures_video_path
 
 def create_video_from_pngs(figures_path, output_path, output_name='output.mp4', fps=5):
     import cv2
@@ -70,6 +73,7 @@ def read_parameters(file):
 def simulate_single_parameters(parameters, **kwargs):
     
     xfoil_analyzer = XFoilAnalyzer()
+    xfoil_analyzer.update_parameter_boundaries(param_boundaries)
     alpha = kwargs['alpha']
     Re = kwargs['Re']
     Mach = kwargs['Mach']
@@ -89,6 +93,7 @@ def simulate_single(params):
     working_dir = os.path.abspath(f'{str(uuid.uuid4())[-8:]}')
     xfoil_settings = XFoilSettings(working_dir=working_dir)
     xfoil_analyzer = XFoilAnalyzer(settings = xfoil_settings)
+    xfoil_analyzer.update_parameter_boundaries(param_boundaries)
     sim_result = xfoil_analyzer.analyze_airfoil(p, alpha, Re, Mach)
     sim_result['parameters'] = p
     if os.path.exists(working_dir):
@@ -145,6 +150,7 @@ def callback_after_each_iter(responses: dict = None,
                             **kwargs):
     global all_results
     global all_parameters
+    global all_survivors
     global all_airfoils
     global all_metrics
     global all_constraints
@@ -157,6 +163,7 @@ def callback_after_each_iter(responses: dict = None,
     
     # all_results.append(responses)
     all_parameters = diff_evolution.get_all_survivors_normed_exploded()
+    all_survivors = diff_evolution.get_all_survivors_exploded()
         
     if better_solution_found:
         # Update best metric
@@ -166,10 +173,11 @@ def callback_after_each_iter(responses: dict = None,
         best_result = responses['data'][np.argmin(responses['metrics'])]
         best_airfoil = best_result['airfoil']
         
-        # Save parameters to file
-        best_params = kwargs['parameters'][np.argmin(responses['metrics'])]
-        df = pd.DataFrame.from_dict(best_params, orient = 'index')
-        df.to_csv(os.path.join(output_path, 'best_parameters.csv'), header = False)
+        # Save parameters to file        
+        diff_evolution.write_best_parameters_to_file(file_path = os.path.join(output_path, 'best_parameters.csv'))
+    
+        # Save optimization info to file
+        diff_evolution.write_optimization_info_to_file(os.path.join(output_path, 'optimization_info.json'))
         
     
     all_airfoils.append(best_airfoil.airfoil)
@@ -195,9 +203,18 @@ def callback_after_each_iter(responses: dict = None,
                          'all_constraints': all_constraints,
                          'ld': all_ld}
     
+    # Plots
     if best_metric < 1000:
-        plot_results(best_airfoil, optimization_data, path = os.path.join(figures_path, f'{iteration}.png'))
-        
+        plot_results(best_airfoil, optimization_data, path = os.path.join(figures_video_path, f'{iteration}.png'))
+    
+    temp_path = os.path.join(figures_path, f'iteration_{iteration}')
+    os.makedirs(temp_path, exist_ok=True)
+    plot_parameter_evolution(data = all_parameters, path = os.path.join(temp_path, 'param_evolution.png') )  
+    plot_survivors(all_survivors, path = os.path.join(temp_path, 'survivors.png'))
+    best_airfoil.plot_airfoil(path = os.path.join(temp_path, 'airfoil.png'))
+    best_airfoil.plot_geometry(path = os.path.join(temp_path, 'constraints.png'))
+    plot_ld_evolution(data = all_ld, path = os.path.join(temp_path, 'lift_and_drag.png'))
+    
     print(f'Iter {iteration}: {best_metric}')
     
     kill_xfoil_processes()
@@ -210,6 +227,7 @@ inputs_path = os.path.abspath('../inputs')
 parameters_file = os.path.join(inputs_path, 'parameters.csv')
 
 # DE options
+seed = None
 pop_size = 150
 metric_threshold = -1e10
 max_iterations = 1000
@@ -239,6 +257,7 @@ all_parameters = None
 all_metrics = pd.DataFrame()
 all_constraints = pd.DataFrame()
 all_ld = pd.DataFrame()
+all_survivors = pd.DataFrame()
 
 # %% Test single simulation
 # parameters = read_parameters(parameters_file)
@@ -246,10 +265,11 @@ all_ld = pd.DataFrame()
 # res = simulate_single_parameters(params_dict, **eval_func_args)
 
 #%% Optimization process
-output_path, figures_path = create_output_folder(results_path)
+output_path, figures_path, figures_video_path = create_output_folder(results_path)
 
 # Read parameters
 parameters = read_parameters(parameters_file)
+param_boundaries = parameters[['name', 'min', 'max']]
 
 # Initialize optimizer
 diff_evolution = Differential_evolution(parameters = parameters,
@@ -267,10 +287,11 @@ diff_evolution = Differential_evolution(parameters = parameters,
                                         use_population_prediction = use_population_prediction,
                                         plot_parameter_evolution_period = plot_parameter_evolution_period,
                                         plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
-                                        adaptive_boundaries = adaptive_boundaries)
+                                        adaptive_boundaries = adaptive_boundaries,
+                                        seed = seed)
 
 # Run optimization
 diff_evolution.run_optimization()
 
-create_video_from_pngs(figures_path, output_path, output_name='airfoil optimization.mp4', fps=5)
+create_video_from_pngs(figures_video_path, output_path, output_name='airfoil optimization.mp4', fps=5)
 # create_video_from_pngs(figures_path, output_path, output_name='water network optimization.gif', fps=5)

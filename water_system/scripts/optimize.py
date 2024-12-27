@@ -1,5 +1,5 @@
 import pandas as pd, os, numpy as np, pickle as pcl
-from water_system import water_distribution_network, plot_result
+from water_system import water_distribution_network, plot_result, plot_parameter_evolution, plot_survivors, plot_cost
 from parameters.Parameters import Parameters
 from optimization.differential_evolution import Differential_evolution
 from datetime import datetime
@@ -10,9 +10,11 @@ def create_output_folder(results_path):
     folder_name = f"optimization_{timestamp}"
     output_path = os.path.join(results_path, folder_name)
     figures_path = os.path.join(output_path, 'figures')
+    figures_video_path = os.path.join(figures_path, 'video')
     os.makedirs(output_path, exist_ok=True)
     os.makedirs(figures_path, exist_ok=True)
-    return output_path, figures_path
+    os.makedirs(figures_video_path, exist_ok=True)
+    return output_path, figures_path, figures_video_path
 
 def create_video_from_pngs(figures_path, output_path, output_name='output.mp4', fps=5):
     import cv2
@@ -110,6 +112,7 @@ def callback_after_each_iter(responses: dict = None,
     global all_results
     global all_parameters
     global all_costs
+    global all_survivors
     global all_metrics
     global best_metric
     global best_network
@@ -118,7 +121,8 @@ def callback_after_each_iter(responses: dict = None,
     
     all_results.append(responses)
     all_parameters = diff_evolution.get_all_survivors_normed_exploded()
-        
+    all_survivors = diff_evolution.get_all_survivors_exploded()
+
     # Update best metric
     if better_solution_found:
         best_metric = np.min(responses['metrics'])
@@ -127,6 +131,12 @@ def callback_after_each_iter(responses: dict = None,
     if better_solution_found:
         best_result = responses['data'][np.argmin(responses['metrics'])]
         best_network = best_result['network']
+        
+        # Save parameters to file        
+        diff_evolution.write_best_parameters_to_file(file_path = os.path.join(output_path, 'best_parameters.csv'))
+    
+        # Save optimization info to file
+        diff_evolution.write_optimization_info_to_file(os.path.join(output_path, 'optimization_info.json'))
     
     best_cost = pd.DataFrame.from_dict([{
         'iter': iteration,
@@ -143,8 +153,19 @@ def callback_after_each_iter(responses: dict = None,
     optimization_data = {'parameters': all_parameters,
                          'costs': all_costs,
                          'metrics': all_metrics}
-    plot_result(best_network, optimization_data, path = os.path.join(figures_path, f'{iteration}.png'))
-        
+    
+    # Plots
+    plot_result(best_network, optimization_data, path = os.path.join(figures_video_path, f'{iteration}.png'))
+    temp_path = os.path.join(figures_path, f'iteration_{iteration}')
+    os.makedirs(temp_path, exist_ok=True)
+    plot_parameter_evolution(data = all_parameters, path = os.path.join(temp_path, 'param_evolution.png') )  
+    plot_survivors(all_survivors, path = os.path.join(temp_path, 'survivors.png'))
+    plot_cost(data = all_costs, path = os.path.join(temp_path, 'cost.png'))
+    best_network.plot_network(path = os.path.join(temp_path, 'network.png'))
+    best_network.plot_demand_violations(path = os.path.join(temp_path, 'demand_violation.png'))
+    best_network.plot_pipe_pump_violations(path = os.path.join(temp_path, 'pipe_pump_violations.png'))
+    best_network.plot_junction_violations(path = os.path.join(temp_path, 'junction_violations.png'))
+    
     print(f'Iter {iteration}: {best_metric}')
 
 #%% Variables
@@ -157,10 +178,11 @@ pcp_path = os.path.join(results_path, 'pcp.html')
 batch_results_path = os.path.join(results_path, 'batch_results.csv')
 
 # DE options
-pop_size = 50
+seed = 140
+pop_size = 40
 metric_threshold = -1e10
 max_iterations = 200
-max_iter_without_improvement = 30
+max_iter_without_improvement = 50
 init_pop = None
 init_pop_out_of_range_param = 'keep'
 defaults_in_init_pop = False
@@ -178,6 +200,7 @@ best_result = None
 all_parameters = None
 all_costs = pd.DataFrame()
 all_metrics = pd.DataFrame()
+all_survivors = pd.DataFrame()
 
 # %% Test single simulation
 # parameters = read_parameters(parameters_file)
@@ -185,8 +208,7 @@ all_metrics = pd.DataFrame()
 # res = simulate_single_parameters(params_dict)
 
 #%% Optimization process
-
-output_path, figures_path = create_output_folder(results_path)
+output_path, figures_path, figures_video_path = create_output_folder(results_path)
 
 # Read parameters
 parameters = read_parameters(parameters_file)
@@ -200,16 +222,18 @@ diff_evolution = Differential_evolution(parameters = parameters,
                                         metric_threshold = metric_threshold,
                                         max_iterations = max_iterations,
                                         max_iter_without_improvement = max_iter_without_improvement,
+                                        # mutation_factor_3 = 0,
                                         init_pop = init_pop,
                                         init_pop_out_of_range_param = init_pop_out_of_range_param,
                                         defaults_in_init_pop = defaults_in_init_pop,
                                         use_population_prediction = use_population_prediction,
                                         plot_parameter_evolution_period = plot_parameter_evolution_period,
                                         plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
-                                        adaptive_boundaries = adaptive_boundaries)
+                                        adaptive_boundaries = adaptive_boundaries,
+                                        seed = seed)
 
 # Run optimization
 diff_evolution.run_optimization()
 
-create_video_from_pngs(figures_path, output_path, output_name='water network optimization.mp4', fps=5)
-create_video_from_pngs(figures_path, output_path, output_name='water network optimization.gif', fps=5)
+create_video_from_pngs(figures_video_path, output_path, output_name='water network optimization.mp4', fps=5)
+# create_video_from_pngs(figures_path, output_path, output_name='water network optimization.gif', fps=5)

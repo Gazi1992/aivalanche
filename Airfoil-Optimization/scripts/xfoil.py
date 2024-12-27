@@ -7,6 +7,7 @@ from visualizations import plot_airfoil, plot_polar, plot_pressure_distribution,
 from screeninfo import get_monitors
 from copy import copy
 from subprocess import DEVNULL
+from matplotlib import patches
 
 #%% xfoil settings
 class XFoilSettings:
@@ -36,12 +37,14 @@ class XFoilAnalyzer:
     def initialize_variables(self, settings = None):
         self.settings = settings or XFoilSettings()
         self.airfoil = None
+        self.parameters = None
         self.airfoil_path = None
         self.nurbs_airfoil = None  # Store NURBS object for geometric analysis
         self.geometric_properties = None
         self.results = None
         self.sim_output = None
         self.sim_error = None
+        self.parameter_boundaries = None
         
         self.max_thickness_upper_limit = 0.18
         self.max_thickness_lower_limit = 0.08
@@ -69,6 +72,18 @@ class XFoilAnalyzer:
         self.total_metric = 0
         
         self.constraints_met = False
+    
+    def get_arrow_length(self, param_name = 'ta_u', arrow_length_min = 0.1, arrow_length_max = 0.2):
+        param_val = self.parameters[param_name]
+        param_min = self.parameter_boundaries.loc[self.parameter_boundaries['name'] == param_name, 'min'].iloc[0]
+        param_max = self.parameter_boundaries.loc[self.parameter_boundaries['name'] == param_name, 'max'].iloc[0]
+
+        length = arrow_length_min + (arrow_length_max - arrow_length_min) * (param_val - param_min) / (param_max - param_min)
+        
+        return length
+    
+    def update_parameter_boundaries(self, param_boundaries):
+        self.parameter_boundaries = param_boundaries
         
     def format_coordinates(self, airfoil):
         """
@@ -101,8 +116,8 @@ class XFoilAnalyzer:
     
     def generate_airfoil(self, parameters: dict = None, plot: bool = False, plot_alpha: float = None):
         """Generate airfoil using NURBS"""
-        parameters = parameters or self.settings.parameters
-        airfoil = Nurbs(parameters)
+        self.parameters = parameters or self.settings.parameters
+        airfoil = Nurbs(self.parameters)
         self.nurbs_airfoil = airfoil
         self.airfoil = airfoil._spline()
         
@@ -804,7 +819,7 @@ class XFoilAnalyzer:
         
         return self.results
 
-    def plot_airfoil(self, ax = None, extra_airfoils=None, min_alpha=0.1, max_alpha=0.4):
+    def plot_airfoil(self, ax = None, extra_airfoils=None, min_alpha=0.1, max_alpha=0.4, show_geometry = True, path = None):
         if ax is not None:
             plt.sca(ax)
         else:
@@ -821,8 +836,8 @@ class XFoilAnalyzer:
                     y_l = item[1]
                     x_u = item[2]
                     y_u = item[3]
-                    ax.plot(x_u, y_u, 'black', alpha=alphas[i])
-                    ax.plot(x_l, y_l, 'black', alpha=alphas[i])
+                    ax.plot(x_u, y_u, 'black', alpha=alphas[i], zorder = 0)
+                    ax.plot(x_l, y_l, 'black', alpha=alphas[i], zorder = 0)
     
         airfoil = self.airfoil
         
@@ -831,8 +846,52 @@ class XFoilAnalyzer:
         x_u = airfoil[2]
         y_u = airfoil[3]
         
-        ax.plot(x_u, y_u, 'purple', label='Upper surface')
-        ax.plot(x_l, y_l, 'orange', label='Lower surface')
+        ax.plot(x_u, y_u, 'purple', label='Upper surface', zorder = 1)
+        ax.plot(x_l, y_l, 'orange', label='Lower surface', zorder = 1)
+        
+        if show_geometry:
+            
+            # Plot TA vectors
+            ta_upper_length = self.get_arrow_length('ta_u')
+            ta_lower_length = self.get_arrow_length('ta_l')
+            ax.arrow(0, 0, 0, ta_upper_length, head_width=0.02, head_length=0.02, fc='black', ec='black', linewidth = 1, alpha = 0.7, zorder = 10)
+            ax.arrow(0, 0, 0, -ta_lower_length, head_width=0.02, head_length=0.02, fc='black', ec='black', linewidth = 1, alpha = 0.7, zorder = 10)
+            ax.text(0.02, ta_upper_length, 'Ta_upper', ha='left')
+            ax.text(0.02, -ta_lower_length, 'Ta_lower', ha='left')
+            
+            # Plot the zero angle line
+            ax.plot([1, 0.5], [0, 0], '--', color='black', linewidth = 0.5, zorder = 9)
+                        
+            # Plot TB vectors
+            tb_upper_length = self.get_arrow_length('tb_u', arrow_length_min=0.15, arrow_length_max=0.3)
+            tb_lower_length = self.get_arrow_length('tb_l', arrow_length_min=0.15, arrow_length_max=0.3)
+            
+            dx_u = tb_upper_length * np.cos(np.radians(self.parameters['alpha_c'] + self.parameters['alpha_b']))
+            dy_u = tb_upper_length * np.sin(np.radians(self.parameters['alpha_c'] + self.parameters['alpha_b']))
+
+            dx_l = tb_lower_length * np.cos(np.radians(self.parameters['alpha_c']))
+            dy_l = tb_lower_length * np.sin(np.radians(self.parameters['alpha_c']))
+            
+            ax.plot([1, 0.5], [0, 0.5*np.tan(np.radians(self.parameters['alpha_c']))], '--', color='black', linewidth = 0.5, zorder = 9)
+            ax.plot([1, 0.5], [0, 0.5*np.tan(np.radians(self.parameters['alpha_c'] + self.parameters['alpha_b']))], '--', color='black', linewidth = 0.5, zorder = 9)
+            ax.arrow(1, 0, -dx_u, dy_u, head_width=0.02, head_length=0.02, fc='black', ec='black', linewidth = 1, alpha = 0.7, zorder = 10)
+            ax.arrow(1, 0, -dx_l, dy_l, head_width=0.02, head_length=0.02, fc='black', ec='black', linewidth = 1, alpha = 0.7, zorder = 10)
+            ax.text(1 - dx_u/2, dy_u + 0.02, 'Tb_upper', ha='center', va = 'bottom')
+            ax.text(1 - dx_l/2, dy_l - 0.02, 'Tb_lower', ha='center', va = 'top')
+            
+            # Plot alpha angles           
+            # Draw arcs for angles
+            r_b = 0.35
+            r_c = 0.45
+            arc_b = patches.Arc((1, 0), 2*r_b, 2*r_b, theta1=min(180-self.parameters['alpha_c']-self.parameters['alpha_b'], 180-self.parameters['alpha_c']), theta2=max(180-self.parameters['alpha_c']-self.parameters['alpha_b'], 180-self.parameters['alpha_c']), color='black')
+            arc_c = patches.Arc((1, 0), 2*r_c, 2*r_c, theta1=min(180-self.parameters['alpha_c'], 180), theta2=max(180-self.parameters['alpha_c'], 180), color='black')
+            
+            ax.add_patch(arc_b)
+            ax.add_patch(arc_c)
+            
+            # Add angle labels
+            ax.text(1-r_b, r_b*np.tan(np.radians(self.parameters['alpha_c'] + self.parameters['alpha_b']/2)), 'αlpha_b', ha='right', va = 'center')
+            ax.text(1-r_c-0.01, r_c*np.tan(np.radians(self.parameters['alpha_c']/2)), 'αlpha_c', ha='right', va = 'center')
 
         xlim = (-0.1, 1.1)
         ylim = (-0.5, 0.5)
@@ -845,10 +904,10 @@ class XFoilAnalyzer:
         plt.title('Airfoil Shape')
         plt.legend(loc = 'upper right')
         
-        if ax is None:
-            plt.show()
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight', dpi=300)
             
-    def plot_geometry(self, ax=None, extra_airfoils=None, min_alpha=0.1, max_alpha=0.5):
+    def plot_geometry(self, ax=None, extra_airfoils=None, min_alpha=0.1, max_alpha=0.5, path = None):
                 
         normalized_lower_pass = 0.4
         normalized_upper_pass = 0.6
@@ -911,9 +970,87 @@ class XFoilAnalyzer:
         ax.grid(True)
         # plt.title("Airfoil Geometric Properties", pad=20, fontsize=14)
         # plt.legend(fontsize=12, loc='upper right', bbox_to_anchor=(0.85, 0.8))
-        if ax is None:
-            plt.show()
+        
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight', dpi=300)
 
+#%% Plots
+def plot_survivors(data, ax = None, path = None):
+    if ax is not None:
+        plt.sca(ax)
+    else:
+        # Create figure
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+    
+    ax.scatter(data['iter'], data['metric'], s = 10)
+    # ax.axvline(x=data['unity_gain_freq'], color='r', linestyle='--', label=f"unity gain at {data['unity_gain_freq']:.1f} Hz")
+    
+    ax.set_xlabel('Iteration')
+    ax.set_ylabel('Metric')
+    ax.set_title('Survivor metric evolution')
+    ax.set_yscale('log')
+    plt.grid(which='major', linestyle='-', alpha=0.5)
+    plt.grid(which='minor', axis='y', linestyle='--', alpha=0.3)
+    
+    # plt.show()
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
+        
+def plot_parameter_evolution(data, path = None):
+    
+    # Get primary monitor size
+    monitor = get_monitors()[0]
+    width = monitor.width / 100  # Convert pixels to inches (approximate)
+    height = monitor.height / 100
+    
+    figure = plt.figure(figsize=(width, height), dpi=300)
+    
+    # params = params[params['iter'] >= params['iter'].max() - 5]
+    params = data.drop(['iter', 'metric'], axis = 1)
+    param_names = list(params.columns)
+    n_params = len(param_names)
+    
+    left_margin = 0.1
+    right_margin = 0.1
+    bottom_margin = 0.1
+    top_margin = 0.1
+    all_param_width = 1 - left_margin - right_margin
+    param_width = all_param_width / n_params
+    param_height = 1 - top_margin - bottom_margin
+        
+    for i, p in enumerate(param_names):
+        values = params[p]
+        hist, edges = np.histogram(values, bins = 100, range = (0,1))
+        ax = figure.add_axes([left_margin + i * param_width, bottom_margin, param_width, param_height])
+        plt.sca(ax)
+        plt.imshow(np.atleast_2d(hist).T, extent = [0,1,0,1],
+                    aspect = "auto", origin = 'lower',
+                    cmap = 'YlGn')   
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xlabel(p)
+        
+        if i == n_params // 2:
+            ax.set_title('Parameter evolution')
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
+
+def plot_ld_evolution(data, path = None):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+    ax.plot(data['iter'], data['ld_ratio'], '-o', color = 'darkgreen', label = 'lift over drag ratio')
+    ax.plot(data['iter'], data['lift'], '-o', color = 'darkblue', label = 'lift')
+    ax.plot(data['iter'], data['drag'], '-o', color = 'darkorange', label = 'drag')
+    ax.set_xlabel('iteration')
+    ax.set_yscale('log')
+    plt.grid(which='major', linestyle='--', alpha=0.5)
+    plt.grid(which='minor', axis = 'y', linestyle='--', alpha=0.3)
+    plt.title('Lift and drag', fontsize = 16)
+    ax.legend(loc='upper right', bbox_to_anchor=(0.98, 0.9))
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
 
 def plot_results(airfoil, optimization_data = None, path = None):
     # Get primary monitor size
@@ -985,7 +1122,7 @@ def plot_results(airfoil, optimization_data = None, path = None):
     if optimization_data is not None:
         extra_airfoils = copy(optimization_data['all_airfoils'])
         extra_airfoils = extra_airfoils[len(extra_airfoils) - 10 : len(extra_airfoils) - 2]   
-    airfoil.plot_airfoil(ax=ax, extra_airfoils = extra_airfoils)
+    airfoil.plot_airfoil(ax=ax, extra_airfoils = extra_airfoils, show_geometry = False)
     
     # Add the geometry
     ax = figure.add_axes([geometry_x, geometry_y, geometry_width, geometry_height], projection='polar')

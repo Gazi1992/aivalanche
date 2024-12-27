@@ -72,9 +72,9 @@ class water_distribution_network:
         }
         
         # Constraints
-        self.min_pressure = 5  # meters
-        self.max_pressure = 120  # meters
-        self.max_velocity = 3.5  # m/s
+        self.min_pressure = 2    # meters
+        self.max_pressure = 115  # meters
+        self.max_velocity = 3.6  # m/s
         
         # Network layout parameters
         self.simulation_duration = 24 * 3600  # 24 hours in seconds
@@ -822,7 +822,7 @@ class water_distribution_network:
                 'all_constraints_met': False
             }
         
-    def plot_network(self, ax = None):
+    def plot_network(self, ax = None, path = None):
         if ax is not None:
             plt.sca(ax)
         else:
@@ -942,13 +942,16 @@ class water_distribution_network:
         plt.legend(handles=legend_elements, loc='upper left', fontsize=11, scatterpoints=1)
         plt.title('Water Distribution Network', fontsize=16)
         plt.grid(False)
-        plt.xlabel('X Coordinate (m)', fontsize=16)
-        plt.ylabel('Y Coordinate (m)', fontsize=16)
+        plt.xlabel('X Coordinate [m]', fontsize=16)
+        plt.ylabel('Y Coordinate [m]', fontsize=16)
         
-        if ax is None:
-            plt.show()
+        # if ax is None:
+        #     plt.show()
             
-    def plot_junction_violations(self, ax=None):
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight', dpi=300)
+    
+    def plot_junction_violations(self, ax=None, path = None):
         if ax is not None:
             plt.sca(ax)
         else:
@@ -997,7 +1000,7 @@ class water_distribution_network:
                     verticalalignment='center', 
                     color='white', 
                     fontweight='bold', 
-                    fontsize=13)
+                    fontsize=16)
         
         # Set proper axis limits with some padding
         ax.set_xlim(0, cols * 2 * radius + (cols - 1) * horizontal_spacing)
@@ -1007,10 +1010,13 @@ class water_distribution_network:
         ax.axis('off')
         plt.title('Junction constraints', fontsize = 16)
         
-        if ax is None:
-            plt.show()
+        # if ax is None:
+        #     plt.show()
+            
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight', dpi=300)
     
-    def plot_demand_violations(self, ax=None):
+    def plot_demand_violations(self, ax=None, path = None):
         if ax is not None:
             plt.sca(ax)
         else:
@@ -1066,7 +1072,7 @@ class water_distribution_network:
                     verticalalignment='center', 
                     color='white', 
                     fontweight='bold', 
-                    fontsize=13)
+                    fontsize=16)
         
         # Set proper axis limits with some padding
         ax.set_xlim(0, cols * h_size + (cols - 1) * horizontal_spacing)
@@ -1076,10 +1082,13 @@ class water_distribution_network:
         ax.axis('off')
         plt.title('Demand node constraints', fontsize = 16)
         
-        if ax is None:
-            plt.show()
+        # if ax is None:
+        #     plt.show()
+
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight', dpi=300)
         
-    def plot_pipe_pump_violations(self, ax=None):
+    def plot_pipe_pump_violations(self, ax=None, path = None):
         if ax is not None:
             plt.sca(ax)
         else:
@@ -1136,7 +1145,7 @@ class water_distribution_network:
                     verticalalignment='center', 
                     color='white', 
                     fontweight='bold', 
-                    fontsize=13)
+                    fontsize=16)
         
         # Set proper axis limits with some padding
         ax.set_xlim(0, cols * h_size + (cols - 1) * horizontal_spacing)
@@ -1146,9 +1155,89 @@ class water_distribution_network:
         ax.axis('off')
         plt.title('Pipe and pump constraints', fontsize = 16)
         
-        if ax is None:
-            plt.show()
+        # if ax is None:
+        #     plt.show()
+            
+        if path is not None:
+            plt.savefig(path, bbox_inches='tight', dpi=300)
+
+#%% Plots 
+def plot_survivors(data, ax = None, path = None):
+    if ax is not None:
+        plt.sca(ax)
+    else:
+        # Create figure
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+    
+    ax.scatter(data['iter'], data['metric'], s = 10)
+    # ax.axvline(x=data['unity_gain_freq'], color='r', linestyle='--', label=f"unity gain at {data['unity_gain_freq']:.1f} Hz")
+    
+    ax.set_xlabel('Iteration')
+    ax.set_ylabel('Metric')
+    ax.set_title('Survivor metric evolution')
+    ax.set_yscale('log')
+    plt.grid(which='major', linestyle='-', alpha=0.5)
+    plt.grid(which='minor', axis='y', linestyle='--', alpha=0.3)
+    
+    # plt.show()
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
         
+def plot_parameter_evolution(data, path = None):
+    
+    # Get primary monitor size
+    monitor = get_monitors()[0]
+    width = monitor.width / 100  # Convert pixels to inches (approximate)
+    height = monitor.height / 100
+    
+    figure = plt.figure(figsize=(width, height), dpi=300)
+    
+    # params = params[params['iter'] >= params['iter'].max() - 5]
+    params = data.drop(['iter', 'metric'], axis = 1)
+    param_names = list(params.columns)
+    n_params = len(param_names)
+    
+    left_margin = 0.1
+    right_margin = 0.1
+    bottom_margin = 0.1
+    top_margin = 0.1
+    all_param_width = 1 - left_margin - right_margin
+    param_width = all_param_width / n_params
+    param_height = 1 - top_margin - bottom_margin
+        
+    for i, p in enumerate(param_names):
+        values = params[p]
+        hist, edges = np.histogram(values, bins = 100, range = (0,1))
+        ax = figure.add_axes([left_margin + i * param_width, bottom_margin, param_width, param_height])
+        plt.sca(ax)
+        plt.imshow(np.atleast_2d(hist).T, extent = [0,1,0,1],
+                    aspect = "auto", origin = 'lower',
+                    cmap = 'YlGn')   
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xlabel(p)
+        
+        if i == n_params // 2:
+            ax.set_title('Parameter evolution')
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
+
+def plot_cost(data, path = None):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+    ax.plot(data['iter'], data['energy_cost'], '-o', label = 'Energy')
+    ax.plot(data['iter'], data['pipe_cost'], '-o', label = 'Pipes')
+    ax.plot(data['iter'], data['total_cost'], '-o', label = 'Total')
+    ax.legend(loc = 'upper right')
+    ax.set_xlabel('Iteration')
+    ax.set_ylabel('Cost [million €]')
+    plt.grid(which='major', linestyle='-', alpha=0.5)
+    plt.title('Cost of the network', fontsize = 16)
+    
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
+
 def plot_result(network, optimization_data = None, path = None):
     
     # Get primary monitor size
@@ -1188,7 +1277,7 @@ def plot_result(network, optimization_data = None, path = None):
     # Horizontal spacing
     hor_space_1 = 0.035
     hor_space_2 = 0.01
-    hor_space_3 = 0.03
+    hor_space_3 = 0.04
     
     # Define heights relative to available height
     network_height = available_height * 0.6
@@ -1245,19 +1334,21 @@ def plot_result(network, optimization_data = None, path = None):
         costs = optimization_data['costs']
         costs = costs[costs['all_constraints_met']]
         if len(costs) > 0:
-            ax.plot(costs['iter'], costs['energy_cost'], '-o', label = 'Energy cost')
-            ax.plot(costs['iter'], costs['pipe_cost'], '-o', label = 'Pipe cost')
-            ax.plot(costs['iter'], costs['total_cost'], '-o', label = 'Total cost')
+            ax.plot(costs['iter'], costs['energy_cost'], '-o', label = 'Energy')
+            ax.plot(costs['iter'], costs['pipe_cost'], '-o', label = 'Pipes')
+            ax.plot(costs['iter'], costs['total_cost'], '-o', label = 'Total')
             ax.legend(loc = 'upper right')
-            ax.set_xlabel('iteration')
+            ax.set_xlabel('Iteration')
+            ax.set_ylabel('Cost [million €]')
             plt.grid()
             plt.title('Cost of the network [milion €]', fontsize = 16)
         else:
             metrics = optimization_data['metrics']
             ax.plot(metrics['iter'], metrics['metric'], '-o')
-            ax.set_xlabel('iteration')
+            ax.set_xlabel('Iteration')
             ax.set_yscale('log')
-            plt.grid()
+            plt.grid(which='major', linestyle='-', alpha=0.5)
+            plt.grid(which='minor', axis = 'y', linestyle='--', alpha=0.3)
             plt.title('Constraints metric', fontsize = 16)
 
     # Add the parameters evolution
@@ -1330,7 +1421,7 @@ def update_fontsize(fig, fontsize):
         # Text annotations
         for artist in ax.get_children():
             if isinstance(artist, plt.Text):
-                artist.set_fontsize(fontsize*1.2)
+                artist.set_fontsize(fontsize*0.8)
     
 def create_realistic_network(x_min = -100, x_max = 3100, y_min = -1600, y_max = 1100, lacunarity = 0.2):
     # Create network model

@@ -43,10 +43,11 @@ def callback_after_each_iter(responses: dict = None,
         # Update best airfoil
         best_result = responses['data'][np.argmin(responses['metrics'])]
         
-        # Save parameters to file
-        best_params = kwargs['parameters'][np.argmin(responses['metrics'])]
-        df = pd.DataFrame.from_dict(best_params, orient = 'index')
-        df.to_csv(os.path.join(output_path, 'best_parameters.csv'), header = False)
+        # Save parameters to file        
+        diff_evolution.write_best_parameters_to_file(file_path = os.path.join(output_path, 'best_parameters.csv'))
+    
+        # Save optimization info to file
+        diff_evolution.write_optimization_info_to_file(os.path.join(output_path, 'optimization_info.json'))
         
         # Save the results file
         df = pd.DataFrame(columns = ['freq', 'magnitude', 'phase'],
@@ -55,7 +56,7 @@ def callback_after_each_iter(responses: dict = None,
         df.to_csv(os.path.join(output_path, 'best_result.csv'), index = False)
         
         # Save the best circuit
-        replace_parameters(os.path.join(inputs_path, 'filter_template.cir'), best_params, output_path, filename = 'best_circuit.cir')
+        replace_parameters(os.path.join(inputs_path, 'filter_template.cir'), diff_evolution.get_best_parameters(), output_path, filename = 'best_circuit.cir')
         
         plot_magnitude(df, path = os.path.join(figures_path, 'magnitude.png'))
         plot_phase(df, path = os.path.join(figures_path, 'phase.png'))
@@ -71,6 +72,7 @@ parameters_file = os.path.join(inputs_path, 'parameters.csv')
 template_file = os.path.join(inputs_path, 'filter_template.cir')
 
 # DE options
+seed = None
 pop_size = 100
 metric_threshold = -1e10
 max_iterations = 1000
@@ -123,7 +125,8 @@ diff_evolution = Differential_evolution(parameters = parameters,
                                         use_population_prediction = use_population_prediction,
                                         plot_parameter_evolution_period = plot_parameter_evolution_period,
                                         plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
-                                        adaptive_boundaries = adaptive_boundaries)
+                                        adaptive_boundaries = adaptive_boundaries,
+                                        seed = seed)
 
 # Run optimization
 diff_evolution.run_optimization()

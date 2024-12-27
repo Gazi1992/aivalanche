@@ -27,7 +27,7 @@ Inputs:
 '''
 
 #%% Imports
-import os, pandas as pd, numpy as np, time
+import os, pandas as pd, numpy as np, time, json
 from pyDOE import lhs
 from scipy.stats.qmc import Sobol, Halton
 from optimization.differential_evolution.utils import preprocess_parameters, unnorm_member, norm_member, scale_parameter, \
@@ -76,8 +76,15 @@ class Differential_evolution:
                  plot_parameter_evolution_period: int = None,           # plot parameter evolution when iteration is a multiple of this number
                  write_history_to_file_period: int = None,              # write the de history to file when iteration is a multiple of this number
                  results_dir: str = None,                               # directory where to save the results
+                 seed: int = None,                                      # seed for reproducibility
                  ):
         
+        
+        if seed is None:
+            seed = np.random.randint(0, 1000)
+        self.seed = seed
+        np.random.seed(self.seed)
+        self.rng = np.random.RandomState(self.seed)
         
         self.eval_func = eval_func
         self.eval_func_args = {} if eval_func_args is None else eval_func_args
@@ -152,6 +159,7 @@ class Differential_evolution:
         self.best_unscaled = None
         self.best = None
         self.best_normed = None
+        self.optimization_info = {}
 
     # Run the optimization loop.
     def run_optimization(self):
@@ -173,7 +181,8 @@ class Differential_evolution:
             self.determine_survivors()                                              # determine the survivors
             self.determine_best()                                                   # determine the best parameters and best metric
             self.update_history_trials()                                            # append the trials to the history trials
-                        
+            self.update_optimization_info()
+            
             # Run the callback
             if self.iter == 1 and self.callback_after_first_iter is not None:
                     self.callback_after_first_iter(parameters = parameters,
@@ -256,7 +265,41 @@ class Differential_evolution:
                                   metrics = all_survivors['survivor_metric'],
                                   save_dir = self.results_dir)
                         
+    # Update optimization info
+    def update_optimization_info(self):
+        if self.iter == 1:
+            self.optimization_info['input'] = {'seed': self.seed,
+                                               'pop_size': self.pop_size,
+                                               'max_iterations': self.max_iterations,
+                                               'max_iter_without_improvement': self.max_iter_without_improvement,
+                                               'metric_threshold': self.metric_threshold,
+                                               'adaptive_boundaries': self.adaptive_boundaries,
+                                               'results_dir': self.results_dir,
+                                               'parameters': self.parameters[['name', 'min', 'default', 'max', 'scale']].to_dict('records')}
             
+        self.optimization_info['output'] = {'iter': self.iter,
+                                            'best_metric': self.best_metric,
+                                            'best_parameters': self.get_best_parameters(),
+                                            'nr_evaluations': self.iter * self.pop_size,
+                                            'stop_reason': self.stop_reason}
+    
+    def write_optimization_info_to_file(self, file_path = None):
+        if file_path is not None:
+            # Convert the main structure to a formatted string
+            json_str = json.dumps(self.optimization_info, indent=4)
+            
+            # Find the parameters section and replace it with single-line formatting
+            param_list = self.optimization_info['input']['parameters']
+            single_line_params = ',\n      '.join(json.dumps(param) for param in param_list)
+            param_section = '"parameters": [\n      ' + single_line_params + '\n    ]'
+            
+            # Replace the original parameters section
+            start = json_str.find('"parameters":')
+            end = json_str.find(']', start) + 1
+            json_str = json_str[:start] + param_section + json_str[end:]
+            with open(file_path, 'w') as f:
+                f.write(json_str)
+    
     # Print the final result
     def show_final_result(self):
         print("\n\n--------------------------- Optimization stopped ---------------------------\n\n")
@@ -273,10 +316,10 @@ class Differential_evolution:
             self.stop_reason = "optimization aborted"
         elif self.opt_min_or_max == 'min' and self.best_metric < self.metric_threshold:
             self.is_stop_criteria_reached = True
-            self.stop_reason = "good enough metric reached"
+            self.stop_reason = "metric threshold reached"
         elif self.opt_min_or_max == 'max' and self.best_metric > self.metric_threshold:
             self.is_stop_criteria_reached = True
-            self.stop_reason = "good enough metric reached"
+            self.stop_reason = "metric threshold reached"
         elif self.iter_no_improvement > self.max_iter_without_improvement:
             self.is_stop_criteria_reached = True
             self.stop_reason = "maximum number of iterations without improvement reached"
@@ -462,7 +505,7 @@ class Differential_evolution:
     def generate_mutations(self, dice: np.array = None):
         if dice is None:        
             # throw the dice to get 3 random intigers between 0 and pop_size-1
-            dice = [np.random.choice([j for j in range(self.pop_size) if j != i], size = (1, 3), replace = False) for i in range(self.pop_size)]
+            dice = [self.rng.choice([j for j in range(self.pop_size) if j != i], size = (1, 3), replace = False) for i in range(self.pop_size)]
             dice = np.array(dice).reshape(-1,3)
             # dice = np.random.randint(self.pop_size, size = (self.pop_size, 3))            
         
@@ -488,7 +531,7 @@ class Differential_evolution:
     def generate_recombinations(self, dice: np.array = None):
         # get a random number for each parameter
         if dice is None:
-            dice = np.random.rand(self.pop_size, self.nr_parameters)
+            dice = self.rng.rand(self.pop_size, self.nr_parameters)
 
         # combine donor and target, getting the value from the donor whereever dice is less than the recombination_factor and from the target otheerwise
         trials_normed = np.where(dice < self.recombination_factor, self.donors_normed, self.targets_normed)
@@ -500,7 +543,7 @@ class Differential_evolution:
         # In the first iteration generate donor at random.
         if(self.iter == 1):
             # self.donors_normed = lhs(self.nr_parameters, samples = self.pop_size, criterion = 'correlation') # Use latin-hyper-cube to generate the random samples
-            sampler = Halton(d=self.nr_parameters)
+            sampler = Halton(d=self.nr_parameters, seed = self.seed)
             self.donors_normed = sampler.random(self.pop_size) # Use Halton to generate the random samples
             self.donors = np.apply_along_axis(func1d = unnorm_member,
                                               axis = 1,
