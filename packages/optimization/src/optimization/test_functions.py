@@ -35,7 +35,7 @@ class Test_Functions:
         Search domain: [-5, 5]
         """
         return (x**2 + y - 11)**2 + (x + y**2 - 7)**2
-    
+
     @staticmethod
     def modified_himmelblau(x, y):
         """
@@ -49,15 +49,15 @@ class Test_Functions:
         """
         # Original Himmelblau base
         h = (x**2 + y - 11)**2 + (x + y**2 - 7)**2
-        
+
         # Multiplicative factors to create different minima values
         # Each factor is designed to primarily affect one region
         factor1 = 1 + 5 * np.exp(-0.2 * ((x + 2.805118)**2 + (y - 3.131312)**2))
         factor2 = 1 + 10 * np.exp(-0.2 * ((x + 3.779310)**2 + (y + 3.283186)**2))
         factor3 = 1 + 15 * np.exp(-0.2 * ((x - 3.584428)**2 + (y + 1.848126)**2))
-        
+
         return h * (factor1 * factor2 * factor3)
-    
+
     @staticmethod
     def eggholder(x, y):
         """
@@ -72,12 +72,12 @@ class Test_Functions:
     def cross_in_tray(x, y):
         """
         Cross-in-Tray Function (2D)
-        Global minima: 
+        Global minima:
         f(±1.3491, ±1.3491) = -2.06261
         Search domain: [-10, 10]
         Multiple global minima
         """
-        return -0.0001 * (abs(np.sin(x) * np.sin(y) * 
+        return -0.0001 * (abs(np.sin(x) * np.sin(y) *
                np.exp(abs(100 - np.sqrt(x**2 + y**2)/np.pi))) + 1)**0.1
 
     @staticmethod
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         (Test_Functions.modified_himmelblau, (-4, 4), (-4, 4), "Modified Himmelblau Function"),
         (Test_Functions.rastrigin, (-5.12, 5.12), (-5.12, 5.12), "Rastrigin Function"),
         (Test_Functions.rosenbrock, (-2, 2), (-2, 2), "Rosenbrock Function"),
-        (Test_Functions.cross_in_tray, (-10, 10), (-10, 10), "Cross-in-Tray Function"),
+        (Test_Functions.cross_in_tray, (-2, 2), (-2, 2), "Cross-in-Tray Function"),
         (Test_Functions.holder_table, (-10, 10), (-10, 10), "Holder Table Function"),
         (Test_Functions.schaffer_n2, (-100, 100), (-100, 100), "Schaffer N.2 Function"),
         (Test_Functions.levy_n13, (-10, 10), (-10, 10), "Levy N.13 Function"),
@@ -146,11 +146,11 @@ if __name__ == '__main__':
         (Test_Functions.easom, (-100, 100), (-100, 100), "Easom Function"),
         (Test_Functions.eggholder, (450, 650), (300, 500), "Eggholder Function")
     ]
-    
+
     # Create combined plots for each function
     for func, x_range, y_range, title in functions_to_plot:
         fig, (ax1, ax2, ax3) = plot_function_2d_3d(func, x_range, y_range, title)
-        
+
         # Add known minima where applicable
         if func == Test_Functions.himmelblau:
             minima = [
@@ -162,7 +162,7 @@ if __name__ == '__main__':
             for x, y in minima:
                 ax2.plot(x, y, 'r*', markersize=10)
                 ax3.plot(x, y, 'r*', markersize=10)
-        
+
         elif func == Test_Functions.cross_in_tray:
             minima = [
                 (1.3491, 1.3491),
@@ -173,7 +173,7 @@ if __name__ == '__main__':
             for x, y in minima:
                 ax2.plot(x, y, 'r*', markersize=10)
                 ax3.plot(x, y, 'r*', markersize=10)
-        
+
         elif func == Test_Functions.holder_table:
             minima = [
                 (8.05502, 9.66459),
@@ -184,9 +184,9 @@ if __name__ == '__main__':
             for x, y in minima:
                 ax2.plot(x, y, 'r*', markersize=10)
                 ax3.plot(x, y, 'r*', markersize=10)
-        
+
         elif func == Test_Functions.easom:
             ax2.plot(np.pi, np.pi, 'r*', markersize=10)
             ax3.plot(np.pi, np.pi, 'r*', markersize=10)
-            
+
     plt.show()

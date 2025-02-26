@@ -97,7 +97,7 @@ print(f"Testing {function_name} function")
 print(FUNCTION_CONFIGS[function_name]['info'])
 
 pop_size = 50
-metric_threshold = 1e-4
+metric_threshold = 1e-10
 max_iterations = 1000
 max_iter_without_improvement = 100
 
@@ -107,7 +107,7 @@ init_pop_out_of_range_param = 'keep'
 defaults_in_init_pop = False
 use_population_prediction = False
 plot_parameter_evolution_period = None
-plot_survivor_metric_evolution_period = None
+plot_survivor_metric_evolution_period = 2
 
 #%% Callbacks
 def callback_after_first_iter(parameters: dict = None,
@@ -120,7 +120,7 @@ def callback_after_first_iter(parameters: dict = None,
     print(f'Parameters: {parameters}')
     print(f'Responses: {responses}')
     print(f"kwargs: {kwargs}")
-    
+
 def callback_after_each_iter(parameters: dict = None,
                             responses: dict = None,
                             iteration: int = None,
@@ -135,16 +135,17 @@ def callback_after_each_iter(parameters: dict = None,
     # print(f"kwargs: {kwargs}")
 
 def callback_after_last_iter(iteration: int = None,
-                            responses: dict = None,
+                            history: dict = None,
                             best_parameters: dict = None,
                             best_metric: float = None,
-                            history: dict = None,
                             **kwargs):
     print(f'Optimization completed after {iteration} iterations.')
     print(f'Best solution found:')
     print(f'Parameters: {best_parameters}')
     print(f'Metric value: {best_metric}')
     print(f"kwargs: {kwargs}")
+
+
 
 #%% Create parameters DataFrame from configuration
 config = FUNCTION_CONFIGS[function_name]
@@ -177,14 +178,24 @@ if __name__ == '__main__':
         plot_parameter_evolution_period = plot_parameter_evolution_period,
         plot_survivor_metric_evolution_period = plot_survivor_metric_evolution_period,
         adaptive_boundaries = adaptive_boundaries,
-        mutation_factor_2 = 0.4,
+        # mutation_factor_1=0.8,
+        # mutation_factor_2=0.6,
+        # mutation_factor_3=0.3,
+        # use_classifier=True,
+        # classifier_optimize=False,
+        use_predictor = True
     )
-    
+
     diff_evolution.run_optimization()
-    
-    survivors = diff_evolution.get_all_survivors_exploded()
-    create_plot_evolution_2d_video(survivors, FUNCTION_CONFIGS, function_name, diff_evolution.parameter_names,
-                                    output_path=f'{function_name}.mp4')
+
+    diff_evolution.get_all_trials_exploded()
+    diff_evolution.get_all_survivors_exploded()
+    diff_evolution.get_all_survivors_normed_exploded()
+
+    # survivors = diff_evolution.get_all_survivors_exploded()
+    # create_plot_evolution_2d_video(survivors, FUNCTION_CONFIGS, function_name, diff_evolution.parameter_names,
+    #                                 output_path=f'{function_name}.mp4')
+
     # for i in list(set(survivors['iter'])):
     #     plot_evolution_2d(survivors, FUNCTION_CONFIGS, function_name, diff_evolution.parameter_names, i)
     # plot_evolution_2d(survivors, FUNCTION_CONFIGS, function_name, diff_evolution.parameter_names, 100)

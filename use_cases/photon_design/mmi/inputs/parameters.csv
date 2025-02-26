@@ -1,0 +1,8 @@
+name,min,default,max,scale,mode
+w2,1,1.5,5,lin,variable
+w3,5,10,15,lin,variable
+w4,10,10,20,lin,variable
+l1,10,500,1000,log,variable
+l2,10,200,1000,log,variable
+l3,10,500,1000,log,variable
+d1,0,5,10,lin,variable

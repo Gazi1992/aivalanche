@@ -1,0 +1,11 @@
+in windows:
+
+pip install package_name --cache-dir C:\Users\gazme\OneDrive\Documents\aivalanche\code\pip_cache
+
+pip install -e testbench --cache-dir C:\Users\gazme\OneDrive\Documents\aivalanche\code\pip_cache
+pip install -e optimization --cache-dir C:\Users\gazme\OneDrive\Documents\aivalanche\code\pip_cache
+pip install -e cost_function --cache-dir C:\Users\gazme\OneDrive\Documents\aivalanche\code\pip_cache
+pip install -e parameters --cache-dir C:\Users\gazme\OneDrive\Documents\aivalanche\code\pip_cache
+pip install -e simulation --cache-dir C:\Users\gazme\OneDrive\Documents\aivalanche\code\pip_cache
+
+

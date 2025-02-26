@@ -31,12 +31,12 @@ def unscale_parameter(parameter, field):
         return -np.longdouble(10.0**parameter[field])
     else:
         return parameter[field]
-    
-# Unnorm member 
+
+# Unnorm member
 def unnorm_member(member, minimum, maximum):
     return minimum + member * (maximum - minimum)
 
-# Norm member 
+# Norm member
 def norm_member(member, minimum, maximum):
     return (member - minimum) / (maximum - minimum)
 
@@ -44,36 +44,36 @@ def norm_member(member, minimum, maximum):
 def preprocess_parameters(parameters: pd.DataFrame = None):
     if parameters is None or not isinstance(parameters, pd.DataFrame):
         raise SystemExit('ERROR! parameters have to be given as a pandas dataframe, with columns [name, min, max]')
-    
+
     if 'name' not in parameters.columns or 'min' not in parameters.columns or 'max' not in parameters.columns:
         raise SystemExit('ERROR! parameters have to be given as a pandas dataframe, with columns [name, min, max]')
-    
+
     if len(parameters['name'].tolist()) != len(set(parameters['name'].tolist())):
         raise SystemExit('ERROR! parameters cannot have duplicate names')
-    
+
     # reset index
     parameters.reset_index(inplace = True, drop = True)
-    
+
     # order parameters by name
     parameters = parameters.sort_values(by ='name')
-    
+
     # set default to the middle value if it is not given
     if 'default' not in parameters.columns:
         parameters[['min', 'max']] = parameters[['min', 'max']].astype(float)
         parameters['default'] = (parameters['max'] + parameters['min']) / 2
     else:
         parameters[['min', 'max', 'default']] = parameters[['min', 'max', 'default']].astype(float)
-        
+
     # set scale to linear if it is missing
     if 'scale' not in parameters.columns:
         parameters['scale'] = 'lin'
-        
+
     parameters['transform'] = parameters.apply(lambda row: set_transform(row), axis = 1)                # set transform for each parameter
     parameters['value'] = parameters['default']                                                         # set the value to default
     parameters['value_scaled'] = parameters.apply(lambda row: scale_parameter(row, 'value'), axis = 1)  # set the value scaled
     parameters['min_scaled'] = parameters.apply(lambda row: scale_parameter(row, 'min'), axis = 1)      # set the min scaled
     parameters['max_scaled'] = parameters.apply(lambda row: scale_parameter(row, 'max'), axis = 1)      # set the max scaled
-        
+
     return parameters
 
 def rmse(x, y):
@@ -129,18 +129,18 @@ def get_exponential_or_linear_fit(x, y):
     elif exp_popt is None and lin_popt is not None:
         return lin_popt, 'linear'
     else:
-        return None, None  
+        return None, None
 
 def get_gaussian_process_fit(x, y):
     x = x.reshape(-1, 1)
     y = y.reshape(-1, 1)
-    
+
     kernel = ConstantKernel(1.0, (1e-10, 1e10)) * RBF(1.0, (1e-10, 1e10))
     gp = GaussianProcessRegressor(kernel = kernel, n_restarts_optimizer = 10, alpha = 5e-2)
-    
+
     # Fit the model
     gp.fit(x, y)
-    
+
     return gp
 
 def smooth_data(data):
@@ -149,15 +149,41 @@ def smooth_data(data):
         window = window - 1
     return savgol_filter(data, window, min(3, window - 1))
 
+def generate_spendley_points(n, r = 1, initial_point = None, initial_point_mode = 'corner'):
+    """
+    Generate Spendley's simplex points in n dimensions with a specified origin.
 
+    Args:
+        n (int): Number of dimensions
+        r (float): Desired length of simplex edges
+        origin (np.array or list): Coordinates of the origin point, defaults to None for origin at zero
 
+    Returns:
+        np.array: Array of shape (n+1, n) containing the simplex vertices
+    """
+    # Calculate p and q
+    p = (r / (n * np.sqrt(2))) * (np.sqrt(n + 1) + n - 1)
+    q = (r / (n * np.sqrt(2))) * (np.sqrt(n + 1) - 1)
 
+    # Initialize points array
+    points = np.full((n + 1, n), q)
 
+    # Set diagonal elements to p
+    for i in range(n):
+        points[i, i] = p
+    points[-1,:] = 0
 
+    if initial_point is None:
+        initial_point = np.zeros(n)
 
+    if initial_point_mode not in ['corner', 'centroid']:
+        initial_point_mode = 'corner'
 
+    if initial_point_mode == 'corner':
+        points += initial_point
+    else:
+        centroid = np.mean(points)
+        offset = initial_point - centroid
+        points += offset
 
-
-
-
-
+    return points

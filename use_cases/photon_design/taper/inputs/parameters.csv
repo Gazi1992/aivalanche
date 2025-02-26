@@ -1,0 +1,10 @@
+name,min,default,max,scale,mode
+w1,1e-1,6.35,1e1,lin,variable
+w2,1e-1,5.7,1e1,lin,variable
+w3,1e-1,5.05,1e1,lin,variable
+w4,1e-1,4.4,1e1,lin,variable
+w5,1e-1,3.75,1e1,lin,variable
+w6,1e-1,3.1,1e1,lin,variable
+w7,1e-1,2.45,1e1,lin,variable
+w8,1e-1,1.8,1e1,lin,variable
+w9,1e-1,1.15,1e1,lin,variable

@@ -1,0 +1,4 @@
+name,min,default,max,scale,mode
+l1,10,500,1000,log,variable
+l2,10,200,1000,log,variable
+l3,10,500,1000,log,variable

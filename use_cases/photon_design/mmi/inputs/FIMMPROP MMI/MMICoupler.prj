@@ -1,0 +1,242 @@
+begin <pdApplicationInfo(1.1)>
+  FIMMWAVE 8.0.0 // applicationname applicationversion
+  3689 // licensenumber
+  6.2 (64 bit) 32471.64 // windowsversion RAM_in_MB 
+  19/02/2025 11:27:24 // savedate(dd/mm/yyyy) savetime(hh:mm:ss)
+end
+begin <fimmwave_prj(1.1)> "MMI Couplers"
+  0 // include state files on save
+  begin <pdVariablesNode(2.0)> "Variables"
+    w1 = "1" 0 ""
+    w2 = "3.4104804" 0 ""
+    w3 = "10.224418" 0 ""
+    w4 = "15.128821" 0 ""
+    l1 = "11.954783" 0 ""
+    l2 = "357.73623" 0 ""
+    d1 = "5.5243882" 0 ""
+    d2 = "10" 0 ""
+    l3 = "1015.5698" 0 ""
+  end
+  begin <FPdeviceNode(1.5)> "1x2 MMI - AlGaAs"
+    1.103 25 // lambda [um] temperature [oC]
+    "[PrjDir]\refbase.mat" // materialDatabase
+    METALWALL 0           
+    METALWALL 0           
+    MAGWALL 0             
+    MAGWALL 0             
+    1 0.01 0.01 3 0 1 // propMethod propTolerance propMinStepsizeFrac jointMethod jointNormalise enmodesharing
+    5 0.3 // psWidth[um] psEtchDepth[um]
+    0 //CavityModeCalculator enabled: 0-not enabled, 1-enabled
+    begin <FPcomponent(2.0)>
+      //list of subelements follow:
+      begin <FPPlanarSection(3.2)>
+        "EpitaxGrow AlGaAs" 21 "l1" 0.68 0 3 1 0.05 0.035 1 0 //"swgname" width length depth hCurv joint_method int_method tolerance minSTPfrac enableEVscan isStraight
+        METALWALL 0           
+        METALWALL 0           
+        MAGWALL 0             
+        MAGWALL 0             
+        "Z" //"zCoordName"
+        BEGINPARS
+        ENDPARS
+        begin <FPPath(1.0)>
+          0 0 // isMirrored etchGrowType
+          1 "w1" "w2" "0" // widthType widthL widthR "widthFn"
+          1 0 0 "0" // offsetType offsetL offsetR "offsetFn"
+          "0.2" // "depth"
+          "0" // "growThickness"
+          1 0 // one of a) {rix alpha} b) {anirix anialpha} c) matname(mx,my)
+        end
+        begin <molab_parms(1.3)>
+          1 0 "" "" // autoRun <unused> minTEfrac maxTEfrac
+          N(1e+50) N(-1e+50)  // evstart evend
+          5 "" "" ""  // maxNmodes molabOpt nx ny
+          1.103 "" NULL 1 0 V2 30 0 1 300 300 15 25 0 5 5  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+        end
+      end
+      begin <FPsimpleJoint(1.2)>
+        0 0 0 0 0 0 0 0 0 0 3 0 // xoff yoff xalign yalign h_tilt1 v_tilt1 rotation1 h_tilt2 v_tilt2 rotation2 method powerNormalise
+      end
+      begin <FPPlanarSection(3.2)>
+        "EpitaxGrow AlGaAs" 21 "l2/2" 0.68 0 3 1 0.02 0.035 1 0 //"swgname" width length depth hCurv joint_method int_method tolerance minSTPfrac enableEVscan isStraight
+        METALWALL 0           
+        METALWALL 0           
+        MAGWALL 0             
+        MAGWALL 0             
+        "Z" //"zCoordName"
+        BEGINPARS
+        ENDPARS
+        begin <FPPath(1.0)>
+          0 0 // isMirrored etchGrowType
+          1 "w3" "w4" "0" // widthType widthL widthR "widthFn"
+          1 0 0 "0" // offsetType offsetL offsetR "offsetFn"
+          "0.2" // "depth"
+          "0" // "growThickness"
+          1 0 // one of a) {rix alpha} b) {anirix anialpha} c) matname(mx,my)
+        end
+        begin <molab_parms(1.3)>
+          1 0 "" "" // autoRun <unused> minTEfrac maxTEfrac
+          N(1e+50) N(-1e+50)  // evstart evend
+          24 "" "" ""  // maxNmodes molabOpt nx ny
+          1.103 "" NULL 1 0 V2 30 0 1 300 300 15 25 0 5 5  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+        end
+      end
+      begin <FPsimpleJoint(1.2)>
+        0 0 0 0 0 0 0 0 0 0 "" 0 // xoff yoff xalign yalign h_tilt1 v_tilt1 rotation1 h_tilt2 v_tilt2 rotation2 method powerNormalise
+      end
+      begin <FPRefSection(1.1)>
+        1 "3" // zFlip refSectionID
+      end
+      begin <FPsimpleJoint(1.2)>
+        0 0 0 0 0 0 0 0 0 0 3 0 // xoff yoff xalign yalign h_tilt1 v_tilt1 rotation1 h_tilt2 v_tilt2 rotation2 method powerNormalise
+      end
+      begin <FPPlanarSection(3.2)>
+        "EpitaxGrow AlGaAs" 21 "l3" 0.68 0 3 1 0.05 0.035 1 0 //"swgname" width length depth hCurv joint_method int_method tolerance minSTPfrac enableEVscan isStraight
+        METALWALL 0           
+        METALWALL 0           
+        MAGWALL 0             
+        MAGWALL 0             
+        "Z" //"zCoordName"
+        BEGINPARS
+        ENDPARS
+        begin <FPPath(1.0)>
+          1 0 // isMirrored etchGrowType
+          1 "w2" "w1" "0" // widthType widthL widthR "widthFn"
+          3 "d1/2" "d2/2" "0" // offsetType offsetL offsetR "offsetFn"
+          "0.2" // "depth"
+          "0" // "growThickness"
+          1 0 // one of a) {rix alpha} b) {anirix anialpha} c) matname(mx,my)
+        end
+        begin <molab_parms(1.3)>
+          1 0 "" "" // autoRun <unused> minTEfrac maxTEfrac
+          N(1e+50) N(-1e+50)  // evstart evend
+          24 "" "" ""  // maxNmodes molabOpt nx ny
+          1.103 "" NULL 1 0 V2 30 0 1 300 300 15 25 0 5 5  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+        end
+      end
+      begin <FPioSection(1.0)>
+        2 0 // numPorts overlapMethod
+        // list of ports follow
+        8 -4 1 0 // portWidth portPosn portNModes portUseCurv
+        8 4 1 0 // portWidth portPosn portNModes portUseCurv
+      end
+    end
+    //lhs input field
+    begin <FPInputDefinition(2.2)>
+      1 //input type
+      1 //single mode input
+    end
+    //rhs input field
+    begin <FPInputDefinition(2.2)>
+      1 //input type
+      0 //single mode input
+    end
+    begin <molab_parms(1.3)>
+      1 0 0 100 // autoRun <unused> minTEfrac maxTEfrac
+      N(1e+50) N(-1e+50)  // evstart evend
+      30 0 120 90  // maxNmodes molabOpt nx ny
+      1.103 0 RFDMVEC 3 0 V1 60 60 0 100 0.000100 16 MeshPol 1 1 0.000100 0.000100 50 50 5.000000 5.000000  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+    end
+    begin <slabwgNode(1.1)> "EpitaxGrow AlGaAs"
+      "[PrjDir]\refbase.mat" -1000 
+      begin <slabwg(3.3)>
+        0 AlGaAs(0.4)                      0 0     0
+        0.66 AlGaAs(0.2)                   0 0     0
+        0.44 GaAs(0)                       0 0     0
+        1.5 AlGaAs(0.2)                    0 0     0
+      end
+    end
+  end
+  begin <FPScanNode(1.3)> "Length Scanner"
+       "1x2 MMI - AlGaAs" //cdname1
+       20 //nstep
+       180 220 //xstart,xend
+       "l2" //xlabel
+       20 //n2step
+       0 1 //x2start,x2end
+       "x2-parameter" //x2label
+       0 //storeSmat
+       0 //scannermode
+       0 //paramScanMode
+  end
+  begin <notesTB(1.0)> "Notes"
+    >Kallistos AI Tests - MMI
+    >===================================
+    >Optimise output power of frequency domain device with 8 variables.
+    >Repeat optimisation from multiple start positions to give evidence of a global maxima. I expect
+    >this device will have lots of local maxima 
+    >
+    >
+    >Variables
+    >==========
+    >w2 - Width of leftmost waveguide on its right side and rightmost waveguides on their left side
+    >w3 - Width of central section (sides)
+    >w4 - Width of central section (center)
+    >l1 - Length of leftmost waveguide
+    >l2 - Length of central section
+    >l3 - Length of rightmost waveguides
+    >d1 - Separation of rightmost waveguides on their left side
+    >
+    >
+    >Constraints
+    >===========
+    >w1 = 1.5  - Width of leftmost waveguide on its left side and rightmost waveguides 
+    >            on their right side
+    >d2 = 10 - Separation of rightmost waveguides on their right side
+    >
+    >
+    >Useful Commands
+    >===============
+    >
+    >app.subnodes[1].subnodes[2].cdev.smat.lr[1][1]
+    >Important output of our simulation. This complex value squared is our optimisation goal.
+    >We're looking to get this as close to 0.5 as possible.
+    >
+    >app.subnodes[1].subnodes[2].update()
+    >Recalculates the output (note this will be slow if variables are changed other than lengths which 
+    >simulate quickly)
+    >
+    >app.subnodes[1].subnodes[1].setvariable(X,"Y")
+    >Changes the variable X to a value of Y such as app.subnodes[1].subnodes[1].setvariable(w2,"2.6")
+    >
+    >
+    >NOTE: When a simulation is done, scanning the length of each section (variables l1 and l2) 
+    >is VERY fast (0.2s each simulation). If any modification can be done to the algorithm to 
+    >acount for this there will be a large computational advantage.
+    >
+    >Useful UI Elements
+    >==================
+    >
+    >Run simulation - 8th from left on FIMMPROP tool bar
+    >Plot field - 11th from left on FIMMPROP Toolbar
+    >Kallistos Settings - 3rd from left on Kallistos Toolbar (find upper and lower bounds here)
+    >Run Optimisation - 5th from left on Kallistos Toolbar
+    >
+    >
+    >From my initial investigation using scans this is a good result with output = 0.476
+    >w2 = 2.6, w3 = 10, w4 = 14.9, l1 = 516, l2 = 875, d1 = 5, l3 = 515.7
+    >
+    >
+  end
+  begin <FPOptimiser(1.2)> "KALLISTOS optimiser 1"
+    PRJITEMNAME : "1x2 MMI - AlGaAs"
+    PRECISION : 0.0001
+    MAXFUNCEVALS : 0
+    MAXIMISE : 1
+    OPTMETHOD : 1
+    OBJFUNCTYPE : Maximise Mode Output
+    ANALYTICMETHOD : 0
+    BOXSIZE : 0.000000
+    INDEPENDENTVAR : w2 1 5 1.5
+    INDEPENDENTVAR : w3 5 15 10
+    INDEPENDENTVAR : w4 10 20 10
+    INDEPENDENTVAR : l1 10 1000 500
+    INDEPENDENTVAR : l2 10 1000 200
+    INDEPENDENTVAR : l3 10 1000 500
+    INDEPENDENTVAR : d1 0 10 5
+    begin <FPOptimiserObjFuncData(1.0)> "Maximise Mode Output"
+      CALC_COMMAND : "calcoutputfield(3,1)" 
+      CALC_COMMAND : "calcmodepower(1)" a1
+      OBJECTIVE : a1
+    end
+  end
+end

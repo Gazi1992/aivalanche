@@ -1,0 +1,196 @@
+begin <pdApplicationInfo(1.1)>
+  FIMMWAVE 8.0.0 // applicationname applicationversion
+  3689 // licensenumber
+  6.2 (64 bit) 32471.64 // windowsversion RAM_in_MB 
+  25/01/2025 14:19:49 // savedate(dd/mm/yyyy) savetime(hh:mm:ss)
+end
+begin <fimmwave_prj(1.1)> "kallistos_demo"
+  0 // include state files on save
+  begin <FPdeviceNode(1.5)> "example_taper"
+    1.55 25 // lambda [um] temperature [oC]
+    "" // materialDatabase
+    METALWALL 0           
+    METALWALL 0           
+    MAGWALL 0             
+    MAGWALL 0             
+    1 0.01 0.01 3 0 1 // propMethod propTolerance propMinStepsizeFrac jointMethod jointNormalise enmodesharing
+    5 0.3 // psWidth[um] psEtchDepth[um]
+    0 //CavityModeCalculator enabled: 0-not enabled, 1-enabled
+    begin <FPcomponent(2.0)>
+      //list of subelements follow:
+      begin <FPPlanarSection(3.2)>
+        "epitax-grow" 10 2 1 0 3 1 0.01 0.01 1 1 //"swgname" width length depth hCurv joint_method int_method tolerance minSTPfrac enableEVscan isStraight
+        METALWALL 0           
+        METALWALL 0           
+        MAGWALL 0             
+        MAGWALL 0             
+        "Z" //"zCoordName"
+        BEGINPARS
+        ENDPARS
+        begin <FPPath(1.0)>
+          0 0 // isMirrored etchGrowType
+          0 7 0 "0" // widthType widthL widthR "widthFn"
+          0 0 0 "0" // offsetType offsetL offsetR "offsetFn"
+          "0" // "depth"
+          "0" // "growThickness"
+          1 0 // one of a) {rix alpha} b) {anirix anialpha} c) matname(mx,my)
+        end
+        begin <molab_parms(1.3)>
+          1 0 0 0 // autoRun <unused> minTEfrac maxTEfrac
+          N(1e+50) N(-1e+50)  // evstart evend
+          10 0 60 1  // maxNmodes molabOpt nx ny
+          1.55 "" REFFIDX 0 0 V3 1 300 300 15 25 0 5 5  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+        end
+      end
+      begin <FPsimpleJoint(1.2)>
+        0 0 0 0 0 0 0 0 0 0 3 0 // xoff yoff xalign yalign h_tilt1 v_tilt1 rotation1 h_tilt2 v_tilt2 rotation2 method powerNormalise
+      end
+      begin <FPPlanarSection(3.2)>
+        "epitax-grow" 10 7 1 0 3 0 0.01 0.01 1 0 //"swgname" width length depth hCurv joint_method int_method tolerance minSTPfrac enableEVscan isStraight
+        METALWALL 0           
+        METALWALL 0           
+        MAGWALL 0             
+        MAGWALL 0             
+        "Z" //"zCoordName"
+        BEGINPARS
+        "p1" "w1" // "name" "value"
+        "p2" "w2" // "name" "value"
+        "p3" "w3" // "name" "value"
+        "p4" "w4" // "name" "value"
+        "p5" "w5" // "name" "value"
+        "p6" "w6" // "name" "value"
+        "p7" "w7" // "name" "value"
+        "p8" "w8" // "name" "value"
+        "p9" "w9" // "name" "value"
+        ENDPARS
+        begin <FPPath(1.0)>
+          0 0 // isMirrored etchGrowType
+          2 7 0.5 "spline(Z,0,7,0.1,p1,0.2,p2,0.3,p3,0.4,p4,0.5,p5,0.6,p6,0.7,p7,0.8,p8,0.9,p9,1,0.5)" // widthType widthL widthR "widthFn"
+          0 0 0 "0" // offsetType offsetL offsetR "offsetFn"
+          "0" // "depth"
+          "0" // "growThickness"
+          1 0 // one of a) {rix alpha} b) {anirix anialpha} c) matname(mx,my)
+        end
+        begin <molab_parms(1.3)>
+          1 0 0 0 // autoRun <unused> minTEfrac maxTEfrac
+          N(1e+50) N(-1e+50)  // evstart evend
+          10 0 60 1  // maxNmodes molabOpt nx ny
+          1.55 "" REFFIDX 0 0 V3 1 300 300 15 25 0 5 5  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+        end
+      end
+      begin <FPsimpleJoint(1.2)>
+        0 0 0 0 0 0 0 0 0 0 3 0 // xoff yoff xalign yalign h_tilt1 v_tilt1 rotation1 h_tilt2 v_tilt2 rotation2 method powerNormalise
+      end
+      begin <FPPlanarSection(3.2)>
+        "epitax-grow" 10 2 1 0 3 1 0.01 0.01 1 1 //"swgname" width length depth hCurv joint_method int_method tolerance minSTPfrac enableEVscan isStraight
+        METALWALL 0           
+        METALWALL 0           
+        MAGWALL 0             
+        MAGWALL 0             
+        "Z" //"zCoordName"
+        BEGINPARS
+        ENDPARS
+        begin <FPPath(1.0)>
+          0 0 // isMirrored etchGrowType
+          0 0.5 0 "0" // widthType widthL widthR "widthFn"
+          0 0 0 "0" // offsetType offsetL offsetR "offsetFn"
+          "0" // "depth"
+          "0" // "growThickness"
+          1 0 // one of a) {rix alpha} b) {anirix anialpha} c) matname(mx,my)
+        end
+        begin <molab_parms(1.3)>
+          1 0 0 0 // autoRun <unused> minTEfrac maxTEfrac
+          N(1e+50) N(-1e+50)  // evstart evend
+          10 0 60 1  // maxNmodes molabOpt nx ny
+          1.55 "" REFFIDX 0 0 V3 1 300 300 15 25 0 5 5  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+        end
+      end
+    end
+    //lhs input field
+    begin <FPInputDefinition(2.2)>
+      1 //input type
+      1 //single mode input
+    end
+    //rhs input field
+    begin <FPInputDefinition(2.2)>
+      1 //input type
+      0 //single mode input
+    end
+    begin <molab_parms(1.3)>
+      1 0 0 100 // autoRun <unused> minTEfrac maxTEfrac
+      N(1e+50) N(-1e+50)  // evstart evend
+      10 0 120 90  // maxNmodes molabOpt nx ny
+      1.55 0 RFDMVEC 0 0 V1 90 50 0 100 0.000100 16  // lambda hCurv solverID Hsymmetries Vsymmetries solverParms
+    end
+    begin <slabwgNode(1.1)> "epitax-grow"
+      "" -1000 
+      begin <slabwg(3.3)>
+        0 1 0                              0 
+        1 1.5 0                            0 
+      end
+    end
+  end
+  begin <FPOptimiser(1.2)> "kallistos-taper"
+    PRJITEMNAME : "example_taper"
+    PRECISION : 0.0001
+    MAXFUNCEVALS : 0
+    MAXIMISE : 1
+    OPTMETHOD : 1
+    OBJFUNCTYPE : Mode Power(1)
+    ANALYTICMETHOD : 1
+    BOXSIZE : 0.000000
+    INDEPENDENTVAR : w1 0.01 10 6.35
+    INDEPENDENTVAR : w2 0.01 10 5.7
+    INDEPENDENTVAR : w3 0.01 10 5.05
+    INDEPENDENTVAR : w4 0.01 10 4.4
+    INDEPENDENTVAR : w5 0.01 10 3.75
+    INDEPENDENTVAR : w6 0.01 10 3.1
+    INDEPENDENTVAR : w7 0.01 10 2.45
+    INDEPENDENTVAR : w8 0.01 10 1.8
+    INDEPENDENTVAR : w9 0.01 10 1.15
+  end
+  begin <pdVariablesNode(2.0)> "Taper Variables"
+    w1 = "0.1" 0 ""
+    w2 = "0.1" 0 ""
+    w3 = "0.1" 0 ""
+    w4 = "0.1" 0 ""
+    w5 = "0.1" 0 ""
+    w6 = "0.1" 0 ""
+    w7 = "0.1" 0 ""
+    w8 = "0.1" 0 ""
+    w9 = "0.1" 0 ""
+  end
+  begin <notesTB(1.0)> "Notes 1"
+    >Kallistos AI Tasts - Taper
+    >=========================
+    >
+    >Very Fast 1D+Z problem to optimise coupling from left to right
+    >
+    >Variables
+    >=========
+    >wn = The n'th width of 9 that parameterises the shape of the taper.
+    >
+    >Useful Commands
+    >===============
+    >
+    >app.subnodes[1].subnodes[1].cdev.smat.lr[1][1]
+    >Important output of our simulation. This complex value squared is our optimisation goal.
+    >We're looking to get this as close to 0.5 as possible.
+    >
+    >app.subnodes[1].subnodes[1].update()
+    >Recalculates the output (note this will be slow if variables are changed other than lengths which 
+    >simulate quickly)
+    >
+    >app.subnodes[1].subnodes[3].setvariable(X,"Y")
+    >Changes the variable X to a value of Y such as app.subnodes[1].subnodes[1].setvariable(w2,"2.6")
+    >
+    >
+    >Useful UI Elements
+    >==================
+    >
+    >Run simulation - 8th from left on FIMMPROP tool bar
+    >Plot field - 11th from left on FIMMPROP Toolbar
+    >Kallistos Settings - 3rd from left on Kallistos Toolbar (find upper and lower bounds here)
+    >Run Optimisation - 5th from left on Kallistos Toolbar  
+  end
+end
