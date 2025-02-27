@@ -1,0 +1,22 @@
+[
+    {   
+        "device_type": "diode",
+        "name": "diode forward current characteristic",
+        "testbench_type": ["diode_id_vd"],
+        "simulation_type": "dc",
+        "characteristic_type": "forward",
+        "circuit": [
+            "e_v_<<index>> p_<<index>> 0 v_sweep 0 1",
+            "v_meas_<<index>> n_<<index>> 0 0",
+            "x_<<index>> p_<<index>> n_<<index>> <<dut_name>> <<instance_parameters>>"
+        ],
+        "results": {
+            "save": ["i(v_meas_<<index>>)", "v(p_<<index>>)"],
+            "rename": {
+                "i(v_meas_<<index>>)": "id_<<index>>",
+                "v(p_<<index>>)": "vd_<<index>>"
+            }
+        },
+        "instance_parameters": ["area", "m"]
+    }
+]

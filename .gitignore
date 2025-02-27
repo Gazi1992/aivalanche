@@ -2,7 +2,5 @@
 *.egg-info/
 **/results/**
 **/build/**
-!**/orthogonal_arrays/results/**
-!**/chebyshev_filter/results/**
-!**/water_system/results/**
-!**/Airfoil-Optimization/results/**
+!**/use_cases/**
+

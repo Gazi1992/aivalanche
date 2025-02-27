@@ -183,7 +183,7 @@ if __name__ == '__main__':
         # mutation_factor_3=0.3,
         # use_classifier=True,
         # classifier_optimize=False,
-        use_predictor = True
+        use_predictor = False
     )
 
     diff_evolution.run_optimization()

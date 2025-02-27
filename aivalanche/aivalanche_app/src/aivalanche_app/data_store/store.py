@@ -422,6 +422,7 @@ class store(QObject):
             response = pickle.loads(self.socket.recv())
             if response is not None:
                 status = response['status']
+                print(status)
                 if status == 'error':
                     self.on_calibration_error(response)
                 elif status == 'progress' and not self.model_calibration_abort:
@@ -467,12 +468,14 @@ class store(QObject):
         if self.status_check_timer is None:
             self.status_check_timer = QTimer(self)
             self.status_check_timer.timeout.connect(self.check_calibration_status)
-            self.stop_calibration_timer.connect(self.status_check_timer.stop)
+            # self.stop_calibration_timer.connect(self.status_check_timer.stop)
+            self.stop_calibration_timer.connect(self.stop_status_check_timer)
         self.status_check_timer.start(2000)
 
     def stop_status_check_timer(self):
         if self.status_check_timer is not None:
-            self.stop_calibration_timer.emit()
+            self.status_check_timer.stop()
+            # self.stop_calibration_timer.emit()
             self.status_check_timer = None
         
     def abort_calibration(self, emit_signals: bool = True, sync: bool = False):

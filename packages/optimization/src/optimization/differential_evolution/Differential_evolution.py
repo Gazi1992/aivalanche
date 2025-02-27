@@ -127,10 +127,10 @@ class Differential_evolution:
         self.opt_min_or_max = opt_min_or_max
 
         self.pop_size = int(pop_size)
-        self.mutation_factor_1 = mutation_factor_1
-        self.mutation_factor_2 = mutation_factor_2
-        self.mutation_factor_3 = mutation_factor_3
-        self.recombination_factor = recombination_factor
+        self.mutation_factor_1 = float(mutation_factor_1) if isinstance(mutation_factor_1, str) else mutation_factor_1
+        self.mutation_factor_2 = float(mutation_factor_2) if isinstance(mutation_factor_2, str) else mutation_factor_2
+        self.mutation_factor_3 = float(mutation_factor_3) if isinstance(mutation_factor_3, str) else mutation_factor_3
+        self.recombination_factor = float(recombination_factor) if isinstance(recombination_factor, str) else recombination_factor
 
         self.max_iterations = int(max_iterations)
         self.metric_threshold = float(metric_threshold)
@@ -221,6 +221,8 @@ class Differential_evolution:
 
         self.optimization_info = {}
         self.real_iter = 0
+        self.new_parameters = None
+        self.new_responses = None
 
     # Run the optimization loop
     def run_optimization(self):
@@ -234,14 +236,20 @@ class Differential_evolution:
                 self.run_predictor_iterations()
             else:
                 self.run_real_iteration()
+                
+        # Reduce the iter to correct the last increment                
+        self.iter -= 1
+        self.real_iter -= 1
 
         # once the stop criteria is reached
         self.show_final_result()
         if self.callback_after_last_iter is not None:
             self.callback_after_last_iter(iteration = self.iter,
+                                          parameters = self.new_parameters,
+                                          responses = self.new_responses,
                                           best_parameters = self.best_unscaled,
                                           best_metric = self.best_metric,
-                                          trials = self.history['trials'],
+                                          history = self.history,
                                           stop_reason = self.stop_reason,
                                           parameter_names = self.parameter_names,
                                           **self.eval_func_args)
@@ -288,14 +296,14 @@ class Differential_evolution:
         self.is_predictor_iteration = False
 
     def run_real_iteration(self):
-        parameters = self.get_next_parameters()                                 # get the trials_unscaled
+        self.new_parameters = self.get_next_parameters()                                 # get the trials_unscaled
         extra_arguments = {'iteration': self.iter,                              # extra arguments to give to the evaluation function
                            'best_metric': self.best_metric,
                            'best_parameters': self.best_unscaled,
                            **self.eval_func_args}
 
-        responses = self.eval_func(parameters = parameters, **extra_arguments)  # run the evaluation function
-        self.save_metrics(responses['metrics'])                                 # save the metrics
+        self.new_responses = self.eval_func(parameters = self.new_parameters, **extra_arguments)  # run the evaluation function
+        self.save_metrics(self.new_responses['metrics'])                                 # save the metrics
 
         self.determine_survivors()                                              # determine the survivors
         self.determine_best()                                                   # determine the best parameters and best metric
@@ -305,22 +313,23 @@ class Differential_evolution:
 
         # Run the callback
         if self.iter == 1 and self.callback_after_first_iter is not None:
-                self.callback_after_first_iter(parameters = parameters,
-                                               responses = responses,
+                self.callback_after_first_iter(parameters = self.new_parameters,
+                                               responses = self.new_responses,
                                                iteration = self.iter,
+                                               history = self.history,
                                                best_parameters = self.best_unscaled,
                                                best_metric = self.best_metric,
                                                parameter_names = self.parameter_names,
                                                **self.eval_func_args)
 
         if self.callback_after_each_iter is not None:
-            self.callback_after_each_iter(parameters = parameters,
-                                          responses = responses,
+            self.callback_after_each_iter(parameters = self.new_parameters,
+                                          responses = self.new_responses,
                                           iteration = self.iter,
                                           best_parameters = self.best_unscaled,
                                           best_metric = self.best_metric,
                                           better_solution_found = self.better_solution_found,
-                                          trials = self.history['trials'],
+                                          history = self.history,
                                           parameter_names = self.parameter_names,
                                           **self.eval_func_args)
 
@@ -333,10 +342,12 @@ class Differential_evolution:
 
         if self.callback_after_better_solution_found is not None:
             self.callback_after_better_solution_found(iteration = self.iter,
-                                                      responses = responses,
+                                                      parameters = self.new_parameters,
+                                                      responses = self.new_responses,
                                                       best_parameters = self.best_unscaled,
                                                       best_metric = self.best_metric,
                                                       parameter_names = self.parameter_names,
+                                                      history = self.history,
                                                       **self.eval_func_args)
 
         # Generate new trials
@@ -424,7 +435,7 @@ class Differential_evolution:
     def show_final_result(self):
         print("\n\n--------------------------- Optimization stopped ---------------------------\n\n")
         print(f"Reason: {self.stop_reason}\n\n")
-        print(f"Number of iteration: {self.iter}\n\n")
+        print(f"Number of iteration: {self.real_iter}\n\n")
         print(f"Best response: {self.best_metric}\n\n")
         print(f"Best parameters: {self.best_unscaled}\n\n")
         print("--------------------------------------------------------------------------------\n\n")
@@ -443,7 +454,7 @@ class Differential_evolution:
         elif self.iter_no_improvement > self.max_iter_without_improvement:
             self.is_stop_criteria_reached = True
             self.stop_reason = "maximum number of iterations without improvement reached"
-        elif self.real_iter > self.max_iterations:
+        elif self.real_iter >= self.max_iterations:
             # self.iter -= 1
             self.is_stop_criteria_reached = True
             self.stop_reason = "maximum number of iterations reached"
@@ -464,6 +475,7 @@ class Differential_evolution:
         if not self.is_stop_criteria_reached:
             self.iter_no_improvement = 0
             self.iter += 1
+            self.real_iter = 1
             self.set_boundaries()
             self.targets = np.full((self.pop_size, self.nr_parameters), None)
             self.targets_unscaled = np.full((self.pop_size, self.nr_parameters), None)
@@ -714,7 +726,7 @@ class Differential_evolution:
         return donors_normed
 
     # Generate the mutation coefficients
-    def generate_mutation_coefficients(self):
+    def generate_mutation_coefficients(self): 
         if isinstance(self.mutation_factor_1, (float, int)):
             a = self.mutation_factor_1
         elif isinstance(self.mutation_factor_1, (tuple, list)):

@@ -22,9 +22,9 @@ class model_calibration:
         best_results = results[np.argmin(metrics)]
         better_solution_found = kwargs['better_solution_found']
         results_dir = self.simulation_input['results_dir']
-        survivors = self.get_all_survivors(kwargs['trials'])
+        survivors = self.get_all_survivors(kwargs['history'])
         survivors = survivors[['iter', 'survivor_metric']]
-        trials = self.get_trial_parameters(kwargs['trials'])
+        trials = self.get_trial_parameters(kwargs['history'])
         res = {'status': 'progress',
                'model_id': model_id,
                'iteration': iteration,
@@ -49,9 +49,9 @@ class model_calibration:
         best_loss = kwargs['best_metric']
         best_results = results[np.argmin(metrics)]
         better_solution_found = True
-        survivors = self.get_all_survivors(kwargs['trials'])
+        survivors = self.get_all_survivors(kwargs['history'])
         survivors = survivors[['iter', 'survivor_metric']]
-        trials = self.get_trial_parameters(kwargs['trials'])
+        trials = self.get_trial_parameters(kwargs['history'])
         stop_reason = kwargs['stop_reason']
         res = {'status': 'finish',
                'model_id': model_id,
@@ -104,26 +104,30 @@ class model_calibration:
         except Exception as e:
             self.on_calibration_error(error = str(e))
             
-    def get_all_survivors(self, trials):
-        data = []
-        pop_size = len(trials[trials['iter'] == 1])
-        for row_idx, row in trials.iterrows():
-            if row_idx < pop_size:
-                data.append(row.tolist())
-            else:
-                if row['trial_metric'] < data[row_idx - pop_size][-1]:
-                    data.append(row.tolist())
-                else:
-                    temp = data[row_idx - pop_size].copy()
-                    temp[0] = row['iter']
-                    data.append(temp)
+    def get_all_survivors(self, history):
+        # data = []
+        # pop_size = len(trials[trials['iter'] == 1])
+        # for row_idx, row in trials.iterrows():
+        #     if row_idx < pop_size:
+        #         data.append(row.tolist())
+        #     else:
+        #         if row['trial_metric'] < data[row_idx - pop_size][-1]:
+        #             data.append(row.tolist())
+        #         else:
+        #             temp = data[row_idx - pop_size].copy()
+        #             temp[0] = row['iter']
+        #             data.append(temp)
         
-        all_survivors = pd.DataFrame(columns = ['iter', 'survivor_normed', 'survivor', 'survivor_unscaled', 'survivor_metric'],
-                                     data = data)
+        # all_survivors = pd.DataFrame(columns = ['iter', 'survivor_normed', 'survivor', 'survivor_unscaled', 'survivor_metric'],
+        #                              data = data)
 
-        return all_survivors
+        # return all_survivors
     
-    def get_trial_parameters(self, trials):
+        return history['survivors']
+
+    
+    def get_trial_parameters(self, history):
+        trials = history['trials']
         parameter_names = self.simulation_input['parameters'].variable_parameters_names
         df_exploded = trials['trial_normed'].apply(pd.Series)
         df_exploded = df_exploded.astype(float)

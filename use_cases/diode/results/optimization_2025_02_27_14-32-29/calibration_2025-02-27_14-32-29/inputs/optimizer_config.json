@@ -1,0 +1,13 @@
+{
+    "type": "differential_evolution",
+    "pop_size": 30,
+    "metric_threshold": 1e-05,
+    "max_iterations": 100,
+    "max_iter_without_improvement": 20,
+    "init_pop_out_of_range_param": "keep",
+    "defaults_in_init_pop": false,
+    "plot_parameter_evolution_period": 1,
+    "plot_survivor_metric_evolution_period": 20,
+    "results_dir": "/home/gazi/Desktop/Work/aivalanche/use_cases/diode/results/optimization_2025_02_27_14-32-29",
+    "adaptive_boundaries": false
+}

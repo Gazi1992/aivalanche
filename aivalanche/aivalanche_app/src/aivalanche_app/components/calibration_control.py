@@ -47,8 +47,8 @@ class calibration_control(QWidget):
     
     @status.setter
     def status(self, value):
-        if self._status != value:
-            self._status = value
+        # if self._status != value:
+        self._status = value
         self.update_ui_based_on_status()
         
     def init_ui(self):

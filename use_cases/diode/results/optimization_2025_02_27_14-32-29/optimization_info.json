@@ -1,0 +1,62 @@
+{
+    "input": {
+        "seed": 584,
+        "pop_size": 30,
+        "max_iterations": 100,
+        "max_iter_without_improvement": 20,
+        "improvement_threshold": 0.01,
+        "metric_threshold": 1e-05,
+        "mutation_factor_1": [
+            0.7,
+            1.1
+        ],
+        "mutation_factor_2": [
+            0.2,
+            0.6
+        ],
+        "mutation_factor_3": [
+            0,
+            0.3
+        ],
+        "recombination_factor": [
+            0.8,
+            0.97
+        ],
+        "adaptive_boundaries": false,
+        "results_dir": "/home/gazi/Desktop/Work/aivalanche/use_cases/diode/results/optimization_2025_02_27_14-32-29",
+        "parameters": [
+      {"name": "bv", "min": 100000.0, "default": 10000000000.0, "max": 1e+20, "scale": "log"},
+      {"name": "ibv", "min": 1e-06, "default": 0.001, "max": 0.1, "scale": "log"},
+      {"name": "ikf", "min": 1e-10, "default": 1e-05, "max": 0.1, "scale": "log"},
+      {"name": "ikr", "min": 1e-10, "default": 1e-05, "max": 0.1, "scale": "log"},
+      {"name": "is", "min": 1e-20, "default": 1e-14, "max": 1e-10, "scale": "log"},
+      {"name": "jsw", "min": 1e-20, "default": 1e-15, "max": 1e-10, "scale": "log"},
+      {"name": "n", "min": 0.5, "default": 1.0, "max": 2.0, "scale": "lin"},
+      {"name": "nbv", "min": 0.0, "default": 1.0, "max": 2.0, "scale": "lin"},
+      {"name": "rs", "min": 1e-10, "default": 1e-06, "max": 10000.0, "scale": "log"},
+      {"name": "trs1", "min": 1e-05, "default": 0.005, "max": 0.01, "scale": "lin"},
+      {"name": "trs2", "min": 1e-05, "default": 0.0005, "max": 0.001, "scale": "lin"}
+    ]
+    },
+    "output": {
+        "iter": 100,
+        "best_metric": 0.0014636519684491334,
+        "best_parameters": {
+            "bv": 11744116991.281868,
+            "ibv": 3.0177886837162282e-05,
+            "ikf": 2.056089819105535e-05,
+            "ikr": 0.0010784941205682873,
+            "is": 2.6659563759650317e-18,
+            "jsw": 1.0276393153819033e-16,
+            "n": 1.9423170314741696,
+            "nbv": 1.2662397839090862,
+            "rs": 1.0001881219602908e-06,
+            "trs1": 0.004996967763752421,
+            "trs2": 0.0005008113737582845
+        },
+        "nr_real_evaluations": 3000,
+        "nr_classifier_evaluations": 0,
+        "nr_predictor_evaluations": 0,
+        "stop_reason": ""
+    }
+}
