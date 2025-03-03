@@ -1,0 +1,13 @@
+{
+    "type": "differential_evolution",
+    "pop_size": 50,
+    "metric_threshold": 1e-05,
+    "max_iterations": 2000,
+    "max_iter_without_improvement": 200,
+    "init_pop_out_of_range_param": "keep",
+    "defaults_in_init_pop": false,
+    "plot_parameter_evolution_period": 1,
+    "plot_survivor_metric_evolution_period": 20,
+    "results_dir": "/home/gazi/Desktop/Work/aivalanche/use_cases/bsim4/results/optimization_2025_03_01_23-51-12",
+    "adaptive_boundaries": false
+}
