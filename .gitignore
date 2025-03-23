@@ -1,6 +1,5 @@
-**/__pycache__/
 *.egg-info/
 **/results/**
 **/build/**
 !**/use_cases/**
-
+**/__pycache__/**
