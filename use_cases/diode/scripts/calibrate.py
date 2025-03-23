@@ -1,6 +1,7 @@
 from calibration.Calibration import Calibration
+from reference_data.Reference_data import Reference_data
 import os, numpy as np, pandas as pd
-from utils import create_output_folder, plot_survivors, plot_parameter_evolution, plot_results, plot_fit, plot_loss, create_video_from_pngs
+from utils import create_output_folder, plot_ref_data, plot_survivors, plot_parameter_evolution, plot_results, plot_fit, plot_loss, create_video_from_pngs
 
 #%% Paths
 results_path = os.path.abspath('../results')
@@ -13,6 +14,10 @@ dut_file = os.path.join(inputs_path, 'dut.cir')
 #%% Create the output folder
 output_path, figures_path, figures_video_path = create_output_folder(results_path)
 
+#%% Plot reference data
+data = Reference_data(reference_data_file)
+plot_ref_data(data.data, path = os.path.join(output_path, 'ref_data.png'))
+
 #%% Some variables
 dut_name = 'dut'
 results_dir = output_path
@@ -20,7 +25,7 @@ best_metric = None
 best_result = None
 all_metrics = pd.DataFrame()
 
-#%% Callback  
+#%% Callback
 def callback_after_each_iter(parameters: dict = None,
                              responses: dict = None,
                              iteration: int = None,
@@ -29,16 +34,16 @@ def callback_after_each_iter(parameters: dict = None,
                              # best_metric: float = None,
                              better_solution_found: bool = None,
                              **kwargs):
-    
+
     global all_metrics
     global best_result
     global best_metric
-    
+
     optimizer = calibration.optimizer
-    
+
     all_parameters = optimizer.get_all_survivors_normed_exploded()
     all_survivors = optimizer.get_all_survivors_exploded()
-    
+
     if better_solution_found:
         # Update best metric
         best_metric = np.min(responses['metrics'])
@@ -51,12 +56,12 @@ def callback_after_each_iter(parameters: dict = None,
 
         # Save optimization info to file
         optimizer.write_optimization_info_to_file(os.path.join(output_path, 'optimization_info.json'))
-    
+
     all_metrics = pd.concat([all_metrics, pd.DataFrame.from_dict([{'iter': iteration, 'metric': best_metric}])])
-    
+
     optimization_data = {'parameters': all_parameters,
                          'metrics': all_metrics}
-    
+
     # Plots
     plot_results(best_result, optimization_data, path = os.path.join(figures_video_path, f'{iteration}.png'))
     temp_path = os.path.join(figures_path, f'iteration_{iteration}')
@@ -65,7 +70,7 @@ def callback_after_each_iter(parameters: dict = None,
     plot_survivors(all_survivors, path = os.path.join(temp_path, 'survivors.png'))
     plot_fit(best_result, path = os.path.join(temp_path, 'fit.png'))
     plot_loss(all_metrics, path = os.path.join(temp_path, 'mismatch.png'))
-    
+
     print(f'Iteration {iteration} completed.')
     print(f'Best metric: {best_metric}.')
 

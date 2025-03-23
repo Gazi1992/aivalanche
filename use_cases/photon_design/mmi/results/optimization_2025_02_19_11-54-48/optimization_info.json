@@ -1,0 +1,48 @@
+{
+    "input": {
+        "seed": 304,
+        "pop_size": 10,
+        "max_iterations": 1000,
+        "max_iter_without_improvement": 10,
+        "improvement_threshold": 0.01,
+        "metric_threshold": -10000000000.0,
+        "mutation_factor_1": [
+            0.7,
+            1.1
+        ],
+        "mutation_factor_2": [
+            0.2,
+            0.6
+        ],
+        "mutation_factor_3": [
+            0,
+            0.3
+        ],
+        "recombination_factor": [
+            0.8,
+            0.97
+        ],
+        "adaptive_boundaries": false,
+        "results_dir": null,
+        "parameters": [
+      {"name": "d1", "min": 0.0, "default": 5.0, "max": 10.0, "scale": "lin"},
+      {"name": "w2", "min": 1.0, "default": 1.5, "max": 5.0, "scale": "lin"},
+      {"name": "w3", "min": 5.0, "default": 10.0, "max": 15.0, "scale": "lin"},
+      {"name": "w4", "min": 10.0, "default": 10.0, "max": 20.0, "scale": "lin"}
+    ]
+    },
+    "output": {
+        "iter": 12,
+        "best_metric": -0.48990815646273195,
+        "best_parameters": {
+            "d1": 7.650631418668256,
+            "w2": 3.968611456375272,
+            "w3": 13.726508251839732,
+            "w4": 13.971981875834427
+        },
+        "nr_real_evaluations": 120,
+        "nr_classifier_evaluations": 0,
+        "nr_predictor_evaluations": 0,
+        "stop_reason": ""
+    }
+}

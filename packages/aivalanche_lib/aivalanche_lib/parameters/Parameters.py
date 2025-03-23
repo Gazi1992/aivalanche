@@ -7,13 +7,8 @@ configurations from different file formats (JSON, CSV).
 Author: Gazmend Alia
 """
 
-import os
-import json
-import random
-import math
-import logging
+import os, json, random, logging, pandas as pd, numpy as np
 from typing import Dict, List, Optional, Union, Any
-import pandas as pd
 from .utils import scale_parameter_row, determine_scale, normalize_scale_value, normalize_parameter_row, determine_transform
 
 # Set up logging
@@ -54,9 +49,29 @@ class Parameters:
             self.load_data(data)
 
     @property
+    def parameters_names(self) -> List[str]:
+        """Get names of variable parameters."""
+        return self.all_parameters['name'].tolist()
+
+    @property
+    def nr_parameters(self) -> int:
+        """Get total number of parameters."""
+        return len(self.all_parameters.index)
+
+    @property
     def fixed_parameters(self) -> pd.DataFrame:
         """Get parameters with mode 'fixed'."""
         return self.all_parameters[self.all_parameters['mode'] == 'fixed']
+
+    @property
+    def fixed_parameters_names(self) -> List[str]:
+        """Get names of variable parameters."""
+        return self.fixed_parameters['name'].tolist()
+
+    @property
+    def nr_fixed_parameters(self) -> int:
+        """Get number of fixed parameters."""
+        return len(self.fixed_parameters.index)
 
     @property
     def variable_parameters(self) -> pd.DataFrame:
@@ -72,16 +87,6 @@ class Parameters:
     def nr_variable_parameters(self) -> int:
         """Get number of variable parameters."""
         return len(self.variable_parameters.index)
-
-    @property
-    def nr_fixed_parameters(self) -> int:
-        """Get number of fixed parameters."""
-        return len(self.fixed_parameters.index)
-
-    @property
-    def nr_parameters(self) -> int:
-        """Get total number of parameters."""
-        return len(self.all_parameters.index)
 
     @property
     def columns(self) -> List[str]:
@@ -150,8 +155,8 @@ class Parameters:
             self._check_scale_values()
             self._set_transform_types()
             self.sort_parameters_by_name()
-            self.scale_parameters()  # Scale parameters based on their scale type
-            self.normalize_parameters()  # Normalize parameters to [0,1] range
+            self._scale_parameters()  # Scale parameters based on their scale type
+            self._normalize_parameters()  # Normalize parameters to [0,1] range
 
     def load_from_dataframe(self, df: pd.DataFrame) -> None:
         """
@@ -397,7 +402,7 @@ class Parameters:
             logger.info(f"Using negative log transform for negative parameters: {', '.join(neglog_params)}")
             print(f"INFO: Using negative log transform for negative parameters: {', '.join(neglog_params)}")
 
-    def scale_parameters(self) -> None:
+    def _scale_parameters(self) -> None:
         """
         Scale parameters according to their scale type.
 
@@ -420,7 +425,7 @@ class Parameters:
         if len(log_params) > 0:
             print(f"INFO: Scaled {len(log_params)} parameters with log scale: {', '.join(log_params['name'].tolist())}")
 
-    def normalize_parameters(self) -> None:
+    def _normalize_parameters(self) -> None:
         """
         Normalize parameters to the [0,1] range.
 
@@ -480,13 +485,7 @@ class Parameters:
         if row['mode'] == 'fixed':
             return row['default']
         else:
-            if row['scale'] == 'log':
-                # Generate random value in log space
-                log_min = math.log10(max(1e-10, row['min']))
-                log_max = math.log10(max(1e-10, row['max']))
-                return 10 ** random.uniform(log_min, log_max)
-            else:
-                return random.uniform(row['min'], row['max'])
+            return random.uniform(row['min'], row['max'])
 
     def write_to_file(self, file_path: str) -> None:
         """
@@ -590,8 +589,8 @@ class Parameters:
             ], ignore_index=True)
 
         self.sort_parameters_by_name()
-        self.scale_parameters()  # Update scaled parameters
-        self.normalize_parameters()  # Update normalized parameters
+        self._scale_parameters()  # Update scaled parameters
+        self._normalize_parameters()  # Update normalized parameters
 
     def remove_parameter(self, name: str) -> bool:
         """
@@ -607,8 +606,8 @@ class Parameters:
             self.all_parameters = self.all_parameters[self.all_parameters['name'] != name]
             # Update scaled parameters
             if not self.all_parameters.empty:
-                self.scale_parameters()
-                self.normalize_parameters()
+                self._scale_parameters()
+                self._normalize_parameters()
             else:
                 self.all_parameters_scaled = pd.DataFrame()
                 self.all_parameters_normed = pd.DataFrame()
@@ -660,8 +659,8 @@ class Parameters:
         param = self.all_parameters_normed[self.all_parameters_normed['name'] == name].iloc[0]
         return param.to_dict()
 
-    def denormalize_parameters(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
-                               include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
+    def denormalize_parameters_array(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
+                                     include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
         """
         Convert normalized parameter values (0-1 range) back to their scaled range.
         Does NOT apply inverse transformations (log, neglog).
@@ -694,14 +693,20 @@ class Parameters:
             # Get all parameter names from the input data
             input_param_names = set(df.columns)
 
-            # Get variable parameter names
+            # Get fixed parameters names
+            fixed_param_names = set(self.fixed_parameters_names)
+
+            # Get variable parameters names
             variable_param_names = set(self.variable_parameters_names)
 
             # Check if all input parameters are valid variable parameters
-            if not input_param_names == variable_param_names:
+            if not input_param_names - fixed_param_names == variable_param_names:
                 # Find the invalid parameters
                 invalid_params = input_param_names - variable_param_names
-                raise ValueError(f"Parameters {list(invalid_params)} are not valid variable parameters and cannot be denormalized")
+                raise ValueError(f"Parameters {list(invalid_params)} are not valid variable parameters and cannot be scaled")
+
+        # Keep only the variable parameters
+        df = df[self.variable_parameters_names]
 
         # Get parameter info for all parameters in one step
         param_info_dict = {row['name']: {'min': row['min'], 'max': row['max']} for _, row in self.variable_parameters_scaled.iterrows()}
@@ -713,18 +718,9 @@ class Parameters:
             df[param_name] = min_val + df[param_name] * (max_val - min_val)
 
         # Add fixed parameters if requested
-        if include_fixed_parameters:
-            fixed_params = self.fixed_parameters
-            if not fixed_params.empty:
-                for _, param in fixed_params.iterrows():
-                    param_name = param['name']
-                    # Get the scaled default value (not the original default)
-                    default_value = param['default']
-
-                    # Only add if the parameter doesn't already exist in the dataframe
-                    if param_name not in df.columns:
-                        # Add the fixed parameter with its default value to all rows
-                        df[param_name] = default_value
+        if include_fixed_parameters and not self.fixed_parameters_scaled.empty:
+            for _, param in self.fixed_parameters_scaled.iterrows():
+                df[param['name']] = param['default']
 
         # Return in the same format as input
         if is_dataframe:
@@ -732,8 +728,8 @@ class Parameters:
         else:
             return df.to_dict('records')
 
-    def descale_parameters(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
-                           include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
+    def descale_parameters_array(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
+                                 include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
         """
         Apply inverse scaling transformations to parameters (e.g., 10^x for log-scaled parameters).
 
@@ -761,14 +757,20 @@ class Parameters:
             # Get all parameter names from the input data
             input_param_names = set(df.columns)
 
-            # Get variable parameter names
+            # Get fixed parameters names
+            fixed_param_names = set(self.fixed_parameters_names)
+
+            # Get variable parameters names
             variable_param_names = set(self.variable_parameters_names)
 
             # Check if all input parameters are valid variable parameters
-            if not input_param_names == variable_param_names:
+            if not input_param_names - fixed_param_names == variable_param_names:
                 # Find the invalid parameters
                 invalid_params = input_param_names - variable_param_names
-                raise ValueError(f"Parameters {list(invalid_params)} are not valid variable parameters and cannot be denormalized")
+                raise ValueError(f"Parameters {list(invalid_params)} are not valid variable parameters and cannot be scaled")
+
+        # Keep only the variable parameters
+        df = df[self.variable_parameters_names]
 
         # Get transform info for all parameters in one step
         transform_dict = {row['name']: row.get('transform') for _, row in self.variable_parameters.iterrows()}
@@ -785,18 +787,9 @@ class Parameters:
             df[param_name] = -10 ** -df[param_name]
 
         # Add fixed parameters if requested
-        if include_fixed_parameters:
-            fixed_params = self.fixed_parameters
-            if not fixed_params.empty:
-                for _, param in fixed_params.iterrows():
-                    param_name = param['name']
-                    # Get the scaled default value (not the original default)
-                    default_value = param['default']
-
-                    # Only add if the parameter doesn't already exist in the dataframe
-                    if param_name not in df.columns:
-                        # Add the fixed parameter with its default value to all rows
-                        df[param_name] = default_value
+        if include_fixed_parameters and not self.fixed_parameters.empty:
+            for _, param in self.fixed_parameters.iterrows():
+                df[param['name']] = param['default']
 
         # Return in the same format as input
         if is_dataframe:
@@ -804,13 +797,13 @@ class Parameters:
         else:
             return df.to_dict('records')
 
-    def denormalize_and_descale_parameters(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
-                                          include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
+    def denormalize_and_descale_parameters_array(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
+                                                 include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
         """
         Convert normalized parameter values back to their original ranges and apply
         inverse scaling transformations.
 
-        This is a convenience method that combines denormalize_parameters and descale_parameters.
+        This is a convenience method that combines de_normalize_parameters and de_scale_parameters.
 
         Args:
             data: Input data in one of the following formats:
@@ -822,10 +815,194 @@ class Parameters:
             Same type as input, with values converted back to their original ranges
         """
         # First denormalize (0-1 to min-max in scaled space)
-        denormalized = self.denormalize_parameters(data, validate_data, include_fixed_parameters)
+        denormalized = self.denormalize_parameters_array(data, validate_data, include_fixed_parameters = False)
 
         # Then descale (apply inverse transformations)
-        return self.descale_parameters(denormalized, validate_data = False, include_fixed_parameters = False)
+        return self.descale_parameters_array(denormalized, validate_data = False, include_fixed_parameters = include_fixed_parameters)
+
+
+    def scale_parameters_array(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
+                               include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
+        """
+        Apply scaling transformations to parameters (e.g., log10(x) for log-scaled parameters).
+        This is the inverse of descale_parameters_array.
+
+        Args:
+            data: Input data in one of the following formats:
+                - pd.DataFrame: DataFrame with parameter names as columns
+                - List[Dict[str, float]]: List of dictionaries with parameter names as keys
+            validate_data: If True, validates that all input parameters are valid variable parameters
+            include_fixed_parameters: If True, includes fixed parameters with their scaled values
+
+        Returns:
+            Same type as input, with scaling applied
+        """
+        # Track the input type to return the same type
+        is_dataframe = isinstance(data, pd.DataFrame)
+
+        # Convert list of dicts to DataFrame if needed
+        if not is_dataframe:
+            try:
+                df = pd.DataFrame(data)
+            except Exception as e:
+                raise ValueError(f"Failed to convert input to DataFrame: {str(e)}")
+        else:
+            df = data.copy()
+
+        if validate_data:
+            # Get all parameter names from the input data
+            input_param_names = set(df.columns)
+
+            # Get fixed parameters names
+            fixed_param_names = set(self.fixed_parameters_names)
+
+            # Get variable parameters names
+            variable_param_names = set(self.variable_parameters_names)
+
+            # Check if all input parameters are valid variable parameters
+            if not input_param_names - fixed_param_names == variable_param_names:
+                # Find the invalid parameters
+                invalid_params = input_param_names - variable_param_names
+                raise ValueError(f"Parameters {list(invalid_params)} are not valid variable parameters and cannot be scaled")
+
+        # Keep only the variable parameters
+        df = df[self.variable_parameters_names]
+
+        # Get transform info for all parameters in one step
+        transform_dict = {row['name']: row.get('transform') for _, row in self.variable_parameters.iterrows()}
+
+        # Process parameters by transform type
+        log_params = [name for name, transform in transform_dict.items() if transform == 'log' and name in df.columns]
+        neglog_params = [name for name, transform in transform_dict.items() if transform == 'neglog' and name in df.columns]
+
+        # Apply transformations using vectorized operations
+        for param_name in log_params:
+            # Ensure values are positive before taking log
+            if (df[param_name] <= 0).any():
+                min_positive = 1e-20  # Small positive value
+                invalid_indices = df[param_name] <= 0
+                if invalid_indices.any():
+                    logger.warning(f"Found {invalid_indices.sum()} non-positive values in log-scaled parameter '{param_name}'. Setting to {min_positive}.")
+                    df.loc[invalid_indices, param_name] = min_positive
+
+            df[param_name] = np.log10(df[param_name])
+
+        for param_name in neglog_params:
+            # Ensure values are negative before taking neglog
+            if (df[param_name] >= 0).any():
+                max_negative = -1e-20  # Small negative value
+                invalid_indices = df[param_name] >= 0
+                if invalid_indices.any():
+                    logger.warning(f"Found {invalid_indices.sum()} non-negative values in neglog-scaled parameter '{param_name}'. Setting to {max_negative}.")
+                    df.loc[invalid_indices, param_name] = max_negative
+
+            df[param_name] = -np.log10(-df[param_name])
+
+        # Add fixed parameters if requested
+        if include_fixed_parameters and not self.fixed_parameters_scaled.empty:
+                for _, param in self.fixed_parameters_scaled.iterrows():
+                    df[param['name']] = param['default']
+
+        # Return in the same format as input
+        if is_dataframe:
+            return df
+        else:
+            return df.to_dict('records')
+
+    def normalize_parameters_array(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
+                                   include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
+        """
+        Normalize parameter values to the 0-1 range based on min and max values.
+        This is the inverse of denormalize_parameters_array.
+
+        Args:
+            data: Input data in one of the following formats:
+                - pd.DataFrame: DataFrame with parameter names as columns
+                - List[Dict[str, float]]: List of dictionaries with parameter names as keys
+            validate_data: If True, validates that all input parameters are valid parameters
+            include_fixed_parameters: If True, includes fixed parameters with their normalized values
+
+        Returns:
+            Same type as input, with values normalized to the 0-1 range
+        """
+        # Track the input type to return the same type
+        is_dataframe = isinstance(data, pd.DataFrame)
+
+        # Convert list of dicts to DataFrame if needed
+        if not is_dataframe:
+            try:
+                df = pd.DataFrame(data)
+            except Exception as e:
+                raise ValueError(f"Failed to convert input to DataFrame: {str(e)}")
+        else:
+            df = data.copy()
+
+        if validate_data:
+            # Get all parameter names from the input data
+            input_param_names = set(df.columns)
+
+            # Get fixed parameters names
+            fixed_param_names = set(self.fixed_parameters_names)
+
+            # Get variable parameters names
+            variable_param_names = set(self.variable_parameters_names)
+
+            # Check if all input parameters are valid variable parameters
+            if not input_param_names - fixed_param_names == variable_param_names:
+                # Find the invalid parameters
+                invalid_params = input_param_names - variable_param_names
+                raise ValueError(f"Parameters {list(invalid_params)} are not valid variable parameters and cannot be scaled")
+
+        # Keep only the variable parameters
+        df = df[self.variable_parameters_names]
+
+        # Get parameter info for all parameters in one step
+        param_info_dict = {row['name']: {'min': row['min'], 'max': row['max']} for _, row in self.variable_parameters_scaled.iterrows()}
+
+        # Apply normalization to each column using vectorized operations
+        for param_name, info in param_info_dict.items():
+            min_val = info['min']
+            max_val = info['max']
+            range_val = max_val - min_val
+
+            if range_val == 0:
+                logger.warning(f"Parameter '{param_name}' has equal min and max values ({min_val}). Normalization will set all values to 0.5.")
+                df[param_name] = 0.5
+            else:
+                df[param_name] = (df[param_name] - min_val) / range_val
+
+        # Add fixed parameters if requested
+        if include_fixed_parameters and not self.fixed_parameters_normed.empty:
+                for _, param in self.fixed_parameters_normed.iterrows():
+                    df[param['name']] = param['default']
+
+        # Return in the same format as input
+        if is_dataframe:
+            return df
+        else:
+            return df.to_dict('records')
+
+    def scale_and_normalize_parameters_array(self, data: Union[pd.DataFrame, List[Dict[str, float]]], validate_data: bool = True,
+                                             include_fixed_parameters: bool = True) -> Union[pd.DataFrame, List[Dict[str, float]]]:
+        """
+        Apply scaling transformations to parameters and then normalize to the 0-1 range.
+        This is the inverse of denormalize_and_descale_parameters_array.
+
+        Args:
+            data: Input data in one of the following formats:
+                - pd.DataFrame: DataFrame with parameter names as columns
+                - List[Dict[str, float]]: List of dictionaries with parameter names as keys
+            validate_data: If True, validates that all input parameters are valid parameters
+            include_fixed_parameters: If True, includes fixed parameters with their scaled and normalized values
+
+        Returns:
+            Same type as input, with values scaled and normalized
+        """
+        # First apply scaling transformations (log, neglog)
+        scaled_data = self.scale_parameters_array(data, validate_data, include_fixed_parameters=False)
+
+        # Then normalize to 0-1 range
+        return self.normalize_parameters_array(scaled_data, validate_data=False, include_fixed_parameters=include_fixed_parameters)
 
     def __str__(self) -> str:
         """

@@ -1,0 +1,58 @@
+{
+    "input": {
+        "seed": 659,
+        "pop_size": 10,
+        "max_iterations": 1000,
+        "max_iter_without_improvement": 25,
+        "improvement_threshold": 0.01,
+        "metric_threshold": 0.0,
+        "mutation_factor_1": [
+            0.7,
+            1.1
+        ],
+        "mutation_factor_2": [
+            0.2,
+            0.6
+        ],
+        "mutation_factor_3": [
+            0,
+            0.3
+        ],
+        "recombination_factor": [
+            0.8,
+            0.97
+        ],
+        "adaptive_boundaries": false,
+        "results_dir": null,
+        "parameters": [
+      {"name": "w1", "min": 0.1, "default": 6.35, "max": 10.0, "scale": "lin"},
+      {"name": "w2", "min": 0.1, "default": 5.7, "max": 10.0, "scale": "lin"},
+      {"name": "w3", "min": 0.1, "default": 5.05, "max": 10.0, "scale": "lin"},
+      {"name": "w4", "min": 0.1, "default": 4.4, "max": 10.0, "scale": "lin"},
+      {"name": "w5", "min": 0.1, "default": 3.75, "max": 10.0, "scale": "lin"},
+      {"name": "w6", "min": 0.1, "default": 3.1, "max": 10.0, "scale": "lin"},
+      {"name": "w7", "min": 0.1, "default": 2.45, "max": 10.0, "scale": "lin"},
+      {"name": "w8", "min": 0.1, "default": 1.8, "max": 10.0, "scale": "lin"},
+      {"name": "w9", "min": 0.1, "default": 1.15, "max": 10.0, "scale": "lin"}
+    ]
+    },
+    "output": {
+        "iter": 1,
+        "best_metric": 0.28869155132478497,
+        "best_parameters": {
+            "w1": 4.28244922251841,
+            "w2": 8.626633740575974,
+            "w3": 4.682153768608286,
+            "w4": 3.3751429027161297,
+            "w5": 7.7127740047839035,
+            "w6": 6.790613394119559,
+            "w7": 3.8215050987323718,
+            "w8": 3.145790380966706,
+            "w9": 7.224911076532478
+        },
+        "nr_real_evaluations": 10,
+        "nr_classifier_evaluations": 0,
+        "nr_predictor_evaluations": 0,
+        "stop_reason": ""
+    }
+}

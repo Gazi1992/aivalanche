@@ -1,0 +1,39 @@
+{
+    "input": {
+        "seed": 794,
+        "pop_size": 20,
+        "max_iterations": 1000,
+        "max_iter_without_improvement": 50,
+        "metric_threshold": 0.0,
+        "adaptive_boundaries": false,
+        "results_dir": null,
+        "parameters": [
+      {"name": "w1", "min": 0.1, "default": 7.0, "max": 10.0, "scale": "lin"},
+      {"name": "w2", "min": 0.1, "default": 6.0, "max": 10.0, "scale": "lin"},
+      {"name": "w3", "min": 0.1, "default": 5.0, "max": 10.0, "scale": "lin"},
+      {"name": "w4", "min": 0.1, "default": 4.0, "max": 10.0, "scale": "lin"},
+      {"name": "w5", "min": 0.1, "default": 3.0, "max": 10.0, "scale": "lin"},
+      {"name": "w6", "min": 0.1, "default": 2.0, "max": 10.0, "scale": "lin"},
+      {"name": "w7", "min": 0.1, "default": 1.0, "max": 10.0, "scale": "lin"},
+      {"name": "w8", "min": 0.1, "default": 1.0, "max": 10.0, "scale": "lin"},
+      {"name": "w9", "min": 0.1, "default": 0.5, "max": 10.0, "scale": "lin"}
+    ]
+    },
+    "output": {
+        "iter": 363,
+        "best_metric": 0.0708935550169707,
+        "best_parameters": {
+            "w1": 3.981440569145635,
+            "w2": 3.8445152979189565,
+            "w3": 5.057566495090884,
+            "w4": 5.039898363261402,
+            "w5": 3.933402507162131,
+            "w6": 2.6949252987460164,
+            "w7": 2.325951413140532,
+            "w8": 2.3660276385521803,
+            "w9": 2.4177415398605357
+        },
+        "nr_evaluations": 7260,
+        "stop_reason": ""
+    }
+}

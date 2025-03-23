@@ -83,7 +83,29 @@ def plot_parameter_evolution(data, path = None):
     if path is not None:
         plt.savefig(path, bbox_inches='tight', dpi=300)
         plt.close()
-        
+
+# Plot reference data
+def plot_ref_data(data, ax = None, path = None):
+    if ax is not None:
+        plt.sca(ax)
+    else:
+        # Create figure
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+
+    for index, row in data.iterrows():
+        ax.scatter(row['x_values'], row['y_values'], marker = 'o', label = f'{row["extra_var_name"]} = {row["extra_var_value"]}')
+
+    ax.set_xlabel(f'{data.iloc[0]["x_name"]}')
+    ax.set_ylabel(f'{data.iloc[0]["y_name"]}')
+    ax.set_title('Forward current characteristic')
+    plt.grid(which='major', linestyle='-', alpha=0.5)
+    plt.grid(which='minor', axis='y', linestyle='--', alpha=0.3)
+    plt.legend(loc = 'upper left')
+
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight', dpi=300)
+        plt.close()
+
 # Plot the fit
 def plot_fit(data, ax = None, path = None):
     if ax is not None:
@@ -91,7 +113,7 @@ def plot_fit(data, ax = None, path = None):
     else:
         # Create figure
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
-        
+
     for index, row in data.iterrows():
         ax.scatter(row['x_values'], row['y_values'], marker = 'o', facecolors = "None", edgecolors = 'black')
         ax.plot(row['x_values_simulation'], row['y_values_simulation'], label = f'{row["extra_var_name"]} = {row["extra_var_value"]}')
@@ -102,11 +124,11 @@ def plot_fit(data, ax = None, path = None):
     plt.grid(which='major', linestyle='-', alpha=0.5)
     plt.grid(which='minor', axis='y', linestyle='--', alpha=0.3)
     plt.legend(loc = 'upper left')
-    
+
     if path is not None:
         plt.savefig(path, bbox_inches='tight', dpi=300)
         plt.close()
-        
+
 def plot_loss(data, ax = None, path = None):
     if ax is not None:
         plt.sca(ax)
@@ -126,7 +148,7 @@ def plot_loss(data, ax = None, path = None):
     if path is not None:
         plt.savefig(path, bbox_inches='tight', dpi=300)
         plt.close()
-        
+
 def plot_results(sim_data, optimization_data = None, path = None):
 
     # Get primary monitor size
@@ -240,7 +262,7 @@ def plot_results(sim_data, optimization_data = None, path = None):
         plt.savefig(path, bbox_inches='tight', dpi=300)
 
     plt.show()
-    
+
 # Update all text elements in a figure
 def update_fontsize(fig, fontsize):
     # Update title and axis labels for all axes

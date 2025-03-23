@@ -1,0 +1,71 @@
+{
+    "input": {
+        "seed": 991,
+        "max_iterations": 1000,
+        "max_iter_without_improvement": 30,
+        "improvement_threshold": 0.01,
+        "metric_threshold": 0,
+        "reflection_coefficient": [
+            0.9,
+            1.1
+        ],
+        "expansion_coefficient": [
+            1.5,
+            2.5
+        ],
+        "contraction_coefficient": [
+            0.3,
+            0.5
+        ],
+        "shrink_coefficient": [
+            0.3,
+            0.5
+        ],
+        "initial_point": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+        ],
+        "initial_point_mode": "centroid",
+        "initial_simplex_edge_length": [
+            0.4,
+            0.7
+        ],
+        "use_default_in_initial_simplex": false,
+        "ignore_bounaries": false,
+        "parameters": [
+      {"name": "w1", "min": 0.1, "default": 6.35, "max": 10.0, "scale": "lin"},
+      {"name": "w2", "min": 0.1, "default": 5.7, "max": 10.0, "scale": "lin"},
+      {"name": "w3", "min": 0.1, "default": 5.05, "max": 10.0, "scale": "lin"},
+      {"name": "w4", "min": 0.1, "default": 4.4, "max": 10.0, "scale": "lin"},
+      {"name": "w5", "min": 0.1, "default": 3.75, "max": 10.0, "scale": "lin"},
+      {"name": "w6", "min": 0.1, "default": 3.1, "max": 10.0, "scale": "lin"},
+      {"name": "w7", "min": 0.1, "default": 2.45, "max": 10.0, "scale": "lin"},
+      {"name": "w8", "min": 0.1, "default": 1.8, "max": 10.0, "scale": "lin"},
+      {"name": "w9", "min": 0.1, "default": 1.15, "max": 10.0, "scale": "lin"}
+    ]
+    },
+    "output": {
+        "iter": 146,
+        "best_metric": 0.12551934483935745,
+        "best_parameters": {
+            "w1": 3.941057413017553,
+            "w2": 3.195614813731492,
+            "w3": 5.978558022190111,
+            "w4": 5.122907118458747,
+            "w5": 6.04837602060896,
+            "w6": 4.436739529190278,
+            "w7": 2.015475928233296,
+            "w8": 3.2349325326315714,
+            "w9": 1.9462458041418054
+        },
+        "nr_evaluations": 229,
+        "stop_reason": "maximum number of iterations without improvement reached"
+    }
+}

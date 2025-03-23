@@ -1,4 +1,4 @@
-import math
+import numpy as np
 
 def scale_parameter_row(row):
     """
@@ -10,17 +10,16 @@ def scale_parameter_row(row):
     Returns:
         pd.Series: The transformed row with additional metadata
     """
-    transform = row.get('transform')
+    transform = row['transform']
 
     if transform == 'log': # Apply log10 transformation
-        row['min'] = math.log10(row['min'])
-        row['max'] = math.log10(row['max'])
-        row['default'] = math.log10(row['default'])
-
+        row['min'] = np.log10(row['min'])
+        row['max'] = np.log10(row['max'])
+        row['default'] = np.log10(row['default'])
     elif transform == 'neglog': # Apply -log10(-x) transformation
-        row['min'] = -math.log10(-row['min'])
-        row['max'] = -math.log10(-row['max'])
-        row['default'] = -math.log10(-row['default'])
+        row['min'] = -np.log10(-row['min'])
+        row['max'] = -np.log10(-row['max'])
+        row['default'] = -np.log10(-row['default'])
 
     return row
 

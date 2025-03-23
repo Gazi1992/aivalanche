@@ -1,0 +1,56 @@
+{
+    "input": {
+        "seed": 829,
+        "max_iterations": 1000,
+        "max_iter_without_improvement": 30,
+        "improvement_threshold": 0.01,
+        "metric_threshold": -10000000000.0,
+        "reflection_coefficient": [
+            0.9,
+            1.1
+        ],
+        "expansion_coefficient": [
+            1.5,
+            2.5
+        ],
+        "contraction_coefficient": [
+            0.3,
+            0.5
+        ],
+        "shrink_coefficient": [
+            0.3,
+            0.5
+        ],
+        "initial_point": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+        ],
+        "initial_point_mode": "centroid",
+        "initial_simplex_edge_length": [
+            0.4,
+            0.7
+        ],
+        "use_default_in_initial_simplex": false,
+        "ignore_bounaries": false,
+        "parameters": [
+      {"name": "d1", "min": 0.0, "default": 5.0, "max": 10.0, "scale": "lin"},
+      {"name": "w2", "min": 1.0, "default": 1.5, "max": 5.0, "scale": "lin"},
+      {"name": "w3", "min": 5.0, "default": 10.0, "max": 15.0, "scale": "lin"},
+      {"name": "w4", "min": 10.0, "default": 10.0, "max": 20.0, "scale": "lin"}
+    ]
+    },
+    "output": {
+        "iter": 20,
+        "best_metric": -0.48881097420354996,
+        "best_parameters": {
+            "d1": 5.830905549722745,
+            "w2": 4.368548026550696,
+            "w3": 10.689404328051328,
+            "w4": 14.69962218039281
+        },
+        "nr_evaluations": 46,
+        "stop_reason": ""
+    }
+}
