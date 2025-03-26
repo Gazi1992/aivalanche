@@ -1004,6 +1004,27 @@ class Parameters:
         # Then normalize to 0-1 range
         return self.normalize_parameters_array(scaled_data, validate_data=False, include_fixed_parameters=include_fixed_parameters)
 
+    def get_parameter_info(self, param_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Get detailed information about a parameter by name.
+
+        Args:
+            param_name (str): Name of the parameter
+
+        Returns:
+            Optional[Dict[str, Any]]: Dictionary with parameter information or None if not found
+        """
+        if self.all_parameters.empty or param_name not in self.all_parameters['name'].values:
+            return None
+
+        # Get the parameter row
+        param_row = self.all_parameters[self.all_parameters['name'] == param_name].iloc[0]
+
+        # Convert to dictionary
+        param_info = param_row.to_dict()
+
+        return param_info
+
     def __str__(self) -> str:
         """
         Return a string representation of the Parameters object.

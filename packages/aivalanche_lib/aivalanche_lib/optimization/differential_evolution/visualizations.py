@@ -2,12 +2,15 @@
 Visualization tools for the Differential Evolution optimizer.
 This module provides a visualization function for analyzing the performance of the
 Differential Evolution optimizer, focusing on metric evolution plots.
-Author: Gazmend Alia
+
+Note: All functions in this module are prefixed with an underscore (_) to indicate
+they are internal implementation details not meant to be called directly from outside
+the DifferentialEvolution class.
 """
 import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
 
-def plot_mutation_and_recombination(param_1_name, param_2_name,
+def _plot_mutation_and_recombination(param_1_name, param_2_name,
                                     all_targets, target, donor, trial, best,
                                     mut_coef_1, mut_coef_2, mut_coef_3, recom_coef,
                                     rand_mem_1, rand_mem_2, rand_mem_3,
@@ -89,7 +92,7 @@ def plot_mutation_and_recombination(param_1_name, param_2_name,
 
     return fig, ax
 
-def plot_metrics_evolution(
+def _plot_metrics_evolution(
     iterations: np.ndarray,
     metrics: np.ndarray = None,
     x_scale: str = 'linear',
@@ -154,8 +157,8 @@ def plot_metrics_evolution(
     ax.set_yscale(y_scale)
 
     # Add grid for better readability
-    plt.grid(which='major', axis = 'both', linestyle='-', alpha=0.5)
-    plt.grid(which='minor', axis = 'both', linestyle='--', alpha=0.3)
+    ax.grid(which='major', axis = 'both', linestyle='-', alpha=0.5)
+    ax.grid(which='minor', axis = 'both', linestyle='--', alpha=0.3)
 
     # Adjust layout to prevent clipping of labels
     plt.tight_layout()
@@ -167,7 +170,7 @@ def plot_metrics_evolution(
     # Return both the figure and axes for further customization if needed
     return fig, ax
 
-def plot_all_parameters_evolution(
+def _plot_all_parameters_evolution(
     df: pd.DataFrame,
     iter_start: int = None,
     iter_end: int = None,
@@ -343,47 +346,59 @@ def plot_all_parameters_evolution(
 
     return fig, axes
 
-def plot_single_parameter_evolution(
+def _plot_parameters_evolution(
     df: pd.DataFrame,
-    parameter_name: str,
+    parameter_names: list = None,
     iter_start: int = None,
     iter_end: int = None,
     iter_step: int = 1,
     fig: plt.Figure = None,
-    ax: plt.Axes = None,
+    axes: list = None,
     bins: int = 100,
-    figsize: tuple = (10, 6),
+    figsize: tuple = None,
     title: str = None,
     save_path: str = None,
+    nr_rows: int = 1,
     **kwargs
-) -> tuple[plt.Figure, plt.Axes]:
+) -> tuple[plt.Figure, list]:
     """
-    Plot the evolution of a single parameter's histogram across iterations.
+    Plot the evolution of multiple parameters' histograms across iterations.
 
     Args:
-        df: DataFrame with parameter values (must contain 'iter' column and parameter_name column)
-        parameter_name: Name of the parameter to visualize
+        df: DataFrame with parameter values (must contain 'iter' column and parameter columns)
+        parameter_names: List of parameter names to visualize (if None, use all columns except 'iter' and 'metric')
         iter_start: First iteration to include (if None, starts from minimum)
         iter_end: Last iteration to include (if None, goes to maximum)
         iter_step: Step size for iterations (to reduce number of histograms)
         fig: Optional existing figure to plot on
-        ax: Optional existing axes to plot on
+        axes: Optional list of existing axes to plot on
         bins: Number of bins for the histograms
-        figsize: Size of the figure in inches (width, height)
-        title: Title for the figure (if None, uses parameter name)
+        figsize: Size of the figure in inches (width, height). If None, calculated automatically
+        title: Title for the figure (if None, uses generic title)
         save_path: If provided, the figure will be saved to this path
+        nr_rows: Number of rows to arrange the parameter plots
         **kwargs: Additional keyword arguments passed to plt.imshow
 
     Returns:
-        tuple: Figure and axes objects
+        tuple: Figure and list of axes
     """
-    # Check if the parameter exists in the DataFrame
-    if parameter_name not in df.columns:
-        raise ValueError(f"Parameter '{parameter_name}' not found in DataFrame")
-
     # Check if 'iter' column exists in the DataFrame
     if 'iter' not in df.columns:
         raise ValueError("DataFrame must contain an 'iter' column")
+
+    # Determine parameter names if not specified
+    if parameter_names is None:
+        # Exclude 'iter' and 'metric' columns
+        parameter_names = [col for col in df.columns if col not in ['iter', 'metric']]
+    else:
+        # Check if all requested parameters exist in the DataFrame
+        for param in parameter_names:
+            if param not in df.columns:
+                raise ValueError(f"Parameter '{param}' not found in DataFrame")
+
+    n_params = len(parameter_names)
+    if n_params == 0:
+        raise ValueError("No parameters to plot")
 
     # Get iteration range
     unique_iters = sorted(df['iter'].unique())
@@ -402,96 +417,138 @@ def plot_single_parameter_evolution(
     if not selected_iters:
         raise ValueError(f"No iterations found in range [{iter_start}, {iter_end}] with step {iter_step}")
 
-    # Determine parameter range
-    param_min = df[parameter_name].min()
-    param_max = df[parameter_name].max()
+    # Calculate layout parameters
+    nr_cols = int(np.ceil(n_params / nr_rows))
 
-    # Ensure min and max are different
-    if param_min == param_max:
-        param_min -= 0.5
-        param_max += 0.5
+    # Set default figure size if not provided
+    if figsize is None:
+        # Scale width based on number of parameters and columns
+        width = min(nr_cols * 5, 20)  # Cap width at 20 inches
+        height = min(nr_rows * 4, 16)  # Cap height at 16 inches
+        figsize = (width, height)
 
     # Create figure and axes if not provided
-    if fig is None or ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
+    if fig is None and axes is None:
+        fig, axes_array = plt.subplots(nr_rows, nr_cols, figsize=figsize)
 
-    # Create a 2D array to store all histograms
-    hist_matrix = []
+        # Handle different axes shapes based on rows and columns
+        if nr_rows == 1 and nr_cols == 1:
+            axes = np.array([axes_array])
+        elif nr_rows == 1:
+            axes = np.array([ax for ax in axes_array])
+        elif nr_cols == 1:
+            axes = np.array([[ax] for ax in axes_array])
+        else:
+            axes = axes_array
+    elif fig is not None and axes is None:
+        # Create axes in the existing figure
+        axes = []
+        for i in range(nr_rows):
+            row_axes = []
+            for j in range(nr_cols):
+                ax = fig.add_subplot(nr_rows, nr_cols, i*nr_cols + j + 1)
+                row_axes.append(ax)
+            axes.append(row_axes)
+        axes = np.array(axes)
+    elif fig is None and axes is not None:
+        # If axes are provided but no figure, get the figure from the first axes
+        if len(axes) > 0:
+            if isinstance(axes, np.ndarray) and axes.size > 0:
+                fig = axes.flat[0].figure
+            elif isinstance(axes, list) and len(axes) > 0:
+                fig = axes[0].figure
+            else:
+                raise ValueError("Invalid axes input")
 
-    # Calculate histograms for each iteration
-    for iter_num in selected_iters:
-        # Get parameter values for this iteration
-        iter_values = df[df['iter'] == iter_num][parameter_name].values
+    # Ensure axes is a numpy array for consistent indexing
+    if not isinstance(axes, np.ndarray):
+        axes = np.array(axes)
 
-        # Calculate histogram
-        hist, _ = np.histogram(iter_values, bins=bins, range=(param_min, param_max))
+    # Flatten the axes array for easier indexing
+    if nr_rows == 1:
+        axes_flat = axes
+    else:
+        axes_flat = axes.flatten()
 
-        # Add to matrix
-        hist_matrix.append(hist)
+    # Plot each parameter
+    for i, param_name in enumerate(parameter_names):
+        if i < len(axes_flat):
+            ax = axes_flat[i]
 
-    # Convert to numpy array
-    hist_matrix = np.array(hist_matrix)
+            # Determine parameter range
+            param_min = df[param_name].min()
+            param_max = df[param_name].max()
 
-    # Transpose the matrix for the rotated view (iterations on x-axis)
-    hist_matrix = hist_matrix.T
+            # Ensure min and max are different
+            if param_min == param_max:
+                param_min -= 0.5
+                param_max += 0.5
 
-    # Set default kwargs for imshow
-    imshow_kwargs = {
-        'aspect': 'auto',
-        'interpolation': 'nearest',
-        'cmap': 'YlGn',
-        'origin': 'lower',
-        'extent': [iter_start, iter_end, param_min, param_max]  # Swapped axes
-    }
+            # Create a 2D array to store all histograms
+            hist_matrix = []
 
-    # Update with user provided kwargs
-    imshow_kwargs.update(kwargs)
+            # Calculate histograms for each iteration
+            for iter_num in selected_iters:
+                # Get parameter values for this iteration
+                iter_values = df[df['iter'] == iter_num][param_name].values
 
-    # Plot histograms as image
-    im = ax.imshow(hist_matrix, **imshow_kwargs)
+                # Calculate histogram
+                hist, _ = np.histogram(iter_values, bins=bins, range=(param_min, param_max))
 
-    # Add colorbar
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label('Frequency')
+                # Add to matrix
+                hist_matrix.append(hist)
 
-    # Set labels - swapped compared to original
-    ax.set_xlabel('Iteration')
-    ax.set_ylabel(parameter_name)
+            # Convert to numpy array
+            hist_matrix = np.array(hist_matrix)
 
-    # Set title
+            # Transpose the matrix for the rotated view (iterations on x-axis)
+            hist_matrix = hist_matrix.T
+
+            # Set default kwargs for imshow
+            imshow_kwargs = {
+                'aspect': 'auto',
+                'interpolation': 'nearest',
+                'cmap': 'YlGn',
+                'origin': 'lower',
+                'extent': [min(selected_iters), max(selected_iters), param_min, param_max]
+            }
+
+            # Update with user provided kwargs
+            imshow_kwargs.update(kwargs)
+
+            # Plot histograms as image
+            im = ax.imshow(hist_matrix, **imshow_kwargs)
+
+            # Add colorbar
+            cbar = fig.colorbar(im, ax=ax)
+            cbar.set_label('Frequency')
+
+            # Set labels
+            ax.set_xlabel('Iteration')
+            ax.set_ylabel(param_name)
+
+            # Set title for each subplot
+            ax.set_title(f"Evolution of {param_name}")
+
+    # Hide unused subplots
+    for i in range(n_params, len(axes_flat)):
+        axes_flat[i].axis('off')
+
+    # Add title to the figure
     if title is None:
-        title = f"Evolution of {parameter_name} distribution"
-    ax.set_title(title)
+        title = "Parameters Distribution Evolution"
+    fig.suptitle(title)
 
-    # Add grid for better readability
-    # plt.grid(which='major', axis = 'x', linestyle='-', color = 'white',  alpha=0.5)
-    # plt.grid(which='minor', axis = 'x', linestyle='-', color = 'white',  alpha=0.5)
-
-    # Add vertical grid lines for iterations if requested
-    # Create evenly spaced grid lines across all iterations
-    # if len(selected_iters) > 20:
-    #     # If there are many iterations, show fewer grid lines
-    #     grid_step = max(1, len(selected_iters) // 20)
-    #     grid_iters = selected_iters[::grid_step]
-    # else:
-    #     # Otherwise show all selected iterations
-    #     grid_iters = selected_iters
-
-    # # Draw vertical lines for each iteration
-    # for iter_num in grid_iters:
-    #     ax.axvline(x=iter_num, color='white', alpha=0.5,
-    #               linewidth=0.5, linestyle='-')
-
-    # Adjust layout
-    plt.tight_layout()
+    # Adjust spacing between subplots
+    fig.tight_layout(rect=[0, 0, 1, 0.96] if title else [0, 0, 1, 1])
 
     # Save figure if path provided
     if save_path:
         fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
-    return fig, ax
+    return fig, axes
 
-def plot_boundaries_evolution(
+def _plot_boundaries_evolution(
     df: pd.DataFrame,
     parameter_names: list = None,
     iter_start: int = None,
@@ -635,12 +692,12 @@ def plot_boundaries_evolution(
             ax.set_title(param_name)
 
             # Add grid for better readability
-            plt.grid(which='major', axis = 'both', linestyle='-', alpha=0.5)
-            plt.grid(which='minor', axis = 'both', linestyle='--', alpha=0.3)
+            ax.grid(which='major', axis = 'both', linestyle='-', alpha=0.5)
+            ax.grid(which='minor', axis = 'both', linestyle='--', alpha=0.3)
 
-            # Add legend to the first subplot only
-            if i == 0:
-                ax.legend()
+            # # Add legend to the first subplot only
+            # if i == 0:
+            #     ax.legend()
 
     # Hide unused subplots
     for i in range(n_params, len(axes_flat)):

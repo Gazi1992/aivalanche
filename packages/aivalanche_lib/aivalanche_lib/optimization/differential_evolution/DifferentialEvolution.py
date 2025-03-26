@@ -6,22 +6,38 @@ using the Differential Evolution method. It integrates with the Parameters class
 handling and supports various DE strategies, adaptive boundaries, and customizable stopping criteria.
 
 Author: Gazmend Alia
+
+Note: All functions in this module prefixed with an underscore (_) indicate
+they are internal implementation details not meant to be called directly from outside
+the DifferentialEvolution class.
 """
 
-import numpy as np, pandas as pd
-from scipy.stats.qmc import Halton
+import numpy as np, pandas as pd, inspect
 from typing import Dict, List, Optional, Union, Any, Callable
 
-# Import Parameters class
 from aivalanche_lib.parameters.Parameters import Parameters
-from .visualizations import (plot_metrics_evolution, plot_all_parameters_evolution, plot_boundaries_evolution,
-                             plot_mutation_and_recombination, plot_single_parameter_evolution)
+from .utils import (
+    _update_history, _update_boundaries,
+    _get_history_as_df, _get_all_denormalized_boundaries,
+    _run_callbacks
+    )
+from .io import (
+    write_history_to_file, write_optimization_info_to_file,
+    write_best_parameters_to_file, write_current_population_to_file
+    )
+from .operators import (
+    _generate_donors, _generate_trials,
+    _determine_survivors, _determine_best
+    )
+from .visualizations import (
+    _plot_metrics_evolution, _plot_all_parameters_evolution, _plot_boundaries_evolution,
+    _plot_mutation_and_recombination, _plot_parameters_evolution
+    )
 
 '''
 TODO
-2. implement incoorpotation of defaults and init pop in the first population
-3. implement clasiffier
-4. implement predictor
+1. implement clasiffier
+2. implement predictor
 '''
 
 class DifferentialEvolution:
@@ -147,10 +163,25 @@ class DifferentialEvolution:
         self._initialize_variables()
 
     @property
+    def current_parameters(self):
+        '''
+        Convert normalized trial vectors to real parameter values.
+        Returns a DataFrame where columns are parameter names and rows are trial vectors,
+        using the Parameters class to handle denormalization and descaling.
+        '''
+        if self.iter < 1:
+            return None
+
+        return self.parameters.denormalize_and_descale_parameters_array(
+            pd.DataFrame(columns = self.variable_parameters_names, data = self.trials),
+            include_fixed_parameters = True
+            )
+
+    @property
     def history(self):
-        trials_df, trials_normed_df = self._get_history_as_df(which='trials')
-        survivors_df, survivors_normed_df = self._get_history_as_df(which='survivors')
-        bests_df, bests_normed_df = self._get_history_as_df(which='bests')
+        trials_df, trials_normed_df = _get_history_as_df(self, which='trials')
+        survivors_df, survivors_normed_df = _get_history_as_df(self, which='survivors')
+        bests_df, bests_normed_df = _get_history_as_df(self, which='bests')
 
         return {
             'trials': trials_df,
@@ -159,12 +190,12 @@ class DifferentialEvolution:
             'survivors_normed': survivors_normed_df,
             'bests': bests_df,
             'bests_normed': bests_normed_df,
-            'all_boundaries': self.all_boundaries,
-            'all_boundaries_normed': self._get_all_denormalized_boundaries()
+            'boundaries': self.all_boundaries,
+            'boundaries_normed': _get_all_denormalized_boundaries(self)
             }
 
     @property
-    def stats(self):
+    def parameter_evolution_stats(self):
         """
         Extract and compute statistics from the optimization history using pandas groupby.
 
@@ -236,6 +267,45 @@ class DifferentialEvolution:
 
         return all_stats
 
+    @property
+    def optimization_info(self):
+        """
+        Property that dynamically assembles optimization information.
+
+        Returns:
+            dict: Dictionary containing input parameters and current output state
+                  of the optimization process.
+        """
+        # Dynamically capture all input parameters from __init__ signature
+
+        # Get the signature of the __init__ method
+        init_signature = inspect.signature(self.__class__.__init__)
+
+        # Extract all parameter names except 'self'
+        param_names = [p for p in init_signature.parameters if p != 'self']
+
+        # Create dictionary with all input parameters
+        input_info = {name: getattr(self, name) for name in param_names if hasattr(self, name)}
+
+        # Add parameters data in the proper format
+        input_info['parameters'] = self.parameters.all_parameters.to_dict('records')
+
+        # Current output state that changes during optimization
+        output_info = {
+            'iter': self.iter,
+            'nr_evaluations': self.nr_evaluations,
+            'best_metric': self.best_metric,
+            'best_parameters': self.best_parameters,
+            'stop_reason': self.stop_reason,
+            'is_stop_criteria_reached': self.is_stop_criteria_reached,
+            'iter_no_improvement': self.iter_no_improvement
+        }
+
+        return {
+            'input': input_info,
+            'output': output_info
+        }
+
     def _initialize_variables(self):
         """Initialize all internal variables for the optimization process."""
         self.iter = 0
@@ -243,18 +313,19 @@ class DifferentialEvolution:
         self.abort_flag = False
         self.is_stop_criteria_reached = False
         self.stop_reason = ""
+        self.nr_evaluations = 0
 
         # Initialize the targets, donors, trials and survivors to None
-        self.targets = np.full((self.pop_size, self.nr_variable_parameters), None)
-        self.targets_metrics = np.full((self.pop_size), None)
+        self.targets = np.full((self.pop_size, self.nr_variable_parameters), np.nan)
+        self.targets_metrics = np.full((self.pop_size), np.nan)
 
-        self.donors = np.full((self.pop_size, self.nr_variable_parameters), None)
+        self.donors = np.full((self.pop_size, self.nr_variable_parameters), np.nan)
 
-        self.trials = np.full((self.pop_size, self.nr_variable_parameters), None)
-        self.trials_metrics = np.full((self.pop_size), None)
+        self.trials = np.full((self.pop_size, self.nr_variable_parameters), np.nan)
+        self.trials_metrics = np.full((self.pop_size), np.nan)
 
-        self.survivors = np.full((self.pop_size, self.nr_variable_parameters), None)
-        self.survivors_metrics = np.full((self.pop_size), None)
+        self.survivors = np.full((self.pop_size, self.nr_variable_parameters), np.nan)
+        self.survivors_metrics = np.full((self.pop_size), np.nan)
 
         # Initialize adaptive boundaries
         self.boundaries_min = np.zeros((self.nr_variable_parameters))       # Initialize with zeros
@@ -293,11 +364,7 @@ class DifferentialEvolution:
         self.best_metric = float('-inf') if self.opt_min_or_max == 'max' else float('inf')
         self.best_response = None
 
-        # Optimization info
-        self.optimization_info = {}
-
-        # Current parameters and responses
-        self.current_parameters = None
+        # Current responses
         self.current_responses = None
         self.current_metrics = None
 
@@ -320,20 +387,18 @@ class DifferentialEvolution:
             self._run_iteration()
 
             # Run callbacks
-            self._run_callbacks(last_iteration = False)
+            _run_callbacks(self, last_iteration = False)
 
             # Generate new trials for next iteration
             self._prepare_next_iter()
 
-        self._run_callbacks(last_iteration = True)
+        _run_callbacks(self, last_iteration = True)
 
         # Final processing
         self.show_final_result()
 
     def _run_iteration(self):
         """Run a single iteration of the optimization algorithm."""
-        # Get next parameters to evaluate
-        self.current_parameters = self._get_current_parameters()
 
         # Evaluate parameters
         extra_arguments = {
@@ -350,26 +415,17 @@ class DifferentialEvolution:
         # Save metrics
         self.trials_metrics = np.array(self.current_metrics)
 
-        # Determine survivors and update best solution
-        self._determine_survivors()
-        self._determine_best()
-        self._update_boundaries()
-        self._update_history()
-        self._update_optimization_info()
+        # Determine survivors, best solution and update history
+        _determine_survivors(self)
+        _determine_best(self)
+        _update_history(self)
 
-    def _get_current_parameters(self):
-        '''
-        Convert normalized trial vectors to real parameter values.
-        Returns a DataFrame where columns are parameter names and rows are trial vectors,
-        using the Parameters class to handle denormalization and descaling.
-        '''
-        return self.parameters.denormalize_and_descale_parameters_array(
-            pd.DataFrame(columns = self.variable_parameters_names, data = self.trials),
-            include_fixed_parameters = True
-            )
+        # Update nr of evaluations
+        self.nr_evaluations += len(self.current_responses)
 
     def _prepare_next_iter(self):
         """Prepare for the next iteration."""
+
         self.iter += 1
 
         # Check if stop criteria are met
@@ -384,334 +440,16 @@ class DifferentialEvolution:
             self.targets_metrics = self.survivors_metrics
 
             # Adapt boundaries if enabled
-            if self.adaptive_boundaries and self.iter % self.adaptive_boundaries_check_period == 0:
-                self._update_boundaries()
+            if self.adaptive_boundaries:
+                _update_boundaries(self)
 
             # Generate new donors and trials
-            self._generate_donors()
-            self._generate_trials()
+            _generate_donors(self)
+            _generate_trials(self)
 
             # # Plot mutation and recombination for 2 params
             # if self.iter == 2:
             #     self._plot_mutation_and_recombination()
-
-    def _incorporate_initial_population(self):
-        """Incorporate provided initial population into donors."""
-        print('incorporate init pop')
-
-    def _incorporate_default_values(self):
-        """Incorporate default parameter values in initial population."""
-        print('incorporate default values')
-
-    def _generate_trials(self):
-        """Generate trial vectors for each target-donor pair."""
-        if self.iter == 1:
-            # In the first iteration, trials are equal to donors
-            self.trials = self.donors
-        else:
-            # Generate recombinations between targets and donors
-            self._generate_recombinations()
-
-    def _generate_donors(self):
-        """Generate donor vectors for each target."""
-        if self.iter == 1:
-            self._generate_initial_population()
-        else:
-            # Generate mutations for each target
-            self._generate_mutations()
-
-    def _generate_initial_population(self):
-         # Generate donors randomly using Halton sequence
-         sampler = Halton(d=self.nr_variable_parameters, seed=self.seed)
-         self.donors = sampler.random(self.pop_size)
-
-         # Handle initial population if provided
-         if self.init_pop is not None:
-             self._incorporate_initial_population()
-
-         # Handle default values in initial population
-         if self.defaults_in_init_pop:
-             self._incorporate_default_values()
-
-    def _generate_mutations(self, dice=None):
-        """Generate mutation vectors using DE mutation operators."""
-        if dice is None:
-            # Select 3 distinct random indices for each target
-            dice = [
-                self.rng.choice([j for j in range(self.pop_size) if j != i], size=(1, 3), replace=False)
-                for i in range(self.pop_size)
-            ]
-            dice = np.array(dice).reshape(-1, 3)
-
-        # Extract random members from the population
-        temp = self.targets[dice].reshape(-1, 3, self.nr_variable_parameters)
-        self.rand_mem_1 = temp[:, 0, :]
-        self.rand_mem_2 = temp[:, 1, :]
-        self.rand_mem_3 = temp[:, 2, :]
-
-        # Calculate mutation coefficients
-        self.mut_coef_1 = self._get_coefficient(self.mutation_factor_1)
-        self.mut_coef_2 = self._get_coefficient(self.mutation_factor_2)
-        self.mut_coef_3 = self._get_coefficient(self.mutation_factor_3)
-
-        # Calculate donor vectors using DE mutation formula
-        self.donors = (
-            self.rand_mem_1 +                                        # Random vector 1
-            self.mut_coef_1 * (self.rand_mem_2 - self.rand_mem_3) +  # Scaled difference between random vectors 2 and 3
-            self.mut_coef_2 * (self.best - self.rand_mem_1) +        # Scaled difference between best and random vector 1
-            self.mut_coef_3 * (self.best - self.targets)             # Scaled difference between best and target
-        )
-
-        # Correct values outside [0, 1] range
-        self._check_donors_boundaries()
-
-    def _get_coefficient(self, factor):
-        if isinstance(factor, (float, int)):
-            return factor
-        elif isinstance(factor, (tuple, list)):
-            return self.rng.uniform(factor[0], factor[1], size=(self.pop_size, 1))
-        return None
-
-    def _check_donors_boundaries(self):
-        """
-        Correct values outside [0, 1] range in donor vectors.
-        Returns:
-            Corrected donor vectors
-        """
-        # Get row and column indices of violations
-        upper_violation_mask = self.donors > self.boundaries_max
-        lower_violation_mask = self.donors < self.boundaries_min
-
-        # Process upper violations
-        if np.any(upper_violation_mask):
-            rows, cols = np.where(upper_violation_mask)
-            self.donors[upper_violation_mask] = self.rng.uniform(
-                self.targets[upper_violation_mask],
-                self.boundaries_max[cols],
-                size=len(rows)
-            )
-
-        # Process lower violations
-        if np.any(lower_violation_mask):
-            rows, cols = np.where(lower_violation_mask)
-            self.donors[lower_violation_mask] = self.rng.uniform(
-                self.boundaries_min[cols],
-                self.targets[lower_violation_mask],
-                size=len(rows)
-            )
-
-    def _generate_recombinations(self, dice=None):
-        """Generate recombination vectors by crossing over targets and donors."""
-        # Generate random values for each parameter
-        if dice is None:
-            dice = self.rng.rand(self.pop_size, self.nr_variable_parameters)
-
-        # Get recombination coefficient
-        self.recom_coef = self._get_coefficient(self.recombination_factor)
-
-        # Create trials by combining donors and targets
-        self.trials = np.where(dice < self.recom_coef, self.donors, self.targets)
-
-    def _run_callbacks(self, last_iteration = False):
-        callbacks_args = {
-            'optimizer': self,
-            'iteration': self.iter,
-            'parameters': self.current_parameters,
-            'responses': self.current_responses,
-            'best_parameters': self.best_parameters,
-            'best_metric': self.best_metric,
-            'best_response': self.best_response,
-            'parameters_names': self.parameters.parameters_names,
-            'all_trials': self.all_trials,
-            'stop_reason': self.stop_reason,
-            **self.eval_func_args
-        }
-
-        if last_iteration:
-            if self.callback_after_last_iter is not None:
-                self.callback_after_last_iter(**callbacks_args)
-        else:
-            if self.iter == 1 and self.callback_after_first_iter is not None:
-                self.callback_after_first_iter(**callbacks_args)
-
-            if self.callback_after_each_iter is not None:
-                self.callback_after_each_iter(**callbacks_args)
-
-            if self.better_solution_found and self.callback_after_better_solution is not None:
-                    self.callback_after_better_solution(**callbacks_args)
-
-    def _determine_survivors(self):
-        """Determine survivors for the next generation."""
-        if self.iter == 1:
-            # In the first iteration, all trials become survivors
-            self.survivors = self.trials
-            self.survivors_metrics = self.trials_metrics
-        else:
-            # Selection: compare trials with targets and choose the better ones
-            mask = (self.trials_metrics > self.targets_metrics) if self.opt_min_or_max == 'max' else (self.trials_metrics < self.targets_metrics)
-
-            # Create survivors by selecting better solutions
-            self.survivors_metrics = np.where(mask, self.trials_metrics, self.targets_metrics)
-            self.survivors = np.where(mask.reshape(-1, 1), self.trials, self.targets)
-
-    def _determine_best(self):
-        """Determine the best solution in the current population."""
-        # Get the index of the best survivor
-        best_index = np.argmax(self.survivors_metrics) if self.opt_min_or_max == 'max' else np.argmin(self.survivors_metrics)
-        current_best_metric = self.survivors_metrics[best_index]
-
-        if self.opt_min_or_max == 'max' and current_best_metric > self.best_metric:
-            self.better_solution_found = True
-        elif self.opt_min_or_max == 'min' and current_best_metric < self.best_metric:
-            self.better_solution_found = True
-        else:
-            self.better_solution_found = False
-
-        # Update best if better solution found
-        if self.better_solution_found:
-            if abs(current_best_metric - self.best_metric) / abs(self.best_metric) >= self.improvement_threshold:
-                self.iter_no_improvement = 0
-            else:
-                self.iter_no_improvement += 1
-
-            self.best = self.survivors[best_index]
-            self.best_parameters = self.current_parameters.iloc[best_index]
-            self.best_metric = self.survivors_metrics[best_index]
-            self.best_response = self.current_responses[best_index]
-        else:
-            self.iter_no_improvement += 1
-
-    def _update_history(self):
-        """Update history by appending current trial vectors, metrics, survivors, and survivor metrics."""
-        # Append current trials to history
-        trials_to_append = self.trials.reshape(1, self.pop_size, self.nr_variable_parameters)
-        self.all_trials = np.vstack((self.all_trials, trials_to_append))
-
-        # Append current metrics to metrics history
-        metrics_to_append = self.trials_metrics.reshape(1, self.pop_size)
-        self.all_trials_metrics = np.vstack((self.all_trials_metrics, metrics_to_append))
-
-        # Append current survivors to survivors history
-        survivors_to_append = self.survivors.reshape(1, self.pop_size, self.nr_variable_parameters)
-        self.all_survivors = np.vstack((self.all_survivors, survivors_to_append))
-
-        # Append current survivor metrics to survivor metrics history
-        survivor_metrics_to_append = self.survivors_metrics.reshape(1, self.pop_size)
-        self.all_survivors_metrics = np.vstack((self.all_survivors_metrics, survivor_metrics_to_append))
-
-        # Append current best to bests history
-        best_to_append = self.best.reshape(1, self.nr_variable_parameters)
-        self.all_bests = np.vstack((self.all_bests, best_to_append))
-
-        # Append current best metric to bests metrics history
-        best_metric_to_append = self.best_metric
-        self.all_bests_metrics = np.vstack((self.all_bests_metrics, best_metric_to_append))
-
-    def _update_boundaries(self):
-        """
-        Update the parameter boundaries based on population distribution using vectorized operations.
-
-        This method implements adaptive boundaries by checking if a significant portion
-        of the population is near the boundaries, and extending them if necessary.
-        """
-        # Skip if adaptive boundaries are not enabled
-        if not self.adaptive_boundaries:
-            return
-
-        # Skip if it's not time to check boundaries based on the period
-        if self.iter % self.adaptive_boundaries_check_period != 0:
-            return
-
-        # Calculate quantiles for all parameters at once
-        lower_quantiles = np.quantile(self.survivors, 1 - self.adaptive_boundaries_pop_quantile, axis=0)
-        upper_quantiles = np.quantile(self.survivors, self.adaptive_boundaries_pop_quantile, axis=0)
-
-        # Calculate thresholds for boundary extension
-        lower_thresholds = self.boundaries_min + self.adaptive_boundaries_edge_threshold * self.boundaries_range
-        upper_thresholds = self.boundaries_max - self.adaptive_boundaries_edge_threshold * self.boundaries_range
-
-        # Check which parameters need boundary extensions
-        lower_extension_mask = lower_quantiles < lower_thresholds
-        upper_extension_mask = upper_quantiles > upper_thresholds
-
-        # Flag to track if boundaries were changed
-        boundaries_changed = False
-
-        # Calculate new boundary values
-        if np.any(lower_extension_mask):
-            boundaries_changed = True
-            # Extend lower boundaries where needed
-            extension_amount = self.adaptive_boundaries_extension * self.boundaries_range[lower_extension_mask]
-            new_mins = self.boundaries_min[lower_extension_mask] - extension_amount
-
-            # Log the parameters that were extended
-            for i, param_idx in enumerate(np.where(lower_extension_mask)[0]):
-                print(f"Extended lower boundary for parameter {param_idx} to {new_mins[i]}")
-
-            # Update the boundaries
-            self.boundaries_min[lower_extension_mask] = new_mins
-
-        if np.any(upper_extension_mask):
-            boundaries_changed = True
-            # Extend upper boundaries where needed
-            extension_amount = self.adaptive_boundaries_extension * self.boundaries_range[upper_extension_mask]
-            new_maxs = self.boundaries_max[upper_extension_mask] + extension_amount
-
-            # Log the parameters that were extended
-            for i, param_idx in enumerate(np.where(upper_extension_mask)[0]):
-                print(f"Extended upper boundary for parameter {param_idx} to {new_maxs[i]}")
-
-            # Update the boundaries
-            self.boundaries_max[upper_extension_mask] = new_maxs
-
-        # Update the range after modifying boundaries
-        self.boundaries_range = self.boundaries_max - self.boundaries_min
-
-        # If boundaries were changed, add new entries to the boundaries history
-        if boundaries_changed:
-            # Create MultiIndex for the new entries
-            new_index = pd.MultiIndex.from_product([[self.iter], ['min', 'max', 'range']], names=['iter', 'type'])
-
-            # Create DataFrame with current boundaries
-            new_boundaries = pd.DataFrame(
-                index=new_index,
-                columns=self.variable_parameters_names,
-                dtype=float
-            )
-
-            # Set values
-            new_boundaries.loc[(self.iter, 'min'), :] = self.boundaries_min
-            new_boundaries.loc[(self.iter, 'max'), :] = self.boundaries_max
-            new_boundaries.loc[(self.iter, 'range'), :] = self.boundaries_range
-
-            # Append to the history
-            self.all_boundaries = pd.concat([self.all_boundaries, new_boundaries])
-
-    def _update_optimization_info(self):
-        """Update optimization information dictionary."""
-        if self.iter == 1:
-            self.optimization_info['input'] = {
-                'seed': self.seed,
-                'pop_size': self.pop_size,
-                'max_iterations': self.max_iterations,
-                'max_iter_without_improvement': self.max_iter_without_improvement,
-                'improvement_threshold': self.improvement_threshold,
-                'metric_threshold': self.metric_threshold,
-                'mutation_factor_1': self.mutation_factor_1,
-                'mutation_factor_2': self.mutation_factor_2,
-                'mutation_factor_3': self.mutation_factor_3,
-                'recombination_factor': self.recombination_factor,
-                'adaptive_boundaries': self.adaptive_boundaries,
-                'results_dir': self.results_dir,
-                'parameters': self.parameters.all_parameters.to_dict('records')
-            }
-
-        self.optimization_info['output'] = {
-            'iter': self.iter,
-            'best_metric': self.best_metric,
-            'best_parameters': self.best_parameters,
-            'stop_reason': self.stop_reason
-        }
 
     def _set_is_stop_criteria_reached(self):
         """Check if any stop criteria are met."""
@@ -733,130 +471,6 @@ class DifferentialEvolution:
         else:
             self.is_stop_criteria_reached = False
 
-    def _get_history_as_df(self, which='trials'):
-        """
-        Convert the optimization history to two DataFrames for analysis.
-
-        Args:
-            which (str): Which history to convert: 'trials', 'survivors', or 'bests'
-
-        Returns:
-            tuple: (df, df_normed)
-                - df: DataFrame with iteration number, denormalized parameters, and metrics
-                - df_normed: DataFrame with iteration number, normalized parameters, and metrics
-        """
-        if which not in ['trials', 'survivors', 'bests']:
-            raise ValueError("'which' parameter must be 'trials', 'survivors', or 'bests'")
-
-        # Select the appropriate arrays based on 'which' parameter
-        if which == 'trials':
-            values_array = self.all_trials
-            metrics_array = self.all_trials_metrics
-        elif which == 'survivors':
-            values_array = self.all_survivors
-            metrics_array = self.all_survivors_metrics
-        else:  # bests
-            values_array = self.all_bests
-            metrics_array = self.all_bests_metrics
-
-        if len(values_array) == 0:
-            return pd.DataFrame(), pd.DataFrame()
-
-        # Number of iterations
-        n_iters = values_array.shape[0]
-
-        # Special handling for bests which has a different shape
-        if which == 'bests':
-            # Create iteration column (one iteration number per best solution)
-            iter_column = np.arange(1, n_iters + 1)
-
-            # For bests, metrics_array might be a 2D array with one value per row
-            # Ensure metrics_flat is a 1D array
-            metrics_flat = metrics_array.flatten()
-
-            # Reshape values to 2D array (n_iters, n_params) - bests already has the right shape
-            values_normed_flat = values_array
-        else:
-            # Create iteration column (repeating each iteration number pop_size times)
-            iter_column = np.repeat(np.arange(1, n_iters + 1), self.pop_size)
-
-            # Flatten metrics to 1D array
-            metrics_flat = metrics_array.flatten()
-
-            # Reshape values to 2D array (n_iters*pop_size, n_params)
-            values_normed_flat = values_array.reshape(-1, self.nr_variable_parameters)
-
-        # Create DataFrame with normalized values
-        df_normed = pd.DataFrame(
-            values_normed_flat,
-            columns=self.variable_parameters_names
-        )
-
-        # Convert normalized values to original parameter values
-        df = self.parameters.denormalize_and_descale_parameters_array(
-            pd.DataFrame(columns=self.variable_parameters_names, data=values_normed_flat),
-            include_fixed_parameters=True
-        )
-
-        # Add iter and metric columns to both DataFrames
-        # Insert iter as first column
-        df_normed.insert(0, 'iter', iter_column)
-        df.insert(0, 'iter', iter_column)
-
-        # Add metric as last column
-        df_normed['metric'] = metrics_flat
-        df['metric'] = metrics_flat
-
-        return df, df_normed
-
-    def _get_all_denormalized_boundaries(self):
-        """
-        Get the denormalized boundary values for all iterations in history using vectorized operations.
-
-        Returns:
-            pandas.DataFrame: DataFrame with multi-index (iter, type: 'min', 'max', 'range')
-                             and columns for each parameter name, containing the
-                             denormalized boundary values throughout optimization.
-        """
-        # Initialize result DataFrame with same structure as all_boundaries
-        result = pd.DataFrame(
-            index=self.all_boundaries.index,
-            columns=self.variable_parameters_names,
-            dtype=float
-        )
-
-        # Get all unique iterations
-        iterations = self.all_boundaries.index.get_level_values('iter').unique()
-
-        # Extract all min boundaries at once
-        all_mins = self.all_boundaries.xs('min', level='type')
-
-        # Extract all max boundaries at once
-        all_maxs = self.all_boundaries.xs('max', level='type')
-
-        # Denormalize all min values at once
-        denorm_mins = self.parameters.denormalize_and_descale_parameters_array(
-            all_mins,
-            include_fixed_parameters=False
-        )
-
-        # Denormalize all max values at once
-        denorm_maxs = self.parameters.denormalize_and_descale_parameters_array(
-            all_maxs,
-            include_fixed_parameters=False
-        )
-
-        # Calculate the range in denormalized space
-        denorm_ranges = denorm_maxs - denorm_mins
-
-        # Store the denormalized values in the result DataFrame
-        for iter_num in iterations:
-            result.loc[(iter_num, 'min')] = denorm_mins.loc[iter_num]
-            result.loc[(iter_num, 'max')] = denorm_maxs.loc[iter_num]
-            result.loc[(iter_num, 'range')] = denorm_ranges.loc[iter_num]
-
-        return result
-
     def abort_optimization(self):
         """Abort optimization process."""
         self.abort_flag = True
@@ -870,55 +484,24 @@ class DifferentialEvolution:
         print(f"Best parameters: {self.best_parameters}\n\n")
         print("--------------------------------------------------------------------------------\n\n")
 
+    # i/o functions
+    def write_history_to_file(self, which='trials', file_path=None):
+        """Delegate to the io module function"""
+        return write_history_to_file(self, which, file_path)
+
+    def write_optimization_info_to_file(self, file_path=None):
+        """Delegate to the io module function"""
+        return write_optimization_info_to_file(self, file_path)
+
     def write_best_parameters_to_file(self, file_path=None):
-        """
-        Write best parameters to a file (CSV or JSON).
-
-        Args:
-            file_path (str): Path to the output file. If None, uses 'best_parameters.csv'
-                            The file extension (.csv or .json) determines the output format.
-        """
-        if file_path is None:
-            raise ValueError('Please provide a file_path!')
-
-        self.best_parameters.name = 'value'
-        self.best_parameters.index.name = 'param'
-
-        # Write to file based on extension
-        ext = file_path.lower().split('.')[-1]
-
-        if ext == 'csv':
-            self.best_parameters.to_csv(file_path)
-            print(f"Best parameters written to {file_path}")
-        elif ext == 'json':
-            self.best_parameters.to_json(file_path, indent=4)
-            print(f"Best parameters written to {file_path}")
-        else:
-            raise ValueError(f"Unsupported file extension: .{ext}. Use .csv or .json")
+        """Delegate to the io module function"""
+        return write_best_parameters_to_file(self, file_path)
 
     def write_current_population_to_file(self, file_path=None):
-        """
-        Write current population to a file (CSV or JSON).
+        """Delegate to the io module function"""
+        return write_current_population_to_file(self, file_path)
 
-        Args:
-            file_path (str): Path to the output file. If None, uses 'population.csv'
-                            The file extension (.csv or .json) determines the output format.
-        """
-        if file_path is None:
-            raise ValueError('Please provide a file_path!')
-
-        # Write to file based on extension
-        ext = file_path.lower().split('.')[-1]
-
-        if ext == 'csv':
-            self.current_parameters.to_csv(file_path, index=False)
-            print(f"Current population written to {file_path}")
-        elif ext == 'json':
-            self.current_parameters.to_json(file_path, orient='records', indent=4)
-            print(f"Current population written to {file_path}")
-        else:
-            raise ValueError(f"Unsupported file extension: .{ext}. Use .csv or .json")
-
+    # plotting functions
     def _plot_mutation_and_recombination(self, param_1_name = None, param_2_name = None, fig = None, ax = None, save_path = None):
         if param_1_name is None:
             param_1_name = self.parameters_names[0]
@@ -944,7 +527,7 @@ class DifferentialEvolution:
             rand_mem_2 = self.rand_mem_2[member_idx]
             rand_mem_3 = self.rand_mem_3[member_idx]
 
-            plot_mutation_and_recombination(param_1_name, param_2_name,
+            _plot_mutation_and_recombination(param_1_name, param_2_name,
                                all_targets, target, donor, trial, best,
                                mut_coef_1, mut_coef_2, mut_coef_3, recom_coef,
                                rand_mem_1, rand_mem_2, rand_mem_3,
@@ -1012,7 +595,7 @@ class DifferentialEvolution:
             raise ValueError(f"Invalid 'which' parameter: {which}. Must be 'trials', 'survivors', or 'bests'")
 
         # Create the plot
-        fig, ax = plot_metrics_evolution(
+        fig, ax = _plot_metrics_evolution(
             iterations=iterations,
             metrics=metrics,
             x_scale=x_scale,
@@ -1067,7 +650,7 @@ class DifferentialEvolution:
             raise ValueError(f"Invalid 'which' parameter: {which}. Must be 'trials', 'survivors', or 'bests'")
 
         # Create the parameter evolution histogram visualization
-        fig, axes = plot_all_parameters_evolution(
+        fig, axes = _plot_all_parameters_evolution(
             df=df,
             iter_start=iter_start,
             iter_end=iter_end,
@@ -1084,10 +667,10 @@ class DifferentialEvolution:
 
         return fig, axes
 
-    def plot_single_parameter_evolution(self, parameter_name: str, which="trials",
+    def plot_parameters_evolution(self, parameter_names: list = None, which="trials",
                                         iter_start=None, iter_end=None, iter_step=1,
-                                        fig=None, ax=None, bins=100, figsize=(10, 6),
-                                        title=None, save_path=None, **kwargs):
+                                        fig=None, axes=None, bins=100, figsize=(10, 6),
+                                        title=None, save_path=None, nr_rows=1, **kwargs):
         """
         Plot the evolution of a single parameter's histogram across iterations.
 
@@ -1098,62 +681,61 @@ class DifferentialEvolution:
             iter_end (int): Last iteration to include (if None, goes to maximum)
             iter_step (int): Step size for iterations (to reduce number of histograms)
             fig (matplotlib.figure.Figure): Optional existing figure to plot on
-            ax (matplotlib.axes.Axes): Optional existing axes to plot on
+            axes (matplotlib.axes.Axes): Optional existing axes to plot on
             bins (int): Number of bins for the histograms
             figsize (tuple): Size of the figure in inches (width, height)
             colormap (str): Colormap to use for the histograms
             title (str): Title for the figure (if None, uses parameter name)
             save_path (str): If provided, the figure will be saved to this path
+            nr_rows: Number of rows to arrange the parameter plots
             **kwargs: Additional keyword arguments passed to plt.imshow
 
         Returns:
             tuple: Figure and axes objects
         """
-        # Check if the parameter exists in the variable parameters
-        if parameter_name not in self.variable_parameters_names:
-            raise ValueError(f"Parameter '{parameter_name}' not found in variable parameters")
+        # Validate parameter names
+        if parameter_names is not None:
+            for param in parameter_names:
+                if param not in self.variable_parameters_names:
+                    raise ValueError(f"Parameter '{param}' not found in variable parameters")
+        else:
+            parameter_names = self.parameters_names
 
         # Get parameter values and metrics based on the 'which' parameter
         if which == "trials":
             # Get history as DataFrame
             df = self.history['trials']
-            title = title or f"Evolution of {parameter_name} distribution in trials"
+            title = title or "Evolution of parameter distributions in trials"
         elif which == "survivors":
             # Get history as DataFrame
             df = self.history['survivors']
-            title = title or f"Evolution of {parameter_name} distribution in survivors"
+            title = title or "Evolution of parameter distributions in survivors"
         else:
             raise ValueError(f"Invalid 'which' parameter: {which}. Must be 'trials', 'survivors', or 'bests'")
 
         # Create the parameter histogram evolution visualization
-        fig, ax = plot_single_parameter_evolution(
+        fig, ax = _plot_parameters_evolution(
             df=df,
-            parameter_name=parameter_name,
+            parameter_names=parameter_names,
             iter_start=iter_start,
             iter_end=iter_end,
             iter_step=iter_step,
             fig=fig,
-            ax=ax,
+            axes=axes,
             bins=bins,
             figsize=figsize,
             title=title,
             save_path=save_path,
+            nr_rows=nr_rows,
             **kwargs
         )
 
         return fig, ax
 
-    def plot_boundaries(self,
-                     normed: bool = True,
-                     parameter_names: list = None,
-                     iter_start: int = None,
-                     iter_end: int = None,
-                     fig = None,
-                     axes: list = None,
-                     title: str = None,
-                     save_path: str = None,
-                     figsize: tuple = None,
-                     nr_rows: int = 1,
+    def plot_boundaries(self, normed: bool = True, parameter_names: list = None,
+                     iter_start: int = None, iter_end: int = None,
+                     fig = None, axes: list = None, title: str = None,
+                     save_path: str = None, figsize: tuple = None, nr_rows: int = 1,
                      **kwargs):
         """
         Plot the evolution of parameter boundaries throughout the optimization.
@@ -1179,7 +761,7 @@ class DifferentialEvolution:
             boundaries_df = self.all_boundaries
             title = title or "Evolution of Normalized Parameter Boundaries"
         else:
-            boundaries_df = self._get_all_denormalized_boundaries()
+            boundaries_df = _get_all_denormalized_boundaries(self)
             title = title or "Evolution of Parameter Boundaries in Original Units"
 
         # Validate parameter names
@@ -1192,7 +774,7 @@ class DifferentialEvolution:
 
 
         # Call the visualization function
-        return plot_boundaries_evolution(
+        return _plot_boundaries_evolution(
             df=boundaries_df,
             parameter_names=parameter_names,
             iter_start=iter_start,

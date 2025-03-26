@@ -139,7 +139,7 @@ def test_rosenbrock():
     print("\nFinal results:")
     print(f"Best metric: {optimizer.best_metric}")
     print(f"Best parameters: {optimizer.best_parameters}")
-    print(f"Expected optimum: x=1.0, y=1.0")
+    print("Expected optimum: x=1.0, y=1.0")
 
     optimizer.plot_metrics(which = 'trials')
     optimizer.plot_metrics(which = 'survivors')
@@ -148,8 +148,8 @@ def test_rosenbrock():
     optimizer.plot_all_parameters_evolution(which = 'trials', iter_end=2)
     optimizer.plot_all_parameters_evolution(which = 'survivors')
 
-    optimizer.plot_single_parameter_evolution(which = 'trials', parameter_name = 'y', cmap = 'jet')
-    optimizer.plot_single_parameter_evolution(which = 'survivors', parameter_name = 'x', cmap = 'viridis')
+    optimizer.plot_parameters_evolution(which = 'trials', cmap = 'jet')
+    optimizer.plot_parameters_evolution(which = 'survivors', cmap = 'viridis')
 
     optimizer.plot_boundaries(normed=True)
     optimizer.plot_boundaries(normed=False)
