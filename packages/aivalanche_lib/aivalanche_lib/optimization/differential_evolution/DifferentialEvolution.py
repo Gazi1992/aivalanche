@@ -70,6 +70,7 @@ class DifferentialEvolution:
                  mutation_factor_2: Union[float, tuple] = (0.2, 0.6),
                  mutation_factor_3: Union[float, tuple] = (0, 0.3),
                  recombination_factor: Union[float, tuple] = (0.8, 0.97),
+                 boundary_constraint_method: str = 'random_from_target',
 
                  init_pop: Optional[Union[str, pd.DataFrame]] = None,
                  init_pop_out_of_range_param: str = 'keep',
@@ -100,6 +101,10 @@ class DifferentialEvolution:
             improvement_threshold: Minimum relative improvement to reset no-improvement counter
             mutation_factor_*: Scaling factors for DE mutation operator
             recombination_factor: Factor for DE crossover operator
+            boundary_constraint_method (str): Method to handle donor values outside boundaries [0, 1]. Options:
+                - 'random_from_target' (default): Replace with random value between target and boundary.
+                - 'clamp': Set value directly to the boundary limit (0 or 1).
+                - 'random': Replace with a new random value within the [0, 1] range.
             init_pop: Initial population (DataFrame or path to CSV)
             init_pop_out_of_range_param: How to handle out-of-range parameters
             defaults_in_init_pop: Whether to use default parameter values in initial population
@@ -136,6 +141,13 @@ class DifferentialEvolution:
         self.mutation_factor_2 = mutation_factor_2
         self.mutation_factor_3 = mutation_factor_3
         self.recombination_factor = recombination_factor
+
+        # valid_boundary_methods check
+        valid_boundary_methods = ['random_from_target', 'clamp', 'random']
+        if boundary_constraint_method not in valid_boundary_methods:
+            raise ValueError(f"Invalid boundary_constraint_method: '{boundary_constraint_method}'. "
+                             f"Must be one of: {', '.join(valid_boundary_methods)}")
+        self.boundary_constraint_method = boundary_constraint_method
 
         # Stopping criteria
         self.max_iterations = int(max_iterations)
@@ -174,7 +186,7 @@ class DifferentialEvolution:
 
         return self.parameters.denormalize_and_descale_parameters_array(
             pd.DataFrame(columns = self.variable_parameters_names, data = self.trials),
-            include_fixed_parameters = True
+            include_fixed = True
             )
 
     @property

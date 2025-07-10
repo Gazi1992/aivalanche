@@ -1,0 +1,43 @@
+{
+  "app_title": "Average Temperature Analysis",
+  "theme": "light",
+  "left_margin": 15,
+  "right_margin": 15,
+  "top_margin": 15,
+  "bottom_margin": 15,
+  "grid_layout": {
+    "rows": 1,
+    "cols": 1,
+    "horizontal_spacing": 10,
+    "vertical_spacing": 10
+  },
+  "figures": [
+    {
+      "id": "avg_temp_figure_1",
+      "title": "Average Temperature Trend (1900-2023)",
+      "x_label": "Year",
+      "y_label": "Average Temperature (°F)",
+      "x_scale": "linear",
+      "y_scale": "linear",
+      "grid_x": true,
+      "grid_y": true,
+      "grid_alpha": 0.25,
+      "items": [
+        {
+          "id": "avg_temp_line_plot_1",
+          "type": "line",
+          "source": "C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\tests\\plotting_new\\data\\Average Temperature 1900-2023.csv",
+          "x_column": "Year",
+          "y_column": "Average_Fahrenheit_Temperature",
+          "legend_name": "Avg Temp (°F)",
+          "line_width": 2,
+          "line_color": "#3498db",
+          "symbol": "o",
+          "symbol_size": 8,
+          "symbol_color": "#2980b9",
+          "symbol_outline": "#333333"
+        }
+      ]
+    }
+  ]
+}

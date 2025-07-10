@@ -1,0 +1,41 @@
+.automation-section {
+  background-color: #f8f9fa; /* Light grey, slightly different from body for separation */
+}
+
+/* Uses .section-title and .section-intro from OptimizationSection.css or App.css if global */
+
+/* .feature-card specific styles can be added here if needed, 
+   but it will inherit from the .card styles in App.css */
+.feature-card h3 {
+  color: #28a745; /* Green for feature titles, differentiating from optimization */
+  margin-bottom: 10px;
+}
+
+.feature-card p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #444;
+}
+
+.subsection {
+  margin-top: 50px;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.subsection-title {
+  font-size: 28px;
+  color: #17a2b8; /* Info blue for subsection title */
+  margin-bottom: 15px;
+}
+
+.subsection-text {
+  font-size: 17px;
+  color: #555;
+  line-height: 1.7;
+  max-width: 700px;
+  margin: 0 auto;
+} 

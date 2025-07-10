@@ -1,0 +1,106 @@
+{
+  "app_title": "Sample Data Dashboard (Vertical)",
+  "theme": "light",
+  "left_margin": 15,
+  "right_margin": 15,
+  "top_margin": 20,
+  "bottom_margin": 20,
+  "grid_layout": {
+    "rows": null,
+    "cols": 1,
+    "horizontal_spacing": 20,
+    "vertical_spacing": 25
+  },
+  "figures": [
+    {
+      "id": "fig_basic_line",
+      "title": "Sensor Reading Over Time",
+      "x_label": "Time (seconds)",
+      "y_label": "Voltage (V)",
+      "grid_x": true,
+      "grid_y": true,
+      "items": [
+        {
+          "id": "sensor_a_line",
+          "type": "line",
+          "source": "data/data1.csv",
+          "x_column": "Timestamp",
+          "y_column": "SensorA_Voltage",
+          "legend_name": "Sensor A",
+          "line_width": 2,
+          "line_style": "solid",
+          "line_color": "#17BECF",
+          "symbol": "o",
+          "symbol_size": 8,
+          "symbol_color": "#17BECF",
+          "symbol_outline": "#444444"
+        }
+      ]
+    },
+    {
+      "id": "fig_multi_log",
+      "title": "Growth Comparison (Log Scale)",
+      "x_label": "Experiment Phase",
+      "y_label": "Population Count (Log)",
+      "y_scale": "log",
+      "grid_x": true,
+      "grid_y": true,
+      "grid_alpha": 0.4,
+      "items": [
+        {
+          "id": "exp_growth_line",
+          "type": "line",
+          "source": "data/data2.csv",
+          "x_column": "Phase",
+          "y_column": "ExponentialPop",
+          "legend_name": "Exponential Growth",
+          "line_width": 1.5,
+          "line_style": "dashdot",
+          "line_color": "#FF7F0E",
+          "fill_level": 1,
+          "fill_color": "#FF7F0E40",
+          "fill_outline": false
+        },
+        {
+          "id": "lin_growth_line",
+          "type": "line",
+          "source": "data/data2.csv",
+          "x_column": "Phase",
+          "y_column": "LinearPop",
+          "legend_name": "Linear Growth",
+          "line_width": 3,
+          "line_style": "solid",
+          "line_color": "#2CA02C",
+          "symbol": "s",
+          "symbol_size": 6,
+          "symbol_color": "#2CA02C",
+          "symbol_outline": "#FFFFFF"
+        }
+      ]
+    },
+    {
+      "id": "fig_scatter_demo",
+      "title": "Parameter Correlation",
+      "x_label": "Parameter X",
+      "y_label": "Parameter Y",
+      "x_scale": "linear",
+      "y_scale": "linear",
+      "grid_x": true,
+      "grid_y": true,
+      "items": [
+        {
+          "id": "param_scatter",
+          "type": "scatter",
+          "source": "data/data3.csv",
+          "x_column": "ParamX",
+          "y_column": "ParamY",
+          "legend_name": "Test Samples",
+          "symbol": "star",
+          "symbol_size": 12,
+          "symbol_color": "#D62728",
+          "symbol_outline": "#FFFFFF"
+        }
+      ]
+    }
+  ]
+}

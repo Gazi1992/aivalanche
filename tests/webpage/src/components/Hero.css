@@ -1,0 +1,243 @@
+/* Brand Colors - Light Theme */
+:root {
+  --charcoal-bg: #F4F7F9; /* Main light background */
+  --card-bg: #FFFFFF; /* Card and distinct section background */
+  --electric-cyan-accent: #3498DB; /* Primary Accent Blue */
+  --lilac-violet-accent: #A56BFF; /* Secondary Accent Lilac */
+  --white-text-85: rgba(44, 62, 80, 0.85); /* Dark text (near black/blue) at 85% opacity */
+  --dark-text-full: #2C3E50; /* Full opacity dark text */
+  --light-text-on-accent: #FFFFFF; /* For text on dark/colored button backgrounds */
+}
+
+.hero-section {
+  background-color: var(--charcoal-bg); /* Will now be light grey */
+  /* background: linear-gradient(rgba(0, 123, 255, 0.8), rgba(0, 86, 179, 0.8)), url('https://images.unsplash.com/photo-1518770660439-4636190af475?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MXxzZWFyY2h8NHx8ZW5naW5lZXJpbmclMjB0ZWNobm9sb2d5fHwwfHx8fDE2NzgwOTE4Nzc&ixlib=rb-4.0.3&q=80&w=1080'); */
+  background-size: cover;
+  background-position: center;
+  color: var(--dark-text-full); /* Text on hero should be dark now */
+  text-align: center;
+  overflow: hidden;
+  height: 70vh; /* Adjusted to 70vh as per new spec */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative; /* For potential absolute positioned elements within slides */
+}
+
+.hero-carousel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-carousel .carousel.carousel-slider {
+  height: 100%;
+}
+
+.hero-carousel .slider-wrapper.axis-horizontal {
+  height: 100%; 
+}
+
+.hero-carousel .slider {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.hero-carousel .carousel-slide {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px; /* Reduced padding, more space for content */
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  text-align: left; /* Align text to left for slides by default */
+}
+
+.hero-carousel .container {
+  max-width: 1100px; /* Wider container for more content */
+  margin: 0 auto;
+  position: relative; /* For absolute positioning of elements like top-left logo */
+  z-index: 2; /* Ensure content is above background gradients/images */
+}
+
+
+.hero-title {
+  font-size: 56px; 
+  font-weight: bold;
+  margin-bottom: 20px; 
+  color: var(--dark-text-full); /* Changed from #fff */
+  line-height: 1.1; /* 56px font / 64px line-height from spec -> ~1.14, adjusted to 1.1 */
+}
+
+.hero-subtitle {
+  font-size: 24px;
+  margin-bottom: 25px;
+  color: var(--white-text-85); /* This is now dark text at 85% opacity */
+  max-width: 700px;
+  /* margin-left: auto; Removed for left alignment */
+  /* margin-right: auto; Removed for left alignment */
+  line-height: 1.4;
+}
+
+.hero-description {
+  font-size: 18px;
+  color: var(--white-text-85); /* Dark text at 85% opacity */
+  max-width: 650px;
+  /* margin-left: auto; */
+  /* margin-right: auto; */
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* CTA Button Styles - Adjusted for Light Theme */
+.cta-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 20px;
+  margin-right: 15px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.cta-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Softer shadow for light theme */
+}
+
+.cta-button-primary {
+  background-color: var(--electric-cyan-accent); /* Now Blue */
+  color: var(--light-text-on-accent); /* White text on Blue */
+  border-color: var(--electric-cyan-accent); /* Blue border */
+}
+
+.cta-button-ghost {
+  background-color: transparent;
+  color: var(--electric-cyan-accent); /* Blue text */
+  border-color: var(--electric-cyan-accent); /* Blue border */
+}
+
+.cta-text-link {
+  color: var(--electric-cyan-accent); /* Blue text */
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 16px;
+  display: inline-block;
+  margin-top: 28px; /* Align baseline roughly with button */
+}
+
+.cta-text-link:hover {
+  text-decoration: underline;
+}
+
+
+/* Carousel navigation and indicators custom styling - Adjusted for Light Theme */
+.hero-carousel .control-dots .dot {
+  background: var(--dark-text-full) !important; /* Dark dots */
+  box-shadow: none !important;
+  opacity: 0.3 !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  margin: 0 5px !important;
+}
+
+.hero-carousel .control-dots .dot.selected {
+  opacity: 0.8 !important;
+  background: var(--electric-cyan-accent) !important; /* Blue selected dot */
+  transform: scale(1.2);
+}
+
+.hero-carousel .control-arrow {
+  background: rgba(44, 62, 80, 0.2) !important; /* Semi-transparent dark */
+  width: 40px !important; 
+  height: 40px !important; 
+  top: calc(50% - 20px) !important; 
+  border-radius: 50%;
+}
+
+.hero-carousel .control-arrow:hover {
+  background: rgba(44, 62, 80, 0.4) !important;
+}
+
+.hero-carousel .control-arrow::before {
+    border-width: 2px !important; 
+    border-color: var(--light-text-on-accent) !important; /* Chevron color on darkish arrow bg */
+}
+
+/* Slide specific styles will be added below or in-line */
+
+/* Placeholder for visual elements - Adjusted for Light Theme */
+.visual-placeholder {
+    background-color: rgba(0,0,0,0.05); /* Light grey placeholder bg */
+    border: 1px dashed var(--electric-cyan-accent); /* Blue dashed border */
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--dark-text-full); /* Dark text */
+    font-style: italic;
+    min-height: 200px; /* Or specific height as needed */
+    width: 100%; /* Or specific width as needed */
+}
+
+/* Capsule Tag Style - Adjusted for Light Theme */
+.capsule-tag {
+    display: inline-block;
+    background-color: var(--electric-cyan-accent); /* Blue background */
+    color: var(--light-text-on-accent); /* White text */
+    padding: 5px 15px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+/* Specific styles for two-column layout in slides */
+.slide-content-wrapper {
+    display: flex;
+    align-items: center; /* Vertically align content and visual */
+    gap: 30px; /* Space between text content and visual */
+    width: 100%;
+}
+
+.slide-text-content {
+    flex: 1; /* Takes available space */
+}
+
+.slide-visual-content {
+    flex: 1; /* Takes available space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.slide-bullets {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 30px;
+}
+
+.slide-bullets li {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start; /* Align icon with top of text */
+    font-size: 18px; /* Consistent font size for bullets */
+}
+
+.slide-bullets .bullet-icon {
+    font-size: 22px; /* Icon size */
+    margin-right: 12px;
+    color: var(--electric-cyan-accent); /* Accent color for icons */
+    flex-shrink: 0; /* Prevent icon from shrinking */
+    padding-top: 2px; /* Align icon better with text */
+} 

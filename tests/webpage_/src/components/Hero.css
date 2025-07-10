@@ -1,0 +1,39 @@
+.hero-section {
+  background: linear-gradient(rgba(0, 123, 255, 0.8), rgba(0, 86, 179, 0.8)), url('https://images.unsplash.com/photo-1518770660439-4636190af475?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MXxzZWFyY2h8NHx8ZW5naW5lZXJpbmclMjB0ZWNobm9sb2d5fHwwfHx8fDE2NzgwOTE4Nzc&ixlib=rb-4.0.3&q=80&w=1080'); /* Example background image with a blue overlay */
+  background-size: cover;
+  background-position: center;
+  color: #fff; /* White text on dark background */
+  text-align: center;
+  padding: 100px 20px; /* Increased padding for impact */
+}
+
+.hero-title {
+  font-size: 48px; /* Large title */
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 22px;
+  margin-bottom: 30px;
+  color: #e9ecef; /* Lighter white for subtitle */
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Styles for a potential Call to Action button if uncommented in Hero.js */
+.hero-section .btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  background-color: #ffffff;
+  color: #007bff;
+  border: 2px solid #ffffff;
+}
+
+.hero-section .btn:hover {
+  background-color: transparent;
+  color: #ffffff;
+} 

@@ -440,33 +440,75 @@ def _determine_best(de_instance):
         best_index = np.argmin(de_instance.survivors_metrics)
 
     current_best_metric = de_instance.survivors_metrics[best_index]
+    previous_best_metric = de_instance.best_metric # Store previous best for clarity
 
     # Check if better solution found
-    if de_instance.opt_min_or_max == 'max' and current_best_metric > de_instance.best_metric:
+    better_solution_found = False
+    if de_instance.opt_min_or_max == 'max' and current_best_metric > previous_best_metric:
         better_solution_found = True
-    elif de_instance.opt_min_or_max == 'min' and current_best_metric < de_instance.best_metric:
+    elif de_instance.opt_min_or_max == 'min' and current_best_metric < previous_best_metric:
         better_solution_found = True
-    else:
-        better_solution_found = False
 
     # Update best if better solution found
     if better_solution_found:
-        # Check if improvement meets threshold
-        if abs(current_best_metric - de_instance.best_metric) / abs(de_instance.best_metric) >= de_instance.improvement_threshold:
-            de_instance.iter_no_improvement = 0
-        else:
-            de_instance.iter_no_improvement += 1
+        improvement_significant = False
+        abs_previous_best = abs(previous_best_metric)
 
-        # Update best solution
+        # Use a small tolerance for checking if the previous best is effectively zero
+        if abs_previous_best > np.finfo(float).eps: # Check if denominator is safely non-zero
+            # Calculate relative improvement safely
+            relative_improvement = np.inf # Default to infinity if calculation fails below
+
+            # Ensure the difference calculation itself doesn't create issues if metrics are huge
+            diff = current_best_metric - previous_best_metric
+            if np.isfinite(diff):
+                 # Perform division only if difference is finite
+                 relative_improvement = abs(diff) / abs_previous_best
+
+            # Check if the calculated relative improvement is finite and meets threshold
+            if np.isfinite(relative_improvement) and relative_improvement >= de_instance.improvement_threshold:
+                 improvement_significant = True
+            # If relative_improvement ended up as inf (due to safe denominator but large diff/small denom),
+            # consider it significant if the threshold is not also inf.
+            elif np.isinf(relative_improvement) and np.isfinite(de_instance.improvement_threshold):
+                 improvement_significant = True
+
+        # else: # previous_best_metric is zero or very close to it
+            # improvement_significant remains False, correctly handled below
+
+        # Update no-improvement counter based on significance
+        if improvement_significant:
+             de_instance.iter_no_improvement = 0
+        else:
+             # If improvement wasn't significant OR if previous best was zero, increment counter
+             de_instance.iter_no_improvement += 1
+
+        # Update best solution details
         de_instance.best = de_instance.survivors[best_index]
-        de_instance.best_parameters = de_instance.current_parameters.iloc[best_index]
-        de_instance.best_metric = de_instance.survivors_metrics[best_index]
-        de_instance.best_response = de_instance.current_responses[best_index]
+        best_survivor_params_normed = pd.DataFrame([de_instance.best], columns=de_instance.variable_parameters_names)
+        de_instance.best_parameters = de_instance.parameters.denormalize_and_descale_parameters_array(
+            best_survivor_params_normed,
+            include_fixed=True
+        ).iloc[0] # Get the Series
+
+        de_instance.best_metric = current_best_metric
+        # Ensure current_responses is list-like and indexable
+        if isinstance(de_instance.current_responses, (list, np.ndarray, pd.Series)) and len(de_instance.current_responses) > best_index:
+             de_instance.best_response = de_instance.current_responses[best_index]
+        else:
+             # Handle cases where current_responses might be structured differently or empty
+             # Maybe store just the metric if the full response isn't guaranteed?
+             # For now, set to None if indexing fails. Consider logging a warning.
+             de_instance.best_response = None
+             # print(f"Warning: Could not retrieve best_response at index {best_index}")
+
         de_instance.better_solution_found = True
-    else:
+
+    else: # No better solution found
         de_instance.iter_no_improvement += 1
         de_instance.better_solution_found = False
 
+    # Return the flag indicating if a better solution was found in this iteration
     return better_solution_found
 
 def _get_coefficient(de_instance, factor):
@@ -488,7 +530,8 @@ def _get_coefficient(de_instance, factor):
 
 def _check_donors_boundaries(de_instance):
     """
-    Correct values outside boundaries in donor vectors.
+    Correct values outside boundaries [0, 1] in normalized donor vectors
+    using the method specified by `de_instance.boundary_constraint_method`.
 
     Args:
         de_instance: Instance of DifferentialEvolution
@@ -497,23 +540,55 @@ def _check_donors_boundaries(de_instance):
         None: Updates de_instance.donors directly
     """
     # Get row and column indices of violations
+    # Note: Assuming normalized boundaries [0, 1] for donors here
+    # If adaptive boundaries modify these, this check needs adjustment,
+    # but typically mutation happens *before* denormalization.
+    # Using boundaries_min/max attributes for generality.
     upper_violation_mask = de_instance.donors > de_instance.boundaries_max
     lower_violation_mask = de_instance.donors < de_instance.boundaries_min
 
+    constraint_method = de_instance.boundary_constraint_method
+
     # Process upper violations
     if np.any(upper_violation_mask):
-        rows, cols = np.where(upper_violation_mask)
-        de_instance.donors[upper_violation_mask] = de_instance.rng.uniform(
-            de_instance.targets[upper_violation_mask],
-            de_instance.boundaries_max[cols],
-            size=len(rows)
-        )
+        rows_upper, cols_upper = np.where(upper_violation_mask)
+
+        if constraint_method == 'random_from_target':
+            # Original method: Random value between target and upper boundary
+            de_instance.donors[upper_violation_mask] = de_instance.rng.uniform(
+                de_instance.targets[upper_violation_mask],        # Low limit = target value
+                de_instance.boundaries_max[cols_upper],           # High limit = boundary max
+                size=len(rows_upper)
+            )
+        elif constraint_method == 'clamp':
+            # Clamp to the upper boundary
+            de_instance.donors[upper_violation_mask] = de_instance.boundaries_max[cols_upper]
+        elif constraint_method == 'random':
+            # Replace with a new random value within the full [min, max] boundary range
+            de_instance.donors[upper_violation_mask] = de_instance.rng.uniform(
+                de_instance.boundaries_min[cols_upper],           # Low limit = boundary min
+                de_instance.boundaries_max[cols_upper],           # High limit = boundary max
+                size=len(rows_upper)
+            )
 
     # Process lower violations
     if np.any(lower_violation_mask):
-        rows, cols = np.where(lower_violation_mask)
-        de_instance.donors[lower_violation_mask] = de_instance.rng.uniform(
-            de_instance.boundaries_min[cols],
-            de_instance.targets[lower_violation_mask],
-            size=len(rows)
-        )
+        rows_lower, cols_lower = np.where(lower_violation_mask)
+
+        if constraint_method == 'random_from_target':
+            # Original method: Random value between lower boundary and target
+            de_instance.donors[lower_violation_mask] = de_instance.rng.uniform(
+                de_instance.boundaries_min[cols_lower],           # Low limit = boundary min
+                de_instance.targets[lower_violation_mask],        # High limit = target value
+                size=len(rows_lower)
+            )
+        elif constraint_method == 'clamp':
+            # Clamp to the lower boundary
+            de_instance.donors[lower_violation_mask] = de_instance.boundaries_min[cols_lower]
+        elif constraint_method == 'random':
+            # Replace with a new random value within the full [min, max] boundary range
+            de_instance.donors[lower_violation_mask] = de_instance.rng.uniform(
+                de_instance.boundaries_min[cols_lower],           # Low limit = boundary min
+                de_instance.boundaries_max[cols_lower],           # High limit = boundary max
+                size=len(rows_lower)
+            )

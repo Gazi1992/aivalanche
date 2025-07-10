@@ -1,0 +1,12 @@
+Timestamp,SensorA_Voltage,SensorB_Reading,Notes
+0,0.5,10.1,"Start"
+1,1.2,10.5,"Ramp Up"
+2,1.9,10.9,"Stable"
+3,2.5,11.0,"Stable"
+4,3.1,11.5,"Increasing"
+5,3.8,12.0,"Peak"
+6,3.5,11.8,"Dropping"
+7,3.0,11.2,"Dropping"
+8,2.4,10.8,"End Phase 1"
+9,1.8,10.3,"Cool Down"
+10,1.1,10.0,"End"

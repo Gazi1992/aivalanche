@@ -1,0 +1,146 @@
+/* General Styles for Learn More Pages - Light Theme */
+.learn-more-page {
+  padding-top: 70px; /* Height of the fixed header */
+  background-color: var(--charcoal-bg); /* Now main light background */
+  color: var(--dark-text-full); /* Now dark text */
+  min-height: 100vh;
+}
+
+.lm-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.lm-hero-section {
+  height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 0 40px; /* Add some padding to hero content */
+  background-color: var(--charcoal-bg); /* Now main light background, or can be distinct e.g. light accent */
+}
+
+.lm-hero-content {
+  flex: 1;
+}
+
+.lm-hero-visual {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lm-hero-content h1 {
+  font-size: 52px;
+  color: var(--dark-text-full); /* Dark text */
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.lm-section {
+  padding: 60px 0;
+  /* border-bottom: 1px solid rgba(44, 62, 80, 0.1); Light border */
+}
+
+.lm-section:last-child {
+  border-bottom: none;
+}
+
+.lm-section-title {
+  font-size: 36px;
+  color: var(--dark-text-full); /* Dark text */
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+/* Card Styles - Light Theme */
+.lm-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.lm-card {
+  background-color: var(--card-bg); /* White card background */
+  padding: 25px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.1); /* Subtle border for cards */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow for depth */
+}
+
+.lm-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.lm-card h3 {
+  font-size: 22px;
+  color: var(--electric-cyan-accent); /* Blue accent for card titles */
+  margin-bottom: 15px;
+}
+
+.lm-card p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--white-text-85); /* Dark text at 85% opacity */
+}
+
+/* ZigZag Section (no major color changes needed, inherits text colors) */
+.lm-zigzag-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 50px;
+  gap: 30px;
+}
+
+.lm-zigzag-row:nth-child(even) .lm-zigzag-text {
+  order: 2;
+}
+
+.lm-zigzag-row:nth-child(even) .lm-zigzag-visual {
+  order: 1;
+}
+
+.lm-zigzag-text {
+  flex: 1;
+}
+
+.lm-zigzag-visual {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Footer Banner - Light Theme */
+.lm-footer-banner {
+  background-color: var(--electric-cyan-accent); /* Blue background */
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.lm-footer-banner h2 {
+  font-size: 28px;
+  color: var(--light-text-on-accent); /* White text on Blue */
+  margin-bottom: 20px;
+}
+
+/* Shared visual placeholder for these pages - Light Theme */
+.lm-visual-placeholder {
+  background-color: rgba(0,0,0,0.03); /* Very light grey placeholder bg */
+  border: 1px dashed var(--lilac-violet-accent); /* Lilac accent for placeholder border */
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: var(--dark-text-full); /* Dark text */
+  font-style: italic;
+  min-height: 250px;
+  width: 100%;
+  border-radius: 8px;
+} 

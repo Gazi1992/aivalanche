@@ -1,0 +1,43 @@
+.app-header {
+  background-color: transparent; /* Transparent background */
+  padding: 20px 0;
+  box-shadow: none; /* Remove shadow or adjust for subtlety if desired */
+  position: fixed; /* Changed from sticky to fixed for overlay */
+  top: 0;
+  left: 0; /* Ensure it spans full width */
+  right: 0; /* Ensure it spans full width */
+  z-index: 1000;
+  width: 100%;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* Add padding to container if needed, as parent padding is on background */
+  padding-left: 20px; 
+  padding-right: 20px;
+}
+
+.logo {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--dark-text-full); /* Changed to dark text */
+  letter-spacing: -1px;
+}
+
+.main-nav a {
+  margin-left: 25px;
+  text-decoration: none;
+  color: var(--white-text-85); /* Changed to dark text 85% opacity */
+  font-size: 16px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--electric-cyan-accent); /* Blue for hover/active */
+  /* text-shadow: 0 0 5px rgba(0,0,0,0.5); Optional: consider if needed for light theme */
+} 

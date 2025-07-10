@@ -1,0 +1,37 @@
+.app-header {
+  background-color: #ffffff; /* White background for header */
+  padding: 20px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
+  color: #007bff; /* Primary blue for logo */
+  letter-spacing: -1px;
+}
+
+.main-nav a {
+  margin-left: 25px;
+  text-decoration: none;
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: #007bff; /* Blue for hover and active links */
+} 

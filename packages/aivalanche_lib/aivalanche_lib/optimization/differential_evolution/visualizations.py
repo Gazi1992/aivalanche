@@ -7,8 +7,19 @@ Note: All functions in this module are prefixed with an underscore (_) to indica
 they are internal implementation details not meant to be called directly from outside
 the DifferentialEvolution class.
 """
-import numpy as np, pandas as pd
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import os, traceback
+import matplotlib.animation as animation
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D # Required for 3D projection in test_functions plot
+from typing import Callable, List, Tuple, Union, Optional
+from aivalanche_lib.test_functions import (
+    get_function_details,
+    generate_parameters_config,
+    plot_test_function
+)
 
 def _plot_mutation_and_recombination(param_1_name, param_2_name,
                                     all_targets, target, donor, trial, best,

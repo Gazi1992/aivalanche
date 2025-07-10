@@ -1,0 +1,198 @@
+/* frontend/src/themes.css */
+
+:root {
+  /* Layout variables */
+  --sidebar-width-expanded: 220px;
+  --sidebar-width-collapsed: 60px;
+  --sidebar-padding: 20px;
+  --sidebar-gap: 20px;
+  --main-padding: 20px;
+  --container-padding: 15px;
+  --container-border-radius: 8px;
+  --button-padding: 10px 15px;
+  --button-border-radius: 5px;
+  --title-font-size: 1.5rem;
+  --sidebar-transition: width 0.3s ease-in-out;
+  
+  /* Plot layout variables */
+  --plot-margin-left: 20px;
+  --plot-margin-right: 5px;
+  --plot-margin-bottom: 15px;
+  --plot-margin-top: 35px;
+  --plot-margin-pad: 0px;
+  --legend-x: 0.01;
+  --legend-y: 0.99;
+  --legend-border-width: 1px;
+
+  /* Declare available theme keys for backend parsing */
+  --available-themes: "light,dark";
+}
+
+/* ---------------- LIGHT THEME COLORS ---------------- */
+
+[data-theme='light'] {
+  --background-color: #FFFFFF;
+  --text-color: #212529;
+  --primary-color: #007BFF;
+  --card-background-color: #FFFFFF;
+  --border-color: #DEE2E6;
+  --header-bg: #FFFFFF;
+  --sidebar-bg: #F8F9FA;
+  --button-bg: #007BFF;
+  --button-text: #FFFFFF;
+  --plot-bg: #FFFFFF;
+  --plot-paper-bg: #FFFFFF;
+  --plot-text: #212529;
+  --grid-color: #E9ECEF;
+  --legend-bg: rgba(255, 255, 255, 0.7);
+  --legend-border: rgba(0, 0, 0, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --color-data-1: #007BFF;
+  --color-data-2: #28A745;
+  --color-data-3: #17A2B8;
+  --color-data-4: #FD7E14;
+  --color-data-5: #6F42C1;
+}
+
+[data-theme='dark'] {
+  --background-color: #0D1117;
+  --text-color: #E6EDF3;
+  --primary-color: #19B58A;
+  --card-background-color: #161B22;
+  --border-color: #30363D;
+  --header-bg: #161B22;
+  --sidebar-bg: #0D1117;
+  --button-bg: #19B58A;
+  --button-text: #FFFFFF;
+  --plot-bg: #161B22;
+  --plot-paper-bg: #161B22;
+  --plot-text: #E6EDF3;
+  --grid-color: #30363D;
+  --legend-bg: rgba(0, 0, 0, 0.5);
+  --legend-border: rgba(255, 255, 255, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --color-data-1: #19B58A;
+  --color-data-2: #E83E8C;
+  --color-data-3: #007BFF;
+  --color-data-4: #FFC107;
+  --color-data-5: #17A2B8;
+  /* Layout variables are inherited from :root */
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+#root {
+    height: 100%;
+} 
+
+/* Zoom button overlay styles */
+.plot-container {
+    position: relative;
+    overflow: visible; /* allow button to extend beyond plot bounds if needed */
+}
+
+.theme-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 56px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    border: none;
+    background: linear-gradient(135deg, #B174FF 0%, #4C8DFF 100%);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s ease-in-out;
+}
+
+.theme-switch.dark {
+    background: linear-gradient(135deg, #555 0%, #333 100%);
+}
+
+.theme-switch svg {
+    color: #fff;
+    pointer-events: none;
+    z-index: 2; /* above knob */
+}
+
+.switch-knob {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    z-index: 1; /* below icons */
+}
+
+.theme-switch.dark .switch-knob {
+    transform: translateX(26px);
+}
+
+/* Adjust zoom button to outline style */
+.zoom-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    opacity: 0;
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    z-index: 1001;
+}
+
+.plot-container:hover .zoom-btn {
+    opacity: 1;
+}
+
+/* Change background on hover for accessibility */
+.zoom-btn:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.zoom-btn:active {
+    background-color: rgba(0,0,0,0.1);
+} 
+
+/* ------------ Skeleton Loading Placeholder ------------- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--border-color);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150px;
+  width: 150px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: skeleton-loading 1.2s infinite;
+}
+
+@keyframes skeleton-loading {
+  0%   { left: -150px; }
+  100% { left: 100%; }
+} 

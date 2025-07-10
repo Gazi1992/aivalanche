@@ -1,0 +1,7 @@
+time_sec,control_value,status
+0.0,1.0,OK
+0.2,1.0,OK
+0.4,0.0,OK
+0.6,0.0,WARN
+0.8,-1.0,OK
+1.0,-1.0,OK

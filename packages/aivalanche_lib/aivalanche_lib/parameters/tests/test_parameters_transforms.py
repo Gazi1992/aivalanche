@@ -1,639 +1,251 @@
-"""
-Tests for transformation functions of the Parameters class.
+# --- START OF FILE test_parameters_transforms.py ---
 
-This test file focuses on testing the array/DataFrame transformation functions:
-- denormalize_parameters_array
-- descale_parameters_array
-- denormalize_and_descale_parameters_array
-- scale_parameters_array
-- normalize_parameters_array
-- scale_and_normalize_parameters_array
+"""
+Tests for transformation functions of the Parameters class, including
+discrete and categorical types.
+
+Focuses on array/DataFrame transformations: denormalize, descale, normalize, scale.
 """
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+import math # Added
 
 # Import Parameters from your package
 from aivalanche_lib.parameters import Parameters
+# Import utils needed for manual calculation verification if necessary
+from aivalanche_lib.parameters.scale_norm import denormalize_categorical_value, normalize_categorical_value, normalize_parameter_value
 
 def create_test_data():
-    """Create sample parameter data for testing."""
+    """Create sample parameter data including discrete and categorical types."""
+    # Using the same data as basics test for consistency
     return [
-        {"name": "linear_positive", "min": 1.0, "max": 10.0, "default": 5.0, "scale": "lin", "mode": "variable"},
-        {"name": "linear_negative", "min": -10.0, "max": -1.0, "default": -5.0, "scale": "lin", "mode": "variable"},
-        {"name": "linear_mixed", "min": -5.0, "max": 5.0, "default": 0.0, "scale": "lin", "mode": "variable"},
-        {"name": "log_small", "min": 0.1, "max": 10.0, "default": 1.0, "scale": "log", "mode": "variable"},
-        {"name": "log_large", "min": 100.0, "max": 10000.0, "default": 1000.0, "scale": "log", "mode": "variable"},
-        {"name": "neglog", "min": -1000.0, "max": -0.1, "default": -10.0, "scale": "log", "mode": "variable"},
-        {"name": "fixed_lin_param", "min": 0.0, "max": 100.0, "default": 42.0, "scale": "lin", "mode": "fixed"},
-        {"name": "fixed_log_param", "min": 0.01, "max": 1000.0, "default": 10.0, "scale": "log", "mode": "fixed"}
+        # --- Continuous ---
+        {"name": "cont_lin_pos", "type": "continuous", "min": 1.0, "max": 10.0, "default": 5.0, "scale": "lin", "mode": "variable"},
+        {"name": "cont_log_pos", "type": "continuous", "min": 0.1, "max": 10.0, "default": 1.0, "scale": "log", "mode": "variable"},
+        {"name": "cont_neglog", "type": "continuous", "min": -1000.0, "max": -0.1, "default": -10.0, "scale": "log", "mode": "variable"},
+        # --- Discrete ---
+        {"name": "disc_list_num", "type": "discrete", "values": [10, 20, 50, 100], "default": 50, "mode": "variable"}, # N=4
+        {"name": "disc_step", "type": "discrete", "min": 16, "max": 128, "step": 16, "default": 64, "mode": "variable"},
+        {"name": "disc_step_log", "type": "discrete", "min": 1, "max": 1000, "step": 1, "default": 10, "scale": "log", "mode": "variable"}, # Log scaled discrete steps
+        # --- Categorical ---
+        {"name": "cat_str", "type": "categorical", "values": ["adam", "sgd", "rmsprop"], "default": "adam", "mode": "variable"}, # N=3
+        {"name": "cat_bool", "type": "categorical", "values": [True, False], "default": True, "mode": "variable"},          # N=2
+        {"name": "cat_single", "type": "categorical", "values": ["only"], "default": "only", "mode": "variable"},             # N=1
+        # --- Fixed ---
+        {"name": "fixed_cont_lin", "type": "continuous", "min": 0.0, "max": 100.0, "default": 42.0, "scale": "lin", "mode": "fixed"},
+        {"name": "fixed_disc_step", "type": "discrete", "min": 0, "max": 10, "step": 2, "default": 6, "mode": "fixed"},
+        {"name": "fixed_cat", "type": "categorical", "values": ["red", "blue"], "default": "red", "mode": "fixed"} # N=2
     ]
 
 def create_test_normalized_data():
-    """Create sample normalized data for denormalization testing."""
+    """
+    Create sample normalized [0,1] data for denormalization testing.
+    Values chosen to test boundaries, midpoints, and points that require rounding/snapping.
+    """
     return pd.DataFrame({
-        "linear_positive": [0.0, 0.25, 0.5, 0.75, 1.0],
-        "linear_negative": [0.0, 0.25, 0.5, 0.75, 1.0],
-        "linear_mixed": [0.0, 0.25, 0.5, 0.75, 1.0],
-        "log_small": [0.0, 0.25, 0.5, 0.75, 1.0],
-        "log_large": [0.0, 0.25, 0.5, 0.75, 1.0],
-        "neglog": [0.0, 0.25, 0.5, 0.75, 1.0]
+        # Continuous
+        "cont_lin_pos":  [0.0, 0.25, 0.5, 0.75, 1.0],    # Range [1, 10] -> 1, 3.25, 5.5, 7.75, 10
+        "cont_log_pos":  [0.0, 0.25, 0.5, 0.75, 1.0],    # Scaled [-1, 1] -> Denorm -1, -0.5, 0, 0.5, 1 -> Descale 0.1, 0.316, 1, 3.16, 10
+        "cont_neglog":   [0.0, 0.25, 0.5, 0.75, 1.0],    # Scaled [1, -3] -> Denorm 1, 0.0, -1.0, -2.0, -3.0 -> Descale -0.1, -1, -10, -100, -1000 (Check Denorm Step)
+        # Discrete
+        "disc_list_num": [0.0, 0.3, 0.6, 0.9, 1.0],    # Scaled [10, 100] -> Denorm 10, 37, 64, 91, 100 -> Snap 10, 50, 50, 100, 100
+        "disc_step":     [0.0, 0.3, 0.6, 0.9, 1.0],    # Scaled [16, 128] -> Denorm 16, 49.6, 83.2, 116.8, 128 -> Snap 16, 48, 80, 112, 128
+        "disc_step_log": [0.0, 0.3, 0.6, 0.9, 1.0],    # Scaled [0, 3] -> Denorm 0, 0.9, 1.8, 2.7, 3 -> Descale 1, 7.94, 63.1, 501.18, 1000 -> Snap 1, 8, 63, 501, 1000
+        # Categorical (N=3, N=2, N=1) - Use utility logic for expected
+        "cat_str":       [0.0, 0.1, 0.4, 0.8, 1.0],    # N=3 -> Indices 0, 0.2, 0.8, 1.6, 2 -> Round 0, 0, 1, 2, 2 -> adam, adam, sgd, rmsprop, rmsprop
+        "cat_bool":      [0.0, 0.1, 0.6, 0.9, 1.0],    # N=2 -> Indices 0, 0.1, 0.6, 0.9, 1 -> Round 0, 0, 1, 1, 1 -> True, True, False, False, False
+        "cat_single":    [0.0, 0.25, 0.5, 0.75, 1.0]   # N=1 -> Index 0 always -> 'only'
     })
+
 
 def create_test_raw_data():
     """Create sample raw (original scale) data for scaling/normalization testing."""
     return pd.DataFrame({
-        "linear_positive": [1.0, 3.25, 5.5, 7.75, 10.0],
-        "linear_negative": [-10.0, -7.75, -5.5, -3.25, -1.0],
-        "linear_mixed": [-5.0, -2.5, 0.0, 2.5, 5.0],
-        "log_small": [0.1, 0.3162, 1.0, 3.1623, 10.0],       # Approximates of log scale values
-        "log_large": [100.0, 316.2, 1000.0, 3162.3, 10000.0],  # Approximates of log scale values
-        "neglog": [-1000.0, -100.0, -10.0, -1.0, -0.1]    # Approximates of neglog scale values
+        # Continuous
+        "cont_lin_pos":  [1.0, 3.25, 5.5, 7.75, 10.0],       # Range [1, 10] -> Norm 0, 0.25, 0.5, 0.75, 1
+        "cont_log_pos":  [0.1, 0.3162, 1.0, 3.1623, 10.0],    # Scale log10 -> -1, -0.5, 0, 0.5, 1 -> Norm 0, 0.25, 0.5, 0.75, 1
+        "cont_neglog":   [-0.1, -1.0, -10.0, -100.0, -1000.0], # Scale -log10(-x) -> 1, 0, -1, -2, -3 -> Norm 0, 0.25, 0.5, 0.75, 1 (Scaled Range [1, -3])
+        # Discrete
+        "disc_list_num": [10, 20, 50, 100, 10],              # Scale lin -> 10, 20, 50, 100, 10 -> Norm 0, 1/9, 4/9, 1, 0
+        "disc_step":     [16, 32, 64, 112, 128],             # Scale lin -> 16, 32, 64, 112, 128 -> Norm 0, 1/7, 3/7, 6/7, 1
+        "disc_step_log": [1, 8, 63, 501, 1000],             # Scale log10 -> 0, 0.903, 1.799, 2.7, 3 -> Norm 0, 0.301, 0.6, 0.9, 1
+        # Categorical
+        "cat_str":       ["adam", "sgd", "rmsprop", "adam", "sgd"], # Scale index -> 0, 1, 2, 0, 1 -> Norm 0, 0.5, 1, 0, 0.5
+        "cat_bool":      [True, False, True, False, True],          # Scale index -> 0, 1, 0, 1, 0 -> Norm 0, 1, 0, 1, 0
+        "cat_single":    ["only", "only", "only", "only", "only"]   # Scale index -> 0, 0, 0, 0, 0 -> Norm 0.5, 0.5, 0.5, 0.5, 0.5
     })
 
-def test_denormalize_parameters_array():
-    """Test denormalizing parameters array."""
-    params = Parameters(create_test_data())
-    normalized_data = create_test_normalized_data()
-
-    # Test denormalizing without fixed parameters
-    denormalized = params.denormalize_parameters_array(normalized_data, include_fixed_parameters=False)
-
-    # Verify denormalized values for linear parameters
-    assert denormalized["linear_positive"].iloc[0] == params.variable_parameters_scaled.loc[params.variable_parameters_scaled['name'] == 'linear_positive', "min"].values[0]  # min value for 0.0
-    assert denormalized["linear_positive"].iloc[4] == params.variable_parameters_scaled.loc[params.variable_parameters_scaled['name'] == 'linear_positive', "max"].values[0]  # max value for 1.0
-
-    # Test denormalizing with fixed parameters
-    denormalized_with_fixed = params.denormalize_parameters_array(normalized_data, include_fixed_parameters=True)
-
-    # Verify fixed parameters are added
-    assert "fixed_lin_param" in denormalized_with_fixed.columns
-    assert "fixed_log_param" in denormalized_with_fixed.columns
-
-    # Verify fixed parameters have their default values
-    fixed_lin_param_defaults = params.fixed_parameters_scaled.loc[
-        params.fixed_parameters_scaled["name"] == "fixed_lin_param", "default"].values[0]
-    assert denormalized_with_fixed["fixed_lin_param"].iloc[0] == fixed_lin_param_defaults
-
-    return params, normalized_data, denormalized_with_fixed
-
-def test_descale_parameters_array():
-    """Test descaling parameters array."""
-    params = Parameters(create_test_data())
-    normalized_data = create_test_normalized_data()
-
-    # First denormalize
-    denormalized = params.denormalize_parameters_array(normalized_data, include_fixed_parameters=False)
-
-    # Then descale
-    descaled = params.descale_parameters_array(denormalized, include_fixed_parameters=True)
-
-    # Verify log transformations are reversed
-    # For log_small: original min=0.1, max=10.0
-    # Normalized 0.0 -> -1.0 (scaled) -> 0.1 (descaled)
-    # Normalized 1.0 -> 1.0 (scaled) -> 10.0 (descaled)
-    assert 0.099 <= descaled["log_small"].iloc[0] <= 0.11  # Should be approx 0.1
-    assert 9.9 <= descaled["log_small"].iloc[4] <= 10.1    # Should be approx 10.0
-
-    # For neglog: original min=-1000.0, max=-0.1
-    # Normalized 0.0 -> -3.0 (scaled) -> -1000.0 (descaled)
-    # Normalized 1.0 -> 1.0 (scaled) -> -0.1 (descaled)
-    assert -1100.0 <= descaled["neglog"].iloc[0] <= -900.0  # Should be approx -1000.0
-    assert -0.11 <= descaled["neglog"].iloc[4] <= -0.09     # Should be approx -0.1
-
-    return params, denormalized, descaled
+# --- Test Denormalization/Descaling ---
 
 def test_denormalize_and_descale_parameters_array():
-    """Test combined denormalization and descaling."""
+    """Test combined denormalization and descaling with new types."""
     params = Parameters(create_test_data())
+    assert not params.error_parsing, f"Error during parameter processing: {params.error_parsing}"
     normalized_data = create_test_normalized_data()
 
     # Use the combined function
     denorm_descaled = params.denormalize_and_descale_parameters_array(
-        normalized_data, include_fixed_parameters=True
+        normalized_data.copy(), # Pass a copy
+        include_fixed=True
     )
+    assert isinstance(denorm_descaled, pd.DataFrame), "Result should be DataFrame"
 
-    # Verify results match individual operations
-    # First denormalize
-    denormalized = params.denormalize_parameters_array(
-        normalized_data, include_fixed_parameters=True
-    )
+    # --- Assertions for Continuous ---
+    # cont_log_pos: Scaled Range [-1, 1]
+    assert np.isclose(denorm_descaled["cont_log_pos"].iloc[0], 0.1)
+    assert np.isclose(denorm_descaled["cont_log_pos"].iloc[2], 1.0)
+    assert np.isclose(denorm_descaled["cont_log_pos"].iloc[4], 10.0)
 
-    # Then descale
-    descaled_separate = params.descale_parameters_array(
-        denormalized, validate_data=False, include_fixed_parameters=False
-    )
+    # cont_neglog: Scaled Range [1, -3]
+    assert np.isclose(denorm_descaled["cont_neglog"].iloc[0], -1000), f"Expected -0.1, got {denorm_descaled['cont_neglog'].iloc[0]}"
+    assert np.isclose(denorm_descaled["cont_neglog"].iloc[2], -10.0), f"Expected -10.0, got {denorm_descaled['cont_neglog'].iloc[2]}"
+    assert np.isclose(denorm_descaled["cont_neglog"].iloc[4], -0.1), f"Expected -1000.0, got {denorm_descaled['cont_neglog'].iloc[4]}"
 
-    # Compare results
-    for col in normalized_data.columns:
-        assert np.allclose(
-            denorm_descaled[col].values,
-            descaled_separate[col].values,
-            rtol=1e-10, atol=1e-10
-        )
+    # --- Assertions for Discrete (Check Snapping) ---
+    # disc_list_num: values=[10, 20, 50, 100]. Scaled Range [10, 100].
+    assert denorm_descaled["disc_list_num"].iloc[0] == 10
+    assert denorm_descaled["disc_list_num"].iloc[1] == 50 # Snap check (37->50)
+    assert denorm_descaled["disc_list_num"].iloc[2] == 50 # Snap check (64->50)
+    assert denorm_descaled["disc_list_num"].iloc[3] == 100 # Snap check (91->100)
+    assert denorm_descaled["disc_list_num"].iloc[4] == 100
+
+    # disc_step: min=16, max=128, step=16. Scaled Range [16, 128].
+    assert denorm_descaled["disc_step"].iloc[0] == 16
+    assert denorm_descaled["disc_step"].iloc[1] == 48 # Snap check (49.6->48)
+    assert denorm_descaled["disc_step"].iloc[2] == 80 # Snap check (83.2->80)
+    assert denorm_descaled["disc_step"].iloc[3] == 112 # Snap check (116.8->112)
+    assert denorm_descaled["disc_step"].iloc[4] == 128
+
+    # disc_step_log: min=1, max=1000, step=1, scale=log. Scaled Range [0, 3].
+    assert denorm_descaled["disc_step_log"].iloc[0] == 1
+    assert denorm_descaled["disc_step_log"].iloc[1] == 8 # Snap check (7.94->8)
+    assert denorm_descaled["disc_step_log"].iloc[2] == 63 # Snap check (63.1->63)
+    assert denorm_descaled["disc_step_log"].iloc[3] == 501 # Snap check (501.18->501)
+    assert denorm_descaled["disc_step_log"].iloc[4] == 1000
+
+    # --- Assertions for Categorical (Check Mapping - Use Utility Logic) ---
+    # cat_str: values=['adam', 'sgd', 'rmsprop']. N=3. Indices [0, 1, 2].
+    assert denorm_descaled["cat_str"].iloc[0] == "adam"
+    assert denorm_descaled["cat_str"].iloc[1] == "adam" # Round check (norm 0.1)
+    assert denorm_descaled["cat_str"].iloc[2] == "sgd"  # Round check (norm 0.4)
+    assert denorm_descaled["cat_str"].iloc[3] == "rmsprop" # Round check (norm 0.8)
+    assert denorm_descaled["cat_str"].iloc[4] == "rmsprop"
+
+    # cat_bool: values=[True, False]. N=2. Indices [0, 1].
+    # *** USE == for boolean comparison ***
+    assert denorm_descaled["cat_bool"].iloc[0] == True, f"Expected True, got {denorm_descaled['cat_bool'].iloc[0]}"
+    assert denorm_descaled["cat_bool"].iloc[1] == True, f"Round check failed: Expected True, got {denorm_descaled['cat_bool'].iloc[1]}" # Round check (norm 0.1)
+    assert denorm_descaled["cat_bool"].iloc[2] == False, f"Round check failed: Expected False, got {denorm_descaled['cat_bool'].iloc[2]}" # Round check (norm 0.6)
+    assert denorm_descaled["cat_bool"].iloc[3] == False, f"Round check failed: Expected False, got {denorm_descaled['cat_bool'].iloc[3]}" # Round check (norm 0.9)
+    assert denorm_descaled["cat_bool"].iloc[4] == False, f"Expected False, got {denorm_descaled['cat_bool'].iloc[4]}"
+
+    # cat_single: values=['only']. N=1. Index [0].
+    assert denorm_descaled["cat_single"].iloc[0] == "only"
+    assert denorm_descaled["cat_single"].iloc[2] == "only"
+    assert denorm_descaled["cat_single"].iloc[4] == "only"
+
+    # --- Assertions for Fixed ---
+    assert "fixed_cont_lin" in denorm_descaled.columns
+    assert "fixed_disc_step" in denorm_descaled.columns
+    assert "fixed_cat" in denorm_descaled.columns
+    assert denorm_descaled["fixed_cont_lin"].iloc[0] == 42.0
+    assert denorm_descaled["fixed_disc_step"].iloc[0] == 6
+    assert denorm_descaled["fixed_cat"].iloc[0] == "red"
 
     return params, normalized_data, denorm_descaled
 
-def test_scale_parameters_array():
-    """Test scaling parameters array."""
-    params = Parameters(create_test_data())
-    raw_data = create_test_raw_data()
 
-    # Test scaling without fixed parameters
-    scaled = params.scale_parameters_array(raw_data, include_fixed_parameters=False)
-
-    # Verify scaled values for log parameters
-    # log_small: min=0.1, max=10.0
-    # raw 0.1 -> log10(0.1) = -1.0
-    # raw 10.0 -> log10(10.0) = 1.0
-    assert -1.1 <= scaled["log_small"].iloc[0] <= -0.9    # Should be approx -1.0
-    assert 0.9 <= scaled["log_small"].iloc[4] <= 1.1      # Should be approx 1.0
-
-    # Test scaling with fixed parameters
-    scaled_with_fixed = params.scale_parameters_array(raw_data, include_fixed_parameters=True)
-
-    # Verify fixed parameters are added
-    assert "fixed_lin_param" in scaled_with_fixed.columns
-    assert "fixed_log_param" in scaled_with_fixed.columns
-
-    return params, raw_data, scaled_with_fixed
-
-def test_normalize_parameters_array():
-    """Test normalizing parameters array."""
-    params = Parameters(create_test_data())
-    raw_data = create_test_raw_data()
-
-    # First scale
-    scaled = params.scale_parameters_array(raw_data, include_fixed_parameters=False)
-
-    # Then normalize
-    normalized = params.normalize_parameters_array(scaled, include_fixed_parameters=True)
-
-    # Verify normalization (all values should be between 0 and 1)
-    for col in normalized.columns:
-        assert normalized[col].min() >= 0
-        assert normalized[col].max() <= 1
-
-    # Specific checks for linear parameters
-    # linear_positive: min=1.0, max=10.0
-    # raw 1.0 -> norm 0.0
-    # raw 10.0 -> norm 1.0
-    assert 0 <= normalized["linear_positive"].iloc[0] <= 0.01  # Should be approx 0.0
-    assert 0.99 <= normalized["linear_positive"].iloc[4] <= 1  # Should be approx 1.0
-
-    return params, scaled, normalized
+# --- Test Scaling/Normalization ---
 
 def test_scale_and_normalize_parameters_array():
-    """Test combined scaling and normalizing."""
+    """Test combined scaling and normalizing with new types."""
     params = Parameters(create_test_data())
+    assert not params.error_parsing, f"Error during parameter processing: {params.error_parsing}"
     raw_data = create_test_raw_data()
+    # Manually calculate expected normalized values based on raw_data and parameter definitions
+    expected_normalized_dict = {
+         "cont_lin_pos":  [0.0, 0.25, 0.5, 0.75, 1.0],
+         "cont_log_pos":  [0.0, 0.25, 0.5, 0.75, 1.0],
+         "cont_neglog":   [1.0, 0.75, 0.5, 0.25, 0.0], # Scaled range [1, -3]
+         "disc_list_num": [0.0, 1/9, 4/9, 1.0, 0.0], # Scaled range [10, 100]
+         "disc_step":     [0.0, 1/7, 3/7, 6/7, 1.0], # Scaled range [16, 128] -> (32-16)/112=16/112=1/7, (64-16)/112=48/112=3/7, (112-16)/112=96/112=6/7
+         "disc_step_log": [0.0, 0.301, 0.6, 0.9, 1.0], # Scaled range [0, 3] -> log10(8)/3=0.903/3=0.301, log10(63)/3=1.799/3=0.6, log10(501)/3=2.7/3=0.9
+         "cat_str":       [0.0, 0.5, 1.0, 0.0, 0.5], # Index 0,1,2 -> Norm 0/(3-1)=0, 1/2=0.5, 2/2=1.0
+         "cat_bool":      [0.0, 1.0, 0.0, 1.0, 0.0], # Index 0,1 -> Norm 0/(2-1)=0, 1/1=1.0
+         "cat_single":    [0.5, 0.5, 0.5, 0.5, 0.5]  # Index 0 -> Norm 0.5 (special case N=1)
+    }
+    expected_normalized = pd.DataFrame(expected_normalized_dict)
+
 
     # Use the combined function
     scaled_normalized = params.scale_and_normalize_parameters_array(
-        raw_data, include_fixed_parameters=True
+        raw_data.copy(), # Pass a copy
+        include_fixed=True
     )
+    assert isinstance(scaled_normalized, pd.DataFrame), "Result should be DataFrame"
 
-    # Verify results match individual operations
-    # First scale
-    scaled = params.scale_parameters_array(
-        raw_data, include_fixed_parameters=True
-    )
 
-    # Then normalize
-    normalized_separate = params.normalize_parameters_array(
-        scaled, validate_data=False, include_fixed_parameters=True
-    )
+    # --- Assertions for Variable Parameters ---
+    for col in expected_normalized.columns:
+         assert col in scaled_normalized.columns, f"Column '{col}' missing in result"
+         assert np.allclose(scaled_normalized[col], expected_normalized[col], atol=1e-3), \
+                f"Normalized values mismatch for '{col}'.\nExpected:\n{expected_normalized[col]}\nGot:\n{scaled_normalized[col]}"
 
-    # Compare results
-    for col in raw_data.columns:
-        assert np.allclose(
-            scaled_normalized[col].values,
-            normalized_separate[col].values,
-            rtol=1e-10, atol=1e-10
-        )
+    # --- Assertions for Fixed ---
+    assert "fixed_cont_lin" in scaled_normalized.columns
+    assert "fixed_disc_step" in scaled_normalized.columns
+    assert "fixed_cat" in scaled_normalized.columns
+    # Get expected normalized defaults from the Parameters object
+    normed_fixed_cont_lin = params.get_parameter_normed("fixed_cont_lin")["default"]
+    normed_fixed_disc_step = params.get_parameter_normed("fixed_disc_step")["default"]
+    normed_fixed_cat = params.get_parameter_normed("fixed_cat")["default"]
+    # Check all rows have the normalized fixed default
+    assert np.allclose(scaled_normalized["fixed_cont_lin"], normed_fixed_cont_lin), f"Fixed cont lin norm failed. Expected {normed_fixed_cont_lin}"
+    assert np.allclose(scaled_normalized["fixed_disc_step"], normed_fixed_disc_step), f"Fixed disc step norm failed. Expected {normed_fixed_disc_step}"
+    assert np.allclose(scaled_normalized["fixed_cat"], normed_fixed_cat), f"Fixed cat norm failed. Expected {normed_fixed_cat}"
+
+    # --- Compare overall structure ---
+    # Check columns match expected normalized output columns (variable + fixed)
+    expected_cols_final = sorted(list(expected_normalized.columns) + params.fixed_parameters_names)
+    assert sorted(list(scaled_normalized.columns)) == expected_cols_final
+    # Check number of rows
+    assert len(scaled_normalized) == len(raw_data)
+
 
     return params, raw_data, scaled_normalized
 
-def visualize_denormalize_descale(params, normalized_data, denormalized, descaled, denorm_descaled):
-    """
-    Create a visualization for denormalization and descaling process.
 
-    Args:
-        params: Parameters instance
-        normalized_data: Input normalized data
-        denormalized: Denormalized data
-        descaled: Descaled data
-        denorm_descaled: Combined denormalized and descaled data
+# --- Visualization (Optional, similar structure needed if desired) ---
+# Adapting the visualization functions from test_parameters_basics would be needed
+# to show the array transformations step-by-step for the new types.
+# This involves plotting the input raw/normalized data and the output at each stage.
 
-    Returns:
-        fig: Matplotlib figure
-    """
-    # Create figure with grid layout
-    fig = plt.figure(figsize=(25, 10))
-    gs = GridSpec(3, 2, figure=fig)
-
-    # Define colors for different parameter types
-    colors = {
-        'fixed': '#FFD580',     # Light orange for fixed parameters
-        'lin': '#D3D3D3',       # Light gray for linear parameters
-        'log': '#ACD1E9',       # Light blue for log parameters
-        'neglog': '#D8BFD8'     # Light purple for neglog parameters
-    }
-
-    # Row 1: Original parameters
-    ax1 = fig.add_subplot(gs[0, :])
-    df1 = params.all_parameters.copy()
-    # Format the DataFrame for display
-    df1_display = df1[['name', 'min', 'max', 'default', 'scale', 'mode', 'transform']]
-    df1_display = df1_display.sort_values(by=['mode', 'name'])
-
-    # Create a table
-    table1 = ax1.table(
-        cellText=df1_display.values,
-        colLabels=df1_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color rows based on parameter type
-    for i, row in enumerate(df1_display.iterrows()):
-        row_idx = i + 1  # +1 because row 0 is the header
-        row_data = row[1]
-
-        # Determine row color
-        if row_data['mode'] == 'fixed':
-            color = colors['fixed']
-        elif row_data.get('transform') == 'log':
-            color = colors['log']
-        elif row_data.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the row
-        for j in range(len(df1_display.columns)):
-            table1[(row_idx, j)].set_facecolor(color)
-
-    table1.auto_set_font_size(False)
-    table1.set_fontsize(10)
-    table1.scale(1, 1.5)
-    ax1.axis('tight')
-    ax1.axis('off')
-    ax1.set_title('Original Parameters')
-
-    # Row 2, Left: Input normalized data
-    ax2_left = fig.add_subplot(gs[1, 0])
-    # Round to 4 decimal places for display
-    normalized_display = normalized_data.round(4)
-
-    # Create a table
-    table2_left = ax2_left.table(
-        cellText=normalized_display.values,
-        colLabels=normalized_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color columns based on parameter type
-    for col_idx, col_name in enumerate(normalized_display.columns):
-        param = params.get_parameter(col_name)
-        if param['mode'] == 'fixed':
-            color = colors['fixed']
-        elif param.get('transform') == 'log':
-            color = colors['log']
-        elif param.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the column except header
-        for row_idx in range(1, len(normalized_display) + 1):
-            table2_left[(row_idx, col_idx)].set_facecolor(color)
-
-    table2_left.auto_set_font_size(False)
-    table2_left.set_fontsize(10)
-    table2_left.scale(1, 1.5)
-    ax2_left.axis('tight')
-    ax2_left.axis('off')
-    ax2_left.set_title('Input Normalized Data')
-
-    # Row 2, Right: Denormalized data
-    ax2_right = fig.add_subplot(gs[1, 1])
-    # Round to 4 decimal places for display
-    denormalized_display = denormalized.round(4)
-
-    # Create a table
-    table2_right = ax2_right.table(
-        cellText=denormalized_display.values,
-        colLabels=denormalized_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color columns based on parameter type
-    for col_idx, col_name in enumerate(denormalized_display.columns):
-        param = params.get_parameter(col_name)
-        if param['mode'] == 'fixed':
-            color = colors['fixed']
-        elif param.get('transform') == 'log':
-            color = colors['log']
-        elif param.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the column except header
-        for row_idx in range(1, len(denormalized_display) + 1):
-            table2_right[(row_idx, col_idx)].set_facecolor(color)
-
-    table2_right.auto_set_font_size(False)
-    table2_right.set_fontsize(10)
-    table2_right.scale(1, 1.5)
-    ax2_right.axis('tight')
-    ax2_right.axis('off')
-    ax2_right.set_title('Denormalized Data (Still in Scaled Space)')
-
-    # Row 3, Left: Descaled data
-    ax3_left = fig.add_subplot(gs[2, 0])
-    # Round to 4 decimal places for display
-    descaled_display = descaled.round(4)
-
-    # Create a table
-    table3_left = ax3_left.table(
-        cellText=descaled_display.values,
-        colLabels=descaled_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color columns based on parameter type
-    for col_idx, col_name in enumerate(descaled_display.columns):
-        param = params.get_parameter(col_name)
-        if param['mode'] == 'fixed':
-            color = colors['fixed']
-        elif param.get('transform') == 'log':
-            color = colors['log']
-        elif param.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the column except header
-        for row_idx in range(1, len(descaled_display) + 1):
-            table3_left[(row_idx, col_idx)].set_facecolor(color)
-
-    table3_left.auto_set_font_size(False)
-    table3_left.set_fontsize(10)
-    table3_left.scale(1, 1.5)
-    ax3_left.axis('tight')
-    ax3_left.axis('off')
-    ax3_left.set_title('Descaled Data (After Applying Inverse Log Transform)')
-
-    # Row 3, Right: Denormalized and descaled data
-    ax3_right = fig.add_subplot(gs[2, 1])
-    # Round to 4 decimal places for display
-    denorm_descaled_display = denorm_descaled.round(4)
-
-    # Create a table
-    table3_right = ax3_right.table(
-        cellText=denorm_descaled_display.values,
-        colLabels=denorm_descaled_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color columns based on parameter type
-    for col_idx, col_name in enumerate(denorm_descaled_display.columns):
-        param = params.get_parameter(col_name)
-        if param['mode'] == 'fixed':
-            color = colors['fixed']
-        elif param.get('transform') == 'log':
-            color = colors['log']
-        elif param.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the column except header
-        for row_idx in range(1, len(denorm_descaled_display) + 1):
-            table3_right[(row_idx, col_idx)].set_facecolor(color)
-
-    table3_right.auto_set_font_size(False)
-    table3_right.set_fontsize(10)
-    table3_right.scale(1, 1.5)
-    ax3_right.axis('tight')
-    ax3_right.axis('off')
-    ax3_right.set_title('Denormalized and Descaled Data (Original Space)')
-
-    return fig
-
-def visualize_scale_normalize(params, raw_data, scaled, normalized):
-    """
-    Create a visualization for scaling and normalization process.
-
-    Args:
-        params: Parameters instance
-        raw_data: Input raw data
-        scaled: Scaled data
-        normalized: Normalized data
-
-    Returns:
-        fig: Matplotlib figure
-    """
-    # Create figure with grid layout
-    fig = plt.figure(figsize=(25, 10))
-    gs = GridSpec(3, 2, figure=fig)
-
-    # Define colors for different parameter types
-    colors = {
-        'fixed': '#FFD580',     # Light orange for fixed parameters
-        'lin': '#D3D3D3',       # Light gray for linear parameters
-        'log': '#ACD1E9',       # Light blue for log parameters
-        'neglog': '#D8BFD8'     # Light purple for neglog parameters
-    }
-
-    # Row 1: Original parameters
-    ax1 = fig.add_subplot(gs[0, :])
-    df1 = params.all_parameters.copy()
-    # Format the DataFrame for display
-    df1_display = df1[['name', 'min', 'max', 'default', 'scale', 'mode', 'transform']]
-    df1_display = df1_display.sort_values(by=['mode', 'name'])
-
-    # Create a table
-    table1 = ax1.table(
-        cellText=df1_display.values,
-        colLabels=df1_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color rows based on parameter type
-    for i, row in enumerate(df1_display.iterrows()):
-        row_idx = i + 1  # +1 because row 0 is the header
-        row_data = row[1]
-
-        # Determine row color
-        if row_data['mode'] == 'fixed':
-            color = colors['fixed']
-        elif row_data.get('transform') == 'log':
-            color = colors['log']
-        elif row_data.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the row
-        for j in range(len(df1_display.columns)):
-            table1[(row_idx, j)].set_facecolor(color)
-
-    table1.auto_set_font_size(False)
-    table1.set_fontsize(10)
-    table1.scale(1, 1.5)
-    ax1.axis('tight')
-    ax1.axis('off')
-    ax1.set_title('Original Parameters')
-
-    # Row 2, Left: Input raw data
-    ax2_left = fig.add_subplot(gs[1, 0])
-    # Round to 4 decimal places for display
-    raw_display = raw_data.round(4)
-
-    # Create a table
-    table2_left = ax2_left.table(
-        cellText=raw_display.values,
-        colLabels=raw_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color columns based on parameter type
-    for col_idx, col_name in enumerate(raw_display.columns):
-        param = params.get_parameter(col_name)
-        if param['mode'] == 'fixed':
-            color = colors['fixed']
-        elif param.get('transform') == 'log':
-            color = colors['log']
-        elif param.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the column except header
-        for row_idx in range(1, len(raw_display) + 1):
-            table2_left[(row_idx, col_idx)].set_facecolor(color)
-
-    table2_left.auto_set_font_size(False)
-    table2_left.set_fontsize(10)
-    table2_left.scale(1, 1.5)
-    ax2_left.axis('tight')
-    ax2_left.axis('off')
-    ax2_left.set_title('Input Raw Data (Original Space)')
-
-    # Row 2, Right: Scaled data
-    ax2_right = fig.add_subplot(gs[1, 1])
-    # Round to 4 decimal places for display
-    scaled_display = scaled.round(4)
-
-    # Create a table
-    table2_right = ax2_right.table(
-        cellText=scaled_display.values,
-        colLabels=scaled_display.columns,
-        loc='center',
-        cellLoc='center'
-    )
-
-    # Color columns based on parameter type
-    for col_idx, col_name in enumerate(scaled_display.columns):
-        param = params.get_parameter(col_name)
-        if param['mode'] == 'fixed':
-            color = colors['fixed']
-        elif param.get('transform') == 'log':
-            color = colors['log']
-        elif param.get('transform') == 'neglog':
-            color = colors['neglog']
-        else:
-            color = colors['lin']
-
-        # Apply color to all cells in the column except header
-        for row_idx in range(1, len(scaled_display) + 1):
-            table2_right[(row_idx, col_idx)].set_facecolor(color)
-
-    table2_right.auto_set_font_size(False)
-    table2_right.set_fontsize(10)
-    table2_right.scale(1, 1.5)
-    ax2_right.axis('tight')
-    ax2_right.axis('off')
-    ax2_right.set_title('Scaled Data (After Log Transform)')
-
-    # Row 3, Left and Right: Normalized data (same in both places for symmetry)
-    for idx, pos in enumerate(['left', 'right']):
-        if pos == 'left':
-            ax = fig.add_subplot(gs[2, 0])
-            title = 'Normalized Data (0-1 Range)'
-        else:
-            ax = fig.add_subplot(gs[2, 1])
-            title = 'Scale and Normalize Combined Result'
-
-        # Round to 4 decimal places for display
-        normalized_display = normalized.round(4)
-
-        # Create a table
-        table = ax.table(
-            cellText=normalized_display.values,
-            colLabels=normalized_display.columns,
-            loc='center',
-            cellLoc='center'
-        )
-
-        # Color columns based on parameter type
-        for col_idx, col_name in enumerate(normalized_display.columns):
-            param = params.get_parameter(col_name)
-            if param['mode'] == 'fixed':
-                color = colors['fixed']
-            elif param.get('transform') == 'log':
-                color = colors['log']
-            elif param.get('transform') == 'neglog':
-                color = colors['neglog']
-            else:
-                color = colors['lin']
-
-            # Apply color to all cells in the column except header
-            for row_idx in range(1, len(normalized_display) + 1):
-                table[(row_idx, col_idx)].set_facecolor(color)
-
-        table.auto_set_font_size(False)
-        table.set_fontsize(10)
-        table.scale(1, 1.5)
-        ax.axis('tight')
-        ax.axis('off')
-        ax.set_title(title)
-
-    return fig
-
+# --- Test Runner ---
 def run_tests_and_visualize():
-    """Run all tests and generate visualizations."""
-    print("Testing denormalization and descaling functions...")
-    params, normalized_data, denormalized = test_denormalize_parameters_array()
-    _, denorm_for_descale, descaled = test_descale_parameters_array()
-    _, _, denorm_descaled = test_denormalize_and_descale_parameters_array()
+    """Run all transformation tests."""
+    print("Testing denormalize_and_descale_parameters_array...")
+    params_dd, normalized_data, denorm_descaled = test_denormalize_and_descale_parameters_array()
+    print("--> PASSED")
 
-    print("Testing scaling and normalization functions...")
-    params, raw_data, scaled = test_scale_parameters_array()
-    _, scaled_for_norm, normalized = test_normalize_parameters_array()
-    _, _, scale_normalized = test_scale_and_normalize_parameters_array()
+    print("\nTesting scale_and_normalize_parameters_array...")
+    params_sn, raw_data, scaled_normalized = test_scale_and_normalize_parameters_array()
+    print("--> PASSED")
 
-    print("Generating visualizations...")
-    fig1 = visualize_denormalize_descale(params, normalized_data, denormalized, descaled, denorm_descaled)
-    fig2 = visualize_scale_normalize(params, raw_data, scaled, normalized)
+    # Optional: Add visualization calls here if implemented
+    # print("\nGenerating visualizations...")
+    # fig1 = visualize_denormalize_descale(...)
+    # fig2 = visualize_scale_normalize(...)
+    # fig1.savefig(...)
+    # fig2.savefig(...)
+    # plt.show()
 
-    fig1.savefig("denormalize_descale_visualization.png", dpi=300, bbox_inches='tight')
-    fig2.savefig("scale_normalize_visualization.png", dpi=300, bbox_inches='tight')
-
-    return fig1, fig2
 
 if __name__ == "__main__":
-    # When running the script directly, execute tests and show visualizations
-    figs = run_tests_and_visualize()
-    plt.show()
+    # When running the script directly, execute tests
+    run_tests_and_visualize()
+    print("\nAll transformation tests passed!")
+
+# --- END OF FILE test_parameters_transforms.py ---

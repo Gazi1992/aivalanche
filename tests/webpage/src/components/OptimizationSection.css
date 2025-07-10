@@ -1,0 +1,32 @@
+.optimization-section {
+  background-color: #ffffff; /* White background for a clean look */
+}
+
+.section-title {
+  font-size: 36px;
+  margin-bottom: 20px;
+  color: #2c3e50; /* Dark blue-grey */
+  text-align: center;
+}
+
+.section-intro {
+  font-size: 18px;
+  color: #555;
+  line-height: 1.7;
+  max-width: 800px;
+  margin: 0 auto 40px auto; /* Center the intro text */
+  text-align: center;
+}
+
+/* .use-case-card specific styles can be added here if needed, 
+   but it will inherit from the .card styles in App.css */
+.use-case-card h3 {
+  color: #007bff; /* Blue for card titles */
+  margin-bottom: 10px;
+}
+
+.use-case-card p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #444;
+} 

@@ -202,7 +202,7 @@ def _get_history_as_df(de_instance, which='trials'):
     # Convert normalized values to original parameter values
     df = de_instance.parameters.denormalize_and_descale_parameters_array(
         pd.DataFrame(columns=de_instance.variable_parameters_names, data=values_normed_flat),
-        include_fixed_parameters=True
+        include_fixed=True
     )
 
     # Add iter and metric columns to both DataFrames
@@ -248,13 +248,13 @@ def _get_all_denormalized_boundaries(de_instance):
     # Denormalize all min values at once
     denorm_mins = de_instance.parameters.denormalize_and_descale_parameters_array(
         all_mins,
-        include_fixed_parameters=False
+        include_fixed=False
     )
 
     # Denormalize all max values at once
     denorm_maxs = de_instance.parameters.denormalize_and_descale_parameters_array(
         all_maxs,
-        include_fixed_parameters=False
+        include_fixed=False
     )
 
     # Calculate the range in denormalized space

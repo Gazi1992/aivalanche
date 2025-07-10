@@ -1,0 +1,71 @@
+[
+  {
+    "name": "Spectrometers",
+    "description": "Devices measuring light intensity.",
+    "instruments": [
+      {
+        "name": "Ocean Optics FX",
+        "description": "Compact UV-VIS spectrometer.",
+        "connected": true
+      },
+      {
+        "name": "Thorlabs CCS100",
+        "description": "High-resolution visible spectrometer.",
+        "connected": false
+      },
+      {
+        "name": "Avantes StarLine",
+        "description": "General purpose fiber optic spec.",
+        "connected": true
+      }
+    ]
+  },
+  {
+    "name": "Power Meters",
+    "description": "Measuring optical power.",
+    "instruments": [
+      {
+        "name": "Thorlabs PM100D",
+        "description": "Console with various sensor heads.",
+        "connected": true
+      },
+      {
+        "name": "Newport 1919-R",
+        "description": "Handheld power meter.",
+        "connected": false
+      }
+    ]
+  },
+  {
+    "name": "Cameras",
+    "description": "Imaging devices.",
+    "instruments": [
+      {
+        "name": "FLIR Boson",
+        "description": "Thermal imaging camera core.",
+        "connected": false
+      }
+    ]
+  },
+  {
+    "name": "Stages & Actuators",
+    "description": "Motion control devices.",
+    "instruments": []
+  },
+    {
+    "name": "Oscilloscopes",
+    "description": "Visualizing electrical signals.",
+    "instruments": [
+      {
+        "name": "Tektronix MSO4",
+        "description": "Mixed Signal Oscilloscope.",
+        "connected": true
+      },
+      {
+        "name": "Rigol DS1054Z",
+        "description": "Entry-level 4-channel scope.",
+        "connected": true
+      }
+    ]
+  }
+]

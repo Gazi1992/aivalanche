@@ -1,0 +1,335 @@
+{
+  "app_title": "PyQtGraph Visualization Tool",
+  "left_margin": 50,
+  "right_margin": 50,
+  "top_margin": 50,
+  "bottom_margin": 50,
+  "theme": "light",
+  "grid_layout": {
+    "rows": 2,
+    "cols": 2,
+    "horizontal_spacing": 25,
+    "vertical_spacing": 25
+  },
+  "figures": [
+    {
+      "id": "figure1",
+      "x_label": "Time (s)",
+      "y_label": "Temperature (°C)",
+      "x_scale": "linear",
+      "y_scale": "linear",
+      "grid_x": true,
+      "grid_y": true,
+      "grid_alpha": 0.4,
+      "grid_color": "#FF0000",
+      "items": [
+        {
+          "id": "temp_sensor1",
+          "type": "line",
+          "source": "data/temperature_data.csv",
+          "x_column": "time",
+          "y_column": "sensor1",
+          "legend_name": "Temperature Sensor 1",
+          "line_color": "#FF0000",
+          "line_width": 2,
+          "line_style": "solid",
+          "symbol": "o",
+          "symbol_size": 5,
+          "symbol_color": "#FF0000",
+          "symbol_outline": "#880000",
+          "fill_level": 1,
+          "fill_color": "#FF000040"
+        },
+        {
+          "id": "temp_sensor2",
+          "type": "scatter",
+          "source": "data/temperature_data.csv",
+          "x_column": "time",
+          "y_column": "sensor2",
+          "legend_name": "Temperature Sensor 2",
+          "symbol": "s",
+          "symbol_size": 10,
+          "symbol_color": "#0000FF",
+          "symbol_outline": "#000088"
+        }
+      ]
+    },
+    {
+      "id": "figure2",
+      "title": "Pressure Analysis",
+      "x_label": "Time (s)",
+      "y_label": "Pressure (kPa)",
+      "x_scale": "linear",
+      "y_scale": "log",
+      "grid_x": false,
+      "grid_y": false,
+      "grid_alpha": 0.3,
+      "items": [
+        {
+          "id": "pressure_data",
+          "type": "line",
+          "source": "data/pressure_data.csv",
+          "x_column": "time",
+          "y_column": "pressure",
+          "legend_name": "System Pressure",
+          "line_color": "#00FF00",
+          "line_width": 3,
+          "line_style": "dash"
+        }
+      ]
+    },
+    {
+      "id": "figure3",
+      "title": "Humidity Analysis",
+      "x_label": "Time (s)",
+      "y_label": "Humidity (%)",
+      "x_scale": "linear",
+      "y_scale": "linear",
+      "grid_x": false,
+      "grid_y": true,
+      "grid_alpha": 0.2,
+      "items": [
+        {
+          "id": "humidity_plot",
+          "type": "line",
+          "source": "data/humidity_data.csv",
+          "x_column": "time",
+          "y_column": "humidity",
+          "legend_name": "Room Humidity",
+          "line_color": "#0000FF",
+          "line_width": 2,
+          "line_style": "dash",
+          "symbol": "o",
+          "symbol_size": 8,
+          "symbol_color": "#0000FF",
+          "fill_level": -10,
+          "fill_color": "#0000FF20",
+          "fill_outline": true
+        }
+      ]
+    },
+    {
+      "id": "figure4",
+      "title": "Temperature vs Humidity",
+      "x_label": "Temperature (°C)",
+      "y_label": "Humidity (%)",
+      "x_scale": "linear",
+      "y_scale": "linear",
+      "grid_x": true,
+      "grid_y": false,
+      "grid_alpha": 0.3,
+      "items": [
+        {
+          "id": "temp_humidity_correlation",
+          "type": "scatter",
+          "source": "data/humidity_data.csv",
+          "x_column": "temperature",
+          "y_column": "humidity",
+          "legend_name": "Measured Points",
+          "symbol": "t",
+          "symbol_size": 15,
+          "symbol_color": "#FF00FF",
+          "symbol_outline": "#880088"
+        }
+      ]
+    },
+    {
+      "id": "figure5",
+      "title": "Value Distribution",
+      "x_label": "Value",
+      "y_label": "Frequency",
+      "x_scale": "linear",
+      "y_scale": "linear",
+      "grid_x": false,
+      "grid_y": false,
+      "grid_alpha": 0.2,
+      "items": [
+        {
+          "id": "dummy_hist",
+          "type": "histogram",
+          "source": "data/histogram_data.csv",
+          "column": "value",
+          "bins": 15,
+          "hist_color": "#ffaa00",
+          "bar_width_fraction": 0.8,
+          "bar_border_color": "#333333",
+          "bar_border_width": 1,
+          "show_fit": true,
+          "fit_color": "#ff0000",
+          "legend_name": "Sample Histogram"
+        }
+      ]
+    },
+    {
+      "id": "figure6",
+      "title": "Category Values",
+      "x_label": "Category",
+      "y_label": "Value",
+      "grid_x": false,
+      "grid_y": false,
+      "items": [
+        {
+          "id": "bar_plot1",
+          "type": "bar",
+          "source": "data/bar_graph_data.csv",
+          "x_column": "category",
+          "y_column": "value",
+          "legend_name": "Category Values",
+          "bar_color": "#1f77b4",
+          "bar_width": 0.8,
+          "bar_border_color": "#000000",
+          "bar_border_width": 1
+        }
+      ]
+    },
+    {
+      "id": "figure7",
+      "title": "Population by Country (2021-2023)",
+      "x_label": "Country",
+      "y_label": "Population (millions)",
+      "grid_x": false,
+      "grid_y": true,
+      "items": [
+        {
+          "id": "pop2021",
+          "type": "bar",
+          "source": "data/multi_bar_data.csv",
+          "x_column": "country",
+          "y_column": "year2021",
+          "legend_name": "2021",
+          "bar_color": "#1f77b4",
+          "group_index": 0,
+          "group_count": 3
+        },
+        {
+          "id": "pop2022",
+          "type": "bar",
+          "source": "data/multi_bar_data.csv",
+          "x_column": "country",
+          "y_column": "year2022",
+          "legend_name": "2022",
+          "bar_color": "#ff7f0e",
+          "bar_border_color": "#000000",
+          "bar_border_width": 1,
+          "group_index": 1,
+          "group_count": 3
+        },
+        {
+          "id": "pop2023",
+          "type": "bar",
+          "source": "data/multi_bar_data.csv",
+          "x_column": "country",
+          "y_column": "year2023",
+          "legend_name": "2023",
+          "bar_color": "#2ca02c",
+          "group_index": 2,
+          "group_count": 3
+        }
+      ]
+    },
+    {
+      "id": "figure8",
+      "title": "Population by Gender",
+      "x_label": "Country",
+      "y_label": "Population (millions)",
+      "items": [
+        {
+          "id": "male_pop",
+          "type": "bar",
+          "source": "data/stacked_bar_data.csv",
+          "x_column": "country",
+          "y_column": "male",
+          "legend_name": "Male",
+          "bar_color": "#1f77b4",
+          "stack_group": "gender_pop"
+        },
+        {
+          "id": "female_pop",
+          "type": "bar",
+          "source": "data/stacked_bar_data.csv",
+          "x_column": "country",
+          "y_column": "female",
+          "legend_name": "Female",
+          "bar_color": "#ff7f0e",
+          "stack_group": "gender_pop"
+        }
+      ]
+    },
+    {
+      "id": "figure9",
+      "title": "Population vs GDP Components",
+      "x_label": "Country",
+      "y_label": "Value",
+      "items": [
+        {
+          "id": "pop_male",
+          "type": "bar",
+          "source": "data/multi_stacked_bar_data.csv",
+          "x_column": "country",
+          "y_column": "male",
+          "legend_name": "Population Male",
+          "bar_color": "#1f77b4",
+          "stack_group": "pop_stack",
+          "group_index": 0,
+          "group_count": 2
+        },
+        {
+          "id": "pop_female",
+          "type": "bar",
+          "source": "data/multi_stacked_bar_data.csv",
+          "x_column": "country",
+          "y_column": "female",
+          "legend_name": "Population Female",
+          "bar_color": "#ff7f0e",
+          "stack_group": "pop_stack",
+          "group_index": 0,
+          "group_count": 2
+        },
+        {
+          "id": "gdp_agri",
+          "type": "bar",
+          "source": "data/multi_stacked_bar_data.csv",
+          "x_column": "country",
+          "y_column": "gdp_agri",
+          "legend_name": "GDP Agriculture",
+          "bar_color": "#2ca02c",
+          "stack_group": "gdp_stack",
+          "group_index": 1,
+          "group_count": 2
+        },
+        {
+          "id": "gdp_ind",
+          "type": "bar",
+          "source": "data/multi_stacked_bar_data.csv",
+          "x_column": "country",
+          "y_column": "gdp_ind",
+          "legend_name": "GDP Industry",
+          "bar_color": "#d62728",
+          "stack_group": "gdp_stack",
+          "group_index": 1,
+          "group_count": 2
+        }
+      ]
+    },
+    {
+      "id": "figure10",
+      "title": "MOSFET I_D vs V_DS (family for V_GS)",
+      "x_label": "V_DS (V)",
+      "y_label": "I_D (A)",
+      "items": [
+        {
+          "id": "mosfet_iv",
+          "type": "line",
+          "source": "data/mosfet_characteristic_dense.csv",
+          "x_column": "vds",
+          "y_column": "ids",
+          "z_column": "vgs",
+          "color_scheme": "plasma",
+          "show_colorbar": true,
+          "legend_visible": true,
+          "line_width": 2
+        }
+      ]
+    }
+  ]
+}

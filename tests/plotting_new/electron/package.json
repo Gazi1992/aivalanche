@@ -1,0 +1,33 @@
+{
+  "name": "aivalanche-desktop",
+  "version": "0.1.0",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "dev": "electron .",
+    "pack": "electron-builder"
+  },
+  "dependencies": {
+    "electron": "^28.1.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.11.0"
+  },
+  "build": {
+    "asar": true,
+    "files": [
+      "../frontend/dist/**/*",
+      "main.js",
+      "../backend/dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist/aivalanche_backend*",
+        "to": "aivalanche_backend"
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  }
+} 

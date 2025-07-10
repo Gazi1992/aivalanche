@@ -1,0 +1,11 @@
+Phase,ExponentialPop,LinearPop,Status
+1,10,100,"Initial"
+2,20,120,"Growth"
+3,40,140,"Growth"
+4,80,160,"Growth"
+5,160,180,"Mid-Point"
+6,320,200,"Accelerated"
+7,640,220,"Accelerated"
+8,1280,240,"Saturation?"
+9,2560,260,"Saturation?"
+10,5120,280,"End"

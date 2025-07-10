@@ -1,0 +1,57 @@
+[
+  {
+    "plot_id": "plot_1_sine",
+    "title": "Plot 1: Sine Wave",
+    "local_theme": "Classic Light",
+    "traces": [
+      {
+        "type": "line",
+        "data_source": {
+          "csv_path": "data/sensor_data_1.csv",
+          "x_col": "Timestamp",
+          "y_col": "SensorA_Reading"
+        },
+        "style": {
+          "name": "Sensor A",
+          "color": "#1f77b4",
+          "width": 2,
+          "line_style": "SolidLine"
+        }
+      }
+    ]
+  },
+  {
+    "plot_id": "plot_2_multi",
+    "title": "Plot 2: Comparison",
+    "traces": [
+      {
+        "type": "line",
+        "data_source": {
+          "csv_path": "data/sensor_data_1.csv",
+          "x_col": "Timestamp",
+          "y_col": "SensorB_Reading"
+        },
+        "style": {
+          "name": "Sensor B",
+          "color": "orange",
+          "width": 1,
+          "line_style": "SolidLine"
+        }
+      },
+      {
+        "type": "line",
+        "data_source": {
+          "csv_path": "data/control_signal.csv",
+          "x_col": "time_sec",
+          "y_col": "control_value"
+        },
+        "style": {
+          "name": "Control Signal",
+          "color": "lime",
+          "width": 3,
+          "line_style": "DashLine"
+        }
+      }
+    ]
+  }
+]
