@@ -3,3 +3,5 @@
 **/build/**
 !**/use_cases/**
 **/__pycache__/**
+node_modules/
+**/node_modules/

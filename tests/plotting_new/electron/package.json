@@ -4,13 +4,14 @@
   "main": "main.js",
   "private": true,
   "scripts": {
-    "dev": "electron .",
+    "dev": "cross-env SKIP_BACKEND=1 NODE_ENV=development electron .",
     "pack": "electron-builder"
   },
   "dependencies": {
     "electron": "^28.1.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "electron-builder": "^24.11.0"
   },
   "build": {

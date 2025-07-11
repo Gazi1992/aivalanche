@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ThemeToggle from './components/ThemeToggle.jsx';
+import ChatInterface from './components/ChatInterface.jsx';
+import Logo from './components/Logo.jsx';
 import axios from 'axios';
 import Plotly from 'plotly.js-dist-min';
+import ExpandIcon from './components/ExpandIcon.jsx';
+
+// Set global config for smoother wheel zoom
+Plotly.setPlotConfig({
+  scrollZoom: {
+    debounce: 40,   // 40 ms between redraws  (try 30–50)
+    speed: 0.5      // zoom delta per wheel-tick (0.5 is Plotly’s default)
+  }
+});
 
 const API_BASE = 'http://localhost:8000';
 
@@ -9,9 +20,13 @@ function App() {
   const [config, setConfig] = useState(null);
   const [theme, setTheme] = useState('light');
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(220);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const computedStyle = getComputedStyle(document.documentElement);
+    return parseInt(computedStyle.getPropertyValue('--sidebar-width-expanded')) || 500;
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [activeFig, setActiveFig] = useState(null);
+  const [sidebarHidden, setSidebarHidden] = useState(false);
   const sidebarRef = useRef(null);
 
   // Ensure the CSS variables reflect the current theme *before* we read them
@@ -20,6 +35,7 @@ function App() {
   }
 
   const collapsedThreshold = 80; // px
+  const hiddenThreshold = 30; // px - below this, sidebar is completely hidden
 
   // Handle sidebar drag resize
   const handleMouseDown = (e) => {
@@ -36,7 +52,7 @@ function App() {
       frameId = requestAnimationFrame(() => {
         const dx = clientX - startX;
         let newWidth = startWidth + dx;
-        newWidth = Math.max(60, Math.min(400, newWidth));
+        newWidth = Math.max(0, newWidth); // Allow width to go to 0 for complete hiding
         if (sidebarRef.current) {
           sidebarRef.current.style.width = `${newWidth}px`;
         }
@@ -52,9 +68,16 @@ function App() {
 
       const dx = upEvent.clientX - startX;
       let newWidth = startWidth + dx;
-      newWidth = Math.max(60, Math.min(400, newWidth));
+      newWidth = Math.max(0, newWidth); // Allow width to go to 0 for complete hiding
+      
+      // If dragged below hidden threshold, snap to 0 (completely hidden)
+      if (newWidth < hiddenThreshold) {
+        newWidth = 0;
+      }
+      
       setSidebarWidth(newWidth);
       setSidebarExpanded(newWidth > collapsedThreshold);
+      setSidebarHidden(newWidth === 0);
 
       // Resize plots after sidebar drag ends
       if (config && config.figures) {
@@ -188,6 +211,7 @@ function App() {
             displaylogo: false,
             displayModeBar: false,
             responsive: true,
+            scrollZoom: true, // Enable mouse wheel zoom
             edits: {
               legendPosition: true,
               titleText: false,
@@ -201,6 +225,110 @@ function App() {
             Plotly.react(plotId, data, layout, plotConfig);
           } else {
             Plotly.newPlot(plotId, data, layout, plotConfig);
+          }
+
+          // Attach custom right-click drag scaling
+          if (!plotDiv.__scaleHandlerAttached) {
+            plotDiv.__scaleHandlerAttached = true;
+            plotDiv.addEventListener('contextmenu', e => e.preventDefault()); // disable context menu
+
+            let startX = 0, startY = 0;
+            let initXRange = null, initYRange = null;
+            let rect = null;
+            const onPointerMove = (moveEvt) => {
+              if (moveEvt.buttons !== 2) return; // ensure right button still pressed
+              const dx = moveEvt.clientX - startX;
+              const dy = moveEvt.clientY - startY;
+              const sensitivity = 0.2; // lower value = higher sensitivity
+              const factorX = 1 - dx / (rect.width * sensitivity);  // horizontal scale
+              const factorY = 1 + dy / (rect.height * sensitivity); // vertical scale (drag down -> zoom in)
+
+              // Clamp factors to reasonable range to avoid inversion/overflow
+              const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+              const fx = clamp(factorX, 0.1, 10);
+              const fy = clamp(factorY, 0.1, 10);
+
+              if (initXRange && initYRange) {
+                const xCenter = (initXRange[0] + initXRange[1]) / 2;
+                const xHalf = (initXRange[1] - initXRange[0]) / 2 * fx;
+                const yCenter = (initYRange[0] + initYRange[1]) / 2;
+                const yHalf = (initYRange[1] - initYRange[0]) / 2 * fy;
+                const isXAsc = initXRange[0] < initXRange[1];
+                const isYAsc = initYRange[0] < initYRange[1];
+                const xMin = xCenter - xHalf;
+                const xMax = xCenter + xHalf;
+                const yMin = yCenter - yHalf;
+                const yMax = yCenter + yHalf;
+                const update = {
+                  'xaxis.range': isXAsc ? [xMin, xMax] : [xMax, xMin],
+                  'yaxis.range': isYAsc ? [yMin, yMax] : [yMax, yMin]
+                };
+                Plotly.relayout(plotDiv, update);
+              }
+            };
+            const onPointerUp = () => {
+              window.removeEventListener('pointermove', onPointerMove);
+              window.removeEventListener('pointerup', onPointerUp);
+            };
+            plotDiv.addEventListener('pointerdown', downEvt => {
+              if (downEvt.button !== 2) return; // only right-click
+              downEvt.preventDefault();
+              rect = plotDiv.getBoundingClientRect();
+              startX = downEvt.clientX;
+              startY = downEvt.clientY;
+              const xaxis = plotDiv._fullLayout.xaxis;
+              const yaxis = plotDiv._fullLayout.yaxis;
+              initXRange = [...xaxis.range];
+              initYRange = [...yaxis.range];
+              window.addEventListener('pointermove', onPointerMove);
+              window.addEventListener('pointerup', onPointerUp);
+            });
+          }
+          // Attach custom middle-click drag panning
+          if (!plotDiv.__panHandlerAttached) {
+            plotDiv.__panHandlerAttached = true;
+            let pStartX = 0, pStartY = 0;
+            let pInitXRange = null, pInitYRange = null;
+            let pRect = null;
+            const onPanMove = (mvEvt) => {
+              if ((mvEvt.buttons & 4) === 0) return; // middle button not pressed
+              const dx = mvEvt.clientX - pStartX;
+              const dy = mvEvt.clientY - pStartY;
+              if (pInitXRange && pInitYRange) {
+                const xScale = (pInitXRange[1] - pInitXRange[0]) / pRect.width;
+                const yScale = (pInitYRange[1] - pInitYRange[0]) / pRect.height;
+                const xOffset = dx * xScale;
+                const yOffset = -dy * yScale; // invert because screen Y grows downward
+
+                const newX0 = pInitXRange[0] - xOffset;
+                const newX1 = pInitXRange[1] - xOffset;
+                const newY0 = pInitYRange[0] - yOffset;
+                const newY1 = pInitYRange[1] - yOffset;
+
+                const update = {
+                  'xaxis.range': [newX0, newX1],
+                  'yaxis.range': [newY0, newY1]
+                };
+                Plotly.relayout(plotDiv, update);
+              }
+            };
+            const onPanUp = () => {
+              window.removeEventListener('pointermove', onPanMove);
+              window.removeEventListener('pointerup', onPanUp);
+            };
+            plotDiv.addEventListener('pointerdown', (pdEvt) => {
+              if (pdEvt.button !== 1) return; // middle mouse only
+              pdEvt.preventDefault();
+              pRect = plotDiv.getBoundingClientRect();
+              pStartX = pdEvt.clientX;
+              pStartY = pdEvt.clientY;
+              const xaxis = plotDiv._fullLayout.xaxis;
+              const yaxis = plotDiv._fullLayout.yaxis;
+              pInitXRange = [...xaxis.range];
+              pInitYRange = [...yaxis.range];
+              window.addEventListener('pointermove', onPanMove);
+              window.addEventListener('pointerup', onPanUp);
+            });
           }
         }
       });
@@ -239,7 +367,99 @@ function App() {
       displaylogo: false,
       displayModeBar: true,
       responsive: true,
+      scrollZoom: true,
+      edits: { legendPosition: true },
     });
+
+    // Attach the same custom interactions to overlay plot
+    if (!overlayDiv.__scaleHandlerAttached) {
+      // === copy of scale handler ===
+      overlayDiv.__scaleHandlerAttached = true;
+      overlayDiv.addEventListener('contextmenu', e => e.preventDefault());
+      let startX = 0, startY = 0, rect = null;
+      let initXRange = null, initYRange = null;
+      const onMove = mv => {
+        if (mv.buttons !== 2) return;
+        const dx = mv.clientX - startX;
+        const dy = mv.clientY - startY;
+        const sensitivity = 0.2;
+        const factorX = 1 - dx / (rect.width * sensitivity);
+        const factorY = 1 + dy / (rect.height * sensitivity);
+        const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+        const fx = clamp(factorX,0.1,10);
+        const fy = clamp(factorY,0.1,10);
+        if(initXRange&&initYRange){
+          const xCenter=(initXRange[0]+initXRange[1])/2;
+          const xHalf=(initXRange[1]-initXRange[0])/2*fx;
+          const yCenter=(initYRange[0]+initYRange[1])/2;
+          const yHalf=(initYRange[1]-initYRange[0])/2*fy;
+          const isXAsc=initXRange[0]<initXRange[1];
+          const isYAsc=initYRange[0]<initYRange[1];
+          const xMin=xCenter-xHalf,xMax=xCenter+xHalf;
+          const yMin=yCenter-yHalf,yMax=yCenter+yHalf;
+          Plotly.relayout(overlayDiv, {
+            'xaxis.range': isXAsc?[xMin,xMax]:[xMax,xMin],
+            'yaxis.range': isYAsc?[yMin,yMax]:[yMax,yMin]
+          });
+        }
+      };
+      const onUp=()=>{
+        window.removeEventListener('pointermove',onMove);
+        window.removeEventListener('pointerup',onUp);
+      };
+      overlayDiv.addEventListener('pointerdown', ev=>{
+        if(ev.button!==2) return;
+        ev.preventDefault();
+        rect=overlayDiv.getBoundingClientRect();
+        startX=ev.clientX;startY=ev.clientY;
+        const xaxis=overlayDiv._fullLayout.xaxis;
+        const yaxis=overlayDiv._fullLayout.yaxis;
+        initXRange=[...xaxis.range];
+        initYRange=[...yaxis.range];
+        window.addEventListener('pointermove',onMove);
+        window.addEventListener('pointerup',onUp);
+      });
+    }
+
+    if(!overlayDiv.__panHandlerAttached){
+      overlayDiv.__panHandlerAttached = true;
+      let pStartX=0,pStartY=0,pRect=null,pInitX=null,pInitY=null;
+      const onPanMove=mv=>{
+        if((mv.buttons&4)===0) return;
+        const dx=mv.clientX-pStartX;
+        const dy=mv.clientY-pStartY;
+        if(pInitX&&pInitY){
+          const xScale=(pInitX[1]-pInitX[0])/pRect.width;
+          const yScale=(pInitY[1]-pInitY[0])/pRect.height;
+          const xOffset=dx*xScale;
+          const yOffset=-dy*yScale;
+          const newX0=pInitX[0]-xOffset;
+          const newX1=pInitX[1]-xOffset;
+          const newY0=pInitY[0]-yOffset;
+          const newY1=pInitY[1]-yOffset;
+          Plotly.relayout(overlayDiv, {
+            'xaxis.range':[newX0,newX1],
+            'yaxis.range':[newY0,newY1]
+          });
+        }
+      };
+      const onPanUp=()=>{
+        window.removeEventListener('pointermove',onPanMove);
+        window.removeEventListener('pointerup',onPanUp);
+      };
+      overlayDiv.addEventListener('pointerdown',ev=>{
+        if(ev.button!==1) return;
+        ev.preventDefault();
+        pRect=overlayDiv.getBoundingClientRect();
+        pStartX=ev.clientX;pStartY=ev.clientY;
+        const xaxis=overlayDiv._fullLayout.xaxis;
+        const yaxis=overlayDiv._fullLayout.yaxis;
+        pInitX=[...xaxis.range];
+        pInitY=[...yaxis.range];
+        window.addEventListener('pointermove',onPanMove);
+        window.addEventListener('pointerup',onPanUp);
+      });
+    }
 
     return () => {
       Plotly.purge(overlayDiv);
@@ -248,6 +468,14 @@ function App() {
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+
+  const restoreSidebar = () => {
+    const computedStyle = getComputedStyle(document.documentElement);
+    const expandedWidth = parseInt(computedStyle.getPropertyValue('--sidebar-width-expanded')) || 500;
+    setSidebarWidth(expandedWidth);
+    setSidebarExpanded(true);
+    setSidebarHidden(false);
   };
 
   // Removed toggle button – expansion is now drag-only
@@ -284,17 +512,6 @@ function App() {
       backgroundColor: 'var(--sidebar-bg)'
     };
 
-    const resizerStyle = {
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      width: '8px',
-      height: '100%',
-      cursor: 'col-resize',
-      backgroundColor: 'var(--border-color)',
-      zIndex: 10,
-    };
-
     const mainStyle = {
       flex: 1,
       padding: 'var(--main-padding)',
@@ -324,10 +541,88 @@ function App() {
 
     return (
       <div style={appStyle}>
+        {!sidebarHidden && (
         <div ref={sidebarRef} style={sideStyle}>
-          {sidebarExpanded && <h2 style={{ margin: 0, padding: 0, fontSize: '1.2em' }}>{appTitle}</h2>}
-          <div onMouseDown={handleMouseDown} style={resizerStyle} />
+            {sidebarExpanded ? (
+              <>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  marginBottom: '16px',
+                  padding: '0'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    minWidth: 0
+                  }}>
+                    <Logo size={32} />
+                    <span style={{ 
+                      fontSize: '1.1em', 
+                      fontWeight: '600', 
+                      color: 'var(--text-color)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      aivalanche
+                    </span>
+                  </div>
+                  <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+                </div>
+                <div style={{ 
+                  flex: 1, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'flex-end',
+                  minHeight: 0,
+                  marginBottom: '16px'
+                }}>
+                  <ChatInterface expanded={sidebarExpanded} />
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                <Logo size={28} />
+                <ChatInterface expanded={sidebarExpanded} />
+              </div>
+            )}
+            <div onMouseDown={handleMouseDown} className="sidebar-resizer" />
         </div>
+        )}
+        
+        {sidebarHidden && (
+          <button
+            onClick={restoreSidebar}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              left: '10px',
+              zIndex: 1000,
+              background: 'var(--primary-color)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              cursor: 'pointer',
+              fontSize: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+            title="Show sidebar"
+          >
+            ☰
+          </button>
+        )}
+        
         <main style={mainStyle}>
           <div style={gridStyle}>
             {placeholderFigures.map(fig => (
@@ -366,18 +661,8 @@ function App() {
     gap: 'var(--sidebar-gap)',
     transition: isDragging ? 'none' : 'width 0.1s ease-in-out',
     overflow: 'hidden',
-    position: 'relative'
-  };
-  
-  const resizerStyle = {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: '8px',
-    height: '100%',
-    cursor: 'col-resize',
-    backgroundColor: 'var(--border-color)',
-    zIndex: 10,
+    position: 'relative',
+    backgroundColor: 'var(--sidebar-bg)'
   };
   
   const buttonStyle = {
@@ -454,29 +739,97 @@ function App() {
 
   return (
     <div style={appStyle}>
+      {!sidebarHidden && (
       <div ref={sidebarRef} style={sideStyle}>
         {sidebarExpanded ? (
           <>
-            <h2 style={{ margin: 0, padding: 0, fontSize: '1.2em' }}>{appTitle}</h2>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '16px',
+                padding: '0'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  minWidth: 0
+                }}>
+                                     <Logo size={32} />
+                  <span style={{ 
+                    fontSize: '1.1em', 
+                    fontWeight: '600', 
+                    color: 'var(--text-color)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    aivalanche
+                  </span>
+                </div>
             <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+              </div>
+                              <div style={{ 
+                  flex: 1, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'flex-end',
+                  minHeight: 0,
+                  marginBottom: '16px'
+                }}>
+                  <ChatInterface expanded={sidebarExpanded} />
+                </div>
           </>
         ) : (
-          <div style={{ textAlign: 'center' }}>
-            {/* Collapsed view can be simplified or customized */}
+            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                                <Logo size={28} />
+              <ChatInterface expanded={sidebarExpanded} />
           </div>
         )}
-        <div onMouseDown={handleMouseDown} style={resizerStyle} />
+          <div onMouseDown={handleMouseDown} className="sidebar-resizer" />
       </div>
+      )}
+
+      {sidebarHidden && (
+        <button
+          onClick={restoreSidebar}
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '10px',
+            zIndex: 1000,
+            background: 'var(--primary-color)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            cursor: 'pointer',
+            fontSize: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+          title="Show sidebar"
+        >
+          ☰
+        </button>
+      )}
 
       <main style={mainStyle}>
         <div style={gridStyle}>
           {figures.map(fig => (
             <div key={fig.id} className="plot-container" style={plotContainerStyle}>
-              <button
-                className="zoom-btn"
-                onClick={() => setActiveFig(fig)}
-                title="Expand plot"
-              >⧉</button>
+              {figures.length > 1 && (
+              <button className="zoom-btn" onClick={() => setActiveFig(fig)} title="Expand plot">
+                <ExpandIcon size={16} />
+              </button>
+              )}
               <div id={`plot-${fig.id}`} style={{ flexGrow:1,minHeight:0 }}></div>
             </div>
           ))}

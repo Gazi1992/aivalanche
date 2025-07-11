@@ -29,7 +29,10 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
     },
+    autoHideMenuBar: true, // hide the default menu bar
   });
+  // Fully disable menu bar (even when Alt is pressed)
+  win.setMenuBarVisibility(false);
 
   // In development load Vite dev server, else load built files.
   const devURL = process.env.FRONTEND_DEV_URL || 'http://localhost:5173';
