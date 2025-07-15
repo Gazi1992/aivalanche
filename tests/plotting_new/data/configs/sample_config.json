@@ -14,6 +14,7 @@
   "figures": [
     {
       "id": "figure1",
+      "visibility": true,
       "x_label": "Time (s)",
       "y_label": "Temperature (°C)",
       "x_scale": "linear",
@@ -24,38 +25,36 @@
       "grid_color": "#FF0000",
       "items": [
         {
-          "id": "temp_sensor1",
+          "id": "plot1",
           "type": "line",
           "source": "data/temperature_data.csv",
           "x_column": "time",
           "y_column": "sensor1",
-          "legend_name": "Temperature Sensor 1",
-          "line_color": "#FF0000",
+          "legend_name": "Sensor 1",
+          "legend_visible": false,
+          "line_color": "#FF5733",
           "line_width": 2,
-          "line_style": "solid",
-          "symbol": "o",
-          "symbol_size": 5,
-          "symbol_color": "#FF0000",
-          "symbol_outline": "#880000",
-          "fill_level": 1,
-          "fill_color": "#FF000040"
+          "symbol_size": 0
         },
         {
-          "id": "temp_sensor2",
+          "id": "plot2",
           "type": "scatter",
           "source": "data/temperature_data.csv",
           "x_column": "time",
           "y_column": "sensor2",
-          "legend_name": "Temperature Sensor 2",
+          "legend_name": "Sensor 2",
           "symbol": "s",
-          "symbol_size": 10,
-          "symbol_color": "#0000FF",
-          "symbol_outline": "#000088"
+          "symbol_size": 20,
+          "color_column": "Noise",
+          "color_map": "Plasma",
+          "show_colorbar": true,
+          "colorbar_title": "Noise (Sensor 2)"
         }
       ]
     },
     {
       "id": "figure2",
+      "visibility": false,
       "title": "Pressure Analysis",
       "x_label": "Time (s)",
       "y_label": "Pressure (kPa)",
@@ -80,6 +79,7 @@
     },
     {
       "id": "figure3",
+      "visibility": false,
       "title": "Humidity Analysis",
       "x_label": "Time (s)",
       "y_label": "Humidity (%)",
@@ -110,6 +110,7 @@
     },
     {
       "id": "figure4",
+      "visibility": false,
       "title": "Temperature vs Humidity",
       "x_label": "Temperature (°C)",
       "y_label": "Humidity (%)",
@@ -135,6 +136,7 @@
     },
     {
       "id": "figure5",
+      "visibility": false,
       "title": "Value Distribution",
       "x_label": "Value",
       "y_label": "Frequency",
@@ -176,6 +178,7 @@
     },
     {
       "id": "figure6",
+      "visibility": false,
       "title": "Category Values",
       "x_label": "Category",
       "y_label": "Value",
@@ -199,6 +202,7 @@
     },
     {
       "id": "figure7",
+      "visibility": false,
       "title": "Population by Country (2021-2023)",
       "x_label": "Country",
       "y_label": "Population (millions)",
@@ -238,6 +242,7 @@
     },
     {
       "id": "figure8",
+      "visibility": false,
       "title": "Population by Gender",
       "x_label": "Country",
       "y_label": "Population (millions)",
@@ -266,6 +271,7 @@
     },
     {
       "id": "figure9",
+      "visibility": false,
       "title": "Population vs GDP Components",
       "x_label": "Country",
       "y_label": "Value",
@@ -314,6 +320,7 @@
     },
     {
       "id": "figure10",
+      "visibility": true,
       "title": "MOSFET I_D vs V_DS (family for V_GS)",
       "x_label": "V_DS (V)",
       "y_label": "I_D (A)",
@@ -325,10 +332,52 @@
           "x_column": "vds",
           "y_column": "ids",
           "z_column": "vgs",
-          "color_scheme": "plasma",
+          "color_map": "plasma",
           "show_colorbar": true,
           "legend_visible": true,
-          "line_width": 2
+          "line_width": 2,
+          "symbol_size": 15
+        }
+      ]
+    },
+    {
+      "id": "figure11",
+      "items": [
+        {
+          "id": "pc_1",
+          "type": "parallel_coordinates",
+          "source": "data/scatter_matrix_data.csv",
+          "data_columns": ["A", "B", "C", "D"],
+          "color_column": "PassFail",
+          "color_map": "RdBu",
+          "show_colorbar": true,
+          "colorbar_title": "Pass / Fail"
+        }
+      ]
+    },
+    {
+      "id": "figure12",
+      "title": "Scatter matrix plot",
+      "items": [
+        {
+          "id": "pc_1",
+          "type": "scatter_matrix",
+          "source": "data/scatter_matrix_data.csv",
+          "data_columns": ["A", "B", "C", "D"],
+          "color_column": "PassFail",
+          "color_map": "RdBu",
+          "show_colorbar": true,
+          "colorbar_title": "Pass / Fail",
+          "diag_type": "histogram",
+          "diag_border_width": 1,
+          "diag_border_color": "#000000",
+          "marker_size": 6,
+          "matrix_part": "both",
+          "show_diagonal": true,
+          "diag_bins": 10,
+          "diag_bar_width_fraction": 0.7,
+          "diag_border_width": 1,
+          "diag_border_color": "#000000"
         }
       ]
     }

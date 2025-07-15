@@ -15,17 +15,17 @@ import plotly.graph_objs as go
 
 from backend.core.data_handler import load_dataset
 from backend.core.plot_factory import (
-    line_plot,
-    scatter_plot,
     histogram_plot,
     bar_plot,
+    scatter_matrix_plot,
+    parallel_coordinates_plot,
 )
 from backend.core.utils.layout_utils import determine_grid_dimensions
 from backend.core.config_loader import ConfigLoader
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_TYPES = {"line", "scatter", "histogram", "bar"}
+SUPPORTED_TYPES = {"line", "scatter", "histogram", "bar", "scatter_matrix", "parallel_coordinates"}
 
 
 def _merge_factory_fig(target: go.Figure, factory_fig: Dict[str, Any]) -> None:
@@ -57,10 +57,21 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
     for fig_idx, fig_cfg in enumerate(loader.get_figures()):
         if not isinstance(fig_cfg, dict):
             continue
+
+        # --------------------------------------------------------------
+        # NEW: Skip figures where visibility flag is explicitly false.
+        # This allows authors to keep optional analyses in the config
+        # but hide them from the rendered dashboard without deletion.
+        # --------------------------------------------------------------
+        if fig_cfg.get("visibility", True) is False:
+            logger.info("Skipping figure %s due to visibility=false", fig_cfg.get("id"))
+            continue
+
         fig_title = fig_cfg.get("title", f"Figure {fig_idx+1}")
         items = fig_cfg.get("items", [])
 
         fig_obj = go.Figure()
+        colorbar_count = 0
 
         for item in items:
             if not isinstance(item, dict):
@@ -113,38 +124,85 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                         y_vals[0] if y_vals else None,
                     )
 
-                else:  # line or scatter (2.5D handled)
+                elif ptype in ("line", "scatter"):
+                    
+                    color_col = item.get("color_column")
                     z_col = item.get("z_column")
-                    if z_col and z_col in df.columns:
+                    mode = 'lines+markers' if ptype == 'line' else 'markers'
+
+                    # For line plots, if symbol_size is 0, we only want lines.
+                    if ptype == 'line' and item.get("symbol_size") == 0:
+                        mode = 'lines'
+
+                    # --- Data-driven coloring (single trace) ---
+                    if color_col and color_col in df.columns and ptype == "scatter":
+                        
+                        colorbar_opts = dict(title=item.get("colorbar_title") or color_col)
+                        if colorbar_count > 0:
+                            colorbar_opts['x'] = 1.05 + (0.15 * colorbar_count)
+                        
+                        marker_opts = dict(
+                            color=df[color_col],
+                            colorscale=item.get("color_map"),
+                            showscale=item.get("show_colorbar"),
+                            colorbar=colorbar_opts,
+                            size=item.get("symbol_size")
+                        )
+                        
+                        trace = go.Scatter(
+                            x=df[x_col],
+                            y=df[y_col],
+                            mode=mode,
+                            name=item.get("legend_name"),
+                            showlegend=item.get("legend_visible"),
+                            marker=marker_opts,
+                            line=dict(width=item.get("line_width")) # Only width is relevant here
+                        )
+                        fig_obj.add_trace(trace)
+                        
+                        if marker_opts['showscale']:
+                            colorbar_count += 1
+                        
+                        logger.debug("Added single '%s' trace with continuous color from column '%s'", ptype, color_col)
+
+                    # --- Z-column grouping (multiple traces) ---
+                    elif z_col and z_col in df.columns:
                         z_vals = sorted(df[z_col].unique())
                         from plotly.colors import qualitative
                         palette = qualitative.Plotly
 
                         for zi, z_val in enumerate(z_vals):
                             sub = df[df[z_col] == z_val]
-                            x_list = sub[x_col].tolist()
-                            y_list = sub[y_col].tolist()
-                            name = f"{item.get('legend_name') or y_col} ({z_col}={z_val})"
                             color = palette[zi % len(palette)]
-                            if ptype == "line":
-                                tfig = line_plot(x_list, y_list, name=name, color=color)
-                            else:
-                                tfig = scatter_plot(x_list, y_list, name=name, color=color)
-
-                            _merge_factory_fig(fig_obj, tfig)
-                            logger.debug("Line/Scatter trace %s (%s=%s) added with %d points", item.get("id"), z_col, z_val, len(x_list))
+                            name = f"{item.get('legend_name') or y_col} ({z_col}={z_val})"
+                            
+                            trace = go.Scatter(
+                                x=sub[x_col],
+                                y=sub[y_col],
+                                mode=mode,
+                                name=name,
+                                showlegend=item.get("legend_visible"),
+                                marker=dict(color=color, size=item.get("symbol_size")),
+                                line=dict(color=color, width=item.get("line_width"))
+                            )
+                            fig_obj.add_trace(trace)
+                        logger.debug("Added %d '%s' traces grouped by column '%s'", len(z_vals), ptype, z_col)
+                    
+                    # --- Simple plot (single trace, single color) ---
                     else:
-                        x = df[x_col].tolist()
-                        y = df[y_col].tolist()
-                        name = item.get("legend_name")
-                        color = item.get("line_color") or item.get("symbol_color")
-                        if ptype == "line":
-                            tfig = line_plot(x, y, name=name, color=color)
-                        else:
-                            tfig = scatter_plot(x, y, name=name, color=color)
+                        color = item.get("line_color") if ptype == 'line' else item.get("symbol_color")
+                        trace = go.Scatter(
+                            x=df[x_col],
+                            y=df[y_col],
+                            mode=mode,
+                            name=item.get("legend_name"),
+                            showlegend=item.get("legend_visible"),
+                            marker=dict(color=color, size=item.get("symbol_size")),
+                            line=dict(color=color, width=item.get("line_width"))
+                        )
+                        fig_obj.add_trace(trace)
+                        logger.debug("Added single '%s' trace with solid color", ptype)
 
-                        _merge_factory_fig(fig_obj, tfig)
-                        logger.debug("Line/Scatter trace %s added with %d points", item.get("id"), len(x))
             elif ptype == "histogram":
                 column = item.get("column")
                 if column not in df.columns:
@@ -172,6 +230,68 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
 
                 _merge_factory_fig(fig_obj, trace_fig)
                 logger.debug("Histogram trace %s added bins=%s", item.get("id"), bins)
+
+            elif ptype == "scatter_matrix":
+                data_cols = item.get("data_columns")
+                if not isinstance(data_cols, list) or len(data_cols) < 2:
+                    logger.warning("scatter_matrix item %s requires at least 2 data_columns", item.get("id"))
+                    continue
+
+                # Verify columns exist
+                missing_cols = [c for c in data_cols if c not in df.columns]
+                if missing_cols:
+                    logger.warning("scatter_matrix item %s references missing columns: %s", item.get("id"), missing_cols)
+                    continue
+
+                try:
+                    sm_fig = scatter_matrix_plot(
+                        df,
+                        data_cols,
+                        title=fig_title,
+                        diag_type=item.get("diag_type", "histogram"),
+                        matrix_part=item.get("matrix_part", "both"),
+                        show_diagonal=item.get("show_diagonal", True),
+                        color=item.get("color"),
+                        diag_bins=item.get("diag_bins"),
+                        diag_border_width=item.get("diag_border_width"),
+                        diag_border_color=item.get("diag_border_color"),
+                        color_column=item.get("color_column"),
+                        color_map=item.get("color_map"),
+                        show_colorbar=item.get("show_colorbar", True),
+                        colorbar_title=item.get("colorbar_title"),
+                        diag_bar_width_fraction=item.get("diag_bar_width_fraction"),
+                        marker_size=item.get("marker_size"),
+                    )
+                    # Replace current fig_obj entirely because scatter matrix is a self-contained figure
+                    fig_obj = go.Figure(sm_fig)
+                    logger.debug("Scatter matrix figure %s built with %d columns", item.get("id"), len(data_cols))
+                except Exception as exc:
+                    logger.error("Failed to build scatter matrix for %s: %s", item.get("id"), exc)
+                    continue
+
+            elif ptype == "parallel_coordinates":
+                data_cols = item.get("data_columns")
+                if not isinstance(data_cols, list) or len(data_cols) < 2:
+                    logger.warning("parallel_coordinates item %s requires at least 2 data_columns", item.get("id"))
+                    continue
+                missing_cols = [c for c in data_cols if c not in df.columns]
+                if missing_cols:
+                    logger.warning("parallel_coordinates item %s references missing columns: %s", item.get("id"), missing_cols)
+                    continue
+                try:
+                    pc_fig = parallel_coordinates_plot(
+                        df,
+                        data_cols,
+                        color_column=item.get("color_column"),
+                        color_map=item.get("color_map", "Viridis"),
+                        show_colorbar=item.get("show_colorbar", True),
+                        colorbar_title=item.get("colorbar_title"),
+                    )
+                    _merge_factory_fig(fig_obj, pc_fig)
+                    logger.debug("Parallel-coordinates trace %s added with %d dimensions", item.get("id"), len(data_cols))
+                except Exception as exc:
+                    logger.error("Failed to build parallel-coordinates for %s: %s", item.get("id"), exc)
+                    continue
 
         # ------------------------------------------------------------------
         # Decide between *stacked* or *grouped* bar mode.

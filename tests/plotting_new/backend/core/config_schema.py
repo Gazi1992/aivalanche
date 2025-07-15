@@ -210,6 +210,11 @@ class SchemaRegistry:
             validator=is_valid_hex_color,
             description="Custom color for grid lines (hex format, e.g., #RRGGBBAA). If null, theme default is used."
         ),
+        "visibility": ConfigField(
+            field_type=bool,
+            default=True,
+            description="Flag to toggle rendering of this figure – true = show (default), false = hide."
+        ),
     }
 
     BASE_PLOT_ITEM_SCHEMA: Dict[str, ConfigField] = {
@@ -280,9 +285,9 @@ class SchemaRegistry:
         ),
         "symbol_size": ConfigField(
             field_type=(int, float),
-            default=10,
-            validator=is_positive,
-            description="Size of the symbols in pixels"
+            default=0,
+            validator=is_non_negative,
+            description="Size of the symbols in pixels. Default is 0 (no symbols)."
         ),
         "symbol_color": ConfigField(
             field_type=(str, type(None)),
@@ -316,16 +321,6 @@ class SchemaRegistry:
             field_type=(str, type(None)),
             default=None,
             description="Optional third-axis column used to split the series into multiple curves (e.g. Vgs levels)."
-        ),
-        "color_scheme": ConfigField(
-            field_type=str,
-            default="single",  # 'single' keeps original colour, otherwise name of pyqtgraph colormap
-            description="Either 'single' or the name of a supported pyqtgraph colormap (e.g. viridis, plasma)."
-        ),
-        "show_colorbar": ConfigField(
-            field_type=bool,
-            default=False,
-            description="Show a colour bar when a colormap is used and z_column is provided. Ignored when color_scheme='single'."
         ),
         "legend_visible": ConfigField(
             field_type=bool,
@@ -372,15 +367,25 @@ class SchemaRegistry:
             default=None,
             description="Optional third-axis column used to split the series into multiple scatter groups (e.g. Vgs levels)."
         ),
-        "color_scheme": ConfigField(
-            field_type=str,
-            default="single",
-            description="Either 'single' or the name of a supported pyqtgraph colormap."
+        "color_column": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            description="Column for data-driven marker coloring. Overrides z_column grouping for color."
+        ),
+        "color_map": ConfigField(
+            field_type=(str, type(None)),
+            default="Viridis",
+            description="Plotly colorscale name (e.g., 'Viridis', 'Plasma'). Used with color_column."
         ),
         "show_colorbar": ConfigField(
             field_type=bool,
-            default=False,
-            description="Show a colour bar when using a colormap."
+            default=True,
+            description="Show a color scale legend. Used with color_column."
+        ),
+        "colorbar_title": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            description="Title for the color bar. Defaults to color_column name."
         ),
         "legend_visible": ConfigField(
             field_type=bool,
@@ -540,11 +545,161 @@ class SchemaRegistry:
         ),
     }
 
+    # -------------------- Scatter Matrix Plot Schema --------------------
+    SCATTER_MATRIX_PLOT_SCHEMA: Dict[str, ConfigField] = {
+        "id": ConfigField(
+            field_type=str,
+            required=True,
+            description="Unique identifier for the scatter matrix plot item"
+        ),
+        "type": ConfigField(
+            field_type=str,
+            required=True,
+            default="scatter_matrix",
+            possible_values=["scatter_matrix"],
+            description="Type must be 'scatter_matrix'"
+        ),
+        "source": ConfigField(
+            field_type=str,
+            required=True,
+            description="Path to the data source file"
+        ),
+        "data_columns": ConfigField(
+            field_type=list,
+            required=True,
+            description="List of column names to include in the scatter matrix (must contain at least 2 entries)"
+        ),
+        "matrix_part": ConfigField(
+            field_type=str,
+            default="both",
+            possible_values=["lower", "upper", "both"],
+            description="Which part of the scatter matrix to display ('lower', 'upper', or 'both')."
+        ),
+        "show_diagonal": ConfigField(
+            field_type=bool,
+            default=True,
+            description="Whether to display the diagonal cells (histograms) in the scatter matrix."
+        ),
+        "diag_type": ConfigField(
+            field_type=str,
+            default="histogram",
+            possible_values=["histogram", "box", "scatter"],
+            description="Type of plot shown on the diagonal in the scatter matrix ('histogram', 'box', or 'scatter')."
+        ),
+        "diag_bins": ConfigField(
+            field_type=(int, type(None)),
+            default=None, # If None, Plotly's auto-binning is used
+            validator=is_positive,
+            description="Number of bins for diagonal histograms. Effective only if diag_type is 'histogram'."
+        ),
+        "diag_border_width": ConfigField(
+            field_type=(int, float, type(None)),
+            default=None,
+            validator=is_non_negative,
+            description="Border width for diagonal histogram bars. Effective only if diag_type is 'histogram'."
+        ),
+        "diag_border_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Border color for diagonal histogram bars. Effective only if diag_type is 'histogram'."
+        ),
+        "diag_bar_width_fraction": ConfigField(
+            field_type=(float, int, type(None)),
+            default=None,
+            validator=is_between_0_and_1,
+            description="Fraction of bin width for diagonal histogram bars (0 to 1). If None, defaults to plotly's standard."
+        ),
+        "marker_size": ConfigField(
+            field_type=(int, float, type(None)),
+            default=None,
+            validator=is_positive,
+            description="Size of scatter plot markers in pixels. If None, a default is used."
+        ),
+        "color_column": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            description="Column to use for coloring markers. If provided, overrides 'color'."
+        ),
+        "color_map": ConfigField(
+            field_type=(str, type(None)),
+            default="Viridis",
+            description="Plotly colorscale name to use when coloring by a column (e.g., 'Viridis', 'Cividis', 'Plasma')."
+        ),
+        "show_colorbar": ConfigField(
+            field_type=bool,
+            default=True,
+            description="Whether to show a color scale bar when coloring by a column."
+        ),
+        "colorbar_title": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            description="Title for the color bar. If None, the color_column name is used."
+        ),
+        "legend_name": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            description="Optional name in legend (not commonly used in scatter matrix)"
+        ),
+        "color": ConfigField(
+            field_type=str,
+            description="Optional color for all plot markers (e.g. hex '#ff0000', or name 'red'). If omitted, a default will be used."
+        )
+    }
+
+    # -------------------- Parallel Coordinates Plot Schema --------------------
+    PARALLEL_COORDS_PLOT_SCHEMA: Dict[str, ConfigField] = {
+        "id": ConfigField(
+            field_type=str,
+            required=True,
+            description="Unique identifier for the parallel-coordinates plot item",
+        ),
+        "type": ConfigField(
+            field_type=str,
+            required=True,
+            default="parallel_coordinates",
+            possible_values=["parallel_coordinates"],
+            description="Type must be 'parallel_coordinates'",
+        ),
+        "source": ConfigField(
+            field_type=str,
+            required=True,
+            description="Path to the data source file",
+        ),
+        "data_columns": ConfigField(
+            field_type=list,
+            required=True,
+            description="List of numeric columns to include as dimensions (≥2)",
+        ),
+        "color_column": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            description="Column for continuous colour mapping",
+        ),
+        "color_map": ConfigField(
+            field_type=str,
+            default="Viridis",
+            description="Plotly colourscale when using color_column",
+        ),
+        "show_colorbar": ConfigField(
+            field_type=bool,
+            default=True,
+            description="Show colour-bar when colour mapping is active",
+        ),
+        "colorbar_title": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            description="Title for colour-bar (defaults to color_column)",
+        ),
+    }
+
     PLOT_TYPE_SCHEMAS: Dict[str, Dict[str, ConfigField]] = {
         "line": LINE_PLOT_SCHEMA,
         "scatter": SCATTER_PLOT_SCHEMA,
         "histogram": HISTOGRAM_PLOT_SCHEMA,
         "bar": BAR_PLOT_SCHEMA,
+        "scatter_matrix": SCATTER_MATRIX_PLOT_SCHEMA,
+        "parallel_coordinates": PARALLEL_COORDS_PLOT_SCHEMA,
     }
 
     @classmethod

@@ -31,10 +31,9 @@ if not any(isinstance(h, logging.FileHandler) for h in _root_logger.handlers):
 
 # Plot factory
 from backend.core.plot_factory import (
-    line_plot,
-    scatter_plot,
     histogram_plot,
     bar_plot,
+    scatter_matrix_plot,
 )
 # Dashboard builder
 from backend.core.dashboard_builder import build_dashboard

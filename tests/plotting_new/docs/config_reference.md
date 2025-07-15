@@ -127,6 +127,12 @@ The configuration is a single JSON object with the following top-level keys:
     *   **Required:** No
     *   **Default:** `null`
 
+*   `"visibility"`: (**NEW**)
+    *   **Purpose:** Toggles whether this figure is included in the rendered dashboard. Set to `false` to temporarily hide a figure (e.g., optional analyses) without deleting its configuration. Omit or set to `true` to show the figure.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `true`
+
 *   `"items"`:
     *   **Purpose:** Contains the definitions for individual data series (plots) within this figure.
     *   **Type:** Array (of Plot Item Objects)
@@ -153,12 +159,20 @@ The configuration is a single JSON object with the following top-level keys:
     *   `"fill_level"`: (Number or `null`, Default: `null`) Y-value boundary for fill. `null` means no fill.
     *   `"fill_color"`: (String - Hex Color or `null`, Default: `null` - uses `line_color` + alpha) Fill area color. Requires `fill_level`. Recommend using alpha (e.g., `#RRGGBBAA`).
     *   `"fill_outline"`: (Boolean, Default: `false`) Draw line border around fill. Requires `fill_level`.
+    *   `"z_column"`: (String or `null`, Default: `null`) Column to split data into multiple traces (for 2.5D plots).
+    *   `"legend_visible"`: (Boolean, Default: `true`) Whether to show this series in the legend.
 
 *   **Styling Overrides for `type: "scatter"`:** (All optional)
     *   `"symbol"`: (String, Default: "o", Allowed: "o", "s", "t", "d", "+", "x", "star", "p", "h")
     *   `"symbol_size"`: (Number > 0, Default: 10) Size in pixels.
     *   `"symbol_color"`: (String - Hex Color, Default: "#000000") Fill color.
     *   `"symbol_outline"`: (String - Hex Color or `null`, Default: `null` - uses `symbol_color`) Outline color.
+    *   `"z_column"`: (String or `null`, Default: `null`) Column to split data into multiple traces.
+    *   `"color_column"`: (String or `null`, Default: `null`) Column for data-driven marker coloring. Overrides `z_column` for color.
+    *   `"color_map"`: (String, Default: `"Viridis"`) Plotly colorscale name (e.g., `Viridis`, `Plasma`).
+    *   `"show_colorbar"`: (Boolean, Default: `true`) Show a color scale legend.
+    *   `"colorbar_title"`: (String, Default: (column name)) Title for the color bar. Defaults to the `color_column` name.
+    *   `"legend_visible"`: (Boolean, Default: `true`) Whether to show this series in the legend.
 
 *   **Styling & Behaviour for `type: "histogram":**
     *   `"column": (Required String) Column in `source` file used to build histogram.
@@ -181,6 +195,33 @@ The configuration is a single JSON object with the following top-level keys:
     *   `"bar_border_color": (String - Hex Color or `null`, Default: `null` – falls back to `bar_color`)
     *   `"bar_border_width": (Number ≥ 0, Default: 0) Outline width in pixels; 0 = no border.
     *   `"offsetgroup":` (String or `null`, Default: `null`) Identifier used to group bars. Bars with the same `offsetgroup` value are stacked together. Different `offsetgroup` values will create separate stacks side-by-side.
+
+*   **Behaviour for `type: "scatter_matrix"`:**
+    *   `"data_columns": (Required Array[String]) List of two or more column names from `source` to include in the matrix. Every pairwise combination is plotted.
+    *   `"matrix_part": (Optional String) Which part of the matrix to display: `"lower"`, `"upper"`, or `"both"`. Default: `"both"`.
+    *   `"show_diagonal": (Optional Boolean) Whether to display the diagonal cells. Default: `true`.
+    *   `"diag_type": (Optional String) Type of plot on the diagonal: `"histogram"`, `"box"`, or `"scatter"`. Default: `"histogram"`.
+    *   `"color": (Optional String) Color for all plot markers (e.g., `#FF0000`). Default: (theme default).
+    *   `"diag_bins": (Optional Integer) Number of bins for diagonal histograms. Default: (auto).
+    *   `"diag_border_width": (Optional Float) Border width for diagonal histogram bars. Default: `0`.
+    *   `"diag_border_color": (Optional String) Border color for diagonal histogram bars. Default: (marker color).
+    *   `"diag_bar_width_fraction": (Optional Float) Fraction of bin width for histogram bars (0 to 1). Default: (auto).
+    *   `"marker_size": (Optional Float) Size of scatter plot markers in pixels. Default: `4`.
+    *   `"color_column": (Optional String or `null`) Column to use for coloring markers. Overrides `color`.
+    *   `"color_map": (Optional String) Plotly colorscale name (e.g., `Viridis`, `Cividis`, `Plasma`).
+    *   `"legend_name": (Optional String or `null`) Not typically shown in scatter matrix but accepted for consistency.
+    *   `"show_colorbar": (Boolean, Default: `true`) Show a color scale bar when coloring by column.
+    *   `"colorbar_title": (String, Default: (column name)) Title for the color bar. Defaults to the `color_column` name.
+
+    The scatter-matrix produces a grid of scatter plots for each 2-by-2 combination of the specified columns and includes histograms on the diagonal (default Plotly behaviour).  All axes share the same scale and labels by default.
+
+### Parallel Coordinates Plot
+*   **Behaviour for `type: "parallel_coordinates"`:**
+    *   `"data_columns"`: (Required Array[String]) Two or more *numeric* columns to include as dimensions.
+    *   `"color_column"`: (Optional String or `null`, Default: `null`) Column for continuous colour mapping.
+    *   `"color_map"`: (Optional String, Default: `"Viridis"`) Plotly colourscale name when using `color_column`.
+    *   `"show_colorbar"`: (Boolean, Default: `true`) Show the colour-bar when colouring by column.
+    *   `"colorbar_title"`: (String, Default: (column name)) Title for the colour-bar.
 
 **Important Notes for Generation:**
 

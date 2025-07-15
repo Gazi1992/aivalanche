@@ -169,13 +169,37 @@ function App() {
 
   const getPlotlyLayout = (figData, themeLayout) => {
     const figLayout = figData.layout || {};
-    return {
-      ...figLayout,
-      ...themeLayout,
-      title: { ...figLayout.title, ...themeLayout.title },
-      xaxis: { ...figLayout.xaxis, ...themeLayout.xaxis },
-      yaxis: { ...figLayout.yaxis, ...themeLayout.yaxis },
-    };
+    
+    // Check if this is a parallel coordinates plot
+    const isParallelCoords = figData.data && figData.data.some(trace => trace.type === 'parcoords');
+    
+    // Create a new layout object, starting with the figure-specific layout,
+    // then overriding it with general theme settings.
+    const newLayout = { ...figLayout, ...themeLayout };
+
+    // For parallel coordinates plots, preserve custom margins if they exist
+    if (isParallelCoords && figLayout.margin) {
+      newLayout.margin = { ...themeLayout.margin, ...figLayout.margin };
+    }
+
+    // The previous spread only handles top-level keys. We need to dive into
+    // all axis objects and apply the theme to them, which is crucial for
+    // matrix plots with many axes (xaxis, xaxis2, yaxis, yaxis2, etc.).
+    for (const key in figLayout) {
+        if (key.startsWith('xaxis')) {
+            // Merge theme axis settings with the specific axis settings from the figure.
+            // The figure's settings take precedence.
+            newLayout[key] = { ...themeLayout.xaxis, ...figLayout[key] };
+        }
+        if (key.startsWith('yaxis')) {
+            newLayout[key] = { ...themeLayout.yaxis, ...figLayout[key] };
+        }
+    }
+
+    // Ensure the title is also properly merged.
+    newLayout.title = { ...themeLayout.title, ...figLayout.title };
+
+    return newLayout;
   };
 
   useEffect(() => {
@@ -199,11 +223,11 @@ function App() {
             ...trace,
             marker: { 
               ...trace.marker,
-              color: colorScale[index % colorScale.length]
+              color: trace.marker?.color || colorScale[index % colorScale.length]
             },
             line: { 
               ...trace.line,
-              color: colorScale[index % colorScale.length]
+              color: trace.line?.color || colorScale[index % colorScale.length]
             }
           }));
 
@@ -234,6 +258,8 @@ function App() {
 
             let startX = 0, startY = 0;
             let initXRange = null, initYRange = null;
+            let activeXAxis = 'xaxis';  // will be resolved per-pointerdown
+            let activeYAxis = 'yaxis';
             let rect = null;
             const onPointerMove = (moveEvt) => {
               if (moveEvt.buttons !== 2) return; // ensure right button still pressed
@@ -260,8 +286,8 @@ function App() {
                 const yMin = yCenter - yHalf;
                 const yMax = yCenter + yHalf;
                 const update = {
-                  'xaxis.range': isXAsc ? [xMin, xMax] : [xMax, xMin],
-                  'yaxis.range': isYAsc ? [yMin, yMax] : [yMax, yMin]
+                  [`${activeXAxis}.range`]: isXAsc ? [xMin, xMax] : [xMax, xMin],
+                  [`${activeYAxis}.range`]: isYAsc ? [yMin, yMax] : [yMax, yMin]
                 };
                 Plotly.relayout(plotDiv, update);
               }
@@ -276,10 +302,35 @@ function App() {
               rect = plotDiv.getBoundingClientRect();
               startX = downEvt.clientX;
               startY = downEvt.clientY;
-              const xaxis = plotDiv._fullLayout.xaxis;
-              const yaxis = plotDiv._fullLayout.yaxis;
-              initXRange = [...xaxis.range];
-              initYRange = [...yaxis.range];
+              const layout = plotDiv._fullLayout;
+              const relX = (downEvt.clientX - rect.left) / rect.width;
+              const relY = 1 - (downEvt.clientY - rect.top) / rect.height; // 0=bottom,1=top
+
+              const xAxes = Object.keys(layout).filter(k => k.startsWith('xaxis'));
+              
+              let finalXAxis = 'xaxis';
+              let finalYAxis = 'yaxis';
+
+              for (const xName of xAxes) {
+                  const yName = xName.replace('xaxis', 'yaxis');
+                  const xAxis = layout[xName];
+                  const yAxis = layout[yName];
+
+                  if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
+                      if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
+                          relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
+                          finalXAxis = xName;
+                          finalYAxis = yName;
+                          break;
+                      }
+                  }
+              }
+              
+              activeXAxis = finalXAxis;
+              activeYAxis = finalYAxis;
+
+              initXRange = [...layout[activeXAxis].range];
+              initYRange = [...layout[activeYAxis].range];
               window.addEventListener('pointermove', onPointerMove);
               window.addEventListener('pointerup', onPointerUp);
             });
@@ -289,6 +340,8 @@ function App() {
             plotDiv.__panHandlerAttached = true;
             let pStartX = 0, pStartY = 0;
             let pInitXRange = null, pInitYRange = null;
+            let pActiveXAxis = 'xaxis';
+            let pActiveYAxis = 'yaxis';
             let pRect = null;
             const onPanMove = (mvEvt) => {
               if ((mvEvt.buttons & 4) === 0) return; // middle button not pressed
@@ -306,8 +359,8 @@ function App() {
                 const newY1 = pInitYRange[1] - yOffset;
 
                 const update = {
-                  'xaxis.range': [newX0, newX1],
-                  'yaxis.range': [newY0, newY1]
+                  [`${pActiveXAxis}.range`]: [newX0, newX1],
+                  [`${pActiveYAxis}.range`]: [newY0, newY1]
                 };
                 Plotly.relayout(plotDiv, update);
               }
@@ -322,10 +375,35 @@ function App() {
               pRect = plotDiv.getBoundingClientRect();
               pStartX = pdEvt.clientX;
               pStartY = pdEvt.clientY;
-              const xaxis = plotDiv._fullLayout.xaxis;
-              const yaxis = plotDiv._fullLayout.yaxis;
-              pInitXRange = [...xaxis.range];
-              pInitYRange = [...yaxis.range];
+              const layout = plotDiv._fullLayout;
+              const relX = (pdEvt.clientX - pRect.left) / pRect.width;
+              const relY = 1 - (pdEvt.clientY - pRect.top) / pRect.height;
+
+              const xAxes = Object.keys(layout).filter(k=>k.startsWith('xaxis'));
+              
+              let finalXAxis = 'xaxis';
+              let finalYAxis = 'yaxis';
+
+              for (const xName of xAxes) {
+                  const yName = xName.replace('xaxis', 'yaxis');
+                  const xAxis = layout[xName];
+                  const yAxis = layout[yName];
+
+                  if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
+                      if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
+                          relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
+                          finalXAxis = xName;
+                          finalYAxis = yName;
+                          break;
+                      }
+                  }
+              }
+
+              pActiveXAxis = finalXAxis;
+              pActiveYAxis = finalYAxis;
+
+              pInitXRange = [...layout[pActiveXAxis].range];
+              pInitYRange = [...layout[pActiveYAxis].range];
               window.addEventListener('pointermove', onPanMove);
               window.addEventListener('pointerup', onPanUp);
             });
@@ -355,11 +433,11 @@ function App() {
       ...trace,
       marker: {
         ...trace.marker,
-        color: colorScale[index % colorScale.length],
+        color: trace.marker?.color || colorScale[index % colorScale.length],
       },
       line: {
         ...trace.line,
-        color: colorScale[index % colorScale.length],
+        color: trace.line?.color || colorScale[index % colorScale.length],
       },
     }));
 
@@ -378,6 +456,8 @@ function App() {
       overlayDiv.addEventListener('contextmenu', e => e.preventDefault());
       let startX = 0, startY = 0, rect = null;
       let initXRange = null, initYRange = null;
+      let activeXAxis = 'xaxis';
+      let activeYAxis = 'yaxis';
       const onMove = mv => {
         if (mv.buttons !== 2) return;
         const dx = mv.clientX - startX;
@@ -398,8 +478,8 @@ function App() {
           const xMin=xCenter-xHalf,xMax=xCenter+xHalf;
           const yMin=yCenter-yHalf,yMax=yCenter+yHalf;
           Plotly.relayout(overlayDiv, {
-            'xaxis.range': isXAsc?[xMin,xMax]:[xMax,xMin],
-            'yaxis.range': isYAsc?[yMin,yMax]:[yMax,yMin]
+            [`${activeXAxis}.range`]: isXAsc?[xMin,xMax]:[xMax,xMin],
+            [`${activeYAxis}.range`]: isYAsc?[yMin,yMax]:[yMax,yMin]
           });
         }
       };
@@ -412,10 +492,33 @@ function App() {
         ev.preventDefault();
         rect=overlayDiv.getBoundingClientRect();
         startX=ev.clientX;startY=ev.clientY;
-        const xaxis=overlayDiv._fullLayout.xaxis;
-        const yaxis=overlayDiv._fullLayout.yaxis;
-        initXRange=[...xaxis.range];
-        initYRange=[...yaxis.range];
+        const layout=overlayDiv._fullLayout;
+        const relX=(ev.clientX-rect.left)/rect.width;
+        const relY=1-(ev.clientY-rect.top)/rect.height;
+        const xAxes=Object.keys(layout).filter(k=>k.startsWith('xaxis'));
+        
+        let finalXAxis = 'xaxis';
+        let finalYAxis = 'yaxis';
+      
+        for (const xName of xAxes) {
+            const yName = xName.replace('xaxis', 'yaxis');
+            const xAxis = layout[xName];
+            const yAxis = layout[yName];
+      
+            if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
+                if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
+                    relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
+                    finalXAxis = xName;
+                    finalYAxis = yName;
+                    break;
+                }
+            }
+        }
+
+        activeXAxis=finalXAxis;
+        activeYAxis=finalYAxis;
+        initXRange=[...layout[activeXAxis].range];
+        initYRange=[...layout[activeYAxis].range];
         window.addEventListener('pointermove',onMove);
         window.addEventListener('pointerup',onUp);
       });
@@ -438,8 +541,8 @@ function App() {
           const newY0=pInitY[0]-yOffset;
           const newY1=pInitY[1]-yOffset;
           Plotly.relayout(overlayDiv, {
-            'xaxis.range':[newX0,newX1],
-            'yaxis.range':[newY0,newY1]
+            [`${pActiveXAxis}.range`]:[newX0,newX1],
+            [`${pActiveYAxis}.range`]:[newY0,newY1]
           });
         }
       };
@@ -452,10 +555,33 @@ function App() {
         ev.preventDefault();
         pRect=overlayDiv.getBoundingClientRect();
         pStartX=ev.clientX;pStartY=ev.clientY;
-        const xaxis=overlayDiv._fullLayout.xaxis;
-        const yaxis=overlayDiv._fullLayout.yaxis;
-        pInitX=[...xaxis.range];
-        pInitY=[...yaxis.range];
+        const layout=overlayDiv._fullLayout;
+        const relX=(ev.clientX-pRect.left)/pRect.width;
+        const relY=1-(ev.clientY-pRect.top)/pRect.height;
+        const xAxes=Object.keys(layout).filter(k=>k.startsWith('xaxis'));
+        
+        let finalXAxisPan = 'xaxis';
+        let finalYAxisPan = 'yaxis';
+
+        for (const xName of xAxes) {
+          const yName = xName.replace('xaxis', 'yaxis');
+          const xAxis = layout[xName];
+          const yAxis = layout[yName];
+    
+          if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
+              if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
+                  relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
+                  finalXAxisPan = xName;
+                  finalYAxisPan = yName;
+                  break;
+              }
+          }
+        }
+
+        pActiveXAxis=finalXAxisPan;
+        pActiveYAxis=finalYAxisPan;
+        pInitX=[...layout[pActiveXAxis].range];
+        pInitY=[...layout[pActiveYAxis].range];
         window.addEventListener('pointermove',onPanMove);
         window.addEventListener('pointerup',onPanUp);
       });

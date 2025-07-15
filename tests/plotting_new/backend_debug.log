@@ -1,166 +1,51 @@
-2025-07-11 15:10:46,168 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-11 15:10:46,168 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-11 15:10:46,168 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-11 15:10:46,168 [INFO] backend.core.config_loader: Configuration validation successful.
-2025-07-11 15:10:46,390 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data.csv' (ext=.csv)
-2025-07-11 15:10:47,920 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor1 added with 11 points
-2025-07-11 15:10:50,446 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor2 added with 11 points
-2025-07-11 15:10:50,462 [DEBUG] backend.core.data_handler: Loading dataset 'pressure_data.csv' (ext=.csv)
-2025-07-11 15:10:53,072 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace pressure_data added with 11 points
-2025-07-11 15:10:53,085 [DEBUG] backend.core.data_handler: Loading dataset 'humidity_data.csv' (ext=.csv)
-2025-07-11 15:10:55,149 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace humidity_plot added with 11 points
-2025-07-11 15:10:57,257 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_humidity_correlation added with 11 points
-2025-07-11 15:10:57,268 [DEBUG] backend.core.data_handler: Loading dataset 'histogram_data.csv' (ext=.csv)
-2025-07-11 15:10:59,276 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-07-11 15:10:59,276 [DEBUG] backend.core.data_handler: Loading dataset 'female_histogram_data.csv' (ext=.csv)
-2025-07-11 15:11:01,182 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-07-11 15:11:01,193 [DEBUG] backend.core.data_handler: Loading dataset 'bar_graph_data.csv' (ext=.csv)
-2025-07-11 15:11:01,198 [DEBUG] backend.core.dashboard_builder: Bar trace added id=bar_plot1 offsetgroup=cat y[0]=23
-2025-07-11 15:11:01,207 [DEBUG] backend.core.data_handler: Loading dataset 'multi_bar_data.csv' (ext=.csv)
-2025-07-11 15:11:01,212 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2021 offsetgroup=None y[0]=331
-2025-07-11 15:11:01,215 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2022 offsetgroup=None y[0]=333
-2025-07-11 15:11:01,215 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2023 offsetgroup=None y[0]=335
-2025-07-11 15:11:01,224 [DEBUG] backend.core.data_handler: Loading dataset 'stacked_bar_data.csv' (ext=.csv)
-2025-07-11 15:11:01,226 [DEBUG] backend.core.dashboard_builder: Bar trace added id=male_pop offsetgroup=pop y[0]=165
-2025-07-11 15:11:01,229 [DEBUG] backend.core.dashboard_builder: Bar trace added id=female_pop offsetgroup=pop y[0]=170
-2025-07-11 15:11:01,240 [DEBUG] backend.core.data_handler: Loading dataset 'multi_stacked_bar_data.csv' (ext=.csv)
-2025-07-11 15:11:01,243 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_male offsetgroup=pop y[0]=165
-2025-07-11 15:11:01,246 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_female offsetgroup=pop y[0]=170
-2025-07-11 15:11:01,248 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_agri offsetgroup=gdp y[0]=1800
-2025-07-11 15:11:01,251 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_ind offsetgroup=gdp y[0]=2300
-2025-07-11 15:11:01,260 [DEBUG] backend.core.data_handler: Loading dataset 'mosfet_characteristic_dense.csv' (ext=.csv)
-2025-07-11 15:11:03,304 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=1) added with 11 points
-2025-07-11 15:11:05,652 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=2) added with 11 points
-2025-07-11 15:11:05,976 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-11 15:11:05,990 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-11 15:11:06,001 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-11 15:11:06,004 [INFO] backend.core.config_loader: Configuration validation successful.
-2025-07-11 15:11:09,459 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=3) added with 11 points
-2025-07-11 15:11:09,485 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 10 items. Calculating balanced dimensions.
-2025-07-11 15:11:09,485 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 3x4
-2025-07-11 15:11:10,321 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor1 added with 11 points
-2025-07-11 15:11:12,599 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor2 added with 11 points
-2025-07-11 15:11:13,987 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace pressure_data added with 11 points
-2025-07-11 15:11:15,008 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace humidity_plot added with 11 points
-2025-07-11 15:11:16,154 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_humidity_correlation added with 11 points
-2025-07-11 15:11:17,029 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-07-11 15:11:17,940 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-07-11 15:11:17,954 [DEBUG] backend.core.dashboard_builder: Bar trace added id=bar_plot1 offsetgroup=cat y[0]=23
-2025-07-11 15:11:17,957 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2021 offsetgroup=None y[0]=331
-2025-07-11 15:11:17,958 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2022 offsetgroup=None y[0]=333
-2025-07-11 15:11:17,959 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2023 offsetgroup=None y[0]=335
-2025-07-11 15:11:17,963 [DEBUG] backend.core.dashboard_builder: Bar trace added id=male_pop offsetgroup=pop y[0]=165
-2025-07-11 15:11:17,963 [DEBUG] backend.core.dashboard_builder: Bar trace added id=female_pop offsetgroup=pop y[0]=170
-2025-07-11 15:11:17,967 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_male offsetgroup=pop y[0]=165
-2025-07-11 15:11:17,968 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_female offsetgroup=pop y[0]=170
-2025-07-11 15:11:17,968 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_agri offsetgroup=gdp y[0]=1800
-2025-07-11 15:11:17,969 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_ind offsetgroup=gdp y[0]=2300
-2025-07-11 15:11:19,159 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=1) added with 11 points
-2025-07-11 15:11:20,600 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=2) added with 11 points
-2025-07-11 15:11:22,056 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=3) added with 11 points
-2025-07-11 15:11:22,060 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 10 items. Calculating balanced dimensions.
-2025-07-11 15:11:22,060 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 3x4
-2025-07-11 15:12:38,213 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-11 15:12:38,213 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-11 15:12:38,213 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-11 15:12:38,215 [INFO] backend.core.config_loader: Configuration validation successful.
-2025-07-11 15:12:39,781 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor1 added with 11 points
-2025-07-11 15:12:41,337 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor2 added with 11 points
-2025-07-11 15:12:42,782 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace pressure_data added with 11 points
-2025-07-11 15:12:43,778 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace humidity_plot added with 11 points
-2025-07-11 15:12:45,089 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_humidity_correlation added with 11 points
-2025-07-11 15:12:47,254 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-07-11 15:12:49,987 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-07-11 15:12:50,017 [DEBUG] backend.core.dashboard_builder: Bar trace added id=bar_plot1 offsetgroup=cat y[0]=23
-2025-07-11 15:12:50,070 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2021 offsetgroup=None y[0]=331
-2025-07-11 15:12:50,084 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2022 offsetgroup=None y[0]=333
-2025-07-11 15:12:50,089 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2023 offsetgroup=None y[0]=335
-2025-07-11 15:12:50,115 [DEBUG] backend.core.dashboard_builder: Bar trace added id=male_pop offsetgroup=pop y[0]=165
-2025-07-11 15:12:50,118 [DEBUG] backend.core.dashboard_builder: Bar trace added id=female_pop offsetgroup=pop y[0]=170
-2025-07-11 15:12:50,134 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_male offsetgroup=pop y[0]=165
-2025-07-11 15:12:50,137 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_female offsetgroup=pop y[0]=170
-2025-07-11 15:12:50,140 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_agri offsetgroup=gdp y[0]=1800
-2025-07-11 15:12:50,144 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_ind offsetgroup=gdp y[0]=2300
-2025-07-11 15:12:52,648 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=1) added with 11 points
-2025-07-11 15:12:54,451 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=2) added with 11 points
-2025-07-11 15:12:56,083 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=3) added with 11 points
-2025-07-11 15:12:56,092 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 10 items. Calculating balanced dimensions.
-2025-07-11 15:12:56,092 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 3x4
-2025-07-11 15:12:56,176 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-11 15:12:56,176 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-11 15:12:56,176 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-11 15:12:56,176 [INFO] backend.core.config_loader: Configuration validation successful.
-2025-07-11 15:12:57,858 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor1 added with 11 points
-2025-07-11 15:12:58,822 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor2 added with 11 points
-2025-07-11 15:12:59,806 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace pressure_data added with 11 points
-2025-07-11 15:13:00,862 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace humidity_plot added with 11 points
-2025-07-11 15:13:01,786 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_humidity_correlation added with 11 points
-2025-07-11 15:13:03,117 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-07-11 15:13:04,884 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-07-11 15:13:04,900 [DEBUG] backend.core.dashboard_builder: Bar trace added id=bar_plot1 offsetgroup=cat y[0]=23
-2025-07-11 15:13:04,909 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2021 offsetgroup=None y[0]=331
-2025-07-11 15:13:04,909 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2022 offsetgroup=None y[0]=333
-2025-07-11 15:13:04,909 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2023 offsetgroup=None y[0]=335
-2025-07-11 15:13:04,925 [DEBUG] backend.core.dashboard_builder: Bar trace added id=male_pop offsetgroup=pop y[0]=165
-2025-07-11 15:13:04,925 [DEBUG] backend.core.dashboard_builder: Bar trace added id=female_pop offsetgroup=pop y[0]=170
-2025-07-11 15:13:04,940 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_male offsetgroup=pop y[0]=165
-2025-07-11 15:13:04,940 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_female offsetgroup=pop y[0]=170
-2025-07-11 15:13:04,940 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_agri offsetgroup=gdp y[0]=1800
-2025-07-11 15:13:04,940 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_ind offsetgroup=gdp y[0]=2300
-2025-07-11 15:13:06,833 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=1) added with 11 points
-2025-07-11 15:13:07,703 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=2) added with 11 points
-2025-07-11 15:13:09,036 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=3) added with 11 points
-2025-07-11 15:13:09,041 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 10 items. Calculating balanced dimensions.
-2025-07-11 15:13:09,042 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 3x4
-2025-07-11 15:14:30,099 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-11 15:14:30,099 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-11 15:14:30,099 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-11 15:14:30,099 [INFO] backend.core.config_loader: Configuration validation successful.
-2025-07-11 15:14:30,553 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor1 added with 11 points
-2025-07-11 15:14:30,924 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor2 added with 11 points
-2025-07-11 15:14:31,323 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace pressure_data added with 11 points
-2025-07-11 15:14:31,717 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace humidity_plot added with 11 points
-2025-07-11 15:14:32,118 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_humidity_correlation added with 11 points
-2025-07-11 15:14:32,511 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-07-11 15:14:32,869 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-07-11 15:14:32,872 [DEBUG] backend.core.dashboard_builder: Bar trace added id=bar_plot1 offsetgroup=cat y[0]=23
-2025-07-11 15:14:32,877 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2021 offsetgroup=None y[0]=331
-2025-07-11 15:14:32,877 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2022 offsetgroup=None y[0]=333
-2025-07-11 15:14:32,878 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2023 offsetgroup=None y[0]=335
-2025-07-11 15:14:32,878 [DEBUG] backend.core.dashboard_builder: Bar trace added id=male_pop offsetgroup=pop y[0]=165
-2025-07-11 15:14:32,881 [DEBUG] backend.core.dashboard_builder: Bar trace added id=female_pop offsetgroup=pop y[0]=170
-2025-07-11 15:14:32,883 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_male offsetgroup=pop y[0]=165
-2025-07-11 15:14:32,883 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_female offsetgroup=pop y[0]=170
-2025-07-11 15:14:32,883 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_agri offsetgroup=gdp y[0]=1800
-2025-07-11 15:14:32,883 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_ind offsetgroup=gdp y[0]=2300
-2025-07-11 15:14:33,272 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=1) added with 11 points
-2025-07-11 15:14:33,611 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=2) added with 11 points
-2025-07-11 15:14:34,330 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=3) added with 11 points
-2025-07-11 15:14:34,337 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 10 items. Calculating balanced dimensions.
-2025-07-11 15:14:34,337 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 3x4
-2025-07-11 15:14:34,381 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-11 15:14:34,382 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-11 15:14:34,382 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-11 15:14:34,383 [INFO] backend.core.config_loader: Configuration validation successful.
-2025-07-11 15:14:35,297 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor1 added with 11 points
-2025-07-11 15:14:35,940 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_sensor2 added with 11 points
-2025-07-11 15:14:36,755 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace pressure_data added with 11 points
-2025-07-11 15:14:37,698 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace humidity_plot added with 11 points
-2025-07-11 15:14:38,660 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace temp_humidity_correlation added with 11 points
-2025-07-11 15:14:39,595 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-07-11 15:14:40,255 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-07-11 15:14:40,263 [DEBUG] backend.core.dashboard_builder: Bar trace added id=bar_plot1 offsetgroup=cat y[0]=23
-2025-07-11 15:14:40,270 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2021 offsetgroup=None y[0]=331
-2025-07-11 15:14:40,271 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2022 offsetgroup=None y[0]=333
-2025-07-11 15:14:40,273 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop2023 offsetgroup=None y[0]=335
-2025-07-11 15:14:40,285 [DEBUG] backend.core.dashboard_builder: Bar trace added id=male_pop offsetgroup=pop y[0]=165
-2025-07-11 15:14:40,287 [DEBUG] backend.core.dashboard_builder: Bar trace added id=female_pop offsetgroup=pop y[0]=170
-2025-07-11 15:14:40,308 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_male offsetgroup=pop y[0]=165
-2025-07-11 15:14:40,311 [DEBUG] backend.core.dashboard_builder: Bar trace added id=pop_female offsetgroup=pop y[0]=170
-2025-07-11 15:14:40,315 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_agri offsetgroup=gdp y[0]=1800
-2025-07-11 15:14:40,318 [DEBUG] backend.core.dashboard_builder: Bar trace added id=gdp_ind offsetgroup=gdp y[0]=2300
-2025-07-11 15:14:41,211 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=1) added with 11 points
-2025-07-11 15:14:42,558 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=2) added with 11 points
-2025-07-11 15:14:44,732 [DEBUG] backend.core.dashboard_builder: Line/Scatter trace mosfet_iv (vgs=3) added with 11 points
-2025-07-11 15:14:44,748 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 10 items. Calculating balanced dimensions.
-2025-07-11 15:14:44,748 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 3x4
+2025-07-15 18:10:28,622 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
+2025-07-15 18:10:28,622 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-07-15 18:10:28,622 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-07-15 18:10:28,623 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-15 18:10:28,623 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-15 18:10:28,623 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
+2025-07-15 18:10:28,623 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-15 18:10:28,623 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-15 18:10:28,623 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
+2025-07-15 18:10:28,624 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
+2025-07-15 18:10:28,713 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data.csv' (ext=.csv)
+2025-07-15 18:10:28,749 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
+2025-07-15 18:10:28,777 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
+2025-07-15 18:10:28,790 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
+2025-07-15 18:10:28,790 [DEBUG] backend.core.data_handler: Loading dataset 'mosfet_characteristic_dense.csv' (ext=.csv)
+2025-07-15 18:10:28,802 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
+2025-07-15 18:10:28,807 [DEBUG] backend.core.data_handler: Loading dataset 'scatter_matrix_data.csv' (ext=.csv)
+2025-07-15 18:10:30,149 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
+2025-07-15 18:10:31,966 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
+2025-07-15 18:10:32,001 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
+2025-07-15 18:10:32,077 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
+2025-07-15 18:10:32,078 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-07-15 18:10:32,078 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-07-15 18:10:32,079 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-15 18:10:32,079 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-15 18:10:32,080 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
+2025-07-15 18:10:32,080 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-15 18:10:32,080 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-15 18:10:32,080 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
+2025-07-15 18:10:32,080 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
+2025-07-15 18:10:32,088 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
+2025-07-15 18:10:32,106 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
+2025-07-15 18:10:32,244 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
+2025-07-15 18:10:32,245 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
+2025-07-15 18:10:32,246 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
+2025-07-15 18:10:32,246 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
+2025-07-15 18:10:32,246 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
+2025-07-15 18:10:32,246 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
+2025-07-15 18:10:32,246 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
+2025-07-15 18:10:32,246 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
+2025-07-15 18:10:32,260 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
+2025-07-15 18:10:34,926 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
+2025-07-15 18:10:35,602 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
+2025-07-15 18:10:35,608 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
