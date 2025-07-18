@@ -104,20 +104,33 @@
           }
         ],
         "layout": {
-          "title": {
-            "text": ""
-          },
           "xaxis": {
             "title": {
               "text": "Time (s)"
-            }
+            },
+            "type": "linear"
           },
           "yaxis": {
             "title": {
               "text": "Temperature (Â°C)"
-            }
+            },
+            "type": "log"
+          },
+          "title": {
+            "text": ""
           }
         }
+      },
+      "metadata": {
+        "isPcp": false,
+        "isSplom": false,
+        "hasLine": true,
+        "hasScatter": true,
+        "hasBar": false,
+        "hasHistogram": false,
+        "hasAxes": true,
+        "hasColorbar": true,
+        "itemCount": 2
       }
     },
     {
@@ -193,20 +206,33 @@
           }
         ],
         "layout": {
-          "title": {
-            "text": "MOSFET I_D vs V_DS (family for V_GS)"
-          },
           "xaxis": {
             "title": {
               "text": "V_DS (V)"
-            }
+            },
+            "type": "linear"
           },
           "yaxis": {
             "title": {
               "text": "I_D (A)"
-            }
+            },
+            "type": "linear"
+          },
+          "title": {
+            "text": "MOSFET I_D vs V_DS (family for V_GS)"
           }
         }
+      },
+      "metadata": {
+        "isPcp": false,
+        "isSplom": false,
+        "hasLine": true,
+        "hasScatter": false,
+        "hasBar": false,
+        "hasHistogram": false,
+        "hasAxes": true,
+        "hasColorbar": false,
+        "itemCount": 1
       }
     },
     {
@@ -317,20 +343,33 @@
             "b": 50
           },
           "hovermode": "closest",
-          "title": {
-            "text": ""
-          },
           "xaxis": {
             "title": {
               "text": ""
-            }
+            },
+            "type": "linear"
           },
           "yaxis": {
             "title": {
               "text": ""
-            }
+            },
+            "type": "linear"
+          },
+          "title": {
+            "text": ""
           }
         }
+      },
+      "metadata": {
+        "isPcp": true,
+        "isSplom": false,
+        "hasLine": false,
+        "hasScatter": false,
+        "hasBar": false,
+        "hasHistogram": false,
+        "hasAxes": false,
+        "hasColorbar": true,
+        "itemCount": 1
       }
     },
     {
@@ -1360,7 +1399,8 @@
             "showline": true,
             "title": {
               "text": ""
-            }
+            },
+            "type": "linear"
           },
           "yaxis": {
             "anchor": "x",
@@ -1373,7 +1413,8 @@
             "showline": true,
             "title": {
               "text": ""
-            }
+            },
+            "type": "linear"
           },
           "xaxis2": {
             "anchor": "y2",
@@ -1697,6 +1738,17 @@
             "showline": true
           }
         }
+      },
+      "metadata": {
+        "isPcp": false,
+        "isSplom": true,
+        "hasLine": false,
+        "hasScatter": false,
+        "hasBar": false,
+        "hasHistogram": false,
+        "hasAxes": false,
+        "hasColorbar": true,
+        "itemCount": 1
       }
     }
   ]

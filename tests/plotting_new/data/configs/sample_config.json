@@ -18,7 +18,7 @@
       "x_label": "Time (s)",
       "y_label": "Temperature (°C)",
       "x_scale": "linear",
-      "y_scale": "linear",
+      "y_scale": "log",
       "grid_x": true,
       "grid_y": true,
       "grid_alpha": 0.4,

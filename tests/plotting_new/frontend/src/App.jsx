@@ -5,14 +5,10 @@ import Logo from './components/Logo.jsx';
 import axios from 'axios';
 import Plotly from 'plotly.js-dist-min';
 import ExpandIcon from './components/ExpandIcon.jsx';
+import EditIcon from './components/EditIcon.jsx';
+import EditPane from './components/EditPane/EditPane.jsx';
+import { attachPlotInteractions } from './utils/plotInteractions.js';
 
-// Set global config for smoother wheel zoom
-Plotly.setPlotConfig({
-  scrollZoom: {
-    debounce: 40,   // 40 ms between redraws  (try 30–50)
-    speed: 0.5      // zoom delta per wheel-tick (0.5 is Plotly’s default)
-  }
-});
 
 const API_BASE = 'http://localhost:8000';
 
@@ -27,6 +23,9 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [activeFig, setActiveFig] = useState(null);
   const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [editingFig, setEditingFig] = useState(null);
+  const [editPaneOpen, setEditPaneOpen] = useState(false);
+  const [localFigures, setLocalFigures] = useState(null);
   const sidebarRef = useRef(null);
 
   // Ensure the CSS variables reflect the current theme *before* we read them
@@ -80,10 +79,10 @@ function App() {
       setSidebarHidden(newWidth === 0);
 
       // Resize plots after sidebar drag ends
-      if (config && config.figures) {
+      if (config && localFigures) {
         // Add a small delay to allow the sidebar transition to complete
         const timer = setTimeout(() => {
-          config.figures.forEach(fig => {
+          localFigures.forEach(fig => {
             if (fig && fig.figure) {
               const plotId = `plot-${fig.id}`;
               const graphDiv = document.getElementById(plotId);
@@ -108,6 +107,7 @@ function App() {
     axios.get(`${API_BASE}/config`)
         .then(res => {
         setConfig(res.data);
+        setLocalFigures(res.data.figures);
       })
       .catch(err => console.error("Error fetching config:", err));
   }, []);
@@ -203,7 +203,7 @@ function App() {
   };
 
   useEffect(() => {
-    if (config && config.figures) {
+    if (config && localFigures) {
       const colorScale = [
         getComputedStyle(document.documentElement).getPropertyValue('--color-data-1').trim(),
         getComputedStyle(document.documentElement).getPropertyValue('--color-data-2').trim(),
@@ -212,7 +212,7 @@ function App() {
         getComputedStyle(document.documentElement).getPropertyValue('--color-data-5').trim(),
       ];
 
-      config.figures.forEach(fig => {
+      localFigures.forEach(fig => {
         if (fig && fig.figure) {
           const plotId = `plot-${fig.id}`;
           const plotDiv = document.getElementById(plotId);
@@ -235,7 +235,7 @@ function App() {
             displaylogo: false,
             displayModeBar: false,
             responsive: true,
-            scrollZoom: true, // Enable mouse wheel zoom
+            scrollZoom: false, // Disable Plotly's scroll zoom - we use custom handler
             edits: {
               legendPosition: true,
               titleText: false,
@@ -251,167 +251,12 @@ function App() {
             Plotly.newPlot(plotId, data, layout, plotConfig);
           }
 
-          // Attach custom right-click drag scaling
-          if (!plotDiv.__scaleHandlerAttached) {
-            plotDiv.__scaleHandlerAttached = true;
-            plotDiv.addEventListener('contextmenu', e => e.preventDefault()); // disable context menu
-
-            let startX = 0, startY = 0;
-            let initXRange = null, initYRange = null;
-            let activeXAxis = 'xaxis';  // will be resolved per-pointerdown
-            let activeYAxis = 'yaxis';
-            let rect = null;
-            const onPointerMove = (moveEvt) => {
-              if (moveEvt.buttons !== 2) return; // ensure right button still pressed
-              const dx = moveEvt.clientX - startX;
-              const dy = moveEvt.clientY - startY;
-              const sensitivity = 0.2; // lower value = higher sensitivity
-              const factorX = 1 - dx / (rect.width * sensitivity);  // horizontal scale
-              const factorY = 1 + dy / (rect.height * sensitivity); // vertical scale (drag down -> zoom in)
-
-              // Clamp factors to reasonable range to avoid inversion/overflow
-              const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
-              const fx = clamp(factorX, 0.1, 10);
-              const fy = clamp(factorY, 0.1, 10);
-
-              if (initXRange && initYRange) {
-                const xCenter = (initXRange[0] + initXRange[1]) / 2;
-                const xHalf = (initXRange[1] - initXRange[0]) / 2 * fx;
-                const yCenter = (initYRange[0] + initYRange[1]) / 2;
-                const yHalf = (initYRange[1] - initYRange[0]) / 2 * fy;
-                const isXAsc = initXRange[0] < initXRange[1];
-                const isYAsc = initYRange[0] < initYRange[1];
-                const xMin = xCenter - xHalf;
-                const xMax = xCenter + xHalf;
-                const yMin = yCenter - yHalf;
-                const yMax = yCenter + yHalf;
-                const update = {
-                  [`${activeXAxis}.range`]: isXAsc ? [xMin, xMax] : [xMax, xMin],
-                  [`${activeYAxis}.range`]: isYAsc ? [yMin, yMax] : [yMax, yMin]
-                };
-                Plotly.relayout(plotDiv, update);
-              }
-            };
-            const onPointerUp = () => {
-              window.removeEventListener('pointermove', onPointerMove);
-              window.removeEventListener('pointerup', onPointerUp);
-            };
-            plotDiv.addEventListener('pointerdown', downEvt => {
-              if (downEvt.button !== 2) return; // only right-click
-              downEvt.preventDefault();
-              rect = plotDiv.getBoundingClientRect();
-              startX = downEvt.clientX;
-              startY = downEvt.clientY;
-              const layout = plotDiv._fullLayout;
-              const relX = (downEvt.clientX - rect.left) / rect.width;
-              const relY = 1 - (downEvt.clientY - rect.top) / rect.height; // 0=bottom,1=top
-
-              const xAxes = Object.keys(layout).filter(k => k.startsWith('xaxis'));
-              
-              let finalXAxis = 'xaxis';
-              let finalYAxis = 'yaxis';
-
-              for (const xName of xAxes) {
-                  const yName = xName.replace('xaxis', 'yaxis');
-                  const xAxis = layout[xName];
-                  const yAxis = layout[yName];
-
-                  if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
-                      if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
-                          relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
-                          finalXAxis = xName;
-                          finalYAxis = yName;
-                          break;
-                      }
-                  }
-              }
-              
-              activeXAxis = finalXAxis;
-              activeYAxis = finalYAxis;
-
-              initXRange = [...layout[activeXAxis].range];
-              initYRange = [...layout[activeYAxis].range];
-              window.addEventListener('pointermove', onPointerMove);
-              window.addEventListener('pointerup', onPointerUp);
-            });
-          }
-          // Attach custom middle-click drag panning
-          if (!plotDiv.__panHandlerAttached) {
-            plotDiv.__panHandlerAttached = true;
-            let pStartX = 0, pStartY = 0;
-            let pInitXRange = null, pInitYRange = null;
-            let pActiveXAxis = 'xaxis';
-            let pActiveYAxis = 'yaxis';
-            let pRect = null;
-            const onPanMove = (mvEvt) => {
-              if ((mvEvt.buttons & 4) === 0) return; // middle button not pressed
-              const dx = mvEvt.clientX - pStartX;
-              const dy = mvEvt.clientY - pStartY;
-              if (pInitXRange && pInitYRange) {
-                const xScale = (pInitXRange[1] - pInitXRange[0]) / pRect.width;
-                const yScale = (pInitYRange[1] - pInitYRange[0]) / pRect.height;
-                const xOffset = dx * xScale;
-                const yOffset = -dy * yScale; // invert because screen Y grows downward
-
-                const newX0 = pInitXRange[0] - xOffset;
-                const newX1 = pInitXRange[1] - xOffset;
-                const newY0 = pInitYRange[0] - yOffset;
-                const newY1 = pInitYRange[1] - yOffset;
-
-                const update = {
-                  [`${pActiveXAxis}.range`]: [newX0, newX1],
-                  [`${pActiveYAxis}.range`]: [newY0, newY1]
-                };
-                Plotly.relayout(plotDiv, update);
-              }
-            };
-            const onPanUp = () => {
-              window.removeEventListener('pointermove', onPanMove);
-              window.removeEventListener('pointerup', onPanUp);
-            };
-            plotDiv.addEventListener('pointerdown', (pdEvt) => {
-              if (pdEvt.button !== 1) return; // middle mouse only
-              pdEvt.preventDefault();
-              pRect = plotDiv.getBoundingClientRect();
-              pStartX = pdEvt.clientX;
-              pStartY = pdEvt.clientY;
-              const layout = plotDiv._fullLayout;
-              const relX = (pdEvt.clientX - pRect.left) / pRect.width;
-              const relY = 1 - (pdEvt.clientY - pRect.top) / pRect.height;
-
-              const xAxes = Object.keys(layout).filter(k=>k.startsWith('xaxis'));
-              
-              let finalXAxis = 'xaxis';
-              let finalYAxis = 'yaxis';
-
-              for (const xName of xAxes) {
-                  const yName = xName.replace('xaxis', 'yaxis');
-                  const xAxis = layout[xName];
-                  const yAxis = layout[yName];
-
-                  if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
-                      if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
-                          relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
-                          finalXAxis = xName;
-                          finalYAxis = yName;
-                          break;
-                      }
-                  }
-              }
-
-              pActiveXAxis = finalXAxis;
-              pActiveYAxis = finalYAxis;
-
-              pInitXRange = [...layout[pActiveXAxis].range];
-              pInitYRange = [...layout[pActiveYAxis].range];
-              window.addEventListener('pointermove', onPanMove);
-              window.addEventListener('pointerup', onPanUp);
-            });
-          }
+          // Attach unified plot interactions
+          attachPlotInteractions(plotDiv);
         }
       });
     }
-  }, [config, themedLayout]);
+  }, [config, localFigures, themedLayout]);
 
   // === Effect to render active (zoomed) figure ===
   useEffect(() => {
@@ -445,147 +290,12 @@ function App() {
       displaylogo: false,
       displayModeBar: true,
       responsive: true,
-      scrollZoom: true,
+      scrollZoom: false, // Disable Plotly's scroll zoom - we use custom handler
       edits: { legendPosition: true },
     });
 
-    // Attach the same custom interactions to overlay plot
-    if (!overlayDiv.__scaleHandlerAttached) {
-      // === copy of scale handler ===
-      overlayDiv.__scaleHandlerAttached = true;
-      overlayDiv.addEventListener('contextmenu', e => e.preventDefault());
-      let startX = 0, startY = 0, rect = null;
-      let initXRange = null, initYRange = null;
-      let activeXAxis = 'xaxis';
-      let activeYAxis = 'yaxis';
-      const onMove = mv => {
-        if (mv.buttons !== 2) return;
-        const dx = mv.clientX - startX;
-        const dy = mv.clientY - startY;
-        const sensitivity = 0.2;
-        const factorX = 1 - dx / (rect.width * sensitivity);
-        const factorY = 1 + dy / (rect.height * sensitivity);
-        const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
-        const fx = clamp(factorX,0.1,10);
-        const fy = clamp(factorY,0.1,10);
-        if(initXRange&&initYRange){
-          const xCenter=(initXRange[0]+initXRange[1])/2;
-          const xHalf=(initXRange[1]-initXRange[0])/2*fx;
-          const yCenter=(initYRange[0]+initYRange[1])/2;
-          const yHalf=(initYRange[1]-initYRange[0])/2*fy;
-          const isXAsc=initXRange[0]<initXRange[1];
-          const isYAsc=initYRange[0]<initYRange[1];
-          const xMin=xCenter-xHalf,xMax=xCenter+xHalf;
-          const yMin=yCenter-yHalf,yMax=yCenter+yHalf;
-          Plotly.relayout(overlayDiv, {
-            [`${activeXAxis}.range`]: isXAsc?[xMin,xMax]:[xMax,xMin],
-            [`${activeYAxis}.range`]: isYAsc?[yMin,yMax]:[yMax,yMin]
-          });
-        }
-      };
-      const onUp=()=>{
-        window.removeEventListener('pointermove',onMove);
-        window.removeEventListener('pointerup',onUp);
-      };
-      overlayDiv.addEventListener('pointerdown', ev=>{
-        if(ev.button!==2) return;
-        ev.preventDefault();
-        rect=overlayDiv.getBoundingClientRect();
-        startX=ev.clientX;startY=ev.clientY;
-        const layout=overlayDiv._fullLayout;
-        const relX=(ev.clientX-rect.left)/rect.width;
-        const relY=1-(ev.clientY-rect.top)/rect.height;
-        const xAxes=Object.keys(layout).filter(k=>k.startsWith('xaxis'));
-        
-        let finalXAxis = 'xaxis';
-        let finalYAxis = 'yaxis';
-      
-        for (const xName of xAxes) {
-            const yName = xName.replace('xaxis', 'yaxis');
-            const xAxis = layout[xName];
-            const yAxis = layout[yName];
-      
-            if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
-                if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
-                    relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
-                    finalXAxis = xName;
-                    finalYAxis = yName;
-                    break;
-                }
-            }
-        }
-
-        activeXAxis=finalXAxis;
-        activeYAxis=finalYAxis;
-        initXRange=[...layout[activeXAxis].range];
-        initYRange=[...layout[activeYAxis].range];
-        window.addEventListener('pointermove',onMove);
-        window.addEventListener('pointerup',onUp);
-      });
-    }
-
-    if(!overlayDiv.__panHandlerAttached){
-      overlayDiv.__panHandlerAttached = true;
-      let pStartX=0,pStartY=0,pRect=null,pInitX=null,pInitY=null;
-      const onPanMove=mv=>{
-        if((mv.buttons&4)===0) return;
-        const dx=mv.clientX-pStartX;
-        const dy=mv.clientY-pStartY;
-        if(pInitX&&pInitY){
-          const xScale=(pInitX[1]-pInitX[0])/pRect.width;
-          const yScale=(pInitY[1]-pInitY[0])/pRect.height;
-          const xOffset=dx*xScale;
-          const yOffset=-dy*yScale;
-          const newX0=pInitX[0]-xOffset;
-          const newX1=pInitX[1]-xOffset;
-          const newY0=pInitY[0]-yOffset;
-          const newY1=pInitY[1]-yOffset;
-          Plotly.relayout(overlayDiv, {
-            [`${pActiveXAxis}.range`]:[newX0,newX1],
-            [`${pActiveYAxis}.range`]:[newY0,newY1]
-          });
-        }
-      };
-      const onPanUp=()=>{
-        window.removeEventListener('pointermove',onPanMove);
-        window.removeEventListener('pointerup',onPanUp);
-      };
-      overlayDiv.addEventListener('pointerdown',ev=>{
-        if(ev.button!==1) return;
-        ev.preventDefault();
-        pRect=overlayDiv.getBoundingClientRect();
-        pStartX=ev.clientX;pStartY=ev.clientY;
-        const layout=overlayDiv._fullLayout;
-        const relX=(ev.clientX-pRect.left)/pRect.width;
-        const relY=1-(ev.clientY-pRect.top)/pRect.height;
-        const xAxes=Object.keys(layout).filter(k=>k.startsWith('xaxis'));
-        
-        let finalXAxisPan = 'xaxis';
-        let finalYAxisPan = 'yaxis';
-
-        for (const xName of xAxes) {
-          const yName = xName.replace('xaxis', 'yaxis');
-          const xAxis = layout[xName];
-          const yAxis = layout[yName];
-    
-          if (xAxis && yAxis && xAxis.domain && yAxis.domain) {
-              if (relX >= xAxis.domain[0] && relX <= xAxis.domain[1] &&
-                  relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
-                  finalXAxisPan = xName;
-                  finalYAxisPan = yName;
-                  break;
-              }
-          }
-        }
-
-        pActiveXAxis=finalXAxisPan;
-        pActiveYAxis=finalYAxisPan;
-        pInitX=[...layout[pActiveXAxis].range];
-        pInitY=[...layout[pActiveYAxis].range];
-        window.addEventListener('pointermove',onPanMove);
-        window.addEventListener('pointerup',onPanUp);
-      });
-    }
+    // Attach unified plot interactions to overlay
+    attachPlotInteractions(overlayDiv);
 
     return () => {
       Plotly.purge(overlayDiv);
@@ -763,7 +473,8 @@ function App() {
   }
 
   const appTitle = config.app_title || "Data Visualization";
-  const { grid, figures } = config;
+  const { grid } = config;
+  const figures = localFigures || config.figures;
   const nRows = grid.rows || 1;
   const nCols = grid.cols || 2;
   const vGapPx = grid.v_gap || 20;
@@ -951,16 +662,41 @@ function App() {
         <div style={gridStyle}>
           {figures.map(fig => (
             <div key={fig.id} className="plot-container" style={plotContainerStyle}>
-              {figures.length > 1 && (
-              <button className="zoom-btn" onClick={() => setActiveFig(fig)} title="Expand plot">
-                <ExpandIcon size={16} />
-              </button>
-              )}
+              <div className="plot-buttons">
+                <button className="edit-btn" onClick={() => {
+                  setEditingFig(fig);
+                  setEditPaneOpen(true);
+                }} title="Edit plot">
+                  <EditIcon size={16} />
+                </button>
+                {figures.length > 1 && (
+                <button className="zoom-btn" onClick={() => setActiveFig(fig)} title="Expand plot">
+                  <ExpandIcon size={16} />
+                </button>
+                )}
+              </div>
               <div id={`plot-${fig.id}`} style={{ flexGrow:1,minHeight:0 }}></div>
             </div>
           ))}
         </div>
         </main>
+
+      {/* Edit Pane */}
+      <EditPane
+        isOpen={editPaneOpen}
+        onClose={() => {
+          setEditPaneOpen(false);
+          setEditingFig(null);
+        }}
+        plotData={editingFig?.figure}
+        metadata={editingFig?.metadata}
+        onUpdate={(updatedFigure) => {
+          const updatedFigures = localFigures.map(f => 
+            f.id === editingFig.id ? { ...f, figure: updatedFigure } : f
+          );
+          setLocalFigures(updatedFigures);
+        }}
+      />
 
       {/* Overlay for enlarged plot */}
       {activeFig && (

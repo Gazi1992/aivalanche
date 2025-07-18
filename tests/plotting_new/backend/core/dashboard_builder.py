@@ -72,6 +72,19 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
 
         fig_obj = go.Figure()
         colorbar_count = 0
+        
+        # Initialize figure metadata
+        fig_metadata = {
+            "isPcp": False,
+            "isSplom": False,
+            "hasLine": False,
+            "hasScatter": False,
+            "hasBar": False,
+            "hasHistogram": False,
+            "hasAxes": True,  # Default to true, will be set to false for PCP/SPLOM
+            "hasColorbar": False,
+            "itemCount": len(items)
+        }
 
         for item in items:
             if not isinstance(item, dict):
@@ -96,6 +109,8 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                     continue
 
                 if ptype == "bar":
+                    # Update metadata
+                    fig_metadata["hasBar"] = True
                     # Build a bar trace respecting grouping/stacking metadata
                     x_vals = df[x_col].tolist()
                     y_vals = df[y_col].tolist()
@@ -125,6 +140,11 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                     )
 
                 elif ptype in ("line", "scatter"):
+                    # Update metadata
+                    if ptype == "line":
+                        fig_metadata["hasLine"] = True
+                    else:
+                        fig_metadata["hasScatter"] = True
                     
                     color_col = item.get("color_column")
                     z_col = item.get("z_column")
@@ -162,6 +182,7 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                         
                         if marker_opts['showscale']:
                             colorbar_count += 1
+                            fig_metadata["hasColorbar"] = True
                         
                         logger.debug("Added single '%s' trace with continuous color from column '%s'", ptype, color_col)
 
@@ -204,6 +225,8 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                         logger.debug("Added single '%s' trace with solid color", ptype)
 
             elif ptype == "histogram":
+                # Update metadata
+                fig_metadata["hasHistogram"] = True
                 column = item.get("column")
                 if column not in df.columns:
                     continue
@@ -232,6 +255,9 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                 logger.debug("Histogram trace %s added bins=%s", item.get("id"), bins)
 
             elif ptype == "scatter_matrix":
+                # Update metadata
+                fig_metadata["isSplom"] = True
+                fig_metadata["hasAxes"] = False
                 data_cols = item.get("data_columns")
                 if not isinstance(data_cols, list) or len(data_cols) < 2:
                     logger.warning("scatter_matrix item %s requires at least 2 data_columns", item.get("id"))
@@ -262,6 +288,9 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                         diag_bar_width_fraction=item.get("diag_bar_width_fraction"),
                         marker_size=item.get("marker_size"),
                     )
+                    # Check if colorbar is shown
+                    if item.get("show_colorbar", True) and item.get("color_column"):
+                        fig_metadata["hasColorbar"] = True
                     # Replace current fig_obj entirely because scatter matrix is a self-contained figure
                     fig_obj = go.Figure(sm_fig)
                     logger.debug("Scatter matrix figure %s built with %d columns", item.get("id"), len(data_cols))
@@ -270,6 +299,9 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                     continue
 
             elif ptype == "parallel_coordinates":
+                # Update metadata
+                fig_metadata["isPcp"] = True
+                fig_metadata["hasAxes"] = False
                 data_cols = item.get("data_columns")
                 if not isinstance(data_cols, list) or len(data_cols) < 2:
                     logger.warning("parallel_coordinates item %s requires at least 2 data_columns", item.get("id"))
@@ -287,6 +319,9 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                         show_colorbar=item.get("show_colorbar", True),
                         colorbar_title=item.get("colorbar_title"),
                     )
+                    # Check if colorbar is shown
+                    if item.get("show_colorbar", True) and item.get("color_column"):
+                        fig_metadata["hasColorbar"] = True
                     _merge_factory_fig(fig_obj, pc_fig)
                     logger.debug("Parallel-coordinates trace %s added with %d dimensions", item.get("id"), len(data_cols))
                 except Exception as exc:
@@ -313,16 +348,26 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
             all_default = all(str(g) in ("0", "None", "", None) for g in bar_offsetgroups)
             fig_obj.update_layout(barmode="group" if all_default else "stack")
 
-        fig_obj.update_layout(
-            title=fig_title,
-            xaxis_title=fig_cfg.get("x_label"),
-            yaxis_title=fig_cfg.get("y_label"),
-        )
+        # Build layout updates including axis scales
+        layout_updates = {
+            "title": fig_title,
+            "xaxis_title": fig_cfg.get("x_label"),
+            "yaxis_title": fig_cfg.get("y_label"),
+        }
+        
+        # Apply axis scales if specified
+        if fig_cfg.get("x_scale"):
+            layout_updates["xaxis_type"] = fig_cfg.get("x_scale")
+        if fig_cfg.get("y_scale"):
+            layout_updates["yaxis_type"] = fig_cfg.get("y_scale")
+            
+        fig_obj.update_layout(**layout_updates)
 
         figures_json.append({
             "id": fig_cfg.get("id"),
             "title": fig_title,
             "figure": json.loads(fig_obj.to_json()),
+            "metadata": fig_metadata
         })
 
     rows, cols = determine_grid_dimensions(len(figures_json), grid_cfg)
