@@ -18,15 +18,10 @@ The configuration is a single JSON object with the following top-level keys:
     *   **Purpose:** Selects the visual theme for the entire application (window, plots, controls). Changing the theme via the UI resets figure-specific style overrides (like custom grid colors) back to the new theme's defaults.
     *   **Type:** String
     *   **Required:** No
-    *   **Default:** "light" (applied by the application, corresponds to 'Default Light' theme)
+    *   **Default:** "light" (applied by the application)
     *   **Allowed Values:** Must be one of the following exact strings:
-        *   `"light"` (Default Light theme)
-        *   `"dark"` (Default Dark theme)
-        *   `"solarized_light"`
-        *   `"solarized_dark"`
-        *   `"dracula"`
-        *   `"github_light"`
-        *   `"nord_dark"`
+        *   `"light"` (Light theme)
+        *   `"dark"` (Dark theme)
 
 *   `"left_margin"`, `"right_margin"`, `"top_margin"`, `"bottom_margin"`:
     *   **Purpose:** Defines padding (in pixels) around the main content area within the window.
@@ -89,18 +84,109 @@ The configuration is a single JSON object with the following top-level keys:
     *   **Required:** No
     *   **Default:** "" (empty string)
 
+*   `"title_font_size"`:
+    *   **Purpose:** Font size for the figure title in pixels. Can be modified at runtime via the Edit Pane.
+    *   **Type:** Number (Integer or Float)
+    *   **Required:** No
+    *   **Default:** 18
+    *   **Constraints:** Must be positive (> 0).
+
+*   `"title_color"`:
+    *   **Purpose:** Color for the figure title (hex format). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color (e.g., "#FF0000", "#RGB", "#RRGGBB", "#RRGGBBAA").
+
+*   `"title_bold"`:
+    *   **Purpose:** Whether the title should be bold. Applied using HTML tags in Plotly.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
+*   `"title_italic"`:
+    *   **Purpose:** Whether the title should be italic. Applied using HTML tags in Plotly.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
 *   `"x_label"`, `"y_label"`:
     *   **Purpose:** Text displayed on the bottom (X) and left (Y) axes. Theme controls text appearance (`axis_fg` color, font size).
     *   **Type:** String
     *   **Required:** No
     *   **Default:** "" (empty string)
 
+*   `"axis_label_font_size"`:
+    *   **Purpose:** Font size for axis labels (both X and Y) in pixels. Can be modified at runtime via the Edit Pane.
+    *   **Type:** Number (Integer or Float)
+    *   **Required:** No
+    *   **Default:** 14
+    *   **Constraints:** Must be positive (> 0).
+
+*   `"axis_label_color"`:
+    *   **Purpose:** Color for axis labels (hex format). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
+
+*   `"axis_label_bold"`:
+    *   **Purpose:** Whether axis labels should be bold. Applied using HTML tags in Plotly.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
+*   `"axis_label_italic"`:
+    *   **Purpose:** Whether axis labels should be italic. Applied using HTML tags in Plotly.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
+*   `"axis_tick_font_size"`:
+    *   **Purpose:** Font size for axis tick labels (both X and Y) in pixels. Can be modified at runtime via the Edit Pane.
+    *   **Type:** Number (Integer or Float)
+    *   **Required:** No
+    *   **Default:** 12
+    *   **Constraints:** Must be positive (> 0).
+
+*   `"axis_tick_color"`:
+    *   **Purpose:** Color for axis tick labels (hex format). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
+
+*   `"axis_tick_bold"`:
+    *   **Purpose:** Whether axis tick labels should be bold. Note: Not supported in the current implementation.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
+*   `"axis_tick_italic"`:
+    *   **Purpose:** Whether axis tick labels should be italic. Note: Not supported in the current implementation.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
 *   `"x_scale"`, `"y_scale"`:
-    *   **Purpose:** Sets the scale type for the respective axis. (UI control planned for future "Axis" menu section).
+    *   **Purpose:** Sets the scale type for the respective axis. Can be modified at runtime via the Edit Pane.
     *   **Type:** String
     *   **Required:** No
     *   **Default:** "linear"
     *   **Allowed Values:** `"linear"`, `"log"`
+
+*   `"x_min"`, `"x_max"`, `"y_min"`, `"y_max"`:
+    *   **Purpose:** Sets the minimum and maximum values for the respective axis. Can be modified at runtime via the Edit Pane.
+    *   **Type:** Number or `null`
+    *   **Required:** No
+    *   **Default:** `null` (auto-calculated based on data)
+    *   **Note:** Setting both min and max will fix the axis range. Setting only one will constrain that bound while auto-calculating the other.
+
+*   `"x_reversed"`, `"y_reversed"`:
+    *   **Purpose:** Reverses the direction of the respective axis. Can be modified at runtime via the Edit Pane.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
 
 *   `"grid_x"`:
     *   **Purpose:** Sets the initial visibility state of the vertical grid lines. Controlled by a checkbox in the 'Grid' section of the hover menu.
@@ -133,6 +219,60 @@ The configuration is a single JSON object with the following top-level keys:
     *   **Required:** No
     *   **Default:** `true`
 
+*   `"legend_font_size"`:
+    *   **Purpose:** Font size for legend text in pixels. Can be modified at runtime via the Edit Pane.
+    *   **Type:** Number (Integer or Float)
+    *   **Required:** No
+    *   **Default:** 12
+    *   **Constraints:** Must be positive (> 0).
+
+*   `"legend_color"`:
+    *   **Purpose:** Color for legend text (hex format). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
+
+*   `"legend_bold"`:
+    *   **Purpose:** Whether legend text should be bold. Applied using HTML tags in Plotly.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
+*   `"legend_italic"`:
+    *   **Purpose:** Whether legend text should be italic. Applied using HTML tags in Plotly.
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
+*   `"figure_background_color"`:
+    *   **Purpose:** Background color for the entire figure (hex format). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color (e.g., "#FFFFFF", "#RGB", "#RRGGBB").
+
+*   `"figure_border_color"`:
+    *   **Purpose:** Border color for the entire figure (hex format). Note: Not directly supported by Plotly.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
+
+*   `"plot_background_color"`:
+    *   **Purpose:** Background color for the plot area (hex format). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
+
+*   `"plot_border_color"`:
+    *   **Purpose:** Color for the plot area border (hex format). If null, grid color is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
+
 *   `"items"`:
     *   **Purpose:** Contains the definitions for individual data series (plots) within this figure.
     *   **Type:** Array (of Plot Item Objects)
@@ -143,9 +283,9 @@ The configuration is a single JSON object with the following top-level keys:
 *   **Common Fields:**
     *   `"id"`: (Required String) Unique identifier for this plot item within the figure.
     *   `"type"`: (Required String) Specifies the plot type.
-        *   **Allowed Values:** `"line"`, `"scatter"`, `"histogram"`, `"bar"`
+        *   **Allowed Values:** `"line"`, `"scatter"`, `"histogram"`, `"bar"`, `"scatter_matrix"`, `"parallel_coordinates"`
     *   `"source"`: (Required String) File path (relative or absolute) to the data source (CSV, XLSX, JSON).
-    *   `"x_column"`, `"y_column"`: (Required String) Exact, case-sensitive name of the column in the source file to use for X-axis and Y-axis data respectively.
+    *   `"x_column"`, `"y_column"`: (Required String for most plot types) Exact, case-sensitive name of the column in the source file to use for X-axis and Y-axis data respectively. Note: Histogram plots use `"column"` instead; scatter_matrix and parallel_coordinates use `"data_columns"` instead.
     *   `"legend_name"`: (Optional String or `null`, Default: `null`) Text for the legend entry for this item. If `null`, excluded from legend. Theme controls legend text appearance.
 
 *   **Styling Overrides for `type: "line"`:** (All optional)
@@ -184,6 +324,7 @@ The configuration is a single JSON object with the following top-level keys:
     *   `"show_fit": (Boolean, Default: `false`) Overlay a fitted distribution/curve.
     *   `"fitting_type": (String, Default: "normal") Algorithm when `show_fit` is true.
         *   Allowed: "normal", "linear", "quadratic", "cubic_spline", "hermite_cubic_spline", "pchip", "best".
+        *   "normal" fits a normal distribution curve to the histogram data.
         *   "best" tries all supported algorithms and selects lowest error (slowest).
     *   `"fit_color": (String - Hex Color, Default: "#000000") Color of fitted curve.
 
@@ -222,6 +363,34 @@ The configuration is a single JSON object with the following top-level keys:
     *   `"color_map"`: (Optional String, Default: `"Viridis"`) Plotly colourscale name when using `color_column`.
     *   `"show_colorbar"`: (Boolean, Default: `true`) Show the colour-bar when colouring by column.
     *   `"colorbar_title"`: (String, Default: (column name)) Title for the colour-bar.
+
+
+**5. Runtime Editing Capabilities:**
+
+While the above configuration options define the initial state of plots, the application also provides an Edit Pane that allows users to modify many plot properties at runtime:
+
+*   **Title Section:**
+    *   Toggle title visibility
+    *   Edit title text
+    
+*   **X-Axis Section:**
+    *   Toggle axis label visibility
+    *   Edit axis label text
+    *   Change scale type (linear/logarithmic)
+    *   Toggle tick label visibility
+    *   Set minimum value (leave empty for auto)
+    *   Set maximum value (leave empty for auto)
+    *   Reverse axis direction
+    
+*   **Y-Axis Section:**
+    *   Same capabilities as X-Axis
+    
+*   **Legend Section:**
+    *   Toggle overall legend visibility
+    *   Edit individual legend item names
+    *   Toggle individual legend item visibility
+
+Note: Changes made in the Edit Pane are temporary and not saved back to the config.json file.
 
 **Important Notes for Generation:**
 

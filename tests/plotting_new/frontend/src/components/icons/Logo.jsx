@@ -17,4 +17,4 @@ const Logo = ({ size = 28, className = '' }) => {
   );
 };
 
-export default Logo; 
+export default Logo;

@@ -1,0 +1,216 @@
+.table-view-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.table-view-container {
+  background-color: var(--card-background-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 1200px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-view-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--background-color);
+}
+
+.table-view-header h3 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.table-view-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.truncation-notice,
+.data-source-notice {
+  color: var(--muted-text-color);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.table-view-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.export-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.export-btn:hover {
+  background-color: var(--primary-hover-color);
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-background-color);
+  color: var(--text-color);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background-color: var(--hover-background-color);
+}
+
+.table-view-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  position: relative;
+}
+
+.table-wrapper {
+  position: relative;
+  max-height: 100%;
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.data-table th {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-right: 1px solid var(--border-color);
+}
+
+.data-table th:last-child {
+  border-right: none;
+}
+
+.data-table td {
+  color: var(--text-color);
+  border-right: 1px solid var(--subtle-border-color);
+}
+
+.data-table td:last-child {
+  border-right: none;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--hover-background-color);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background-color: var(--subtle-background-color);
+}
+
+.row-number-header,
+.row-number {
+  background-color: var(--background-color);
+  font-weight: 500;
+  color: var(--muted-text-color);
+  text-align: center;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  min-width: 50px;
+}
+
+.data-table th.row-number-header {
+  z-index: 15;
+}
+
+.no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted-text-color);
+  font-size: 16px;
+}
+
+/* Table button styling to match other buttons */
+.table-btn {
+  opacity: 0;
+  background-color: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plot-container:hover .table-btn {
+  opacity: 1;
+}
+
+.table-btn:hover {
+  background-color: var(--hover-background-color);
+  border-color: var(--hover-border-color);
+}
+
+/* Add custom properties for the table view */
+:root {
+  --subtle-background-color: rgba(0, 0, 0, 0.02);
+  --subtle-border-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+  --subtle-background-color: rgba(255, 255, 255, 0.02);
+  --subtle-border-color: rgba(255, 255, 255, 0.05);
+}

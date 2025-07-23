@@ -1,893 +1,124 @@
-2025-07-19 00:26:05,483 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:26:05,483 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:26:05,483 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:26:05,495 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:26:05,495 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:26:05,495 [WARNING] backend.core.config_loader: Configuration validation completed with 4 errors/warnings.
-2025-07-19 00:26:05,495 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Field 'y_scale' value 'logarithmic' is not allowed. Must be one of: ['linear', 'log']
-2025-07-19 00:26:05,495 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:26:05,495 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:26:05,495 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:26:05,495 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:26:05,658 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data.csv' (ext=.csv)
-2025-07-19 00:26:05,699 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:26:05,733 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:26:05,765 [ERROR] backend.api.server: Error building dashboard from sample_config.json: 
-    Invalid value of type 'builtins.str' received for the 'type' property of layout.yaxis
-        Received value: 'logarithmic'
-
-    The 'type' property is an enumeration that may be specified as:
-      - One of the following enumeration values:
-            ['-', 'linear', 'log', 'date', 'category',
-            'multicategory']
-Traceback (most recent call last):
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\backend\api\server.py", line 105, in get_config
-    dashboard_json = build_dashboard(config_path)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\backend\core\dashboard_builder.py", line 364, in build_dashboard
-    fig_obj.update_layout(**layout_updates)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\graph_objs\_figure.py", line 218, in update_layout
-    return super().update_layout(dict1, overwrite, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 1415, in update_layout
-    self.layout.update(dict1, overwrite=overwrite, **kwargs)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5195, in update
-    BaseFigure._perform_update(self, kwargs, overwrite=overwrite)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 3992, in _perform_update
-    plotly_obj[key] = val
-    ~~~~~~~~~~^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5956, in __setitem__
-    super(BaseLayoutHierarchyType, self).__setitem__(prop, value)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 4972, in __setitem__
-    res[prop[-1]] = value
-    ~~~^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 4932, in __setitem__
-    self._set_prop(prop, value)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5276, in _set_prop
-    raise err
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5271, in _set_prop
-    val = validator.validate_coerce(val)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\_plotly_utils\basevalidators.py", line 611, in validate_coerce
-    self.raise_invalid_val(v)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\_plotly_utils\basevalidators.py", line 298, in raise_invalid_val
-    raise ValueError(
-ValueError: 
-    Invalid value of type 'builtins.str' received for the 'type' property of layout.yaxis
-        Received value: 'logarithmic'
-
-    The 'type' property is an enumeration that may be specified as:
-      - One of the following enumeration values:
-            ['-', 'linear', 'log', 'date', 'category',
-            'multicategory']
-2025-07-19 00:26:05,783 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:26:05,783 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:26:05,783 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:26:05,783 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:26:05,783 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:26:05,783 [WARNING] backend.core.config_loader: Configuration validation completed with 4 errors/warnings.
-2025-07-19 00:26:05,783 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Field 'y_scale' value 'logarithmic' is not allowed. Must be one of: ['linear', 'log']
-2025-07-19 00:26:05,783 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:26:05,783 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:26:05,783 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:26:05,783 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:26:05,797 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:26:05,798 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:26:05,805 [ERROR] backend.api.server: Error building dashboard from sample_config.json: 
-    Invalid value of type 'builtins.str' received for the 'type' property of layout.yaxis
-        Received value: 'logarithmic'
-
-    The 'type' property is an enumeration that may be specified as:
-      - One of the following enumeration values:
-            ['-', 'linear', 'log', 'date', 'category',
-            'multicategory']
-Traceback (most recent call last):
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\backend\api\server.py", line 105, in get_config
-    dashboard_json = build_dashboard(config_path)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\backend\core\dashboard_builder.py", line 364, in build_dashboard
-    fig_obj.update_layout(**layout_updates)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\graph_objs\_figure.py", line 218, in update_layout
-    return super().update_layout(dict1, overwrite, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 1415, in update_layout
-    self.layout.update(dict1, overwrite=overwrite, **kwargs)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5195, in update
-    BaseFigure._perform_update(self, kwargs, overwrite=overwrite)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 3992, in _perform_update
-    plotly_obj[key] = val
-    ~~~~~~~~~~^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5956, in __setitem__
-    super(BaseLayoutHierarchyType, self).__setitem__(prop, value)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 4972, in __setitem__
-    res[prop[-1]] = value
-    ~~~^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 4932, in __setitem__
-    self._set_prop(prop, value)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5276, in _set_prop
-    raise err
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\plotly\basedatatypes.py", line 5271, in _set_prop
-    val = validator.validate_coerce(val)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\_plotly_utils\basevalidators.py", line 611, in validate_coerce
-    self.raise_invalid_val(v)
-  File "C:\Users\gazme\OneDrive\Documents\aivalanche\code\myPyEnv\Lib\site-packages\_plotly_utils\basevalidators.py", line 298, in raise_invalid_val
-    raise ValueError(
-ValueError: 
-    Invalid value of type 'builtins.str' received for the 'type' property of layout.yaxis
-        Received value: 'logarithmic'
-
-    The 'type' property is an enumeration that may be specified as:
-      - One of the following enumeration values:
-            ['-', 'linear', 'log', 'date', 'category',
-            'multicategory']
-2025-07-19 00:27:40,015 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:27:40,019 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:27:40,019 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:27:40,024 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:27:40,024 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:27:40,026 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 00:27:40,026 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:27:40,026 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:27:40,026 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:27:40,026 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:27:40,038 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:27:40,048 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:27:40,076 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 00:27:40,079 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 00:27:40,079 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 00:27:40,079 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 00:27:40,079 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 00:27:40,079 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 00:27:40,079 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 00:27:40,079 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 00:27:40,081 [DEBUG] backend.core.data_handler: Loading dataset 'mosfet_characteristic_dense.csv' (ext=.csv)
-2025-07-19 00:27:40,093 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 00:27:40,109 [DEBUG] backend.core.data_handler: Loading dataset 'scatter_matrix_data.csv' (ext=.csv)
-2025-07-19 00:27:41,331 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 00:27:42,255 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:27:42,295 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 00:27:42,396 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 00:27:42,396 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:27:42,414 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:27:42,414 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:27:42,414 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:27:42,414 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 00:27:42,414 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:27:42,414 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:27:42,414 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:27:42,414 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:27:42,423 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:27:42,426 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:27:42,459 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 00:27:42,459 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 00:27:42,459 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 00:27:42,459 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 00:27:42,459 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 00:27:42,459 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 00:27:42,459 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 00:27:42,473 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 00:27:42,511 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 00:27:45,202 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 00:27:47,058 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 00:27:47,076 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 00:27:47,122 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:27:47,122 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:27:47,122 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:27:47,122 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:27:47,122 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:27:47,122 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 00:27:47,122 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:27:47,122 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:27:47,137 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:27:47,137 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:27:47,137 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:27:47,137 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 00:27:47,163 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 00:27:47,185 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 00:27:49,434 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 00:27:51,258 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 00:27:51,275 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 00:44:06,540 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:44:06,541 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:44:06,541 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:44:06,543 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:44:06,543 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:44:06,543 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 00:44:06,543 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:44:06,544 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:44:06,544 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:44:06,544 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:44:06,550 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:44:06,554 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 00:44:06,565 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 00:44:06,577 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 00:44:09,324 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 00:44:11,435 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 00:44:11,447 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 00:44:11,499 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:44:11,504 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:44:11,504 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:44:11,506 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:44:11,506 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:44:11,512 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 00:44:11,512 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:44:11,512 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:44:11,512 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:44:11,512 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:44:11,531 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:44:11,547 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 00:44:11,577 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 00:44:11,601 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 00:44:14,442 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 00:44:16,452 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 00:44:16,473 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 00:52:01,288 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:52:01,290 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:52:01,290 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:52:01,290 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:52:01,290 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:52:01,290 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 00:52:01,290 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:52:01,290 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:52:01,290 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:52:01,290 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:52:01,299 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:52:01,308 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 00:52:01,321 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 00:52:01,340 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 00:52:04,285 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 00:52:06,537 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 00:52:06,557 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 00:52:06,609 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 00:52:06,611 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 00:52:06,611 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 00:52:06,614 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:52:06,615 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:52:06,615 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 00:52:06,615 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 00:52:06,615 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 00:52:06,617 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 00:52:06,617 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 00:52:06,625 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 00:52:06,634 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 00:52:06,650 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 00:52:06,651 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 00:52:06,651 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 00:52:06,651 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 00:52:06,651 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 00:52:06,651 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 00:52:06,651 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 00:52:06,651 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 00:52:06,667 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 00:52:09,642 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 00:52:11,377 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 00:52:11,390 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:00:14,768 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:00:14,769 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:00:14,769 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:00:14,769 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:00:14,769 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:00:14,769 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:00:14,769 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:00:14,769 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:00:14,769 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:00:14,769 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:00:14,780 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:00:14,789 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:00:14,813 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:00:14,840 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:00:16,293 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:00:17,005 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:00:17,012 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:01:04,180 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:01:04,181 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:01:04,181 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:01:04,182 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:01:04,182 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:01:04,182 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:01:04,182 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:01:04,182 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:01:04,184 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:01:04,184 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:01:04,187 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:01:04,192 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:01:04,200 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:01:04,207 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:01:05,067 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:01:06,726 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:01:06,758 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:01:06,844 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:01:06,844 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:01:06,844 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:01:06,844 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:01:06,844 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:01:06,844 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:01:06,844 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:01:06,844 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:01:06,844 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:01:06,844 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:01:06,859 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:01:06,877 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:01:06,932 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:01:06,996 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:01:09,907 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:01:11,925 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:01:11,959 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:02:15,016 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:02:15,017 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:02:15,017 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:02:15,018 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:02:15,018 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:02:15,018 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:02:15,018 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:02:15,018 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:02:15,018 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:02:15,018 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:02:15,021 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:02:15,022 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:02:15,027 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:02:15,027 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:02:15,027 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:02:15,027 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:02:15,027 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:02:15,028 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:02:15,028 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:02:15,028 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:02:15,031 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:02:15,846 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:02:16,392 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:02:16,397 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:02:17,780 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:02:17,780 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:02:17,780 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:02:17,780 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:02:17,780 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:02:17,780 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:02:17,780 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:02:17,780 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:02:17,780 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:02:17,780 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:02:17,780 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:02:17,780 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:02:17,780 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:02:17,796 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:02:18,477 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:02:19,006 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:02:19,013 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:07:44,206 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:07:44,206 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:07:44,206 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:07:44,206 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:07:44,206 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:07:44,206 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:07:44,206 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:07:44,206 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:07:44,206 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:07:44,206 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:07:44,206 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:07:44,206 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:07:44,206 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:07:44,206 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:07:44,567 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:07:44,820 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:07:44,822 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:07:44,832 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:07:44,832 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:07:44,832 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:07:44,832 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:07:44,832 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:07:44,832 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:07:44,832 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:07:44,832 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:07:44,832 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:07:44,832 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:07:44,837 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:07:44,838 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:07:44,842 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:07:44,844 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:07:45,225 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:07:45,538 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:07:45,542 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:17:52,741 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:17:52,741 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:17:52,741 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:17:52,741 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:17:52,741 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:17:52,741 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:17:52,741 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:17:52,741 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:17:52,741 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:17:52,741 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:17:52,741 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:17:52,755 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:17:52,755 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:17:52,772 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:17:53,972 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:17:54,794 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:17:54,794 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:17:54,817 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:17:54,817 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:17:54,817 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:17:54,826 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:17:54,826 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:17:54,826 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:17:54,826 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:17:54,826 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:17:54,826 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:17:54,826 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:17:54,826 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:17:54,826 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:17:54,826 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:17:54,847 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:17:55,592 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:17:56,179 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:17:56,194 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:18:13,985 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:18:13,985 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:18:13,985 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:18:13,985 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:18:13,985 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:18:13,985 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:18:13,985 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:18:13,985 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:18:13,985 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:18:13,985 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:18:13,985 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:18:13,985 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:18:13,996 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:18:13,999 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:18:14,334 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:18:14,583 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:18:14,583 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:18:14,599 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:18:14,599 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:18:14,599 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:18:14,599 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:18:14,599 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:18:14,599 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:18:14,599 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:18:14,599 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:18:14,601 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:18:14,601 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:18:14,601 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:18:14,601 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:18:14,601 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:18:14,601 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:18:14,976 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:18:15,228 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:18:15,232 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:19:10,103 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:19:10,103 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:19:10,103 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:19:10,103 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:19:10,103 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:19:10,103 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:19:10,103 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:19:10,103 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:19:10,103 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:19:10,103 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:19:10,119 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:19:10,119 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:19:10,119 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:19:10,135 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:19:10,901 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:19:11,467 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:19:11,467 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:19:11,500 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:19:11,500 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:19:11,500 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:19:11,502 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:19:11,502 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:19:11,502 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:19:11,502 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:19:11,502 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:19:11,502 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:19:11,502 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:19:11,504 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:19:11,506 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:19:11,510 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:19:11,516 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:19:12,230 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:19:12,800 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:19:12,800 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:21:44,536 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:21:44,537 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:21:44,538 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:21:44,540 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:21:44,540 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:21:44,540 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:21:44,540 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:21:44,540 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:21:44,541 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:21:44,541 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:21:44,547 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:21:44,547 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:21:44,563 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:21:44,580 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:21:45,480 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:21:46,211 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:21:46,230 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:21:46,329 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:21:46,329 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:21:46,329 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:21:46,329 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:21:46,329 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:21:46,329 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:21:46,329 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:21:46,329 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:21:46,329 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:21:46,329 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:21:46,345 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:21:46,356 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:21:46,371 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:21:46,371 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:21:46,371 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:21:46,372 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:21:46,372 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:21:46,372 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:21:46,372 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:21:46,372 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:21:46,407 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:21:47,167 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:21:47,767 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:21:47,776 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:24:04,309 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:24:04,309 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:24:04,309 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:24:04,309 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:24:04,309 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:24:04,309 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:24:04,309 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:24:04,309 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:24:04,309 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:24:04,309 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:24:04,309 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:24:04,309 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:24:04,324 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:24:04,324 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:24:04,674 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:24:04,924 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:24:04,924 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:24:04,943 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:24:04,943 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:24:04,943 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:24:04,943 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:24:04,943 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:24:04,943 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:24:04,943 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:24:04,943 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:24:04,943 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:24:04,943 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:24:04,943 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:24:04,943 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:24:04,943 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:24:04,943 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:24:05,317 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:24:05,574 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:24:05,574 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:27:24,502 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:27:24,502 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:27:24,502 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:27:24,502 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:27:24,502 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:27:24,502 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:27:24,502 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:27:24,502 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:27:24,502 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:27:24,502 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:27:24,502 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:27:24,502 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:27:24,502 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:27:24,517 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:27:25,119 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:27:25,720 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:27:25,720 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:27:25,753 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:27:25,753 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:27:25,753 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:27:25,753 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:27:25,753 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:27:25,753 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:27:25,753 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:27:25,753 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:27:25,753 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:27:25,753 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:27:25,753 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:27:25,753 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:27:25,753 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:27:25,767 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:27:26,720 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:27:27,369 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:27:27,370 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:29:39,768 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:29:39,768 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:29:39,768 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:29:39,783 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:29:39,783 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:29:39,785 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:29:39,785 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:29:39,785 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:29:39,785 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:29:39,786 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:29:39,795 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:29:39,802 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:29:39,802 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:29:39,821 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:29:40,966 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:29:41,654 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:29:41,664 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:29:41,681 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:29:41,681 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:29:41,681 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:29:41,681 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:29:41,681 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:29:41,681 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:29:41,681 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:29:41,681 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:29:41,681 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:29:41,681 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:29:41,681 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:29:41,681 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:29:41,699 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:29:41,699 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:29:41,699 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:29:41,699 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:29:41,700 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:29:41,700 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:29:41,700 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:29:41,700 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:29:41,714 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:29:42,803 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:29:43,466 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:29:43,483 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:34:28,656 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:34:28,656 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:34:28,656 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:34:28,656 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:34:28,656 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:34:28,656 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:34:28,656 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:34:28,656 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:34:28,656 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:34:28,656 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:34:28,664 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:34:28,664 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:34:28,671 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:34:28,672 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:34:29,015 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:34:29,593 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:34:29,605 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:34:29,639 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:34:29,639 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:34:29,639 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:34:29,639 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:34:29,639 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:34:29,639 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:34:29,639 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:34:29,639 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:34:29,639 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:34:29,639 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:34:29,639 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:34:29,639 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:34:29,647 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:34:29,647 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:34:29,647 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:34:29,647 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:34:29,649 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:34:29,649 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:34:29,649 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:34:29,649 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:34:29,655 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:34:30,535 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:34:31,225 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:34:31,230 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:37:52,827 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:37:52,827 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:37:52,827 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:37:52,829 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:37:52,829 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:37:52,829 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:37:52,829 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:37:52,829 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:37:52,830 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:37:52,830 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:37:52,832 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:37:52,832 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:37:52,849 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:37:52,849 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:37:53,585 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:37:54,099 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:37:54,099 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
-2025-07-19 01:37:54,132 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-07-19 01:37:54,132 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-07-19 01:37:54,132 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-07-19 01:37:54,132 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:37:54,132 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:37:54,132 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
-2025-07-19 01:37:54,132 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-07-19 01:37:54,132 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-07-19 01:37:54,132 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-07-19 01:37:54,132 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-07-19 01:37:54,132 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-07-19 01:37:54,132 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure5 due to visibility=false
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-07-19 01:37:54,141 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-07-19 01:37:54,147 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-07-19 01:37:54,933 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-07-19 01:37:55,718 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-07-19 01:37:55,723 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x2
+2025-07-23 23:19:57,173 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
+2025-07-23 23:19:57,173 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-07-23 23:19:57,173 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-07-23 23:19:57,175 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-23 23:19:57,175 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-23 23:19:57,175 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
+2025-07-23 23:19:57,175 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-23 23:19:57,175 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-23 23:19:57,175 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
+2025-07-23 23:19:57,175 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
+2025-07-23 23:19:57,242 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data.csv' (ext=.csv)
+2025-07-23 23:19:57,247 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
+2025-07-23 23:19:57,264 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
+2025-07-23 23:19:57,264 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data_1.csv' (ext=.csv)
+2025-07-23 23:19:57,264 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
+2025-07-23 23:19:57,278 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
+2025-07-23 23:19:57,278 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
+2025-07-23 23:19:57,278 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.4)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.4)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:57,278 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
+2025-07-23 23:19:57,278 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.4)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.4)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (Â°C)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:57,303 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
+2025-07-23 23:19:57,305 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
+2025-07-23 23:19:57,306 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
+2025-07-23 23:19:57,306 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
+2025-07-23 23:19:57,306 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
+2025-07-23 23:19:57,309 [DEBUG] backend.core.data_handler: Loading dataset 'histogram_data.csv' (ext=.csv)
+2025-07-23 23:19:57,309 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
+2025-07-23 23:19:57,862 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
+2025-07-23 23:19:57,862 [DEBUG] backend.core.data_handler: Loading dataset 'female_histogram_data.csv' (ext=.csv)
+2025-07-23 23:19:57,862 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
+2025-07-23 23:19:58,205 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
+2025-07-23 23:19:58,205 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
+2025-07-23 23:19:58,205 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.2)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,205 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
+2025-07-23 23:19:58,205 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.2)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,212 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
+2025-07-23 23:19:58,215 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
+2025-07-23 23:19:58,217 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
+2025-07-23 23:19:58,217 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
+2025-07-23 23:19:58,217 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
+2025-07-23 23:19:58,217 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
+2025-07-23 23:19:58,217 [DEBUG] backend.core.data_handler: Loading dataset 'mosfet_characteristic_dense.csv' (ext=.csv)
+2025-07-23 23:19:58,219 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
+2025-07-23 23:19:58,221 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
+2025-07-23 23:19:58,221 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
+2025-07-23 23:19:58,221 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,221 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
+2025-07-23 23:19:58,221 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,231 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
+2025-07-23 23:19:58,233 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
+2025-07-23 23:19:58,235 [DEBUG] backend.core.data_handler: Loading dataset 'scatter_matrix_data.csv' (ext=.csv)
+2025-07-23 23:19:58,236 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
+2025-07-23 23:19:58,671 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
+2025-07-23 23:19:58,673 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
+2025-07-23 23:19:58,673 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,673 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
+2025-07-23 23:19:58,673 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,681 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
+2025-07-23 23:19:58,971 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
+2025-07-23 23:19:58,971 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
+2025-07-23 23:19:58,971 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,971 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
+2025-07-23 23:19:58,971 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:58,979 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
+2025-07-23 23:19:58,979 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3
+2025-07-23 23:19:58,999 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
+2025-07-23 23:19:59,001 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-07-23 23:19:59,001 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-07-23 23:19:59,001 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-23 23:19:59,001 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-23 23:19:59,001 [WARNING] backend.core.config_loader: Configuration validation completed with 3 errors/warnings.
+2025-07-23 23:19:59,001 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-07-23 23:19:59,001 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-07-23 23:19:59,001 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
+2025-07-23 23:19:59,001 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
+2025-07-23 23:19:59,001 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
+2025-07-23 23:19:59,004 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
+2025-07-23 23:19:59,004 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
+2025-07-23 23:19:59,005 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
+2025-07-23 23:19:59,005 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
+2025-07-23 23:19:59,006 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.4)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.4)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:59,006 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
+2025-07-23 23:19:59,006 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.4)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.4)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (Â°C)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:59,018 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
+2025-07-23 23:19:59,020 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
+2025-07-23 23:19:59,022 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
+2025-07-23 23:19:59,022 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
+2025-07-23 23:19:59,022 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
+2025-07-23 23:19:59,023 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
+2025-07-23 23:19:59,398 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
+2025-07-23 23:19:59,398 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
+2025-07-23 23:19:59,763 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
+2025-07-23 23:19:59,764 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
+2025-07-23 23:19:59,764 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.2)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:59,764 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
+2025-07-23 23:19:59,764 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.2)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:59,773 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
+2025-07-23 23:19:59,776 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
+2025-07-23 23:19:59,776 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
+2025-07-23 23:19:59,776 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
+2025-07-23 23:19:59,776 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
+2025-07-23 23:19:59,776 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
+2025-07-23 23:19:59,777 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
+2025-07-23 23:19:59,780 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
+2025-07-23 23:19:59,780 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
+2025-07-23 23:19:59,780 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:59,780 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
+2025-07-23 23:19:59,780 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
+2025-07-23 23:19:59,790 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
+2025-07-23 23:19:59,792 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
+2025-07-23 23:19:59,794 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
+2025-07-23 23:20:00,153 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
+2025-07-23 23:20:00,153 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
+2025-07-23 23:20:00,153 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:20:00,153 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
+2025-07-23 23:20:00,153 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:20:00,153 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
+2025-07-23 23:20:00,407 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
+2025-07-23 23:20:00,407 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
+2025-07-23 23:20:00,407 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:20:00,407 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
+2025-07-23 23:20:00,407 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-07-23 23:20:00,423 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
+2025-07-23 23:20:00,423 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3

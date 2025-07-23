@@ -1,23 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-// SendIcon removed - using Enter key to send messages
-
-const BotIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
-    <circle cx="12" cy="5" r="2"></circle>
-    <path d="m12 7-3 4h6l-3-4z"></path>
-    <line x1="8" y1="16" x2="8" y2="16"></line>
-    <line x1="16" y1="16" x2="16" y2="16"></line>
-  </svg>
-);
-
-const UserIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-    <circle cx="12" cy="7" r="4"></circle>
-  </svg>
-);
+import { ChatAssistantIcon, UserIcon } from './icons';
 
 const ChatInterface = ({ expanded }) => {
   const [messages, setMessages] = useState([
@@ -110,7 +92,7 @@ const ChatInterface = ({ expanded }) => {
   if (!expanded) {
     return (
       <div className="chat-collapsed">
-        <BotIcon size={16} />
+        <ChatAssistantIcon size={16} />
       </div>
     );
   }
@@ -118,7 +100,7 @@ const ChatInterface = ({ expanded }) => {
   return (
     <div className="chat-interface">
       <div className="chat-header">
-        <BotIcon size={18} />
+        <ChatAssistantIcon size={30} />
         <span>AI Assistant</span>
       </div>
       
@@ -126,7 +108,7 @@ const ChatInterface = ({ expanded }) => {
         {messages.map(message => (
           <div key={message.id} className={`message ${message.sender}`}>
             <div className="message-avatar">
-              {message.sender === 'bot' ? <BotIcon size={16} /> : <UserIcon size={16} />}
+              {message.sender === 'bot' ? <ChatAssistantIcon size={20} /> : <UserIcon size={20} />}
             </div>
             <div className="message-content">
               <div className="message-text">{message.text}</div>
@@ -138,7 +120,7 @@ const ChatInterface = ({ expanded }) => {
         {isTyping && (
           <div className="message bot typing">
             <div className="message-avatar">
-              <BotIcon size={16} />
+              <ChatAssistantIcon size={16} />
             </div>
             <div className="message-content">
               <div className="typing-indicator">

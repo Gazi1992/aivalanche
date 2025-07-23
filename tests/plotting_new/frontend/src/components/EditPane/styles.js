@@ -1,7 +1,7 @@
 export const overlayStyle = {
   position: 'fixed',
   top: 0,
-  width: '400px',
+  width: '500px',
   height: '100vh',
   backgroundColor: 'var(--sidebar-bg)',
   borderRight: '1px solid var(--border-color)',
@@ -49,11 +49,11 @@ export const sectionContentStyle = {
   padding: '0 16px 16px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '16px'
+  gap: '12px'
 };
 
 export const subsectionStyle = {
-  padding: '12px',
+  padding: '10px',
   backgroundColor: 'var(--background-color)',
   borderRadius: '6px',
   border: '1px solid var(--border-color)'
@@ -63,7 +63,7 @@ export const subsectionHeaderStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  marginBottom: '12px',
+  marginBottom: '8px',
   cursor: 'pointer',
   userSelect: 'none'
 };
@@ -77,8 +77,10 @@ export const subsectionTitleStyle = {
 export const chevronStyle = (expanded) => ({
   transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
   transition: 'transform 0.2s',
-  fontSize: '0.8rem',
-  color: 'var(--text-color)'
+  fontSize: '2rem',
+  color: 'var(--text-color)',
+  display: 'flex',
+  alignItems: 'center'
 });
 
 export const inputGroupStyle = {
@@ -89,7 +91,7 @@ export const inputGroupStyle = {
 
 export const labelStyle = {
   fontSize: '0.85rem',
-  fontWeight: '500',
+  fontWeight: 'normal',
   color: 'var(--text-color)'
 };
 
@@ -101,7 +103,8 @@ export const inputStyle = {
   color: 'var(--text-color)',
   fontSize: '0.85rem',
   outline: 'none',
-  transition: 'border-color 0.2s'
+  transition: 'border-color 0.2s',
+  colorScheme: 'inherit'
 };
 
 export const checkboxGroupStyle = {
@@ -155,3 +158,46 @@ export const closeButtonStyle = {
   padding: '4px',
   lineHeight: 1
 };
+
+export const fieldContainerStyle = {
+  marginBottom: '12px'
+};
+
+export const checkboxStyle = {
+  marginRight: '8px',
+  cursor: 'pointer'
+};
+
+export const sliderStyle = {
+  flex: 1,
+  cursor: 'pointer',
+  height: '4px'
+};
+
+export const colorInputStyle = {
+  width: '30px',
+  height: '30px',
+  border: '1px solid var(--border-color)',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  padding: '0px',
+  backgroundColor: 'var(--background-color)'
+};
+
+export const toggleButtonStyle = (isActive, disabled = false) => ({
+  width: '30px',
+  height: '30px',
+  border: '1px solid var(--border-color)',
+  borderRadius: '4px',
+  backgroundColor: isActive ? 'var(--primary-color)' : 'var(--background-color)',
+  color: isActive ? 'white' : 'var(--text-color)',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  opacity: disabled ? 0.5 : 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.2s ease',
+  userSelect: 'none'
+});

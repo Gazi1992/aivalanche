@@ -18,4 +18,4 @@ const ExpandIcon = ({ size = 18, strokeWidth = 2 }) => (
   </svg>
 );
 
-export default ExpandIcon; 
+export default ExpandIcon;

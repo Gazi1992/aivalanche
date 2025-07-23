@@ -261,6 +261,12 @@ def bar_plot_endpoint(req: BarPlotRequest) -> dict:
 # --------------------------- Dashboard from config -------------------------
 
 
+
+
+
+
+
+
 @app.get("/dashboard/{config_name}", summary="Render full dashboard from config")
 def dashboard(config_name: str):
     """Return figures generated from *config_name* (looked up in data/configs)."""

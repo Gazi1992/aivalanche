@@ -1,142 +1,154 @@
 import React from 'react';
+import { AxisIcon } from '../icons';
 import { 
   subsectionStyle, 
   subsectionHeaderStyle, 
   subsectionTitleStyle, 
   chevronStyle,
-  legendItemStyle,
-  legendItemInputStyle,
   inputStyle,
+  labelStyle,
   selectStyle,
-  checkboxGroupStyle,
-  labelStyle
+  checkboxStyle
 } from './styles';
 
 const AxisSubsection = ({ 
-  axis, // 'X' or 'Y'
-  expanded,
-  setExpanded,
-  labelVisible,
-  setLabelVisible,
-  label,
-  setLabel,
-  scale,
-  setScale,
-  ticksVisible,
-  setTicksVisible,
-  minValue,
-  setMinValue,
-  maxValue,
-  setMaxValue,
-  inverted,
-  setInverted,
+  axisExpanded, 
+  setAxisExpanded,
+  xAxisScale,
+  setXAxisScale,
+  xAxisMin,
+  setXAxisMin,
+  xAxisMax,
+  setXAxisMax,
+  xAxisInverted,
+  setXAxisInverted,
+  yAxisScale,
+  setYAxisScale,
+  yAxisMin,
+  setYAxisMin,
+  yAxisMax,
+  setYAxisMax,
+  yAxisInverted,
+  setYAxisInverted,
   onBlur
 }) => {
+  const containerStyle = {
+    display: 'grid',
+    gridTemplateColumns: '60px minmax(0, 1fr) minmax(0, 1fr)',
+    gap: '8px',
+    columnGap: '16px'
+  };
+  
+  const columnHeaderStyle = {
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    color: 'var(--text-color)',
+    textAlign: 'left',
+    paddingBottom: '8px'
+  };
+  
+  const rowLabelStyle = {
+    fontSize: '0.85rem',
+    color: 'var(--text-color)',
+    textAlign: 'left',
+    display: 'flex',
+    alignItems: 'center'
+  };
+
   return (
     <div style={subsectionStyle}>
       <div 
         style={subsectionHeaderStyle}
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setAxisExpanded(!axisExpanded)}
       >
-        <span style={subsectionTitleStyle}>{axis}-Axis</span>
-        <span style={chevronStyle(expanded)}>›</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <AxisIcon size={20} />
+          <span style={subsectionTitleStyle}>Axes</span>
+        </span>
+        <span style={chevronStyle(axisExpanded)}>›</span>
       </div>
       
-      {expanded && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Axis Label */}
-          <div style={legendItemStyle}>
+      {axisExpanded && (
+        <div style={containerStyle}>
+          {/* Headers */}
+          <div></div>
+          <div style={columnHeaderStyle}>X-Axis</div>
+          <div style={columnHeaderStyle}>Y-Axis</div>
+          
+          {/* Scale Row */}
+          <div style={rowLabelStyle}>Scale</div>
+          <select
+            value={xAxisScale}
+            onChange={(e) => setXAxisScale(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="linear">Linear</option>
+            <option value="log">Log</option>
+          </select>
+          <select
+            value={yAxisScale}
+            onChange={(e) => setYAxisScale(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="linear">Linear</option>
+            <option value="log">Log</option>
+          </select>
+          
+          {/* Min Row */}
+          <div style={rowLabelStyle}>Min</div>
+          <input
+            type="text"
+            value={xAxisMin}
+            onChange={(e) => setXAxisMin(e.target.value)}
+            onBlur={onBlur}
+            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+            placeholder="Auto"
+          />
+          <input
+            type="text"
+            value={yAxisMin}
+            onChange={(e) => setYAxisMin(e.target.value)}
+            onBlur={onBlur}
+            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+            placeholder="Auto"
+          />
+          
+          {/* Max Row */}
+          <div style={rowLabelStyle}>Max</div>
+          <input
+            type="text"
+            value={xAxisMax}
+            onChange={(e) => setXAxisMax(e.target.value)}
+            onBlur={onBlur}
+            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+            placeholder="Auto"
+          />
+          <input
+            type="text"
+            value={yAxisMax}
+            onChange={(e) => setYAxisMax(e.target.value)}
+            onBlur={onBlur}
+            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+            placeholder="Auto"
+          />
+          
+          {/* Reverse Row */}
+          <div style={rowLabelStyle}>Reverse</div>
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <input
               type="checkbox"
-              id={`${axis.toLowerCase()}axis-label-visible`}
-              checked={labelVisible}
-              onChange={(e) => setLabelVisible(e.target.checked)}
-            />
-            <input
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder={`${axis}-Axis Label`}
-              style={legendItemInputStyle}
-              disabled={!labelVisible}
-              onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'var(--border-color)';
-                onBlur();
-              }}
+              checked={xAxisInverted}
+              onChange={(e) => setXAxisInverted(e.target.checked)}
+              style={checkboxStyle}
             />
           </div>
-          
-          {/* Show Tick Labels */}
-          <div style={checkboxGroupStyle}>
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <input
               type="checkbox"
-              id={`${axis.toLowerCase()}axis-ticks-visible`}
-              checked={ticksVisible}
-              onChange={(e) => setTicksVisible(e.target.checked)}
+              checked={yAxisInverted}
+              onChange={(e) => setYAxisInverted(e.target.checked)}
+              style={checkboxStyle}
             />
-            <label htmlFor={`${axis.toLowerCase()}axis-ticks-visible`} style={labelStyle}>Show Tick Labels</label>
-          </div>
-          
-          {/* Scale, Min, Max */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <label htmlFor={`${axis.toLowerCase()}axis-scale`} style={{ ...labelStyle, display: 'block', marginBottom: '4px' }}>Scale</label>
-              <select
-                id={`${axis.toLowerCase()}axis-scale`}
-                value={scale}
-                onChange={(e) => setScale(e.target.value)}
-                style={{ ...selectStyle, width: '100%' }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-              >
-                <option value="linear">Linear</option>
-                <option value="log">Logarithmic</option>
-              </select>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <label htmlFor={`${axis.toLowerCase()}axis-min`} style={{ ...labelStyle, display: 'block', marginBottom: '4px' }}>Min</label>
-              <input
-                type="text"
-                id={`${axis.toLowerCase()}axis-min`}
-                value={minValue}
-                onChange={(e) => setMinValue(e.target.value)}
-                placeholder="Auto"
-                style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'var(--border-color)';
-                  onBlur();
-                }}
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <label htmlFor={`${axis.toLowerCase()}axis-max`} style={{ ...labelStyle, display: 'block', marginBottom: '4px' }}>Max</label>
-              <input
-                type="text"
-                id={`${axis.toLowerCase()}axis-max`}
-                value={maxValue}
-                onChange={(e) => setMaxValue(e.target.value)}
-                placeholder="Auto"
-                style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'var(--border-color)';
-                  onBlur();
-                }}
-              />
-            </div>
-          </div>
-          
-          {/* Invert Axis */}
-          <div style={checkboxGroupStyle}>
-            <input
-              type="checkbox"
-              id={`${axis.toLowerCase()}axis-inverted`}
-              checked={inverted}
-              onChange={(e) => setInverted(e.target.checked)}
-            />
-            <label htmlFor={`${axis.toLowerCase()}axis-inverted`} style={labelStyle}>Reverse Axis</label>
           </div>
         </div>
       )}

@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import ThemeToggle from './components/ThemeToggle.jsx';
-import ChatInterface from './components/ChatInterface.jsx';
-import Logo from './components/Logo.jsx';
+import Sidebar from './components/Sidebar/Sidebar.jsx';
+import { ExpandIcon, EditIcon, ChatAssistantIcon, TableIcon } from './components/icons';
 import axios from 'axios';
 import Plotly from 'plotly.js-dist-min';
-import ExpandIcon from './components/ExpandIcon.jsx';
-import EditIcon from './components/EditIcon.jsx';
 import EditPane from './components/EditPane/EditPane.jsx';
+import TableView from './components/TableView/TableView.jsx';
 import { attachPlotInteractions } from './utils/plotInteractions.js';
 
 
@@ -26,7 +24,8 @@ function App() {
   const [editingFig, setEditingFig] = useState(null);
   const [editPaneOpen, setEditPaneOpen] = useState(false);
   const [localFigures, setLocalFigures] = useState(null);
-  const sidebarRef = useRef(null);
+  const [tableViewFig, setTableViewFig] = useState(null);
+  const [tableViewOpen, setTableViewOpen] = useState(false);
 
   // Ensure the CSS variables reflect the current theme *before* we read them
   if (typeof document !== 'undefined' && document.body.dataset.theme !== theme) {
@@ -52,9 +51,8 @@ function App() {
         const dx = clientX - startX;
         let newWidth = startWidth + dx;
         newWidth = Math.max(0, newWidth); // Allow width to go to 0 for complete hiding
-        if (sidebarRef.current) {
-          sidebarRef.current.style.width = `${newWidth}px`;
-        }
+        // Update width directly through state during drag
+        setSidebarWidth(newWidth);
         frameId = null;
       });
     };
@@ -100,8 +98,6 @@ function App() {
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   };
-
-  // Removed the useEffect that updated data-theme, handled synchronously above
 
   useEffect(() => {
     axios.get(`${API_BASE}/config`)
@@ -173,9 +169,9 @@ function App() {
     // Check if this is a parallel coordinates plot
     const isParallelCoords = figData.data && figData.data.some(trace => trace.type === 'parcoords');
     
-    // Create a new layout object, starting with the figure-specific layout,
-    // then overriding it with general theme settings.
-    const newLayout = { ...figLayout, ...themeLayout };
+    // Create a new layout object, starting with the theme settings,
+    // then overriding with figure-specific settings (figure takes precedence).
+    const newLayout = { ...themeLayout, ...figLayout };
 
     // For parallel coordinates plots, preserve custom margins if they exist
     if (isParallelCoords && figLayout.margin) {
@@ -198,6 +194,20 @@ function App() {
 
     // Ensure the title is also properly merged.
     newLayout.title = { ...themeLayout.title, ...figLayout.title };
+    
+    // Ensure legend settings are properly merged (figure settings take precedence)
+    if (figLayout.legend) {
+      newLayout.legend = { ...themeLayout.legend, ...figLayout.legend };
+    }
+
+    // Ensure background colors from figure take precedence
+    // Note: paper_bgcolor is handled by EditPane setting both paper_bgcolor and figureBackgroundColor
+    if (figLayout.paper_bgcolor !== undefined) {
+      newLayout.paper_bgcolor = figLayout.paper_bgcolor;
+    }
+    if (figLayout.plot_bgcolor !== undefined) {
+      newLayout.plot_bgcolor = figLayout.plot_bgcolor;
+    }
 
     return newLayout;
   };
@@ -312,9 +322,25 @@ function App() {
     setSidebarWidth(expandedWidth);
     setSidebarExpanded(true);
     setSidebarHidden(false);
+    
+    // Resize plots after sidebar is restored
+    if (config && localFigures) {
+      // Add a small delay to allow the sidebar transition to complete
+      const timer = setTimeout(() => {
+        localFigures.forEach(fig => {
+          if (fig && fig.figure) {
+            const plotId = `plot-${fig.id}`;
+            const graphDiv = document.getElementById(plotId);
+            if (graphDiv) {
+              Plotly.Plots.resize(graphDiv);
+            }
+          }
+        });
+      }, 350); // Slightly longer delay than the transition duration
+      
+      return () => clearTimeout(timer);
+    }
   };
-
-  // Removed toggle button – expansion is now drag-only
 
   // Show placeholder containers (identical styling) during initial load
   if (!config) {
@@ -332,20 +358,6 @@ function App() {
       color: 'var(--text-color)',
       height: '100vh',
       overflow: 'hidden',
-    };
-
-    const sideStyle = {
-      width: `${sidebarWidth}px`,
-      padding: sidebarExpanded ? 'var(--sidebar-padding)' : '10px',
-      boxSizing: 'border-box',
-      borderRight: `1px solid var(--border-color)`,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 'var(--sidebar-gap)',
-      transition: isDragging ? 'none' : 'width 0.1s ease-in-out',
-      overflow: 'hidden',
-      position: 'relative',
-      backgroundColor: 'var(--sidebar-bg)'
     };
 
     const mainStyle = {
@@ -368,7 +380,9 @@ function App() {
       backgroundColor: 'var(--card-background-color)',
       padding: 'var(--container-padding)',
       borderRadius: 'var(--container-border-radius)',
-      border: `1px solid var(--border-color)`,
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'var(--border-color)',
       boxShadow: `4px 4px 8px var(--shadow-color)`,
       display: 'flex',
       flexDirection: 'column',
@@ -377,57 +391,15 @@ function App() {
 
     return (
       <div style={appStyle}>
-        {!sidebarHidden && (
-        <div ref={sidebarRef} style={sideStyle}>
-            {sidebarExpanded ? (
-              <>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  marginBottom: '16px',
-                  padding: '0'
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    minWidth: 0
-                  }}>
-                    <Logo size={32} />
-                    <span style={{ 
-                      fontSize: '1.1em', 
-                      fontWeight: '600', 
-                      color: 'var(--text-color)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}>
-                      aivalanche
-                    </span>
-                  </div>
-                  <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-                </div>
-                <div style={{ 
-                  flex: 1, 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  justifyContent: 'flex-end',
-                  minHeight: 0,
-                  marginBottom: '16px'
-                }}>
-                  <ChatInterface expanded={sidebarExpanded} />
-                </div>
-              </>
-            ) : (
-              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-                <Logo size={28} />
-                <ChatInterface expanded={sidebarExpanded} />
-              </div>
-            )}
-            <div onMouseDown={handleMouseDown} className="sidebar-resizer" />
-        </div>
-        )}
+        <Sidebar 
+          theme={theme}
+          toggleTheme={toggleTheme}
+          sidebarWidth={sidebarWidth}
+          sidebarExpanded={sidebarExpanded}
+          sidebarHidden={sidebarHidden}
+          onDragStart={handleMouseDown}
+          appTitle="Loading…"
+        />
         
         {sidebarHidden && (
           <button
@@ -455,7 +427,7 @@ function App() {
             onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
             title="Show sidebar"
           >
-            ☰
+            <ChatAssistantIcon size={24} />
           </button>
         )}
         
@@ -488,29 +460,6 @@ function App() {
     overflow: 'hidden',
   };
 
-  const sideStyle={
-    width: `${sidebarWidth}px`,
-    padding: sidebarExpanded ? 'var(--sidebar-padding)' : '10px',
-    boxSizing: 'border-box',
-    borderRight: `1px solid var(--border-color)`,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--sidebar-gap)',
-    transition: isDragging ? 'none' : 'width 0.1s ease-in-out',
-    overflow: 'hidden',
-    position: 'relative',
-    backgroundColor: 'var(--sidebar-bg)'
-  };
-  
-  const buttonStyle = {
-    padding: 'var(--button-padding)',
-    border: 'none',
-    borderRadius: 'var(--button-border-radius)',
-    backgroundColor: 'var(--button-bg)',
-    color: 'var(--button-text)',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s ease-in-out',
-  };
 
   const gridStyle = {
     display: 'grid',
@@ -524,7 +473,9 @@ function App() {
       backgroundColor: 'var(--card-background-color)',
       padding: 'var(--container-padding)',
       borderRadius: 'var(--container-border-radius)',
-      border: `1px solid var(--border-color)`,
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'var(--border-color)',
       boxShadow: `4px 4px 8px var(--shadow-color)`,
       transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
       display: 'flex',
@@ -563,6 +514,7 @@ function App() {
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
+    position: 'relative',
   };
 
   const closeBtnStyle = {
@@ -576,57 +528,15 @@ function App() {
 
   return (
     <div style={appStyle}>
-      {!sidebarHidden && (
-      <div ref={sidebarRef} style={sideStyle}>
-        {sidebarExpanded ? (
-          <>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                marginBottom: '16px',
-                padding: '0'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  minWidth: 0
-                }}>
-                                     <Logo size={32} />
-                  <span style={{ 
-                    fontSize: '1.1em', 
-                    fontWeight: '600', 
-                    color: 'var(--text-color)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    aivalanche
-                  </span>
-                </div>
-            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-              </div>
-                              <div style={{ 
-                  flex: 1, 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  justifyContent: 'flex-end',
-                  minHeight: 0,
-                  marginBottom: '16px'
-                }}>
-                  <ChatInterface expanded={sidebarExpanded} />
-                </div>
-          </>
-        ) : (
-            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-                                <Logo size={28} />
-              <ChatInterface expanded={sidebarExpanded} />
-          </div>
-        )}
-          <div onMouseDown={handleMouseDown} className="sidebar-resizer" />
-      </div>
-      )}
+      <Sidebar 
+        theme={theme}
+        toggleTheme={toggleTheme}
+        sidebarWidth={sidebarWidth}
+        sidebarExpanded={sidebarExpanded}
+        sidebarHidden={sidebarHidden}
+        onDragStart={handleMouseDown}
+        appTitle={appTitle}
+      />
 
       {sidebarHidden && (
         <button
@@ -654,20 +564,38 @@ function App() {
           onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
           title="Show sidebar"
         >
-          ☰
+          <ChatAssistantIcon size={30} />
         </button>
       )}
 
       <main style={mainStyle}>
         <div style={gridStyle}>
-          {figures.map(fig => (
-            <div key={fig.id} className="plot-container" style={plotContainerStyle}>
+          {figures.map(fig => {
+            // Create dynamic container style with figure background and border
+            const figureContainerStyle = {
+              ...plotContainerStyle,
+              ...(fig.figure?.layout?.figureBackgroundColor && { 
+                backgroundColor: fig.figure.layout.figureBackgroundColor 
+              }),
+              ...(fig.figure?.layout?.figureBorderColor && { 
+                borderColor: fig.figure.layout.figureBorderColor 
+              }),
+            };
+            
+            return (
+            <div key={fig.id} className="plot-container" style={figureContainerStyle}>
               <div className="plot-buttons">
                 <button className="edit-btn" onClick={() => {
                   setEditingFig(fig);
                   setEditPaneOpen(true);
                 }} title="Edit plot">
                   <EditIcon size={16} />
+                </button>
+                <button className="table-btn" onClick={() => {
+                  setTableViewFig(fig);
+                  setTableViewOpen(true);
+                }} title="View data">
+                  <TableIcon size={16} />
                 </button>
                 {figures.length > 1 && (
                 <button className="zoom-btn" onClick={() => setActiveFig(fig)} title="Expand plot">
@@ -676,8 +604,10 @@ function App() {
                 )}
               </div>
               <div id={`plot-${fig.id}`} style={{ flexGrow:1,minHeight:0 }}></div>
+              <div className="figure-id-label">{fig.id}</div>
             </div>
-          ))}
+            );
+          })}
         </div>
         </main>
 
@@ -698,12 +628,25 @@ function App() {
         }}
       />
 
+      {/* Table View */}
+      <TableView
+        figure={tableViewFig}
+        isOpen={tableViewOpen}
+        onClose={() => {
+          setTableViewOpen(false);
+          setTableViewFig(null);
+        }}
+      />
+
       {/* Overlay for enlarged plot */}
       {activeFig && (
         <div style={overlayStyle} onClick={() => setActiveFig(null)}>
           <div style={overlayInnerStyle} onClick={e => e.stopPropagation()}>
             <button style={closeBtnStyle} onClick={() => setActiveFig(null)}>×</button>
             <div id="overlay-plot" style={{ flexGrow:1, width:'100%', height:'100%' }} />
+            <div className="figure-id-label" style={{ opacity: 0.4 }}>
+              {activeFig.id}
+            </div>
           </div>
         </div>
       )}

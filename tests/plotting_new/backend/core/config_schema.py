@@ -166,6 +166,28 @@ class SchemaRegistry:
             default="",
             description="Title of the figure"
         ),
+        "title_font_size": ConfigField(
+            field_type=(int, float),
+            default=18,
+            validator=is_positive,
+            description="Font size for the figure title in pixels"
+        ),
+        "title_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Color for the figure title (hex format). If null, theme default is used."
+        ),
+        "title_bold": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether the title should be bold"
+        ),
+        "title_italic": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether the title should be italic"
+        ),
         "x_label": ConfigField(
             field_type=str,
             default="",
@@ -175,6 +197,50 @@ class SchemaRegistry:
             field_type=str,
             default="",
             description="Label for the y-axis"
+        ),
+        "axis_label_font_size": ConfigField(
+            field_type=(int, float),
+            default=14,
+            validator=is_positive,
+            description="Font size for axis labels in pixels"
+        ),
+        "axis_label_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Color for axis labels (hex format). If null, theme default is used."
+        ),
+        "axis_label_bold": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether axis labels should be bold"
+        ),
+        "axis_label_italic": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether axis labels should be italic"
+        ),
+        "axis_tick_font_size": ConfigField(
+            field_type=(int, float),
+            default=12,
+            validator=is_positive,
+            description="Font size for axis tick labels in pixels"
+        ),
+        "axis_tick_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Color for axis tick labels (hex format). If null, theme default is used."
+        ),
+        "axis_tick_bold": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether axis tick labels should be bold"
+        ),
+        "axis_tick_italic": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether axis tick labels should be italic"
         ),
         "x_scale": ConfigField(
             field_type=str,
@@ -187,6 +253,36 @@ class SchemaRegistry:
             default="linear",
             possible_values=["linear", "log"],
             description="Scale type for the y-axis ('linear' or 'log')"
+        ),
+        "x_min": ConfigField(
+            field_type=(int, float, type(None)),
+            default=None,
+            description="Minimum value for the x-axis. If None, auto-calculated from data."
+        ),
+        "x_max": ConfigField(
+            field_type=(int, float, type(None)),
+            default=None,
+            description="Maximum value for the x-axis. If None, auto-calculated from data."
+        ),
+        "y_min": ConfigField(
+            field_type=(int, float, type(None)),
+            default=None,
+            description="Minimum value for the y-axis. If None, auto-calculated from data."
+        ),
+        "y_max": ConfigField(
+            field_type=(int, float, type(None)),
+            default=None,
+            description="Maximum value for the y-axis. If None, auto-calculated from data."
+        ),
+        "x_reversed": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Reverses the direction of the x-axis (high to low instead of low to high)"
+        ),
+        "y_reversed": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Reverses the direction of the y-axis (high to low instead of low to high)"
         ),
         "grid_x": ConfigField(
             field_type=bool,
@@ -214,6 +310,52 @@ class SchemaRegistry:
             field_type=bool,
             default=True,
             description="Flag to toggle rendering of this figure – true = show (default), false = hide."
+        ),
+        "legend_font_size": ConfigField(
+            field_type=(int, float),
+            default=12,
+            validator=is_positive,
+            description="Font size for legend text in pixels"
+        ),
+        "legend_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Color for legend text (hex format). If null, theme default is used."
+        ),
+        "legend_bold": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether legend text should be bold"
+        ),
+        "legend_italic": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Whether legend text should be italic"
+        ),
+        "figure_background_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Background color for the entire figure (hex format). If null, theme default is used."
+        ),
+        "figure_border_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Border color for the entire figure (hex format). Note: Not directly supported by Plotly."
+        ),
+        "plot_background_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Background color for the plot area (hex format). If null, theme default is used."
+        ),
+        "plot_border_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Color for the plot area border (hex format). If null, grid color is used."
         ),
     }
 

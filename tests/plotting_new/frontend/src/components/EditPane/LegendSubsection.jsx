@@ -1,4 +1,6 @@
 import React from 'react';
+import { LegendIcon, FillIcon, BorderIcon } from '../icons';
+import ColorPickerIcon from './ColorPickerIcon';
 import { 
   subsectionStyle, 
   subsectionHeaderStyle, 
@@ -7,7 +9,9 @@ import {
   checkboxGroupStyle,
   labelStyle,
   legendItemStyle,
-  legendItemInputStyle
+  legendItemInputStyle,
+  inputStyle,
+  sliderStyle
 } from './styles';
 
 const LegendSubsection = ({ 
@@ -16,7 +20,13 @@ const LegendSubsection = ({
   legendVisible,
   setLegendVisible,
   legendItems,
-  updateLegendItem
+  updateLegendItem,
+  legendBackgroundColor,
+  setLegendBackgroundColor,
+  legendBorderColor,
+  setLegendBorderColor,
+  legendBackgroundOpacity,
+  setLegendBackgroundOpacity
 }) => {
   return (
     <div style={subsectionStyle}>
@@ -24,7 +34,10 @@ const LegendSubsection = ({
         style={subsectionHeaderStyle}
         onClick={() => setLegendExpanded(!legendExpanded)}
       >
-        <span style={subsectionTitleStyle}>Legend</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <LegendIcon size={20} />
+          <span style={subsectionTitleStyle}>Legend</span>
+        </span>
         <span style={chevronStyle(legendExpanded)}>›</span>
       </div>
       
@@ -39,6 +52,37 @@ const LegendSubsection = ({
             />
             <label htmlFor="legend-visible" style={labelStyle}>Show Legend</label>
           </div>
+          
+          {legendVisible && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                <label style={labelStyle}>Opacity:</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={Math.round(legendBackgroundOpacity * 100)}
+                  onChange={(e) => setLegendBackgroundOpacity(e.target.value / 100)}
+                  style={{ ...sliderStyle, flex: 1 }}
+                />
+                <span style={{ minWidth: '40px', color: 'var(--text-color)', fontSize: '0.85rem' }}>
+                  {Math.round(legendBackgroundOpacity * 100)}%
+                </span>
+              </div>
+              <ColorPickerIcon
+                icon={FillIcon}
+                color={legendBackgroundColor}
+                onChange={(e) => setLegendBackgroundColor(e.target.value)}
+                title="Legend background color"
+              />
+              <ColorPickerIcon
+                icon={BorderIcon}
+                color={legendBorderColor}
+                onChange={(e) => setLegendBorderColor(e.target.value)}
+                title="Legend border color"
+              />
+            </div>
+          )}
           
           {legendVisible && legendItems.length > 0 && (
             <div style={{ marginTop: '8px' }}>

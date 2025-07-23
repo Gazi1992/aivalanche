@@ -39,7 +39,7 @@
         {
           "id": "plot2",
           "type": "scatter",
-          "source": "data/temperature_data.csv",
+          "source": "data/temperature_data_1.csv",
           "x_column": "time",
           "y_column": "sensor2",
           "legend_name": "Sensor 2",
@@ -136,7 +136,7 @@
     },
     {
       "id": "figure5",
-      "visibility": false,
+      "visibility": true,
       "title": "Value Distribution",
       "x_label": "Value",
       "y_label": "Frequency",

@@ -1,4 +1,5 @@
 import React from 'react';
+import { TitleIcon } from '../icons';
 import { 
   subsectionStyle, 
   subsectionHeaderStyle, 
@@ -23,12 +24,15 @@ const TitleSubsection = ({
         style={subsectionHeaderStyle}
         onClick={() => setTitleExpanded(!titleExpanded)}
       >
-        <span style={subsectionTitleStyle}>Title</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <TitleIcon size={20} />
+          <span style={subsectionTitleStyle}>Title</span>
+        </span>
         <span style={chevronStyle(titleExpanded)}>›</span>
       </div>
       
       {titleExpanded && (
-        <div style={legendItemStyle}>
+        <div style={{ ...legendItemStyle, gap: '8px' }}>
           <input
             type="checkbox"
             id="title-visible"
@@ -40,7 +44,7 @@ const TitleSubsection = ({
             value={titleText}
             onChange={(e) => setTitleText(e.target.value)}
             placeholder="Plot Title"
-            style={legendItemInputStyle}
+            style={{ ...legendItemInputStyle, flex: 1 }}
             disabled={!titleVisible}
             onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
             onBlur={(e) => {

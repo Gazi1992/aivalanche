@@ -34,10 +34,11 @@
   --background-color: #F5F7FA;
   --text-color: #2D3748;
   --primary-color: #FF6B35;
+  --primary-hover-color: #E55A2B;
   --card-background-color: #FFFFFF;
   --border-color: #E2E8F0;
   --header-bg: #FFFFFF;
-  --sidebar-bg: #FAFBFC;
+  --sidebar-bg: #FFFFFF;
   --button-bg: #FF6B35;
   --button-text: #FFFFFF;
   --plot-bg: #FFFFFF;
@@ -58,6 +59,7 @@
   --background-color: #0b1529;
   --text-color: #e5ecf3;
   --primary-color: #2d9d92;
+  --primary-hover-color: #23776E;
   --card-background-color: #121e33;
   --border-color: #1e2c48;
   --header-bg: #121e33;
@@ -157,7 +159,8 @@ body {
 
 /* Adjust zoom and edit buttons to outline style */
 .zoom-btn,
-.edit-btn {
+.edit-btn,
+.table-btn {
   opacity: 0;
   background-color: var(--card-background-color);
   border: 1px solid var(--border-color);
@@ -172,20 +175,41 @@ body {
 }
 
 .plot-container:hover .zoom-btn,
-.plot-container:hover .edit-btn {
+.plot-container:hover .edit-btn,
+.plot-container:hover .table-btn {
   opacity: 1;
 }
 
 .zoom-btn:hover,
-.edit-btn:hover {
+.edit-btn:hover,
+.table-btn:hover {
   background-color: rgba(255,255,255,0.1); /* subtle contrast on dark */
 }
 
 /* Change background on hover for accessibility */
 .zoom-btn:active,
-.edit-btn:active {
+.edit-btn:active,
+.table-btn:active {
     background-color: rgba(0,0,0,0.1);
 } 
+
+/* ------------ Figure ID Label ------------- */
+.figure-id-label {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 11px;
+  color: var(--muted-text-color);
+  opacity: 0;
+  pointer-events: none;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s ease;
+}
+
+.plot-container:hover .figure-id-label {
+  opacity: 0.4;
+}
 
 /* ------------ Skeleton Loading Placeholder ------------- */
 .skeleton {
@@ -484,6 +508,88 @@ input[type="checkbox"]:hover {
 input[type="checkbox"]:focus {
   outline: none;
   border-color: var(--primary-color);
+}
+
+/* ---------------- NUMBER INPUT STYLES ---------------- */
+
+input[type="number"] {
+  color-scheme: light;
+}
+
+[data-theme='dark'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='solarized-dark'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='monokai'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='nord'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='dracula'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='gruvbox-dark'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='tokyo-night'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='catppuccin-mocha'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='one-dark'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='synthwave-84'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='cyberpunk'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='midnight'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='forest'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='ocean'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='sunset'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='neon'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='material-dark'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='ayu-dark'] input[type="number"] {
+  color-scheme: dark;
+}
+
+[data-theme='github-dark'] input[type="number"] {
+  color-scheme: dark;
 }
 
 /* ---------------- SIDEBAR RESIZER STYLES ---------------- */
