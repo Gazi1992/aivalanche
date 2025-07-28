@@ -30,6 +30,18 @@ const AxisSubsection = ({
   setYAxisMax,
   yAxisInverted,
   setYAxisInverted,
+  xAxisLabelVisible,
+  setXAxisLabelVisible,
+  xAxisLabel,
+  setXAxisLabel,
+  yAxisLabelVisible,
+  setYAxisLabelVisible,
+  yAxisLabel,
+  setYAxisLabel,
+  xAxisTicksVisible,
+  setXAxisTicksVisible,
+  yAxisTicksVisible,
+  setYAxisTicksVisible,
   onBlur
 }) => {
   const containerStyle = {
@@ -74,6 +86,62 @@ const AxisSubsection = ({
           <div></div>
           <div style={columnHeaderStyle}>X-Axis</div>
           <div style={columnHeaderStyle}>Y-Axis</div>
+          
+          {/* Labels Row */}
+          <div style={rowLabelStyle}>Label</div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: 0 }}>
+            <input
+              type="checkbox"
+              checked={xAxisLabelVisible}
+              onChange={(e) => setXAxisLabelVisible(e.target.checked)}
+              style={checkboxStyle}
+            />
+            <input
+              type="text"
+              value={xAxisLabel}
+              onChange={(e) => setXAxisLabel(e.target.value)}
+              onBlur={onBlur}
+              style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+              placeholder="X-axis label"
+              disabled={!xAxisLabelVisible}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: 0 }}>
+            <input
+              type="checkbox"
+              checked={yAxisLabelVisible}
+              onChange={(e) => setYAxisLabelVisible(e.target.checked)}
+              style={checkboxStyle}
+            />
+            <input
+              type="text"
+              value={yAxisLabel}
+              onChange={(e) => setYAxisLabel(e.target.value)}
+              onBlur={onBlur}
+              style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+              placeholder="Y-axis label"
+              disabled={!yAxisLabelVisible}
+            />
+          </div>
+          
+          {/* Ticks Row */}
+          <div style={rowLabelStyle}>Ticks</div>
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <input
+              type="checkbox"
+              checked={xAxisTicksVisible}
+              onChange={(e) => setXAxisTicksVisible(e.target.checked)}
+              style={checkboxStyle}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <input
+              type="checkbox"
+              checked={yAxisTicksVisible}
+              onChange={(e) => setYAxisTicksVisible(e.target.checked)}
+              style={checkboxStyle}
+            />
+          </div>
           
           {/* Scale Row */}
           <div style={rowLabelStyle}>Scale</div>

@@ -43,9 +43,6 @@ def _merge_factory_fig(target: go.Figure, factory_fig: Dict[str, Any]) -> None:
         for trace in factory_fig.get("data", []):
             target.add_trace(trace)
 
-
-
-
 def build_dashboard(config_path: Path) -> Dict[str, Any]:
     """Return a dict containing figure JSON + layout derived from *config_path*."""
 
@@ -209,7 +206,17 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                     # --- Data-driven coloring (single trace) ---
                     if color_col and color_col in df.columns and ptype == "scatter":
                         
-                        colorbar_opts = dict(title=item.get("colorbar_title") or color_col)
+                        colorbar_opts = dict(
+                            title=dict(
+                                text=item.get("colorbar_title") or color_col,
+                                font=dict(
+                                    weight='normal'  # Explicitly set to normal weight
+                                )
+                            ),
+                            tickfont=dict(
+                                weight='normal'  # Also set normal weight for tick labels
+                            )
+                        )
                         if colorbar_count > 0:
                             colorbar_opts['x'] = 1.05 + (0.15 * colorbar_count)
                         
@@ -498,7 +505,6 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
             xaxis_config["autorange"] = "reversed"
             
         # Add grid configuration to x-axis
-        grid_alpha = fig_cfg.get("grid_alpha", 0.3)
         grid_color = fig_cfg.get("grid_color")
         
         if fig_cfg.get("grid_x", True):
@@ -509,11 +515,23 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                     r = int(grid_color[1:3], 16)
                     g = int(grid_color[3:5], 16) 
                     b = int(grid_color[5:7], 16)
-                    xaxis_config["gridcolor"] = f"rgba({r}, {g}, {b}, {grid_alpha})"
+                    # If no alpha is specified in the hex color, use a default
+                    if len(grid_color) == 7:  # #RRGGBB format
+                        xaxis_config["gridcolor"] = f"rgba({r}, {g}, {b}, 0.3)"
+                    else:  # #RRGGBBAA format
+                        a = int(grid_color[7:9], 16) / 255.0
+                        xaxis_config["gridcolor"] = f"rgba({r}, {g}, {b}, {a})"
                 else:
                     xaxis_config["gridcolor"] = grid_color
         else:
             xaxis_config["showgrid"] = False
+            
+        # Configure minor grid for x-axis
+        if fig_cfg.get("grid_x_minor", False):
+            xaxis_config["minor"] = {
+                "showgrid": True,
+                "gridcolor": xaxis_config.get("gridcolor", "rgba(128, 128, 128, 0.1)")
+            }
             
         # Configure zero line (vertical line at x=0)
         xaxis_config["zeroline"] = True
@@ -524,12 +542,17 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                 r = int(grid_color[1:3], 16)
                 g = int(grid_color[3:5], 16) 
                 b = int(grid_color[5:7], 16)
-                xaxis_config["zerolinecolor"] = f"rgba({r}, {g}, {b}, {grid_alpha})"
+                # Extract alpha from hex color or use default
+                if len(grid_color) == 7:  # #RRGGBB format
+                    xaxis_config["zerolinecolor"] = f"rgba({r}, {g}, {b}, 0.3)"
+                else:  # #RRGGBBAA format
+                    a = int(grid_color[7:9], 16) / 255.0
+                    xaxis_config["zerolinecolor"] = f"rgba({r}, {g}, {b}, {a})"
             else:
                 xaxis_config["zerolinecolor"] = grid_color
         else:
             # If no custom grid color, use theme default
-            xaxis_config["zerolinecolor"] = f"rgba(128, 128, 128, {grid_alpha})"
+            xaxis_config["zerolinecolor"] = "rgba(128, 128, 128, 0.3)"
             
         # Configure plot border
         xaxis_config["showline"] = True
@@ -624,11 +647,23 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                     r = int(grid_color[1:3], 16)
                     g = int(grid_color[3:5], 16) 
                     b = int(grid_color[5:7], 16)
-                    yaxis_config["gridcolor"] = f"rgba({r}, {g}, {b}, {grid_alpha})"
+                    # If no alpha is specified in the hex color, use a default
+                    if len(grid_color) == 7:  # #RRGGBB format
+                        yaxis_config["gridcolor"] = f"rgba({r}, {g}, {b}, 0.3)"
+                    else:  # #RRGGBBAA format
+                        a = int(grid_color[7:9], 16) / 255.0
+                        yaxis_config["gridcolor"] = f"rgba({r}, {g}, {b}, {a})"
                 else:
                     yaxis_config["gridcolor"] = grid_color
         else:
             yaxis_config["showgrid"] = False
+            
+        # Configure minor grid for y-axis
+        if fig_cfg.get("grid_y_minor", False):
+            yaxis_config["minor"] = {
+                "showgrid": True,
+                "gridcolor": yaxis_config.get("gridcolor", "rgba(128, 128, 128, 0.1)")
+            }
             
         # Configure zero line (horizontal line at y=0)
         yaxis_config["zeroline"] = True
@@ -639,12 +674,17 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
                 r = int(grid_color[1:3], 16)
                 g = int(grid_color[3:5], 16) 
                 b = int(grid_color[5:7], 16)
-                yaxis_config["zerolinecolor"] = f"rgba({r}, {g}, {b}, {grid_alpha})"
+                # Extract alpha from hex color or use default
+                if len(grid_color) == 7:  # #RRGGBB format
+                    yaxis_config["zerolinecolor"] = f"rgba({r}, {g}, {b}, 0.3)"
+                else:  # #RRGGBBAA format
+                    a = int(grid_color[7:9], 16) / 255.0
+                    yaxis_config["zerolinecolor"] = f"rgba({r}, {g}, {b}, {a})"
             else:
                 yaxis_config["zerolinecolor"] = grid_color
         else:
             # If no custom grid color, use theme default
-            yaxis_config["zerolinecolor"] = f"rgba(128, 128, 128, {grid_alpha})"
+            yaxis_config["zerolinecolor"] = "rgba(128, 128, 128, 0.3)"
             
         # Configure plot border
         yaxis_config["showline"] = True
@@ -672,6 +712,7 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
         # Apply bold/italic styling to y-axis label using HTML tags
         y_label = fig_cfg.get("y_label", "")
         if y_label:
+            logger.debug(f"Y-axis label for {fig_cfg.get('id')}: {y_label!r}")
             if fig_cfg.get("axis_label_italic", False):
                 y_label = f"<i>{y_label}</i>"
             if fig_cfg.get("axis_label_bold", False):
@@ -692,12 +733,22 @@ def build_dashboard(config_path: Path) -> Dict[str, Any]:
         if legend_font_size is not None:
             legend_config["font"] = {"size": legend_font_size}
         
-        legend_color = fig_cfg.get("legend_color")
-        if legend_color is not None:
+        legend_text_color = fig_cfg.get("legend_text_color")
+        if legend_text_color is not None:
             if "font" not in legend_config:
                 legend_config["font"] = {}
-            legend_config["font"]["color"] = legend_color
+            legend_config["font"]["color"] = legend_text_color
         # Note: Legend text also doesn't support bold/italic in Plotly
+        
+        # Add legend background and border colors
+        legend_bgcolor = fig_cfg.get("legend_background_color")
+        if legend_bgcolor is not None:
+            legend_config["bgcolor"] = legend_bgcolor
+            
+        legend_bordercolor = fig_cfg.get("legend_border_color")
+        if legend_bordercolor is not None:
+            legend_config["bordercolor"] = legend_bordercolor
+            legend_config["borderwidth"] = 1  # Set a default border width when border color is specified
         
         if legend_config:
             layout_updates["legend"] = legend_config

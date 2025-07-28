@@ -1,10 +1,10 @@
 import React from 'react';
-import LabelsSubsection from './LabelsSubsection';
+import TitleSubsection from './TitleSubsection';
 import AxisSubsection from './AxisSubsection';
 import LegendSubsection from './LegendSubsection';
 import GridSubsection from './GridSubsection';
-import BackgroundSubsection from './BackgroundSubsection';
 import TextSubsection from './TextSubsection';
+import DataSubsection from './DataSubsection';
 import { PaletteIcon } from '../icons';
 import { 
   sectionStyle, 
@@ -18,6 +18,7 @@ const AppearanceSection = ({
   setAppearanceExpanded,
   hasAxes,
   hasLegend,
+  hasData,
   titleState,
   xAxisState,
   yAxisState,
@@ -25,8 +26,10 @@ const AppearanceSection = ({
   gridState,
   backgroundState,
   textState,
+  dataState,
   onTextBlur,
-  updateLegendItem
+  updateLegendItem,
+  updateTraceProperty
 }) => {
   return (
     <div style={sectionStyle}>
@@ -45,27 +48,15 @@ const AppearanceSection = ({
       
       {appearanceExpanded && (
         <div style={sectionContentStyle}>
-          <LabelsSubsection 
-            labelsExpanded={titleState.expanded}
-            setLabelsExpanded={titleState.setExpanded}
+          <TitleSubsection 
+            titleExpanded={titleState.expanded}
+            setTitleExpanded={titleState.setExpanded}
             titleVisible={titleState.visible}
             setTitleVisible={titleState.setVisible}
             titleText={titleState.text}
             setTitleText={titleState.setText}
             titleAlignment={titleState.alignment}
             setTitleAlignment={titleState.setAlignment}
-            xAxisLabelVisible={xAxisState.labelVisible}
-            setXAxisLabelVisible={xAxisState.setLabelVisible}
-            xAxisLabel={xAxisState.label}
-            setXAxisLabel={xAxisState.setLabel}
-            yAxisLabelVisible={yAxisState.labelVisible}
-            setYAxisLabelVisible={yAxisState.setLabelVisible}
-            yAxisLabel={yAxisState.label}
-            setYAxisLabel={yAxisState.setLabel}
-            xAxisTicksVisible={xAxisState.ticksVisible}
-            setXAxisTicksVisible={xAxisState.setTicksVisible}
-            yAxisTicksVisible={yAxisState.ticksVisible}
-            setYAxisTicksVisible={yAxisState.setTicksVisible}
             onBlur={onTextBlur}
           />
 
@@ -90,6 +81,18 @@ const AppearanceSection = ({
                 setYAxisMax={yAxisState.setMaxValue}
                 yAxisInverted={yAxisState.inverted}
                 setYAxisInverted={yAxisState.setInverted}
+                xAxisLabelVisible={xAxisState.labelVisible}
+                setXAxisLabelVisible={xAxisState.setLabelVisible}
+                xAxisLabel={xAxisState.label}
+                setXAxisLabel={xAxisState.setLabel}
+                yAxisLabelVisible={yAxisState.labelVisible}
+                setYAxisLabelVisible={yAxisState.setLabelVisible}
+                yAxisLabel={yAxisState.label}
+                setYAxisLabel={yAxisState.setLabel}
+                xAxisTicksVisible={xAxisState.ticksVisible}
+                setXAxisTicksVisible={xAxisState.setTicksVisible}
+                yAxisTicksVisible={yAxisState.ticksVisible}
+                setYAxisTicksVisible={yAxisState.setTicksVisible}
                 onBlur={onTextBlur}
               />
 
@@ -104,10 +107,16 @@ const AppearanceSection = ({
                 setXMinorGridVisible={gridState.setXMinorGridVisible}
                 yMinorGridVisible={gridState.yMinorGridVisible}
                 setYMinorGridVisible={gridState.setYMinorGridVisible}
-                gridOpacity={gridState.gridOpacity}
-                setGridOpacity={gridState.setGridOpacity}
                 gridColor={gridState.gridColor}
                 setGridColor={gridState.setGridColor}
+                figureBackgroundColor={backgroundState.figureBackgroundColor}
+                setFigureBackgroundColor={backgroundState.setFigureBackgroundColor}
+                figureBorderColor={backgroundState.figureBorderColor}
+                setFigureBorderColor={backgroundState.setFigureBorderColor}
+                plotBackgroundColor={backgroundState.plotBackgroundColor}
+                setPlotBackgroundColor={backgroundState.setPlotBackgroundColor}
+                plotBorderColor={backgroundState.plotBorderColor}
+                setPlotBorderColor={backgroundState.setPlotBorderColor}
               />
             </>
           )}
@@ -124,23 +133,22 @@ const AppearanceSection = ({
               setLegendBackgroundColor={legendState.setBackgroundColor}
               legendBorderColor={legendState.borderColor}
               setLegendBorderColor={legendState.setBorderColor}
-              legendBackgroundOpacity={legendState.backgroundOpacity}
-              setLegendBackgroundOpacity={legendState.setBackgroundOpacity}
             />
           )}
 
-          <BackgroundSubsection
-            backgroundExpanded={backgroundState.expanded}
-            setBackgroundExpanded={backgroundState.setExpanded}
-            figureBackgroundColor={backgroundState.figureBackgroundColor}
-            setFigureBackgroundColor={backgroundState.setFigureBackgroundColor}
-            figureBorderColor={backgroundState.figureBorderColor}
-            setFigureBorderColor={backgroundState.setFigureBorderColor}
-            plotBackgroundColor={backgroundState.plotBackgroundColor}
-            setPlotBackgroundColor={backgroundState.setPlotBackgroundColor}
-            plotBorderColor={backgroundState.plotBorderColor}
-            setPlotBorderColor={backgroundState.setPlotBorderColor}
-          />
+          {hasData && (
+            <DataSubsection
+              dataExpanded={dataState.expanded}
+              setDataExpanded={dataState.setExpanded}
+              traces={dataState.traces}
+              selectedTraceIndex={dataState.selectedTraceIndex}
+              setSelectedTraceIndex={dataState.setSelectedTraceIndex}
+              traceProperties={dataState.traceProperties}
+              updateTraceProperty={updateTraceProperty}
+              availableColumns={dataState.availableColumns}
+              onBlur={onTextBlur}
+            />
+          )}
 
           <TextSubsection
             textExpanded={textState.expanded}
@@ -171,8 +179,8 @@ const AppearanceSection = ({
             setLegendBold={textState.setLegendBold}
             legendItalic={textState.legendItalic}
             setLegendItalic={textState.setLegendItalic}
-            legendColor={textState.legendColor}
-            setLegendColor={textState.setLegendColor}
+            legendTextColor={textState.legendTextColor}
+            setLegendTextColor={textState.setLegendTextColor}
             hasLegend={textState.hasLegend}
           />
         </div>

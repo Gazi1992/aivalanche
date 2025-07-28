@@ -264,7 +264,17 @@ def scatter_matrix_plot(
         scatter_marker_style["colorscale"] = color_map
         scatter_marker_style["showscale"] = show_colorbar
         if show_colorbar:
-            scatter_marker_style["colorbar"] = dict(title=colorbar_title or color_column)
+            scatter_marker_style["colorbar"] = dict(
+                title=dict(
+                    text=colorbar_title or color_column,
+                    font=dict(
+                        weight='normal'  # Explicitly set to normal weight
+                    )
+                ),
+                tickfont=dict(
+                    weight='normal'  # Also set normal weight for tick labels
+                )
+            )
         # Set color axis limits to the data's min/max to ensure full colorscale is used
         # Cast to standard int to prevent JSON serialization issues with numpy types.
         scatter_marker_style["cmin"] = int(df[color_column].min())
@@ -376,8 +386,6 @@ def scatter_matrix_plot(
 # ---------------------------------------------------------------------------
 # Parallel Coordinates Plot
 # ---------------------------------------------------------------------------
-
-
 def parallel_coordinates_plot(
     df: "pd.DataFrame",
     columns: List[str],
@@ -429,7 +437,17 @@ def parallel_coordinates_plot(
             showscale=show_colorbar,
             cmin=float(df[color_column].min()),
             cmax=float(df[color_column].max()),
-            colorbar=dict(title=colorbar_title or color_column),
+            colorbar=dict(
+                title=dict(
+                    text=colorbar_title or color_column,
+                    font=dict(
+                        weight='normal'  # Explicitly set to normal weight
+                    )
+                ),
+                tickfont=dict(
+                    weight='normal'  # Also set normal weight for tick labels
+                )
+            ),
         )
 
     trace = go.Parcoords(dimensions=dimensions, line=line_kwargs)

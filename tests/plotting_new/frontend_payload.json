@@ -40,7 +40,13 @@
                 "bdata": "9pNEV1SXGkDMHmlbxPgbQM+zWYOZABRAHMd7NGmzIUA1KCmuElcbQBpUVwsd6CFAvFk95DuwG0BoRD05lc7uP2rUpneEAx1Aw8UMdiohIED57+XL72EZQA=="
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Noise (Sensor 2)"
                 }
               },
@@ -124,10 +130,10 @@
             },
             "type": "linear",
             "showgrid": true,
-            "gridcolor": "rgba(255, 0, 0, 0.4)",
+            "gridcolor": "rgba(255, 0, 0, 0.3)",
             "zeroline": true,
             "zerolinewidth": 1.5,
-            "zerolinecolor": "rgba(255, 0, 0, 0.4)",
+            "zerolinecolor": "rgba(255, 0, 0, 0.3)",
             "showline": true,
             "linewidth": 1,
             "mirror": true,
@@ -135,7 +141,7 @@
           },
           "yaxis": {
             "title": {
-              "text": "Temperature (Â°C)",
+              "text": "Temperature (°C)",
               "font": {
                 "size": 14
               }
@@ -145,10 +151,10 @@
             },
             "type": "log",
             "showgrid": true,
-            "gridcolor": "rgba(255, 0, 0, 0.4)",
+            "gridcolor": "rgba(255, 0, 0, 0.3)",
             "zeroline": true,
             "zerolinewidth": 1.5,
-            "zerolinecolor": "rgba(255, 0, 0, 0.4)",
+            "zerolinecolor": "rgba(255, 0, 0, 0.3)",
             "showline": true,
             "linewidth": 1,
             "mirror": true,
@@ -427,7 +433,7 @@
             "showgrid": false,
             "zeroline": true,
             "zerolinewidth": 1.5,
-            "zerolinecolor": "rgba(128, 128, 128, 0.2)",
+            "zerolinecolor": "rgba(128, 128, 128, 0.3)",
             "showline": true,
             "linewidth": 1,
             "mirror": true,
@@ -447,7 +453,7 @@
             "showgrid": false,
             "zeroline": true,
             "zerolinewidth": 1.5,
-            "zerolinecolor": "rgba(128, 128, 128, 0.2)",
+            "zerolinecolor": "rgba(128, 128, 128, 0.3)",
             "showline": true,
             "linewidth": 1,
             "mirror": true,
@@ -1218,7 +1224,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -1752,7 +1764,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -1829,7 +1847,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -1906,7 +1930,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -1983,7 +2013,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2079,7 +2115,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2156,7 +2198,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2233,7 +2281,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2310,7 +2364,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2406,7 +2466,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2483,7 +2549,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2560,7 +2632,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },
@@ -2637,7 +2715,13 @@
                 "bdata": "AAAAAQABAAABAQEBAQEBAQABAQABAAABAAABAAEAAAEBAAEBAQABAQABAQABAAEAAQAA"
               },
               "colorbar": {
+                "tickfont": {
+                  "weight": "normal"
+                },
                 "title": {
+                  "font": {
+                    "weight": "normal"
+                  },
                   "text": "Pass / Fail"
                 }
               },

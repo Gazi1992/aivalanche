@@ -200,18 +200,23 @@ The configuration is a single JSON object with the following top-level keys:
     *   **Required:** No
     *   **Default:** `true` (applied by the application)
 
-*   `"grid_alpha"`:
-    *   **Purpose:** Sets the transparency of grid lines (0.0 = fully transparent, 1.0 = fully opaque). Controlled by a slider in the 'Grid' section of the hover menu.
-    *   **Type:** Number (Float or Integer 0/1)
-    *   **Required:** No
-    *   **Default:** 0.3
-    *   **Constraints:** Value must be between 0.0 and 1.0 inclusive.
-
 *   `"grid_color"`: (**NEW**)
     *   **Purpose:** Overrides the theme's default color for the axis lines, tick marks, and grid lines associated with this figure. Controlled by a color picker in the 'Grid' section of the hover menu. If `null`, the theme's `axis_fg` color is used. Changing the global theme resets this override.
     *   **Type:** String (Hex Color format: `#RGB`, `#RRGGBB`, `#RRGGBBAA`) or `null`
     *   **Required:** No
     *   **Default:** `null`
+
+*   `"grid_x_minor"`: (**NEW**)
+    *   **Purpose:** Initial state for vertical minor grid line visibility (toggleable).
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
+
+*   `"grid_y_minor"`: (**NEW**)
+    *   **Purpose:** Initial state for horizontal minor grid line visibility (toggleable).
+    *   **Type:** Boolean
+    *   **Required:** No
+    *   **Default:** `false`
 
 *   `"visibility"`: (**NEW**)
     *   **Purpose:** Toggles whether this figure is included in the rendered dashboard. Set to `false` to temporarily hide a figure (e.g., optional analyses) without deleting its configuration. Omit or set to `true` to show the figure.
@@ -226,7 +231,7 @@ The configuration is a single JSON object with the following top-level keys:
     *   **Default:** 12
     *   **Constraints:** Must be positive (> 0).
 
-*   `"legend_color"`:
+*   `"legend_text_color"`:
     *   **Purpose:** Color for legend text (hex format). If null, theme default is used.
     *   **Type:** String or `null`
     *   **Required:** No
@@ -244,6 +249,20 @@ The configuration is a single JSON object with the following top-level keys:
     *   **Type:** Boolean
     *   **Required:** No
     *   **Default:** `false`
+
+*   `"legend_background_color"`:
+    *   **Purpose:** Background color for legend box (hex format or rgba). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
+
+*   `"legend_border_color"`:
+    *   **Purpose:** Border color for legend box (hex format or rgba). If null, theme default is used.
+    *   **Type:** String or `null`
+    *   **Required:** No
+    *   **Default:** `null`
+    *   **Constraints:** Must be valid hex color.
 
 *   `"figure_background_color"`:
     *   **Purpose:** Background color for the entire figure (hex format). If null, theme default is used.

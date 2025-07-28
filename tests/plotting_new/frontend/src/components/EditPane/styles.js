@@ -31,8 +31,7 @@ export const sectionStyle = {
   marginBottom: '20px',
   backgroundColor: 'var(--card-background-color)',
   borderRadius: '8px',
-  border: '1px solid var(--border-color)',
-  overflow: 'hidden'
+  border: '1px solid var(--border-color)'
 };
 
 export const sectionHeaderStyle = {
@@ -49,7 +48,8 @@ export const sectionContentStyle = {
   padding: '0 16px 16px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '12px'
+  gap: '12px',
+  borderRadius: '0 0 8px 8px'
 };
 
 export const subsectionStyle = {
@@ -201,3 +201,91 @@ export const toggleButtonStyle = (isActive, disabled = false) => ({
   transition: 'all 0.2s ease',
   userSelect: 'none'
 });
+
+// Data subsection specific styles
+export const dataContainerStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px',
+  marginTop: '8px'
+};
+
+export const rowStyle = {
+  display: 'grid',
+  gridTemplateColumns: '80px 1fr',
+  gap: '12px',
+  alignItems: 'center'
+};
+
+export const traceOptionsContainerStyle = {
+  backgroundColor: '#ECEEF0',
+  border: '1px solid var(--border-color)',
+  borderRadius: '6px',
+  padding: '12px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px',
+  boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.05)'
+};
+
+export const traceSectionHeaderStyle = {
+  fontSize: '11px',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  color: 'var(--text-secondary)',
+  marginBottom: '8px',
+  marginTop: '16px',
+  letterSpacing: '0.5px'
+};
+
+export const flexRowStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  width: '100%',
+  gap: '8px'
+};
+
+export const flexGroupStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2px'
+};
+
+export const smallInputStyle = {
+  ...inputStyle,
+  width: '50px',
+  backgroundColor: '#ECEEF0'
+};
+
+export const dropdownTriggerStyle = {
+  ...inputStyle,
+  width: '80px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '2px 4px',
+  backgroundColor: '#ECEEF0'
+};
+
+export const dropdownStyle = {
+  position: 'absolute',
+  top: '100%',
+  left: 0,
+  right: 0,
+  backgroundColor: '#ECEEF0',
+  border: '1px solid var(--border-color)',
+  borderRadius: '3px',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  zIndex: 1000
+};
+
+export const dropdownItemStyle = {
+  padding: '8px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'background-color 0.2s'
+};

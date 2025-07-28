@@ -11,7 +11,10 @@
       "Bash(del:*)",
       "Bash(ren:*)",
       "Bash(wc:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(touch:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }

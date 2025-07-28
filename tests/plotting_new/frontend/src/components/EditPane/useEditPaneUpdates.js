@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { colorToRgba } from './colorUtils';
 
 export const useEditPaneUpdates = (state, plotData, onUpdate) => {
   const {
@@ -26,12 +25,10 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
     legendItems,
     legendBackgroundColor,
     legendBorderColor,
-    legendBackgroundOpacity,
     xGridVisible,
     yGridVisible,
     xMinorGridVisible,
     yMinorGridVisible,
-    gridOpacity,
     gridColor,
     figureBackgroundColor,
     figureBorderColor,
@@ -50,7 +47,8 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
     legendFontSize,
     legendBold,
     legendItalic,
-    legendColor
+    legendTextColor,
+    traceProperties
   } = state;
 
   const applyUpdates = () => {
@@ -68,23 +66,16 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
         font: {
           ...updatedLayout.title?.font,
           ...(titleFontSize !== null && { size: titleFontSize }),
-          ...(titleColor !== null && { color: titleColor }),
-          family: updatedLayout.title?.font?.family || 'Arial, sans-serif'
+          ...(titleColor !== null && { color: titleColor })
         }
       };
 
       // Handle bold/italic for title
-      if (titleBold || titleItalic) {
-        let fontFamily = updatedLayout.title.font.family || 'Arial, sans-serif';
-        if (titleBold && titleItalic) {
-          fontFamily = '"Arial Black", Arial, sans-serif';
-          updatedLayout.title.font.family = fontFamily;
-          updatedLayout.title.font.style = 'italic';
-        } else if (titleBold) {
-          updatedLayout.title.font.family = '"Arial Black", Arial, sans-serif';
-        } else if (titleItalic) {
-          updatedLayout.title.font.style = 'italic';
-        }
+      if (titleBold && updatedLayout.title.font) {
+        updatedLayout.title.font.weight = 'bold';
+      }
+      if (titleItalic && updatedLayout.title.font) {
+        updatedLayout.title.font.style = 'italic';
       }
     }
 
@@ -96,15 +87,15 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
         font: {
           ...updatedLayout.xaxis?.title?.font,
           ...(axisLabelFontSize !== null && { size: axisLabelFontSize }),
-          ...(axisLabelColor !== null && { color: axisLabelColor }),
-          family: updatedLayout.xaxis?.title?.font?.family || 'Arial, sans-serif'
+          ...(axisLabelColor !== null && { color: axisLabelColor })
         }
       },
       ...(xAxisScale !== null && { type: xAxisScale }),
       ...(xAxisTicksVisible !== null && { showticklabels: xAxisTicksVisible }),
       ...(xAxisInverted !== null && { autorange: xAxisInverted ? 'reversed' : (xAxisMin || xAxisMax ? false : true) }),
       ...(xGridVisible !== null && { showgrid: xGridVisible }),
-      ...(gridColor !== null && gridOpacity !== null && { gridcolor: colorToRgba(gridColor, gridOpacity) }),
+      ...(gridColor !== null && { gridcolor: gridColor }),
+      ...(gridColor !== null && { zerolinecolor: gridColor }),
       tickfont: {
         ...updatedLayout.xaxis?.tickfont,
         ...(axisTickFontSize !== null && { size: axisTickFontSize }),
@@ -116,22 +107,16 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
       ...(plotBorderColor !== null && { linecolor: plotBorderColor }),
       minor: xMinorGridVisible ? {
         showgrid: true,
-        gridcolor: gridColor && gridOpacity ? colorToRgba(gridColor, gridOpacity * 0.5) : 'rgba(128, 128, 128, 0.05)'
+        gridcolor: gridColor || 'rgba(128, 128, 128, 0.1)'
       } : {}
     };
 
     // Handle bold/italic for axis labels
-    if ((axisLabelBold || axisLabelItalic) && updatedLayout.xaxis.title.font) {
-      let fontFamily = updatedLayout.xaxis.title.font.family || 'Arial, sans-serif';
-      if (axisLabelBold && axisLabelItalic) {
-        fontFamily = '"Arial Black", Arial, sans-serif';
-        updatedLayout.xaxis.title.font.family = fontFamily;
-        updatedLayout.xaxis.title.font.style = 'italic';
-      } else if (axisLabelBold) {
-        updatedLayout.xaxis.title.font.family = '"Arial Black", Arial, sans-serif';
-      } else if (axisLabelItalic) {
-        updatedLayout.xaxis.title.font.style = 'italic';
-      }
+    if (axisLabelBold && updatedLayout.xaxis.title.font) {
+      updatedLayout.xaxis.title.font.weight = 'bold';
+    }
+    if (axisLabelItalic && updatedLayout.xaxis.title.font) {
+      updatedLayout.xaxis.title.font.style = 'italic';
     }
 
     // Set X-axis range if specified
@@ -151,15 +136,15 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
         font: {
           ...updatedLayout.yaxis?.title?.font,
           ...(axisLabelFontSize !== null && { size: axisLabelFontSize }),
-          ...(axisLabelColor !== null && { color: axisLabelColor }),
-          family: updatedLayout.yaxis?.title?.font?.family || 'Arial, sans-serif'
+          ...(axisLabelColor !== null && { color: axisLabelColor })
         }
       },
       ...(yAxisScale !== null && { type: yAxisScale }),
       ...(yAxisTicksVisible !== null && { showticklabels: yAxisTicksVisible }),
       ...(yAxisInverted !== null && { autorange: yAxisInverted ? 'reversed' : (yAxisMin || yAxisMax ? false : true) }),
       ...(yGridVisible !== null && { showgrid: yGridVisible }),
-      ...(gridColor !== null && gridOpacity !== null && { gridcolor: colorToRgba(gridColor, gridOpacity) }),
+      ...(gridColor !== null && { gridcolor: gridColor }),
+      ...(gridColor !== null && { zerolinecolor: gridColor }),
       tickfont: {
         ...updatedLayout.yaxis?.tickfont,
         ...(axisTickFontSize !== null && { size: axisTickFontSize }),
@@ -171,22 +156,16 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
       ...(plotBorderColor !== null && { linecolor: plotBorderColor }),
       minor: yMinorGridVisible ? {
         showgrid: true,
-        gridcolor: gridColor && gridOpacity ? colorToRgba(gridColor, gridOpacity * 0.5) : 'rgba(128, 128, 128, 0.05)'
+        gridcolor: gridColor || 'rgba(128, 128, 128, 0.1)'
       } : {}
     };
 
     // Handle bold/italic for Y-axis labels
-    if ((axisLabelBold || axisLabelItalic) && updatedLayout.yaxis.title.font) {
-      let fontFamily = updatedLayout.yaxis.title.font.family || 'Arial, sans-serif';
-      if (axisLabelBold && axisLabelItalic) {
-        fontFamily = '"Arial Black", Arial, sans-serif';
-        updatedLayout.yaxis.title.font.family = fontFamily;
-        updatedLayout.yaxis.title.font.style = 'italic';
-      } else if (axisLabelBold) {
-        updatedLayout.yaxis.title.font.family = '"Arial Black", Arial, sans-serif';
-      } else if (axisLabelItalic) {
-        updatedLayout.yaxis.title.font.style = 'italic';
-      }
+    if (axisLabelBold && updatedLayout.yaxis.title.font) {
+      updatedLayout.yaxis.title.font.weight = 'bold';
+    }
+    if (axisLabelItalic && updatedLayout.yaxis.title.font) {
+      updatedLayout.yaxis.title.font.style = 'italic';
     }
 
     // Set Y-axis range if specified
@@ -206,8 +185,8 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
     if (updatedLayout.showlegend !== false) {
       updatedLayout.legend = {
         ...updatedLayout.legend,
-        ...(legendBackgroundColor !== null && legendBackgroundOpacity !== null && { 
-          bgcolor: colorToRgba(legendBackgroundColor, legendBackgroundOpacity) 
+        ...(legendBackgroundColor !== null && { 
+          bgcolor: legendBackgroundColor 
         }),
         ...(legendBorderColor !== null && { 
           bordercolor: legendBorderColor,
@@ -216,23 +195,16 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
         font: {
           ...updatedLayout.legend?.font,
           ...(legendFontSize !== null && { size: legendFontSize }),
-          ...(legendColor !== null && { color: legendColor }),
-          family: updatedLayout.legend?.font?.family || 'Arial, sans-serif'
+          ...(legendTextColor !== null && { color: legendTextColor })
         }
       };
 
       // Handle bold/italic for legend
-      if ((legendBold || legendItalic) && updatedLayout.legend.font) {
-        let fontFamily = updatedLayout.legend.font.family || 'Arial, sans-serif';
-        if (legendBold && legendItalic) {
-          fontFamily = '"Arial Black", Arial, sans-serif';
-          updatedLayout.legend.font.family = fontFamily;
-          updatedLayout.legend.font.style = 'italic';
-        } else if (legendBold) {
-          updatedLayout.legend.font.family = '"Arial Black", Arial, sans-serif';
-        } else if (legendItalic) {
-          updatedLayout.legend.font.style = 'italic';
-        }
+      if (legendBold && updatedLayout.legend.font) {
+        updatedLayout.legend.font.weight = 'bold';
+      }
+      if (legendItalic && updatedLayout.legend.font) {
+        updatedLayout.legend.font.style = 'italic';
       }
     }
 
@@ -248,14 +220,163 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
       updatedLayout.figureBorderColor = figureBorderColor;
     }
 
-    // Update traces visibility based on legend items
+    // Update traces visibility based on legend items and trace properties
     const updatedData = plotData.data.map((trace, index) => {
       const legendItem = legendItems.find(item => item.id === index);
-      return {
+      const traceProps = traceProperties[index] || {};
+      
+      const updatedTrace = {
         ...trace,
         showlegend: legendItem ? legendItem.visible : true,
-        name: legendItem ? legendItem.name : trace.name
+        name: traceProps.name !== undefined ? traceProps.name : (legendItem ? legendItem.name : trace.name)
       };
+      
+      // Update line properties if it's a line trace
+      if (trace.mode?.includes('lines')) {
+        updatedTrace.line = {
+          ...trace.line,
+          ...(traceProps.lineWidth !== undefined && { width: traceProps.lineWidth }),
+          ...(traceProps.lineStyle !== undefined && { dash: traceProps.lineStyle }),
+          ...(traceProps.color !== undefined && !traceProps.colorColumn && { color: traceProps.color })
+        };
+        
+        // Handle symbols for line traces
+        if (traceProps.symbol !== undefined || traceProps.symbolSize !== undefined) {
+          const currentSymbol = traceProps.symbol !== undefined ? traceProps.symbol : trace.marker?.symbol;
+          const currentSize = traceProps.symbolSize !== undefined ? traceProps.symbolSize : trace.marker?.size;
+          
+          // Set mode based on symbol and size
+          if (currentSymbol === null || currentSize === 0) {
+            updatedTrace.mode = 'lines';
+          } else {
+            updatedTrace.mode = 'lines+markers';
+            
+            // Update marker properties
+            updatedTrace.marker = {
+              ...trace.marker,
+              ...(traceProps.symbol !== undefined && { symbol: traceProps.symbol }),
+              ...(traceProps.symbolSize !== undefined && { size: traceProps.symbolSize }),
+              ...(traceProps.symbolColor !== undefined && { color: traceProps.symbolColor })
+            };
+            
+            // Only set line properties if border color is explicitly set
+            if (traceProps.symbolBorderColor !== undefined) {
+              updatedTrace.marker.line = {
+                ...trace.marker?.line,
+                color: traceProps.symbolBorderColor,
+                width: 1
+              };
+            }
+          }
+        }
+      }
+      
+      // Update marker properties if it's a scatter trace
+      if (trace.mode?.includes('markers') && !trace.mode?.includes('lines')) {
+        // Check if we should hide markers
+        const currentSymbol = traceProps.symbol !== undefined ? traceProps.symbol : trace.marker?.symbol;
+        const currentSize = traceProps.symbolSize !== undefined ? traceProps.symbolSize : trace.marker?.size;
+        
+        if (currentSymbol === null || currentSize === 0) {
+          // Hide scatter plot if no symbol
+          updatedTrace.visible = false;
+        } else {
+          updatedTrace.visible = legendItem ? legendItem.visible : true;
+          
+          updatedTrace.marker = {
+            ...trace.marker,
+            ...(traceProps.symbol !== undefined && { symbol: traceProps.symbol }),
+            ...(traceProps.symbolSize !== undefined && { size: traceProps.symbolSize }),
+            ...(traceProps.symbolColor !== undefined && { color: traceProps.symbolColor }),
+            ...(traceProps.color !== undefined && !traceProps.colorColumn && !traceProps.symbolColor && { color: traceProps.color })
+          };
+          
+          // Only set line properties if border color is explicitly set
+          if (traceProps.symbolBorderColor !== undefined) {
+            updatedTrace.marker.line = {
+              ...trace.marker?.line,
+              color: traceProps.symbolBorderColor,
+              width: 1
+            };
+          }
+          
+          // Handle color by column
+          if (traceProps.colorColumn && plotData.x && plotData.y) {
+            // This would need access to the actual data columns
+            // For now, we'll just set up the structure
+            updatedTrace.marker.color = traceProps.colorColumn; // This should be the actual data
+            updatedTrace.marker.colorscale = traceProps.colormap || 'Viridis';
+            updatedTrace.marker.showscale = traceProps.showColorbar !== false;
+            if (traceProps.showColorbar !== false) {
+              updatedTrace.marker.colorbar = {
+                title: {
+                  text: traceProps.colorbarTitle || traceProps.colorColumn,
+                  font: { weight: 'normal' }
+                },
+                tickfont: { weight: 'normal' },
+                ...(traceProps.showColorbarTicks === false && { tickmode: 'array', tickvals: [] })
+              };
+            }
+          }
+        }
+      }
+      
+      // Update bar properties if it's a bar trace
+      if (trace.type === 'bar') {
+        // Bar width
+        if (traceProps.barWidth !== undefined) {
+          updatedTrace.width = traceProps.barWidth;
+        }
+        
+        // Bar opacity
+        if (traceProps.barOpacity !== undefined) {
+          updatedTrace.opacity = traceProps.barOpacity;
+        }
+        
+        // Bar color
+        if (traceProps.color !== undefined && !traceProps.colorColumn) {
+          updatedTrace.marker = {
+            ...updatedTrace.marker,
+            color: traceProps.color
+          };
+        }
+        
+        // Text on bars
+        if (traceProps.showText !== undefined) {
+          if (traceProps.showText) {
+            // Show the y values as text on bars
+            updatedTrace.text = trace.y;
+            updatedTrace.textposition = traceProps.textPosition || 'auto';
+          } else {
+            updatedTrace.text = undefined;
+            updatedTrace.textposition = undefined;
+          }
+        } else if (traceProps.textPosition !== undefined && trace.text) {
+          updatedTrace.textposition = traceProps.textPosition;
+        }
+        
+        // Handle color by column for bars
+        if (traceProps.colorColumn && plotData.x && plotData.y) {
+          updatedTrace.marker = {
+            ...updatedTrace.marker,
+            color: traceProps.colorColumn, // This should be the actual data
+            colorscale: traceProps.colormap || 'Viridis',
+            showscale: traceProps.showColorbar !== false
+          };
+          if (traceProps.showColorbar !== false) {
+            updatedTrace.marker.colorbar = {
+              title: {
+                text: traceProps.colorbarTitle || traceProps.colorColumn,
+                font: { weight: 'normal' }
+              },
+              tickfont: { weight: 'normal' },
+              ...(traceProps.showColorbarTicks === false && { tickmode: 'array', tickvals: [] })
+            };
+          }
+        }
+      }
+      
+      return updatedTrace;
     });
 
     onUpdate({ ...plotData, layout: updatedLayout, data: updatedData });
@@ -277,14 +398,14 @@ export const useEditPaneUpdates = (state, plotData, onUpdate) => {
   }, [titleVisible, xAxisLabelVisible, yAxisLabelVisible, legendVisible, 
       xAxisScale, yAxisScale, xAxisTicksVisible, yAxisTicksVisible, legendItems,
       xAxisInverted, yAxisInverted, xGridVisible, yGridVisible, 
-      xMinorGridVisible, yMinorGridVisible, gridOpacity, gridColor,
+      xMinorGridVisible, yMinorGridVisible, gridColor,
       titleFontSize, axisLabelFontSize, axisTickFontSize, titleColor, 
       axisLabelColor, axisTickColor, titleBold, titleItalic, titleAlignment,
       axisLabelBold, axisLabelItalic,
-      legendFontSize, legendColor, legendBold, legendItalic,
-      legendBackgroundColor, legendBorderColor, legendBackgroundOpacity,
+      legendFontSize, legendTextColor, legendBold, legendItalic,
+      legendBackgroundColor, legendBorderColor,
       figureBackgroundColor, figureBorderColor,
-      plotBackgroundColor, plotBorderColor]);
+      plotBackgroundColor, plotBorderColor, traceProperties]);
 
   // Auto-update on certain field changes with debounce
   useEffect(() => {

@@ -42,11 +42,11 @@ def load_dataset(name: str, data_dir: Optional[Path] = None) -> pd.DataFrame:
     logger.debug("Loading dataset '%s' (ext=%s)", name, ext)
 
     if ext == ".csv":
-        return pd.read_csv(file_path)
+        return pd.read_csv(file_path, encoding='utf-8')
     if ext in {".xls", ".xlsx"}:
         return pd.read_excel(file_path)
     if ext == ".json":
-        return pd.read_json(file_path)
+        return pd.read_json(file_path, encoding='utf-8')
 
     raise ValueError(f"Unsupported data format: {ext}")
 

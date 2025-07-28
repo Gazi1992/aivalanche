@@ -26,7 +26,7 @@ class ConfigLoader:
             raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
 
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
                 logger.info(f"Loading configuration from: {self.config_path}")
                 config = json.load(f)
             return config

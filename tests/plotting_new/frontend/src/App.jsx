@@ -100,7 +100,11 @@ function App() {
   };
 
   useEffect(() => {
-    axios.get(`${API_BASE}/config`)
+    axios.get(`${API_BASE}/config`, {
+      headers: {
+        'Accept': 'application/json; charset=utf-8'
+      }
+    })
         .then(res => {
         setConfig(res.data);
         setLocalFigures(res.data.figures);

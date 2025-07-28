@@ -16,7 +16,7 @@ const LabelIcon = ({ size = 24, color = 'currentColor' }) => (
       fontFamily="Algerian"
       fill={color}
     >
-      L
+      T
     </text>
   </svg>
 );

@@ -24,9 +24,7 @@ const LegendSubsection = ({
   legendBackgroundColor,
   setLegendBackgroundColor,
   legendBorderColor,
-  setLegendBorderColor,
-  legendBackgroundOpacity,
-  setLegendBackgroundOpacity
+  setLegendBorderColor
 }) => {
   return (
     <div style={subsectionStyle}>
@@ -43,46 +41,33 @@ const LegendSubsection = ({
       
       {legendExpanded && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={checkboxGroupStyle}>
-            <input
-              type="checkbox"
-              id="legend-visible"
-              checked={legendVisible}
-              onChange={(e) => setLegendVisible(e.target.checked)}
-            />
-            <label htmlFor="legend-visible" style={labelStyle}>Show Legend</label>
-          </div>
-          
-          {legendVisible && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                <label style={labelStyle}>Opacity:</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={Math.round(legendBackgroundOpacity * 100)}
-                  onChange={(e) => setLegendBackgroundOpacity(e.target.value / 100)}
-                  style={{ ...sliderStyle, flex: 1 }}
-                />
-                <span style={{ minWidth: '40px', color: 'var(--text-color)', fontSize: '0.85rem' }}>
-                  {Math.round(legendBackgroundOpacity * 100)}%
-                </span>
-              </div>
-              <ColorPickerIcon
-                icon={FillIcon}
-                color={legendBackgroundColor}
-                onChange={(e) => setLegendBackgroundColor(e.target.value)}
-                title="Legend background color"
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={checkboxGroupStyle}>
+              <input
+                type="checkbox"
+                id="legend-visible"
+                checked={legendVisible}
+                onChange={(e) => setLegendVisible(e.target.checked)}
               />
-              <ColorPickerIcon
-                icon={BorderIcon}
-                color={legendBorderColor}
-                onChange={(e) => setLegendBorderColor(e.target.value)}
-                title="Legend border color"
-              />
+              <label htmlFor="legend-visible" style={labelStyle}>Show Legend</label>
             </div>
-          )}
+            {legendVisible && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ColorPickerIcon
+                  icon={FillIcon}
+                  color={legendBackgroundColor}
+                  onChange={(e) => setLegendBackgroundColor(e.target.value)}
+                  title="Legend background color"
+                />
+                <ColorPickerIcon
+                  icon={BorderIcon}
+                  color={legendBorderColor}
+                  onChange={(e) => setLegendBorderColor(e.target.value)}
+                  title="Legend border color"
+                />
+              </div>
+            )}
+          </div>
           
           {legendVisible && legendItems.length > 0 && (
             <div style={{ marginTop: '8px' }}>

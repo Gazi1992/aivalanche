@@ -40,8 +40,8 @@ const TextSubsection = ({
   setLegendBold,
   legendItalic,
   setLegendItalic,
-  legendColor,
-  setLegendColor,
+  legendTextColor,
+  setLegendTextColor,
   hasLegend
 }) => {
   const textItemStyle = {
@@ -199,9 +199,9 @@ const TextSubsection = ({
               </ToggleButton>
               <ColorPickerIcon
                 icon={FillIcon}
-                color={legendColor || '#000000'}
-                onChange={(e) => setLegendColor(e.target.value)}
-                title="Legend color"
+                color={legendTextColor || '#000000'}
+                onChange={(e) => setLegendTextColor(e.target.value)}
+                title="Legend text color"
               />
             </div>
           )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { GridIcon, FillIcon } from '../icons';
+import { GridIcon, BorderIcon, FillIcon } from '../icons';
 import ColorPickerIcon from './ColorPickerIcon';
 import { 
   subsectionStyle, 
@@ -7,8 +7,7 @@ import {
   chevronStyle,
   fieldContainerStyle,
   labelStyle,
-  checkboxStyle,
-  sliderStyle
+  checkboxStyle
 } from './styles';
 
 const GridSubsection = ({
@@ -22,10 +21,16 @@ const GridSubsection = ({
   setXMinorGridVisible,
   yMinorGridVisible,
   setYMinorGridVisible,
-  gridOpacity,
-  setGridOpacity,
   gridColor,
-  setGridColor
+  setGridColor,
+  figureBackgroundColor,
+  setFigureBackgroundColor,
+  figureBorderColor,
+  setFigureBorderColor,
+  plotBackgroundColor,
+  setPlotBackgroundColor,
+  plotBorderColor,
+  setPlotBorderColor
 }) => {
   return (
     <div style={subsectionStyle}>
@@ -37,7 +42,7 @@ const GridSubsection = ({
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <GridIcon size={20} />
-          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-color)' }}>Grid</span>
+          <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-color)' }}>Grid & Figure</span>
         </span>
         <span style={chevronStyle(gridExpanded)}>›</span>
       </div>
@@ -88,28 +93,76 @@ const GridSubsection = ({
             </label>
           </div>
           
-          {/* Grid Opacity and Color */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-              <label style={labelStyle}>Opacity:</label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={Math.round(gridOpacity * 100)}
-                onChange={(e) => setGridOpacity(e.target.value / 100)}
-                style={{ ...sliderStyle, flex: 1 }}
+          {/* All color options in one line */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            width: '100%',
+            marginTop: '8px'
+          }}>
+            {/* Grid */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <label style={{ ...labelStyle, fontSize: '0.85rem' }}>Grid:</label>
+              <ColorPickerIcon
+                icon={BorderIcon}
+                color={gridColor || '#808080'}
+                onChange={(e) => setGridColor(e.target.value)}
+                title="Grid color"
               />
-              <span style={{ minWidth: '40px', color: 'var(--text-color)', fontSize: '0.85rem' }}>
-                {Math.round(gridOpacity * 100)}%
-              </span>
             </div>
-            <ColorPickerIcon
-              icon={FillIcon}
-              color={gridColor || '#808080'}
-              onChange={(e) => setGridColor(e.target.value)}
-              title="Grid color"
-            />
+            
+            {/* Vertical Divider */}
+            <div style={{ 
+              width: '1px', 
+              height: '24px', 
+              backgroundColor: 'var(--border-color)',
+              marginLeft: 'auto',
+              marginRight: 'auto'
+            }} />
+            
+            {/* Figure */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <label style={{ ...labelStyle, fontSize: '0.85rem' }}>Figure:</label>
+              <ColorPickerIcon
+                icon={FillIcon}
+                color={figureBackgroundColor}
+                onChange={(e) => setFigureBackgroundColor(e.target.value)}
+                title="Figure background color"
+              />
+              <ColorPickerIcon
+                icon={BorderIcon}
+                color={figureBorderColor}
+                onChange={(e) => setFigureBorderColor(e.target.value)}
+                title="Figure border color"
+              />
+            </div>
+            
+            {/* Vertical Divider */}
+            <div style={{ 
+              width: '1px', 
+              height: '24px', 
+              backgroundColor: 'var(--border-color)',
+              marginLeft: 'auto',
+              marginRight: 'auto'
+            }} />
+            
+            {/* Plot Area */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <label style={{ ...labelStyle, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Plot Area:</label>
+              <ColorPickerIcon
+                icon={FillIcon}
+                color={plotBackgroundColor}
+                onChange={(e) => setPlotBackgroundColor(e.target.value)}
+                title="Plot area background color"
+              />
+              <ColorPickerIcon
+                icon={BorderIcon}
+                color={plotBorderColor}
+                onChange={(e) => setPlotBorderColor(e.target.value)}
+                title="Plot area border color"
+              />
+            </div>
           </div>
         </div>
       )}

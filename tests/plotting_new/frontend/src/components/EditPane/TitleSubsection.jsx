@@ -1,12 +1,12 @@
 import React from 'react';
-import { TitleIcon } from '../icons';
+import { LabelIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon } from '../icons';
 import { 
   subsectionStyle, 
   subsectionHeaderStyle, 
   subsectionTitleStyle, 
   chevronStyle,
-  legendItemStyle,
-  legendItemInputStyle
+  inputStyle,
+  checkboxStyle
 } from './styles';
 
 const TitleSubsection = ({ 
@@ -16,8 +16,11 @@ const TitleSubsection = ({
   setTitleVisible,
   titleText,
   setTitleText,
+  titleAlignment,
+  setTitleAlignment,
   onBlur
 }) => {
+
   return (
     <div style={subsectionStyle}>
       <div 
@@ -25,33 +28,77 @@ const TitleSubsection = ({
         onClick={() => setTitleExpanded(!titleExpanded)}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <TitleIcon size={20} />
+          <LabelIcon size={20} />
           <span style={subsectionTitleStyle}>Title</span>
         </span>
         <span style={chevronStyle(titleExpanded)}>›</span>
       </div>
       
       {titleExpanded && (
-        <div style={{ ...legendItemStyle, gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <input
             type="checkbox"
-            id="title-visible"
             checked={titleVisible}
             onChange={(e) => setTitleVisible(e.target.checked)}
+            style={checkboxStyle}
           />
           <input
             type="text"
             value={titleText}
             onChange={(e) => setTitleText(e.target.value)}
-            placeholder="Plot Title"
-            style={{ ...legendItemInputStyle, flex: 1 }}
+            onBlur={onBlur}
+            style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+            placeholder="Enter title"
             disabled={!titleVisible}
-            onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'var(--border-color)';
-              onBlur();
-            }}
           />
+          <button
+            onClick={() => setTitleAlignment('left')}
+            style={{
+              padding: '4px',
+              border: '1px solid var(--border-color)',
+              borderRadius: '4px',
+              background: titleAlignment === 'left' ? 'var(--primary-color)' : 'var(--background-color)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Align left"
+          >
+            <AlignLeftIcon size={16} color={titleAlignment === 'left' ? 'white' : 'var(--text-color)'} />
+          </button>
+          <button
+            onClick={() => setTitleAlignment('center')}
+            style={{
+              padding: '4px',
+              border: '1px solid var(--border-color)',
+              borderRadius: '4px',
+              background: titleAlignment === 'center' ? 'var(--primary-color)' : 'var(--background-color)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Align center"
+          >
+            <AlignCenterIcon size={16} color={titleAlignment === 'center' ? 'white' : 'var(--text-color)'} />
+          </button>
+          <button
+            onClick={() => setTitleAlignment('right')}
+            style={{
+              padding: '4px',
+              border: '1px solid var(--border-color)',
+              borderRadius: '4px',
+              background: titleAlignment === 'right' ? 'var(--primary-color)' : 'var(--background-color)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Align right"
+          >
+            <AlignRightIcon size={16} color={titleAlignment === 'right' ? 'white' : 'var(--text-color)'} />
+          </button>
         </div>
       )}
     </div>

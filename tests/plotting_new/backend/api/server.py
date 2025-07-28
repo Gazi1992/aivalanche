@@ -11,6 +11,7 @@ from typing import List
 # Third-party
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import plotly.graph_objs as go
 
@@ -147,7 +148,7 @@ def get_config():
         except Exception as exc:
             logging.getLogger(__name__).error("Failed to write frontend payload from /config: %s", exc)
 
-        return dashboard_json
+        return JSONResponse(content=dashboard_json, media_type="application/json; charset=utf-8")
     except Exception as e:
         logging.getLogger(__name__).error(f"Error building dashboard from {config_name}: {e}", exc_info=True)
         raise HTTPException(500, detail="Failed to process configuration.")
@@ -340,7 +341,7 @@ def dashboard(config_name: str):
     # Keep short diagnostics in the regular debug log
     logging.getLogger(__name__).debug("Dashboard response size=%d bytes", len(json.dumps(dashboard_json)))
     logging.getLogger(__name__).debug("Dashboard snippet: %s", json.dumps(dashboard_json)[:500])
-    return dashboard_json
+    return JSONResponse(content=dashboard_json, media_type="application/json; charset=utf-8")
 
 
 # ---------------------------------------------------------------------------

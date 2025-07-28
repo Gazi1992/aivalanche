@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { extractAlphaFromColor, extractColorWithoutAlpha, colorToRgba } from './colorUtils';
+import { extractColorWithoutAlpha } from './colorUtils';
 
 export const useEditPaneState = (plotData, isOpen) => {
   // Section expansion states
@@ -8,7 +8,6 @@ export const useEditPaneState = (plotData, isOpen) => {
   const [axisExpanded, setAxisExpanded] = useState(false);
   const [legendExpanded, setLegendExpanded] = useState(false);
   const [gridExpanded, setGridExpanded] = useState(false);
-  const [backgroundExpanded, setBackgroundExpanded] = useState(false);
   const [textExpanded, setTextExpanded] = useState(false);
 
   // Title state
@@ -37,14 +36,12 @@ export const useEditPaneState = (plotData, isOpen) => {
   const [legendItems, setLegendItems] = useState([]);
   const [legendBackgroundColor, setLegendBackgroundColor] = useState(null);
   const [legendBorderColor, setLegendBorderColor] = useState(null);
-  const [legendBackgroundOpacity, setLegendBackgroundOpacity] = useState(null);
 
   // Grid state
   const [xGridVisible, setXGridVisible] = useState(null);
   const [yGridVisible, setYGridVisible] = useState(null);
   const [xMinorGridVisible, setXMinorGridVisible] = useState(false);
   const [yMinorGridVisible, setYMinorGridVisible] = useState(false);
-  const [gridOpacity, setGridOpacity] = useState(null);
   const [gridColor, setGridColor] = useState(null);
 
   // Background state
@@ -67,7 +64,12 @@ export const useEditPaneState = (plotData, isOpen) => {
   const [legendFontSize, setLegendFontSize] = useState(null);
   const [legendBold, setLegendBold] = useState(false);
   const [legendItalic, setLegendItalic] = useState(false);
-  const [legendColor, setLegendColor] = useState(null);
+  const [legendTextColor, setLegendTextColor] = useState(null);
+  
+  // Data state
+  const [dataExpanded, setDataExpanded] = useState(false);
+  const [selectedTraceIndex, setSelectedTraceIndex] = useState(0);
+  const [traceProperties, setTraceProperties] = useState({});
 
   // Timer for updates
   const updateTimer = useRef(null);
@@ -81,7 +83,6 @@ export const useEditPaneState = (plotData, isOpen) => {
       setLegendExpanded(false);
       setGridExpanded(false);
       setTextExpanded(false);
-      setBackgroundExpanded(false);
     }
   }, [isOpen]);
 
@@ -114,8 +115,7 @@ export const useEditPaneState = (plotData, isOpen) => {
     setAxisTickColor(layout.xaxis?.tickfont?.color || layout.yaxis?.tickfont?.color || null);
     setXGridVisible(layout.xaxis?.showgrid !== false);
     if (layout.xaxis?.gridcolor) {
-      setGridColor(extractColorWithoutAlpha(layout.xaxis.gridcolor));
-      setGridOpacity(extractAlphaFromColor(layout.xaxis.gridcolor));
+      setGridColor(layout.xaxis.gridcolor);
     }
     setXMinorGridVisible(layout.xaxis?.minor?.showgrid === true);
 
@@ -136,22 +136,20 @@ export const useEditPaneState = (plotData, isOpen) => {
     setLegendVisible(layout.showlegend !== false);
     if (layout.legend?.bgcolor) {
       setLegendBackgroundColor(extractColorWithoutAlpha(layout.legend.bgcolor));
-      setLegendBackgroundOpacity(extractAlphaFromColor(layout.legend.bgcolor));
     } else {
       // Only set defaults if not specified in layout
       setLegendBackgroundColor(null);
-      setLegendBackgroundOpacity(0.8);
     }
     setLegendBorderColor(layout.legend?.bordercolor || null);
     setLegendFontSize(layout.legend?.font?.size || 12);
-    setLegendColor(layout.legend?.font?.color || null);
+    setLegendTextColor(layout.legend?.font?.color || null);
 
     // Legend items from traces
     if (plotData.data) {
       const items = plotData.data.map((trace, index) => ({
         id: index,
         name: trace.name || `Trace ${index + 1}`,
-        visible: trace.visible !== false
+        visible: trace.showlegend !== false
       }));
       setLegendItems(items);
     }
@@ -181,8 +179,6 @@ export const useEditPaneState = (plotData, isOpen) => {
     setLegendExpanded,
     gridExpanded,
     setGridExpanded,
-    backgroundExpanded,
-    setBackgroundExpanded,
     textExpanded,
     setTextExpanded,
 
@@ -233,8 +229,6 @@ export const useEditPaneState = (plotData, isOpen) => {
     setLegendBackgroundColor,
     legendBorderColor,
     setLegendBorderColor,
-    legendBackgroundOpacity,
-    setLegendBackgroundOpacity,
 
     // Grid state
     xGridVisible,
@@ -245,8 +239,6 @@ export const useEditPaneState = (plotData, isOpen) => {
     setXMinorGridVisible,
     yMinorGridVisible,
     setYMinorGridVisible,
-    gridOpacity,
-    setGridOpacity,
     gridColor,
     setGridColor,
 
@@ -287,8 +279,16 @@ export const useEditPaneState = (plotData, isOpen) => {
     setLegendBold,
     legendItalic,
     setLegendItalic,
-    legendColor,
-    setLegendColor,
+    legendTextColor,
+    setLegendTextColor,
+    
+    // Data state
+    dataExpanded,
+    setDataExpanded,
+    selectedTraceIndex,
+    setSelectedTraceIndex,
+    traceProperties,
+    setTraceProperties,
 
     // Refs
     updateTimer,

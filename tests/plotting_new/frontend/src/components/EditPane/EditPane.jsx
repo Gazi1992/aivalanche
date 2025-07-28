@@ -85,9 +85,7 @@ const EditPane = ({ isOpen, onClose, plotData, metadata, onUpdate }) => {
     backgroundColor: state.legendBackgroundColor,
     setBackgroundColor: state.setLegendBackgroundColor,
     borderColor: state.legendBorderColor,
-    setBorderColor: state.setLegendBorderColor,
-    backgroundOpacity: state.legendBackgroundOpacity,
-    setBackgroundOpacity: state.setLegendBackgroundOpacity
+    setBorderColor: state.setLegendBorderColor
   };
 
   const gridState = {
@@ -101,15 +99,11 @@ const EditPane = ({ isOpen, onClose, plotData, metadata, onUpdate }) => {
     setXMinorGridVisible: state.setXMinorGridVisible,
     yMinorGridVisible: state.yMinorGridVisible,
     setYMinorGridVisible: state.setYMinorGridVisible,
-    gridOpacity: state.gridOpacity,
-    setGridOpacity: state.setGridOpacity,
     gridColor: state.gridColor,
     setGridColor: state.setGridColor
   };
   
   const backgroundState = {
-    expanded: state.backgroundExpanded,
-    setExpanded: state.setBackgroundExpanded,
     figureBackgroundColor: state.figureBackgroundColor,
     setFigureBackgroundColor: state.setFigureBackgroundColor,
     figureBorderColor: state.figureBorderColor,
@@ -149,9 +143,42 @@ const EditPane = ({ isOpen, onClose, plotData, metadata, onUpdate }) => {
     setLegendBold: state.setLegendBold,
     legendItalic: state.legendItalic,
     setLegendItalic: state.setLegendItalic,
-    legendColor: state.legendColor,
-    setLegendColor: state.setLegendColor,
+    legendTextColor: state.legendTextColor,
+    setLegendTextColor: state.setLegendTextColor,
     hasLegend
+  };
+  
+  // Extract traces and columns for data subsection
+  const traces = plotData?.data || [];
+  const hasData = traces.length > 0 && !metadata?.isPcp && !metadata?.isSplom;
+  
+  // Get available columns from the first dataset
+  const availableColumns = [];
+  if (metadata?.datasets) {
+    const firstDataset = Object.values(metadata.datasets)[0];
+    if (firstDataset?.columns) {
+      availableColumns.push(...firstDataset.columns);
+    }
+  }
+  
+  const dataState = {
+    expanded: state.dataExpanded,
+    setExpanded: state.setDataExpanded,
+    traces: traces,
+    selectedTraceIndex: state.selectedTraceIndex,
+    setSelectedTraceIndex: state.setSelectedTraceIndex,
+    traceProperties: state.traceProperties,
+    availableColumns: availableColumns
+  };
+  
+  const updateTraceProperty = (traceIndex, property, value) => {
+    state.setTraceProperties(prev => ({
+      ...prev,
+      [traceIndex]: {
+        ...prev[traceIndex],
+        [property]: value
+      }
+    }));
   };
 
   return (
@@ -172,6 +199,7 @@ const EditPane = ({ isOpen, onClose, plotData, metadata, onUpdate }) => {
             setAppearanceExpanded={state.setAppearanceExpanded}
             hasAxes={hasAxes}
             hasLegend={hasLegend}
+            hasData={hasData}
             titleState={titleState}
             xAxisState={xAxisState}
             yAxisState={yAxisState}
@@ -179,8 +207,10 @@ const EditPane = ({ isOpen, onClose, plotData, metadata, onUpdate }) => {
             gridState={gridState}
             backgroundState={backgroundState}
             textState={textState}
+            dataState={dataState}
             onTextBlur={handleTextBlur}
             updateLegendItem={updateLegendItem}
+            updateTraceProperty={updateTraceProperty}
           />
         </div>
       </div>

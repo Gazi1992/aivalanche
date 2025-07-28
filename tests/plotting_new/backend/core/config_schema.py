@@ -294,17 +294,21 @@ class SchemaRegistry:
             default=True,
             description="Initial state for horizontal grid line visibility (toggleable)"
         ),
-        "grid_alpha": ConfigField(
-            field_type=(float, int),
-            default=0.3,
-            validator=is_between_0_and_1,
-            description="Alpha (transparency) value for grid lines (0.0 to 1.0)"
-        ),
         "grid_color": ConfigField(
             field_type=(str, type(None)),
             default=None,
             validator=is_valid_hex_color,
             description="Custom color for grid lines (hex format, e.g., #RRGGBBAA). If null, theme default is used."
+        ),
+        "grid_x_minor": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Initial state for vertical minor grid line visibility (toggleable)"
+        ),
+        "grid_y_minor": ConfigField(
+            field_type=bool,
+            default=False,
+            description="Initial state for horizontal minor grid line visibility (toggleable)"
         ),
         "visibility": ConfigField(
             field_type=bool,
@@ -317,11 +321,23 @@ class SchemaRegistry:
             validator=is_positive,
             description="Font size for legend text in pixels"
         ),
-        "legend_color": ConfigField(
+        "legend_text_color": ConfigField(
             field_type=(str, type(None)),
             default=None,
             validator=is_valid_hex_color,
             description="Color for legend text (hex format). If null, theme default is used."
+        ),
+        "legend_background_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Background color for legend box (hex format or rgba). If null, theme default is used."
+        ),
+        "legend_border_color": ConfigField(
+            field_type=(str, type(None)),
+            default=None,
+            validator=is_valid_hex_color,
+            description="Border color for legend box (hex format or rgba). If null, theme default is used."
         ),
         "legend_bold": ConfigField(
             field_type=bool,
