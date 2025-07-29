@@ -83,7 +83,20 @@ class DifferentialEvolution:
                  adaptive_boundaries_extension: float = 0.1,
                  adaptive_boundaries_check_period: int = 10,
 
-                 results_dir: Optional[str] = None):
+                 results_dir: Optional[str] = None,
+                 
+                 # Metamodel parameters
+                 use_metamodel: bool = False,
+                 metamodel_type: str = 'gaussian_process',
+                 metamodel_config: Optional[Dict[str, Any]] = None,
+                 metamodel_acquisition_strategy: str = 'mixed',
+                 metamodel_acquisition_function: str = 'expected_improvement',
+                 metamodel_min_training_points: Optional[int] = None,
+                 metamodel_update_frequency: int = 5,
+                 metamodel_exploration_ratio: float = 0.2,
+                 metamodel_uncertainty_threshold: float = 0.2,
+                 metamodel_validation_frequency: int = 10,
+                 metamodel_verbose: bool = False):
         """
         Initialize the Differential Evolution optimizer.
 
@@ -112,6 +125,21 @@ class DifferentialEvolution:
             adaptive_boundaries: Whether to adapt parameter boundaries during optimization
             adaptive_boundaries_*: Settings for adaptive boundaries
             results_dir: Directory to save results
+            
+            # Metamodel parameters
+            use_metamodel: Whether to use metamodel-assisted optimization
+            metamodel_type: Type of metamodel ('gaussian_process', 'random_forest', etc.)
+            metamodel_config: Configuration dict for the metamodel (passed to metamodel constructor)
+            metamodel_acquisition_strategy: Strategy for using metamodel ('all_actual', 'all_metamodel', 
+                                          'mixed', 'adaptive', 'uncertainty', 'periodic')
+            metamodel_acquisition_function: Acquisition function for 'mixed' strategy 
+                                          ('expected_improvement', 'probability_of_improvement', 'upper_confidence_bound')
+            metamodel_min_training_points: Minimum training points before using metamodel (default: pop_size)
+            metamodel_update_frequency: How often to retrain the metamodel
+            metamodel_exploration_ratio: Ratio of exploratory evaluations for 'mixed' strategy
+            metamodel_uncertainty_threshold: Uncertainty threshold for 'uncertainty' strategy
+            metamodel_validation_frequency: Validation frequency for 'periodic' strategy
+            metamodel_verbose: Whether to print metamodel information
         """
         # Set random seed
         self.seed = seed if seed is not None else np.random.randint(0, 1000)
@@ -170,6 +198,52 @@ class DifferentialEvolution:
 
         # Results directory
         self.results_dir = results_dir
+        
+        # Metamodel settings
+        self.use_metamodel = use_metamodel
+        self.metamodel_evaluator = None
+        
+        if self.use_metamodel:
+            # Import metamodel components
+            try:
+                from aivalanche_lib.metamodels import MetamodelEvaluator, GaussianProcessMetamodel, AcquisitionStrategy
+            except ImportError:
+                raise ImportError(
+                    "Metamodel support requires the aivalanche_lib.metamodels package. "
+                    "Please ensure it is properly installed."
+                )
+            
+            # Create metamodel instance based on type
+            if metamodel_type == 'gaussian_process':
+                metamodel = GaussianProcessMetamodel(
+                    random_state=self.seed,
+                    **(metamodel_config or {})
+                )
+            else:
+                raise ValueError(f"Unsupported metamodel type: {metamodel_type}")
+            
+            # Set default min training points if not specified
+            if metamodel_min_training_points is None:
+                metamodel_min_training_points = self.pop_size
+            
+            # Create metamodel evaluator wrapper
+            self.metamodel_evaluator = MetamodelEvaluator(
+                actual_eval_func=self.eval_func,
+                metamodel=metamodel,
+                acquisition_strategy=AcquisitionStrategy(metamodel_acquisition_strategy),
+                acquisition_function=metamodel_acquisition_function,
+                min_training_points=metamodel_min_training_points,
+                update_frequency=metamodel_update_frequency,
+                exploration_ratio=metamodel_exploration_ratio,
+                uncertainty_threshold=metamodel_uncertainty_threshold,
+                validation_frequency=metamodel_validation_frequency,
+                verbose=metamodel_verbose
+            )
+            
+            # Store original eval_func for reference
+            self._original_eval_func = self.eval_func
+            # Replace eval_func with metamodel evaluator
+            self.eval_func = self.metamodel_evaluator
 
         # Initialize variables
         self._initialize_variables()
@@ -419,6 +493,10 @@ class DifferentialEvolution:
             'best_parameters': self.best_parameters,
             **self.eval_func_args
         }
+        
+        # Add optimization direction for metamodel evaluator
+        if self.use_metamodel:
+            extra_arguments['opt_min_or_max'] = self.opt_min_or_max
 
         # The eval_func should return a list, where each item is a dict that has at least the element 'metric'.
         self.current_responses = self.eval_func(parameters = self.current_parameters, **extra_arguments)
@@ -495,6 +573,31 @@ class DifferentialEvolution:
         print(f"Best response: {self.best_metric}\n\n")
         print(f"Best parameters: {self.best_parameters}\n\n")
         print("--------------------------------------------------------------------------------\n\n")
+        
+        # Show metamodel statistics if used
+        if self.use_metamodel and self.metamodel_evaluator:
+            print("\n-------------------------- Metamodel Statistics --------------------------\n")
+            stats = self.get_metamodel_statistics()
+            if stats:
+                print(f"Actual function evaluations: {stats['n_actual_evaluations']}")
+                print(f"Metamodel predictions: {stats['n_metamodel_evaluations']}")
+                print(f"Metamodel usage ratio: {stats['metamodel_usage_ratio']:.2%}")
+                print(f"Time saved: {stats['time_saved']:.2f} seconds")
+                print(f"Speedup factor: {stats['speedup_factor']:.2f}x")
+                if stats['avg_validation_error'] is not None:
+                    print(f"Average validation error: {stats['avg_validation_error']:.4f}")
+            print("\n--------------------------------------------------------------------------------\n\n")
+    
+    def get_metamodel_statistics(self) -> Optional[Dict[str, Any]]:
+        """
+        Get statistics about metamodel usage if metamodel is enabled.
+        
+        Returns:
+            Dictionary with metamodel statistics or None if metamodel not used
+        """
+        if self.use_metamodel and self.metamodel_evaluator:
+            return self.metamodel_evaluator.get_statistics()
+        return None
 
     # i/o functions
     def write_history_to_file(self, which='trials', file_path=None):

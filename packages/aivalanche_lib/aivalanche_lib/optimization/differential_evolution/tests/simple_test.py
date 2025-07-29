@@ -7,9 +7,11 @@ It includes two test functions obtained from the test_functions package:
 2. A 6-parameter function (Ackley) that tests optimization in higher dimensions
 """
 
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
 from typing import List, Dict, Any
 
 # Import modules
@@ -21,6 +23,42 @@ from aivalanche_lib.test_functions import (
     generate_parameters_config,
     list_available_functions
 )
+from aivalanche_lib.optimization.differential_evolution.visualizations import _plot_population_animation
+
+# ----------------------------------------------------------------------------
+# Animation Function for 2D Problems
+# ----------------------------------------------------------------------------
+
+def create_de_animation(optimizer, output_dir, func_details=None):
+    """
+    Wrapper function to create population animation using the visualizations module.
+    
+    Args:
+        optimizer: The DifferentialEvolution optimizer instance
+        output_dir: Directory to save the animation
+        func_details: Function details dictionary (optional, for creating heatmap)
+    """
+    # Prepare save path
+    save_path = os.path.join(output_dir, 'de_animation.gif')
+    
+    # Call the animation function from visualizations
+    fig, anim = _plot_population_animation(
+        optimizer,
+        param_names=None,  # Will use first two parameters
+        figsize=(10, 8),
+        interval=100,
+        fps=10,
+        save_path=save_path,
+        func_details=func_details
+    )
+    
+    # Note: The function now supports heatmap background when func_details is provided
+    
+    if fig is not None:
+        plt.close(fig)
+        print(f"Animation saved to: {save_path}")
+    else:
+        print("Could not create animation")
 
 # ----------------------------------------------------------------------------
 # Generic Evaluation Function for Optimizers
@@ -87,7 +125,7 @@ def callback_after_better_solution(iteration, best_parameters, best_metric, **kw
 # ----------------------------------------------------------------------------
 # Test with 2D Rosenbrock function using the package
 # ----------------------------------------------------------------------------
-def test_rosenbrock():
+def test_rosenbrock(results_base_dir=None):
     """Test DifferentialEvolution with 2D Rosenbrock function from the package."""
     print("\n=== Testing with 2D Rosenbrock function (from test_functions) ===\n")
 
@@ -101,6 +139,12 @@ def test_rosenbrock():
     # Generate parameter configuration and create Parameters object
     param_config = generate_parameters_config(details_rosenbrock)
     parameters = Parameters(param_config)
+    
+    # Set up results directory
+    if results_base_dir is None:
+        results_base_dir = os.path.dirname(__file__)
+    test_results_dir = os.path.join(results_base_dir, 'test_results_rosenbrock_2d')
+    os.makedirs(test_results_dir, exist_ok=True)
 
     # Create optimizer
     optimizer = DifferentialEvolution(
@@ -116,7 +160,8 @@ def test_rosenbrock():
         callback_after_each_iter=callback_after_each_iter,
         callback_after_better_solution=callback_after_better_solution,
         adaptive_boundaries=False, # Keep adaptive boundaries for this test
-        boundary_constraint_method='clamp' # Example: Test clamping
+        boundary_constraint_method='clamp', # Example: Test clamping
+        results_dir=test_results_dir
     )
 
     # Run optimization
@@ -133,14 +178,14 @@ def test_rosenbrock():
     print("\nGenerating plots...")
     # Optimizer history plots
     fig_met_b, ax_met_b = optimizer.plot_metrics(which='bests', y_scale='log', title="Best Metric Evolution (Rosenbrock)")
-    fig_met_b.savefig("rosenbrock_best_metrics.png")
+    fig_met_b.savefig(os.path.join(test_results_dir, "metrics_evolution.png"))
 
     fig_hist, ax_hist = optimizer.plot_all_parameters_evolution(which='survivors', nr_rows=1, title="Survivor Parameter Distributions (Rosenbrock)")
-    fig_hist.savefig("rosenbrock_survivor_histograms.png")
+    fig_hist.savefig(os.path.join(test_results_dir, "survivor_histograms.png"))
 
     if optimizer.adaptive_boundaries:
         fig_bound, ax_bound = optimizer.plot_boundaries(normed=False, title="Boundary Evolution (Rosenbrock)")
-        fig_bound.savefig("rosenbrock_boundaries.png")
+        fig_bound.savefig(os.path.join(test_results_dir, "boundaries.png"))
 
     # Plot the test function itself using the package plotter
     fig_func, axes_func = plot_test_function(details_rosenbrock)
@@ -150,21 +195,34 @@ def test_rosenbrock():
         best_p = optimizer.best_parameters
         ax_contour.scatter(best_p['x1'], best_p['x2'], color='black', s=120, marker='X', label='DE Best Found', zorder=6)
         ax_contour.legend()
-    fig_func.savefig("rosenbrock_function_plot.png")
+    fig_func.savefig(os.path.join(test_results_dir, "function_plot.png"))
 
     plt.close('all') # Close plots to avoid displaying them if running multiple tests
     print("Plots saved.")
+    
+    # Create animation for 2D problem
+    print("\nCreating animation...")
+    create_de_animation(optimizer, test_results_dir, func_details=details_rosenbrock)
 
     # Save results
-    optimizer.write_best_parameters_to_file('rosenbrock_best_parameters.csv')
-    optimizer.write_optimization_info_to_file('rosenbrock_optimization_info.json')
+    optimizer.write_best_parameters_to_file(os.path.join(test_results_dir, 'best_parameters.csv'))
+    optimizer.write_optimization_info_to_file(os.path.join(test_results_dir, 'optimization_info.json'))
+    
+    # Save history files
+    for history_type in ['bests', 'trials']:
+        optimizer.write_history_to_file(
+            which=history_type,
+            file_path=os.path.join(test_results_dir, f'history_{history_type}.csv')
+        )
+    
+    print(f"\nAll files saved to: {test_results_dir}")
 
     return optimizer
 
 # ----------------------------------------------------------------------------
 # Test with 6D Ackley function using the package
 # ----------------------------------------------------------------------------
-def test_ackley():
+def test_ackley(results_base_dir=None):
     """Test DifferentialEvolution with 6D Ackley function from the package."""
     print("\n=== Testing with 6D Ackley function (from test_functions) ===\n")
 
@@ -179,6 +237,12 @@ def test_ackley():
     # Generate parameter configuration and create Parameters object
     param_config = generate_parameters_config(details_ackley)
     parameters = Parameters(param_config)
+    
+    # Set up results directory
+    if results_base_dir is None:
+        results_base_dir = os.path.dirname(__file__)
+    test_results_dir = os.path.join(results_base_dir, 'test_results_ackley_6d')
+    os.makedirs(test_results_dir, exist_ok=True)
 
     # Create optimizer
     optimizer = DifferentialEvolution(
@@ -193,7 +257,8 @@ def test_ackley():
         max_iter_without_improvement=75,
         callback_after_each_iter=callback_after_each_iter,
         # callback_after_better_solution=callback_after_better_solution, # Can be verbose
-        adaptive_boundaries=False # Keep boundaries fixed for this multimodal test
+        adaptive_boundaries=False, # Keep boundaries fixed for this multimodal test
+        results_dir=test_results_dir
     )
 
     # Run optimization
@@ -210,10 +275,10 @@ def test_ackley():
     print("\nGenerating plots...")
     # Optimizer history plots
     fig_met_b, ax_met_b = optimizer.plot_metrics(which='bests', y_scale='linear', title="Best Metric Evolution (Ackley 6D)")
-    fig_met_b.savefig("ackley6d_best_metrics.png")
+    fig_met_b.savefig(os.path.join(test_results_dir, "metrics_evolution.png"))
 
     fig_hist, ax_hist = optimizer.plot_all_parameters_evolution(which='survivors', nr_rows=2, title="Survivor Parameter Distributions (Ackley 6D)")
-    fig_hist.savefig("ackley6d_survivor_histograms.png")
+    fig_hist.savefig(os.path.join(test_results_dir, "survivor_histograms.png"))
 
     # Cannot plot the function itself in 6D
     print("Cannot plot 6D function visually.")
@@ -222,8 +287,17 @@ def test_ackley():
     print("Plots saved.")
 
     # Save results
-    optimizer.write_best_parameters_to_file('ackley6d_best_parameters.csv')
-    optimizer.write_optimization_info_to_file('ackley6d_optimization_info.json')
+    optimizer.write_best_parameters_to_file(os.path.join(test_results_dir, 'best_parameters.csv'))
+    optimizer.write_optimization_info_to_file(os.path.join(test_results_dir, 'optimization_info.json'))
+    
+    # Save history files
+    for history_type in ['bests', 'trials']:
+        optimizer.write_history_to_file(
+            which=history_type,
+            file_path=os.path.join(test_results_dir, f'history_{history_type}.csv')
+        )
+    
+    print(f"\nAll files saved to: {test_results_dir}")
 
     return optimizer
 

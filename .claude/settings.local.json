@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(python test_nelder_mead.py:*)",
+      "Bash(python:*)",
+      "Bash(C:UsersgazmeOneDriveDocumentsaivalanchecodemyPyEnvScriptsactivate)",
+      "Bash(\"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\myPyEnv\\Scripts\\python.exe\" test_nelder_mead.py)",
+      "Bash(\"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\myPyEnv\\Scripts\\python.exe\" -c \"import test_nelder_mead; test_nelder_mead.test_basic_optimization()\")",
+      "Bash(\"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\myPyEnv\\Scripts\\python.exe\" -c \"import test_nelder_mead; test_nelder_mead.test_basic_optimization()\")",
+      "Bash(\"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\myPyEnv\\Scripts\\python.exe\" test_nelder_mead.py single sphere_2d)",
+      "Bash(\"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\myPyEnv\\Scripts\\python.exe\" test_nelder_mead.py single rosenbrock_2d)",
+      "Bash(\"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\myPyEnv\\Scripts\\python.exe\" test_nelder_mead.py fixed)",
+      "Bash(powershell:*)",
+      "Bash(del \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\visualizations_animation.py\")",
+      "Bash(Remove-Item \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\visualizations_animation.py\")",
+      "Bash(C:UsersgazmeOneDriveDocumentsaivalanchecodemyPyEnvScriptspython.exe packages/aivalanche_lib/aivalanche_lib/optimization/adam/tests/test_adam_advanced.py)"
+    ],
+    "deny": []
+  }
+}
