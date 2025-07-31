@@ -177,7 +177,7 @@ def get_refinement_config(mode: str, custom_config: dict = None) -> dict:
     
     Args:
         mode: Refinement mode name
-        custom_config: Custom configuration (only used for 'custom' mode)
+        custom_config: Custom configuration (for 'custom' mode or to override predefined settings)
         
     Returns:
         Dictionary with refinement configuration
@@ -194,7 +194,14 @@ def get_refinement_config(mode: str, custom_config: dict = None) -> dict:
             raise ValueError("custom_config must be provided for 'custom' mode")
         return custom_config
     
-    return REFINEMENT_MODES[mode].copy()
+    # Return copy of predefined configuration
+    config = REFINEMENT_MODES[mode].copy()
+    
+    # Override with any custom settings
+    if custom_config:
+        config.update(custom_config)
+    
+    return config
 
 
 def get_mode_description(mode: str) -> str:
