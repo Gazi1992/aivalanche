@@ -137,7 +137,26 @@ class DifferentialEvolution:
                 'noisy': Configured for noisy objective functions
                 'high_dimensional': Optimized for high-dimensional problems
                 'custom': User-defined configuration
-            metamodel_config: Custom configuration dict for 'custom' mode
+            metamodel_config: Custom configuration dict for 'custom' mode or to override predefined settings.
+                Available fields:
+                - enabled (bool): Whether metamodel is active
+                - type (str): Metamodel type (currently only 'gaussian_process' supported)
+                - model_config (dict): Model-specific configuration:
+                    - kernel (str): Kernel type ('rbf', 'matern', 'matern32', 'matern52', 'exponential')
+                    - alpha (float): Noise level/regularization parameter
+                    - n_restarts_optimizer (int): Number of restarts for hyperparameter optimization
+                    - normalize_y (bool): Whether to normalize target values
+                    - optimize_kernel (bool): Whether to optimize kernel hyperparameters
+                - acquisition_strategy (str): How to use metamodel ('all_actual', 'all_metamodel', 
+                                              'mixed', 'adaptive', 'uncertainty', 'periodic')
+                - acquisition_function (str): For 'mixed' strategy ('expected_improvement', 
+                                              'probability_of_improvement', 'upper_confidence_bound')
+                - min_training_points (int): Minimum points before using metamodel (None = auto)
+                - update_frequency (int): How often to retrain metamodel
+                - exploration_ratio (float): Ratio of exploratory evaluations (for 'mixed')
+                - uncertainty_threshold (float): Max uncertainty for predictions (for 'uncertainty')
+                - validation_frequency (int): How often to validate (for 'periodic')
+                - verbose (bool): Print metamodel information during optimization
             
             # Perturbation parameters
             perturbation_mode: Perturbation mode - predefined configurations for escaping local minima:
@@ -155,7 +174,19 @@ class DifferentialEvolution:
                 'periodic': Regular perturbations at fixed intervals
                 'emergency': Last resort massive perturbation for extreme stagnation
                 'custom': User-defined configuration
-            perturbation_config: Custom configuration dict for 'custom' mode
+            perturbation_config: Custom configuration dict for 'custom' mode or to override predefined settings.
+                Available fields:
+                - trigger_ratio (float): When to trigger (0-1, fraction of max_iter_without_improvement)
+                - param_selection (str): How to select parameters ('random', 'variance', 'smart', 'all')
+                - param_ratio (float/tuple): Fraction of parameters to perturb (ignored for 'variance'/'all')
+                - population_ratio (float/tuple): Fraction of population to perturb
+                - scale (str/float/tuple): Perturbation magnitude ('adaptive', 'adaptive_strong', 'adaptive_weak', float, or tuple)
+                - memory_enabled (bool): Track perturbation effectiveness for adaptation
+                - cooldown_ratio (float): Cooldown period after perturbation (0-1)
+                - sigma_threshold (float): Variance threshold for 'variance' selection
+                - memory_decay (float): Optional - decay factor for memory (smart_escape mode)
+                - success_amplification (float): Optional - amplify successful perturbations (smart_escape mode)
+                - periodic_interval (int): Optional - fixed interval for periodic mode
             
             # Local refinement parameters
             refinement_mode: Refinement mode - predefined configurations for different problem types:
@@ -169,7 +200,25 @@ class DifferentialEvolution:
                 'multi_objective': For problems with multiple objectives
                 'sensitive': Conservative refinement for sensitive problems
                 'custom': User-defined configuration
-            refinement_config: Custom configuration dict for 'custom' mode
+            refinement_config: Custom configuration dict for 'custom' mode or to override predefined settings.
+                Available fields:
+                - method (str): Refinement method (currently only 'dls' supported)
+                - max_iterations (int): Maximum iterations for refinement
+                - trigger (str): When to apply ('on_completion', 'on_stagnation', 'adaptive', 'both')
+                - stagnation_threshold (int): Iterations without improvement to trigger (for 'on_stagnation')
+                - adaptive_interval (int): Interval for adaptive triggering
+                - options (dict): Method-specific options for DLS:
+                    - initial_damping (float): Starting damping parameter
+                    - damping_increase_factor (float): Factor to increase damping
+                    - damping_decrease_factor (float): Factor to decrease damping
+                    - gradient_tolerance (float): Convergence tolerance for gradient norm
+                    - parameter_tolerance (float): Convergence tolerance for parameter changes
+                    - improvement_threshold (float): Minimum improvement to continue
+                    - jacobian_step_size (float): Step size for finite difference Jacobian
+                    - residual_type (str): 'scalar' or 'vector' residuals
+                    - trust_region_radius (float): Initial trust region size
+                    - use_qr_decomposition (bool): Use QR decomposition for stability
+                    - boundary_handling (str): How to handle bounds ('reflect', 'clip', 'project')
         """
         # Set random seed
         self.seed = seed if seed is not None else np.random.randint(0, 1000)

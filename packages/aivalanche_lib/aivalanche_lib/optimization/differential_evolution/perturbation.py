@@ -402,6 +402,20 @@ def _apply_perturbation(de_instance):
     # Store pre-perturbation metric for tracking improvement
     pre_perturbation_best = de_instance.best_metric
     
+    # Print perturbation message
+    print(f"\n{'='*60}")
+    print(f"Applying perturbation (mode: {de_instance.perturbation_mode})")
+    print(f"  Iteration: {de_instance.iter}")
+    print(f"  Current best: {pre_perturbation_best:.6e}")
+    print(f"  No improvement for: {de_instance.iter_no_improvement} iterations")
+    print(f"  Perturbing: {len(param_indices)} parameters, {n_members} population members")
+    param_names = [de_instance.variable_parameters_names[i] for i in param_indices]
+    if len(param_names) <= 5:
+        print(f"  Parameters: {', '.join(param_names)}")
+    else:
+        print(f"  Parameters: {', '.join(param_names[:3])}, ... ({len(param_names)} total)")
+    print(f"{'='*60}\n")
+    
     # Apply perturbations
     for param_idx in param_indices:
         scale = _calculate_perturbation_scale(de_instance, param_idx)
@@ -489,6 +503,18 @@ def _update_perturbation_effectiveness(de_instance):
                 improved = event['post_metric'] < event['pre_metric']
             else:
                 improved = event['post_metric'] > event['pre_metric']
+            
+            # Print effectiveness message (only for the most recent perturbation)
+            if event['iteration'] == de_instance.iter - 1:
+                if improved:
+                    improvement = abs(event['post_metric'] - event['pre_metric'])
+                    relative_improvement = improvement / (abs(event['pre_metric']) + 1e-10)
+                    print(f"\n[SUCCESS] Perturbation effective!")
+                    print(f"  Improved from {event['pre_metric']:.6e} to {event['post_metric']:.6e}")
+                    print(f"  Relative improvement: {relative_improvement:.2%}\n")
+                else:
+                    print(f"\n[INFO] Perturbation did not improve solution")
+                    print(f"  Best remains: {event['pre_metric']:.6e}\n")
             
             # Update parameter-specific improvement tracking
             for param_idx in event['parameters']:
