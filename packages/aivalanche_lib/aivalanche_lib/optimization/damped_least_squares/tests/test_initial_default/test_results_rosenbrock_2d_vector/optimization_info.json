@@ -1,0 +1,76 @@
+{
+  "input": {
+    "seed": 42,
+    "eval_func_args": {},
+    "callback_after_first_iter": null,
+    "callback_after_each_iter": null,
+    "callback_after_last_iter": null,
+    "callback_after_better_solution": null,
+    "parameters": [
+      {
+        "name": "x1",
+        "min": -2.0,
+        "max": 2.0,
+        "default": -0.40147161968844003,
+        "variation": "continuous",
+        "type": "continuous",
+        "values": null,
+        "step": NaN,
+        "scale": "lin",
+        "mode": "variable",
+        "transform": null
+      },
+      {
+        "name": "x2",
+        "min": -1.0,
+        "max": 3.0,
+        "default": 2.4422857805117317,
+        "variation": "continuous",
+        "type": "continuous",
+        "values": null,
+        "step": NaN,
+        "scale": "lin",
+        "mode": "variable",
+        "transform": null
+      }
+    ],
+    "opt_min_or_max": "min",
+    "max_iterations": 50,
+    "metric_threshold": 1e-10,
+    "max_iter_without_improvement": 30,
+    "improvement_threshold": 1e-06,
+    "gradient_tolerance": 1e-08,
+    "parameter_tolerance": 1e-08,
+    "initial_damping": 0.1,
+    "damping_increase_factor": 2.0,
+    "damping_decrease_factor": 0.5,
+    "min_damping": 1e-10,
+    "max_damping": 1000000.0,
+    "jacobian_method": "finite_difference",
+    "jacobian_step_size": 1e-06,
+    "jacobian_step_size_relative": true,
+    "initial_point": "default",
+    "use_defaults_in_initial_point": false,
+    "residual_type": "vector",
+    "trust_region_radius": null,
+    "use_geodesic_acceleration": false,
+    "use_qr_decomposition": true,
+    "boundary_handling": "reflect",
+    "results_dir": "c:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\damped_least_squares\\tests\\test_initial_default\\test_results_rosenbrock_2d_vector"
+  },
+  "output": {
+    "iter": 23,
+    "nr_evaluations": 47,
+    "best_metric": 3.498547132173634e-07,
+    "best_parameters": {
+      "x1": -9.180196593705503e-05,
+      "x2": 0.0005842524704167129
+    },
+    "stop_reason": "parameter tolerance reached",
+    "is_stop_criteria_reached": true,
+    "iter_no_improvement": 0,
+    "final_damping": 838860.8,
+    "final_gradient_norm": 0.002366587548903596,
+    "final_step_norm": 5.6421690742815455e-09
+  }
+}

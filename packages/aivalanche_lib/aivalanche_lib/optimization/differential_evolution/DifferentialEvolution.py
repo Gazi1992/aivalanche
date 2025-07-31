@@ -33,12 +33,12 @@ from .visualizations import (
     _plot_metrics_evolution, _plot_all_parameters_evolution, _plot_boundaries_evolution,
     _plot_mutation_and_recombination, _plot_parameters_evolution
     )
-
-'''
-TODO
-1. implement clasiffier
-2. implement predictor
-'''
+from .perturbation import (
+    _setup_perturbation_config, _apply_perturbation, _update_perturbation_effectiveness
+    )
+from .refinement import (
+    apply_local_refinement, should_trigger_refinement, get_refinement_summary
+    )
 
 class DifferentialEvolution:
     """
@@ -86,17 +86,16 @@ class DifferentialEvolution:
                  results_dir: Optional[str] = None,
                  
                  # Metamodel parameters
-                 use_metamodel: bool = False,
-                 metamodel_type: str = 'gaussian_process',
+                 metamodel_mode: str = 'off',
                  metamodel_config: Optional[Dict[str, Any]] = None,
-                 metamodel_acquisition_strategy: str = 'mixed',
-                 metamodel_acquisition_function: str = 'expected_improvement',
-                 metamodel_min_training_points: Optional[int] = None,
-                 metamodel_update_frequency: int = 5,
-                 metamodel_exploration_ratio: float = 0.2,
-                 metamodel_uncertainty_threshold: float = 0.2,
-                 metamodel_validation_frequency: int = 10,
-                 metamodel_verbose: bool = False):
+                
+                # Perturbation parameters
+                perturbation_mode: str = 'off',
+                perturbation_config: Optional[Dict[str, Any]] = None,
+                
+                # Local refinement parameters
+                refinement_mode: str = 'off',
+                refinement_config: Optional[Dict[str, Any]] = None):
         """
         Initialize the Differential Evolution optimizer.
 
@@ -127,19 +126,50 @@ class DifferentialEvolution:
             results_dir: Directory to save results
             
             # Metamodel parameters
-            use_metamodel: Whether to use metamodel-assisted optimization
-            metamodel_type: Type of metamodel ('gaussian_process', 'random_forest', etc.)
-            metamodel_config: Configuration dict for the metamodel (passed to metamodel constructor)
-            metamodel_acquisition_strategy: Strategy for using metamodel ('all_actual', 'all_metamodel', 
-                                          'mixed', 'adaptive', 'uncertainty', 'periodic')
-            metamodel_acquisition_function: Acquisition function for 'mixed' strategy 
-                                          ('expected_improvement', 'probability_of_improvement', 'upper_confidence_bound')
-            metamodel_min_training_points: Minimum training points before using metamodel (default: pop_size)
-            metamodel_update_frequency: How often to retrain the metamodel
-            metamodel_exploration_ratio: Ratio of exploratory evaluations for 'mixed' strategy
-            metamodel_uncertainty_threshold: Uncertainty threshold for 'uncertainty' strategy
-            metamodel_validation_frequency: Validation frequency for 'periodic' strategy
-            metamodel_verbose: Whether to print metamodel information
+            metamodel_mode: Metamodel mode - predefined configurations for different use cases:
+                'off': No metamodel (default)
+                'auto': Balanced general-purpose metamodel usage
+                'exploration': Emphasizes exploration with uncertain predictions
+                'exploitation': Trusts model more for exploitation
+                'fast': Maximum speedup, may sacrifice accuracy
+                'accurate': Conservative usage only when model is certain
+                'periodic': Periodically validates metamodel predictions
+                'noisy': Configured for noisy objective functions
+                'high_dimensional': Optimized for high-dimensional problems
+                'custom': User-defined configuration
+            metamodel_config: Custom configuration dict for 'custom' mode
+            
+            # Perturbation parameters
+            perturbation_mode: Perturbation mode - predefined configurations for escaping local minima:
+                'off': No perturbation (default)
+                'very_light': Minimal perturbation only in extreme stagnation
+                'light': Gentle perturbations late in stagnation
+                'conservative': Careful perturbations with moderate strength
+                'auto': Balanced perturbation strategy
+                'moderate': More frequent perturbations with moderate strength
+                'strong': Strong perturbations triggered early
+                'aggressive': Very strong and frequent perturbations
+                'very_aggressive': Extreme perturbations for difficult landscapes
+                'random_walk': Random perturbations without memory
+                'smart_escape': Intelligent escape using memory and success amplification
+                'periodic': Regular perturbations at fixed intervals
+                'emergency': Last resort massive perturbation for extreme stagnation
+                'custom': User-defined configuration
+            perturbation_config: Custom configuration dict for 'custom' mode
+            
+            # Local refinement parameters
+            refinement_mode: Refinement mode - predefined configurations for different problem types:
+                'off': No refinement (default)
+                'auto': Balanced general-purpose refinement
+                'light': Quick polish with loose tolerances
+                'moderate': Refinement on stagnation with balanced settings
+                'aggressive': Thorough refinement with tight tolerances
+                'high_precision': Ultra-precise for problems requiring extreme accuracy
+                'curve_fitting': Optimized for least squares problems
+                'multi_objective': For problems with multiple objectives
+                'sensitive': Conservative refinement for sensitive problems
+                'custom': User-defined configuration
+            refinement_config: Custom configuration dict for 'custom' mode
         """
         # Set random seed
         self.seed = seed if seed is not None else np.random.randint(0, 1000)
@@ -199,9 +229,50 @@ class DifferentialEvolution:
         # Results directory
         self.results_dir = results_dir
         
+        # Perturbation settings
+        self.perturbation_mode = perturbation_mode
+        self.perturbation_config = perturbation_config
+        self._perturbation_active_config = None  # Will be set based on mode
+        
+        # Local refinement settings
+        from .refinement_modes import get_refinement_config
+        from .metamodel_modes import get_metamodel_config
+        from .perturbation_modes import get_perturbation_config
+        
+        # Set refinement mode
+        self.refinement_mode = refinement_mode
+        
+        # Get refinement configuration
+        self._refinement_config = get_refinement_config(self.refinement_mode, refinement_config)
+        self.use_local_refinement = (self.refinement_mode != 'off')
+        
+        # Extract main settings from config
+        if self._refinement_config:
+            self.refinement_method = self._refinement_config.get('method', 'dls')
+            self.refinement_max_iterations = self._refinement_config.get('max_iterations', 50)
+            self.refinement_trigger = self._refinement_config.get('trigger', 'on_completion')
+            self.refinement_options = self._refinement_config.get('options', {})
+            
+            # Additional trigger settings
+            self.refinement_stagnation_threshold = self._refinement_config.get('stagnation_threshold', 50)
+            self.refinement_adaptive_interval = self._refinement_config.get('adaptive_interval', 100)
+        else:
+            self.refinement_method = None
+            self.refinement_max_iterations = None
+            self.refinement_trigger = None
+            self.refinement_options = {}
+            self.refinement_stagnation_threshold = 50
+            self.refinement_adaptive_interval = 100
+        
+        self.refinement_applied = False
+        self.refinement_info = None
+        self._last_refinement_iter = -1
+        
         # Metamodel settings
-        self.use_metamodel = use_metamodel
+        self.metamodel_mode = metamodel_mode
+        self.metamodel_config = get_metamodel_config(metamodel_mode, metamodel_config)
         self.metamodel_evaluator = None
+        self.use_metamodel = self.metamodel_config is not None and self.metamodel_config.get('enabled', False)
         
         if self.use_metamodel:
             # Import metamodel components
@@ -213,31 +284,49 @@ class DifferentialEvolution:
                     "Please ensure it is properly installed."
                 )
             
+            # Extract configuration
+            mm_cfg = self.metamodel_config
+            mm_type = mm_cfg.get('type', 'gaussian_process')
+            mm_model_config = mm_cfg.get('model_config', {})
+            
             # Create metamodel instance based on type
-            if metamodel_type == 'gaussian_process':
+            if mm_type == 'gaussian_process':
                 metamodel = GaussianProcessMetamodel(
                     random_state=self.seed,
-                    **(metamodel_config or {})
+                    **mm_model_config
                 )
             else:
-                raise ValueError(f"Unsupported metamodel type: {metamodel_type}")
+                raise ValueError(f"Unsupported metamodel type: {mm_type}")
             
             # Set default min training points if not specified
-            if metamodel_min_training_points is None:
-                metamodel_min_training_points = self.pop_size
+            min_training_points = mm_cfg.get('min_training_points')
+            if min_training_points is None:
+                # Different defaults based on mode
+                if self.metamodel_mode == 'fast':
+                    min_training_points = int(0.3 * self.pop_size)
+                elif self.metamodel_mode == 'exploitation':
+                    min_training_points = int(0.5 * self.pop_size)
+                elif self.metamodel_mode == 'accurate':
+                    min_training_points = int(3 * self.pop_size)
+                elif self.metamodel_mode == 'exploration':
+                    min_training_points = int(2 * self.pop_size)
+                elif self.metamodel_mode == 'high_dimensional':
+                    min_training_points = int(5 * len(self.parameters_names))
+                else:
+                    min_training_points = self.pop_size
             
             # Create metamodel evaluator wrapper
             self.metamodel_evaluator = MetamodelEvaluator(
                 actual_eval_func=self.eval_func,
                 metamodel=metamodel,
-                acquisition_strategy=AcquisitionStrategy(metamodel_acquisition_strategy),
-                acquisition_function=metamodel_acquisition_function,
-                min_training_points=metamodel_min_training_points,
-                update_frequency=metamodel_update_frequency,
-                exploration_ratio=metamodel_exploration_ratio,
-                uncertainty_threshold=metamodel_uncertainty_threshold,
-                validation_frequency=metamodel_validation_frequency,
-                verbose=metamodel_verbose
+                acquisition_strategy=AcquisitionStrategy(mm_cfg.get('acquisition_strategy', 'mixed')),
+                acquisition_function=mm_cfg.get('acquisition_function', 'expected_improvement'),
+                min_training_points=min_training_points,
+                update_frequency=mm_cfg.get('update_frequency', 5),
+                exploration_ratio=mm_cfg.get('exploration_ratio', 0.2),
+                uncertainty_threshold=mm_cfg.get('uncertainty_threshold', 0.2),
+                validation_frequency=mm_cfg.get('validation_frequency', 10),
+                verbose=mm_cfg.get('verbose', False)
             )
             
             # Store original eval_func for reference
@@ -462,6 +551,20 @@ class DifferentialEvolution:
         self.rand_mem_1 = None
         self.rand_mem_2 = None
         self.rand_mem_3 = None
+        
+        # Initialize perturbation memory
+        self.perturbation_memory = {
+            'history': [],  # List of perturbation events
+            'param_perturbation_count': np.zeros(self.nr_variable_parameters),
+            'param_last_perturbed_iter': np.zeros(self.nr_variable_parameters),
+            'param_improvement_after_perturbation': np.zeros(self.nr_variable_parameters),
+            'param_reconvergence_speed': np.zeros(self.nr_variable_parameters),
+            'last_perturbation_iter': 0,
+            'perturbations_applied': 0
+        }
+        
+        # Set perturbation configuration based on mode
+        _setup_perturbation_config(self)
 
     def run_optimization(self):
         """Run the optimization loop until stop criteria are met."""
@@ -479,6 +582,22 @@ class DifferentialEvolution:
             self._prepare_next_iter()
 
         _run_callbacks(self, last_iteration = True)
+        
+        # Apply local refinement if enabled
+        if self.use_local_refinement:
+            if self.refinement_trigger in ['on_completion', 'both']:
+                if should_trigger_refinement(self, self.refinement_trigger):
+                    # Mark that refinement was applied at the end (for 'both' mode)
+                    if self.refinement_trigger == 'both':
+                        self._refinement_applied_at_end = True
+                    
+                    improved, info = apply_local_refinement(
+                        self,
+                        method=self.refinement_method,
+                        max_iterations=self.refinement_max_iterations,
+                        options=self.refinement_options,
+                        during_optimization=False  # This is after optimization completes
+                    )
 
         # Final processing
         self.show_final_result()
@@ -504,6 +623,22 @@ class DifferentialEvolution:
 
         # Save metrics
         self.trials_metrics = np.array(self.current_metrics)
+        
+        # Apply refinement to best trial if enabled and conditions are met
+        if self.use_local_refinement:
+            if self.refinement_trigger in ['on_stagnation', 'adaptive', 'both']:
+                if should_trigger_refinement(self, self.refinement_trigger):
+                    print(f"\n--- Triggering refinement at iteration {self.iter} ---")
+                    improved, info = apply_local_refinement(
+                        self,
+                        method=self.refinement_method,
+                        max_iterations=self.refinement_max_iterations,
+                        options=self.refinement_options,
+                        during_optimization=True  # New flag to indicate we're during optimization
+                    )
+                    # If refinement improved, reset stagnation counter
+                    if improved:
+                        self.iter_no_improvement = 0
 
         # Determine survivors, best solution and update history
         _determine_survivors(self)
@@ -512,6 +647,10 @@ class DifferentialEvolution:
 
         # Update nr of evaluations
         self.nr_evaluations += len(self.current_responses)
+        
+        # Update perturbation effectiveness if perturbation is enabled
+        if self.perturbation_mode != 'off':
+            _update_perturbation_effectiveness(self)
 
     def _prepare_next_iter(self):
         """Prepare for the next iteration."""
@@ -536,6 +675,10 @@ class DifferentialEvolution:
             # Generate new donors and trials
             _generate_donors(self)
             _generate_trials(self)
+            
+            # Apply perturbation to trials if conditions are met
+            if self.perturbation_mode != 'off':
+                _apply_perturbation(self)
 
             # # Plot mutation and recombination for 2 params
             # if self.iter == 2:
@@ -586,6 +729,12 @@ class DifferentialEvolution:
                 print(f"Speedup factor: {stats['speedup_factor']:.2f}x")
                 if stats['avg_validation_error'] is not None:
                     print(f"Average validation error: {stats['avg_validation_error']:.4f}")
+            print("\n--------------------------------------------------------------------------------\n\n")
+        
+        # Show refinement results if applied
+        if self.refinement_applied and self.refinement_info:
+            print("\n-------------------------- Refinement Results ----------------------------\n")
+            print(get_refinement_summary(self.refinement_info))
             print("\n--------------------------------------------------------------------------------\n\n")
     
     def get_metamodel_statistics(self) -> Optional[Dict[str, Any]]:

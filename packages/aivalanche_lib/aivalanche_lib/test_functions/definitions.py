@@ -51,6 +51,12 @@ def beale_2d(x: np.ndarray) -> float:
     term3 = (2.625 - x[0] + x[0] * x[1]**3)**2
     return term1 + term2 + term3
 
+def griewank_2d(x: np.ndarray) -> float:
+    """Griewank function in 2D: multimodal with product coupling term."""
+    sum_term = (x[0]**2 + x[1]**2) / 4000
+    prod_term = np.cos(x[0]) * np.cos(x[1] / np.sqrt(2))
+    return sum_term - prod_term + 1
+
 # --- 3D Functions ---
 
 def sphere_3d(x: np.ndarray) -> float:
@@ -143,8 +149,16 @@ ALL_FUNCTIONS = {
         "optimum_loc": np.array([3.0, 0.5]),
         "optimum_val": 0.0,
     },
+    "griewank_2d": {
+        "func": griewank_2d,
+        "dim": 2,
+        "bounds": [(-100.0, 100.0), (-100.0, 100.0)],
+        "optimum_loc": np.array([0.0, 0.0]),
+        "optimum_val": 0.0,
+        "plot_bounds": [(-10.0, 10.0), (-10.0, 10.0)],  # Tighter bounds for visualization
+    },
     # --- 3D ---
-     "sphere_3d": {
+    "sphere_3d": {
         "func": sphere_3d,
         "dim": 3,
         "bounds": [(-5.12, 5.12)] * 3, # Apply same bounds to all dims

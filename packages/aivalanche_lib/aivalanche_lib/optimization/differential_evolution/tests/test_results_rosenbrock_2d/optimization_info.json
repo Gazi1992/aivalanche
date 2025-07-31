@@ -1,42 +1,12 @@
 {
     "input": {
         "seed": "42",
-        "eval_func": "<function evaluate_test_function at 0x0000022DC9DE3BA0>",
-        "eval_func_args": {
-            "func_details": {
-                "func": "<function rosenbrock_2d at 0x0000022DF1D0D300>",
-                "dim": "2",
-                "bounds": [
-                    [
-                        "-2.0",
-                        "2.0"
-                    ],
-                    [
-                        "-1.0",
-                        "3.0"
-                    ]
-                ],
-                "optimum_loc": [
-                    1.0,
-                    1.0
-                ],
-                "optimum_val": "0.0",
-                "plot_bounds": [
-                    [
-                        "-2.0",
-                        "2.0"
-                    ],
-                    [
-                        "-1.0",
-                        "3.0"
-                    ]
-                ]
-            }
-        },
+        "eval_func": "<function create_test_function_wrapper.<locals>.wrapper at 0x000001E4FE3E3EC0>",
+        "eval_func_args": {},
         "callback_after_first_iter": null,
-        "callback_after_each_iter": "<function callback_after_each_iter at 0x0000022DC9DE3560>",
+        "callback_after_each_iter": null,
         "callback_after_last_iter": null,
-        "callback_after_better_solution": "<function callback_after_better_solution at 0x0000022DC9DFB740>",
+        "callback_after_better_solution": null,
         "parameters": [
             {
                 "name": "x1",
@@ -65,27 +35,27 @@
         ],
         "opt_min_or_max": "min",
         "pop_size": "30",
-        "max_iterations": "300",
-        "metric_threshold": "0.0",
-        "max_iter_without_improvement": "100",
-        "improvement_threshold": "0.01",
+        "max_iterations": "50",
+        "metric_threshold": "1e-08",
+        "max_iter_without_improvement": "30",
+        "improvement_threshold": "0.001",
         "mutation_factor_1": [
-            "0.7",
-            "1.1"
+            "0.5",
+            "0.9"
         ],
         "mutation_factor_2": [
-            "0.2",
-            "0.6"
+            "0.0",
+            "0.3"
         ],
         "mutation_factor_3": [
             "0",
             "0.3"
         ],
         "recombination_factor": [
-            "0.8",
-            "0.97"
+            "0.7",
+            "0.95"
         ],
-        "boundary_constraint_method": "clamp",
+        "boundary_constraint_method": "random_from_target",
         "init_pop": null,
         "init_pop_out_of_range_param": "keep",
         "defaults_in_init_pop": "False",
@@ -96,18 +66,25 @@
         "adaptive_boundaries_extension": "0.1",
         "adaptive_boundaries_check_period": "10",
         "results_dir": "c:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\tests\\test_results_rosenbrock_2d",
-        "use_metamodel": "False"
+        "use_metamodel": "False",
+        "perturbation_mode": "auto",
+        "perturbation_config": null,
+        "use_local_refinement": "False",
+        "refinement_method": "dls",
+        "refinement_max_iterations": "50",
+        "refinement_options": {},
+        "refinement_trigger": "on_completion"
     },
     "output": {
-        "iter": "226",
-        "nr_evaluations": "6780",
-        "best_metric": 0.0,
+        "iter": "50",
+        "nr_evaluations": "1500",
+        "best_metric": 3.4024444338167095e-06,
         "best_parameters": {
-            "x1": "1.0",
-            "x2": "1.0"
+            "x1": "0.9998584815576712",
+            "x2": "0.9999008966269369"
         },
-        "stop_reason": "maximum number of iterations without improvement reached",
+        "stop_reason": "maximum number of iterations reached",
         "is_stop_criteria_reached": "True",
-        "iter_no_improvement": "101"
+        "iter_no_improvement": "0"
     }
 }

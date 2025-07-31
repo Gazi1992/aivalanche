@@ -14,7 +14,9 @@
       "Bash(powershell:*)",
       "Bash(del \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\visualizations_animation.py\")",
       "Bash(Remove-Item \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\visualizations_animation.py\")",
-      "Bash(C:UsersgazmeOneDriveDocumentsaivalanchecodemyPyEnvScriptspython.exe packages/aivalanche_lib/aivalanche_lib/optimization/adam/tests/test_adam_advanced.py)"
+      "Bash(C:UsersgazmeOneDriveDocumentsaivalanchecodemyPyEnvScriptspython.exe packages/aivalanche_lib/aivalanche_lib/optimization/adam/tests/test_adam_advanced.py)",
+      "Bash(rm:*)",
+      "Bash(kill:*)"
     ],
     "deny": []
   }

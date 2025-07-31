@@ -233,6 +233,7 @@ def test_multiple_functions():
         'sphere_2d', 
         'himmelblau_2d',
         'beale_2d',
+        'griewank_2d',
         
         # 1D function
         'parabola_1d',
@@ -242,7 +243,8 @@ def test_multiple_functions():
         
         # n-dimensional functions (tested in 2D)
         'ackley_nd',
-        'rastrigin_nd'
+        'rastrigin_nd',
+        'griewank_nd'
     ]
     
     results = {}

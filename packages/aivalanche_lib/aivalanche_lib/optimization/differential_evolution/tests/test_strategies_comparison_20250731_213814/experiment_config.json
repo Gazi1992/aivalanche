@@ -1,0 +1,40 @@
+{
+  "problem": {
+    "function_name": "griewank_nd",
+    "n_dim": 20,
+    "seed": 42
+  },
+  "common_config": {
+    "max_iterations": 1000,
+    "max_iter_without_improvement": 500,
+    "metric_threshold": 1e-10,
+    "improvement_threshold": 0.0001,
+    "pop_size": 100
+  },
+  "refinement_config": {
+    "use_local_refinement": true,
+    "refinement_trigger": "both",
+    "refinement_max_iterations": 100,
+    "refinement_options": {
+      "residual_type": "vector",
+      "gradient_tolerance": 1e-12,
+      "parameter_tolerance": 1e-10
+    }
+  },
+  "strategies": {
+    "pure_de": "Pure DE (Baseline)",
+    "de_light_perturbation": "DE + Light Perturbation",
+    "de_moderate_perturbation": "DE + Moderate Perturbation",
+    "de_strong_perturbation": "DE + Strong Perturbation",
+    "de_aggressive_perturbation": "DE + Aggressive Perturbation",
+    "de_refinement": "DE + Refinement",
+    "de_moderate_perturb_refine": "DE + Moderate Perturbation + Refinement",
+    "de_strong_perturb_refine": "DE + Strong Perturbation + Refinement"
+  },
+  "func_details": {
+    "name": "griewank_nd",
+    "dim": 20,
+    "optimum_val": 0.0,
+    "optimum_point": "origin"
+  }
+}

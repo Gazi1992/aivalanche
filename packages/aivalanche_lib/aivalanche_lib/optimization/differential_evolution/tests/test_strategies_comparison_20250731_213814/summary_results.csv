@@ -1,0 +1,9 @@
+Strategy,Best Metric,Distance from Optimum,Iterations,Evaluations,Runtime (s),Stop Reason,Efficiency,Perturbations Applied
+DE + Refinement,0.049276625618848935,0.049276625618848935,979,97900,1015.13148,maximum number of iterations without improvement reached,0.013354024919175946,0
+DE + Moderate Perturbation + Refinement,0.049276625618848935,0.049276625618848935,979,97900,940.993539,maximum number of iterations without improvement reached,0.013354024919175946,251
+DE + Strong Perturbation + Refinement,0.049276625618848935,0.049276625618848935,979,97900,953.199104,maximum number of iterations without improvement reached,0.013354024919175946,351
+Pure DE (Baseline),0.6328662135796622,0.6328662135796622,1000,100000,165.176028,maximum number of iterations reached,0.0019868808910596353,0
+DE + Light Perturbation,0.6328662135796622,0.6328662135796622,1000,100000,162.527718,maximum number of iterations reached,0.0019868808910596353,0
+DE + Moderate Perturbation,0.6328662135796622,0.6328662135796622,1000,100000,174.764588,maximum number of iterations reached,0.0019868808910596353,0
+DE + Strong Perturbation,0.6328662135796622,0.6328662135796622,1000,100000,159.639788,maximum number of iterations reached,0.0019868808910596353,0
+DE + Aggressive Perturbation,0.6328662135796622,0.6328662135796622,1000,100000,159.954268,maximum number of iterations reached,0.0019868808910596353,0

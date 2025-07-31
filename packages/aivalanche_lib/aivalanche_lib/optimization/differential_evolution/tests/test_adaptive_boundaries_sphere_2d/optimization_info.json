@@ -1,0 +1,90 @@
+{
+    "input": {
+        "seed": "42",
+        "eval_func": "<function create_test_function_wrapper.<locals>.wrapper at 0x0000024D8A21B880>",
+        "eval_func_args": {},
+        "callback_after_first_iter": null,
+        "callback_after_each_iter": null,
+        "callback_after_last_iter": null,
+        "callback_after_better_solution": null,
+        "parameters": [
+            {
+                "name": "x1",
+                "min": "-5.12",
+                "max": "-4.6080000000000005",
+                "default": "-4.864000000000001",
+                "scale": "lin",
+                "mode": "variable",
+                "type": "continuous",
+                "values": null,
+                "step": "nan",
+                "transform": null
+            },
+            {
+                "name": "x2",
+                "min": "-5.12",
+                "max": "-4.6080000000000005",
+                "default": "-4.864000000000001",
+                "scale": "lin",
+                "mode": "variable",
+                "type": "continuous",
+                "values": null,
+                "step": "nan",
+                "transform": null
+            }
+        ],
+        "opt_min_or_max": "min",
+        "pop_size": "25",
+        "max_iterations": "60",
+        "metric_threshold": "1e-08",
+        "max_iter_without_improvement": "40",
+        "improvement_threshold": "0.001",
+        "mutation_factor_1": [
+            "0.7",
+            "1.1"
+        ],
+        "mutation_factor_2": [
+            "0.2",
+            "0.6"
+        ],
+        "mutation_factor_3": [
+            "0",
+            "0.3"
+        ],
+        "recombination_factor": [
+            "0.8",
+            "0.97"
+        ],
+        "boundary_constraint_method": "random_from_target",
+        "init_pop": null,
+        "init_pop_out_of_range_param": "keep",
+        "defaults_in_init_pop": "False",
+        "defaults_in_init_pop_ratio": "0.2",
+        "adaptive_boundaries": "True",
+        "adaptive_boundaries_edge_threshold": "0.02",
+        "adaptive_boundaries_pop_quantile": "0.85",
+        "adaptive_boundaries_extension": "0.25",
+        "adaptive_boundaries_check_period": "5",
+        "results_dir": "c:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\tests\\test_adaptive_boundaries_sphere_2d",
+        "use_metamodel": "False",
+        "perturbation_mode": "off",
+        "perturbation_config": null,
+        "use_local_refinement": "False",
+        "refinement_method": "dls",
+        "refinement_max_iterations": "50",
+        "refinement_options": {},
+        "refinement_trigger": "on_completion"
+    },
+    "output": {
+        "iter": "60",
+        "nr_evaluations": "1500",
+        "best_metric": 20.183126152323865,
+        "best_parameters": {
+            "x1": "-3.14810061175936",
+            "x2": "-3.2050879380391746"
+        },
+        "stop_reason": "maximum number of iterations reached",
+        "is_stop_criteria_reached": "True",
+        "iter_no_improvement": "0"
+    }
+}
