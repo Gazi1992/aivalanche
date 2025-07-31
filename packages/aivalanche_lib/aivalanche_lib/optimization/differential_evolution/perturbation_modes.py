@@ -304,7 +304,7 @@ def validate_perturbation_config(config: Dict[str, Any]) -> bool:
     return True
 
 
-def get_mode_comparison() -> pd.DataFrame:
+def get_mode_comparison():
     """
     Get a DataFrame comparing all perturbation modes.
     

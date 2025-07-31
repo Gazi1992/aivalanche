@@ -22,9 +22,11 @@ def test_param_selection_all():
     parameters = Parameters(param_config)
     
     # Create evaluation function
-    def eval_func(parameters_df, **kwargs):
+    def eval_func(parameters=None, parameters_df=None, **kwargs):
+        # Handle both parameter name formats
+        df = parameters if parameters is not None else parameters_df
         responses = []
-        for _, row in parameters_df.iterrows():
+        for _, row in df.iterrows():
             x = np.array([row[f'x{i+1}'] for i in range(n_dim)])
             value = func_details['func'](x)
             responses.append({'metric': value})

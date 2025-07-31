@@ -222,6 +222,8 @@ class GaussianProcessMetamodel(BaseMetamodel):
         y_pred_norm, y_var_norm = self.model.predict(X_norm)
         
         # Convert variance to standard deviation
+        # Clip negative variances to avoid sqrt warnings (numerical precision issues)
+        y_var_norm = np.maximum(y_var_norm, 0.0)
         y_std_norm = np.sqrt(y_var_norm)
         
         # Denormalize

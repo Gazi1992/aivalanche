@@ -67,9 +67,11 @@ def compare_perturbation_modes():
     parameters = Parameters(param_config)
     
     # Create evaluation function
-    def eval_func(parameters_df, **kwargs):
+    def eval_func(parameters=None, parameters_df=None, **kwargs):
+        # Handle both parameter name formats
+        df = parameters if parameters is not None else parameters_df
         responses = []
-        for _, row in parameters_df.iterrows():
+        for _, row in df.iterrows():
             x = np.array([row[f'x{i+1}'] for i in range(n_dim)])
             value = func_details['func'](x)
             responses.append({
@@ -112,12 +114,27 @@ def compare_perturbation_modes():
         optimizer.run_optimization()
         
         # Store results
+        # Get history data - it's a DataFrame
+        history_bests = optimizer.history.get('bests')
+        
+        # Convert DataFrame to list of dicts for easier plotting
+        if history_bests is not None and not history_bests.empty:
+            history_data = []
+            for idx, row in history_bests.iterrows():
+                history_data.append({
+                    'iteration': row['iter'],
+                    'metric': row['metric']
+                })
+        else:
+            # Fallback if no history
+            history_data = [{'iteration': optimizer.iter, 'metric': optimizer.best_metric}]
+        
         results[mode] = {
             'best_metric': optimizer.best_metric,
             'iterations': optimizer.iter,
             'evaluations': optimizer.nr_evaluations,
             'stop_reason': optimizer.stop_reason,
-            'history': optimizer.history['bests'],
+            'history': history_data,
             'perturbation_count': len(optimizer.perturbation_memory.get('history', [])) if hasattr(optimizer, 'perturbation_memory') else 0
         }
         
@@ -138,11 +155,24 @@ def create_comparison_plot(results, func_details, results_dir):
     # Plot 1: Convergence curves
     for mode, result in results.items():
         history = result['history']
-        iterations = [h['iteration'] for h in history]
-        metrics = [h['metric'] for h in history]
         
-        ax1.semilogy(iterations, metrics, label=f"{mode} (perturb: {result['perturbation_count']})", 
-                     linewidth=2, alpha=0.8)
+        # Extract iterations and metrics, handling None values
+        iterations = []
+        metrics = []
+        for h in history:
+            if isinstance(h, dict) and 'iteration' in h and 'metric' in h and h['metric'] is not None:
+                iterations.append(h['iteration'])
+                metrics.append(h['metric'])
+        
+        # If we have data, plot it
+        if iterations and metrics:
+            ax1.semilogy(iterations, metrics, label=f"{mode} (perturb: {result['perturbation_count']})", 
+                         linewidth=2, alpha=0.8)
+        else:
+            # Plot just the final point if no history
+            ax1.semilogy([result['iterations']], [result['best_metric']], 'o',
+                         label=f"{mode} (perturb: {result['perturbation_count']})", 
+                         markersize=8, alpha=0.8)
     
     ax1.axhline(y=func_details['optimum_val'], color='red', linestyle='--', 
                 alpha=0.5, label='Global Optimum')
@@ -214,9 +244,11 @@ def test_custom_perturbation_configuration():
     param_config = generate_parameters_config(func_details)
     parameters = Parameters(param_config)
     
-    def eval_func(parameters_df, **kwargs):
+    def eval_func(parameters=None, parameters_df=None, **kwargs):
+        # Handle both parameter name formats
+        df = parameters if parameters is not None else parameters_df
         responses = []
-        for _, row in parameters_df.iterrows():
+        for _, row in df.iterrows():
             x = np.array([row[f'x{i+1}'] for i in range(3)])
             value = func_details['func'](x)
             responses.append({'metric': value})
