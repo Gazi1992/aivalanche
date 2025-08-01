@@ -8,6 +8,9 @@ from typing import Any, Union, Dict, List, Optional # Adjusted imports
 
 logger = logging.getLogger(__name__) # Logger for scaling/norm operations
 
+# Global constant for symlog transform threshold
+SYMLOG_THRESHOLD = 1e-6
+
 # --- Parameter Transformation/Normalization utils ---
 
 def scale_parameter_row(row: pd.Series) -> pd.Series:
@@ -69,7 +72,13 @@ def scale_parameter_row(row: pd.Series) -> pd.Series:
             raise TypeError(f"Parameter '{param_name}' (type: {param_type}) has non-numeric min/max/default "
                             f"('{min_val_orig}', '{max_val_orig}', '{default_orig}') required for scaling.") from e
 
-        if transform == 'log': # Apply log10 transformation
+        if transform == 'symlog': # Apply symmetric log transformation
+            # Symlog can handle any real numbers
+            row['min'] = np.sign(min_val_num) * np.log10(1 + np.abs(min_val_num) / SYMLOG_THRESHOLD)
+            row['max'] = np.sign(max_val_num) * np.log10(1 + np.abs(max_val_num) / SYMLOG_THRESHOLD)
+            row['default'] = np.sign(default_num) * np.log10(1 + np.abs(default_num) / SYMLOG_THRESHOLD)
+
+        elif transform == 'log': # Apply log10 transformation
             # Check for non-positive values before log
             if min_val_num <= 0 or max_val_num <= 0 or default_num <= 0:
                  raise ValueError(f"Parameter '{param_name}' has non-positive min/max/default "
@@ -217,14 +226,13 @@ def determine_transform(row: Dict[str, Any]) -> Optional[str]:
     if not is_numeric_compatible:
         return None # Not numeric, cannot apply log/neglog
 
-    # Check range for applicability of log/neglog
+    # Check range for applicability of log/neglog/symlog
     if pd.isna(min_val) or pd.isna(max_val): return None # Invalid range
     if min_val > 0 and max_val > 0: return 'log'
     elif min_val < 0 and max_val < 0: return 'neglog'
     else:
-        # Range crosses zero, includes zero, or is invalid for log scale
-        # This case should ideally lead to scale being reset to 'lin' elsewhere
-        return None
+        # Range crosses zero - use symlog transform
+        return 'symlog'
 
 
 def normalize_scale_value(scale_value: Any) -> Optional[str]:

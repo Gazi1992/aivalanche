@@ -28,7 +28,7 @@ _expected_cols = {
     'step': float, # Float for discrete step
     'scale': str, # 'lin', 'log'
     'mode': str, # 'fixed', 'variable'
-    'transform': str # 'log', 'neglog', None
+    'transform': str # 'log', 'neglog', 'symlog', None
 }
 
 def run_all_validations(params_obj: 'Parameters') -> None:
@@ -505,13 +505,13 @@ def _check_scale_values(params_obj: 'Parameters') -> None:
 
 
 def _set_transform_types(params_obj: 'Parameters') -> None:
-    """Determine 'transform' ('log', 'neglog') based on 'scale' and range, only for numeric types."""
+    """Determine 'transform' ('log', 'neglog', 'symlog') based on 'scale' and range, only for numeric types."""
     df = params_obj.all_parameters
     if 'transform' not in df.columns: df['transform'] = None
     # Ensure it's None initially before checking, handle existing values if needed? Better to just overwrite.
     df['transform'] = None
 
-    mixed_sign_fixed = []; log_params = []; neglog_params = []
+    mixed_sign_fixed = []; log_params = []; neglog_params = []; symlog_params = []
     for index, row in df.iterrows():
         param_type = row['type']
         scale = row['scale']
@@ -548,10 +548,10 @@ def _set_transform_types(params_obj: 'Parameters') -> None:
                     transform = 'neglog'
                     neglog_params.append(param_name)
                 else:
-                    # Mixed signs, zero involved, or min/max equal - cannot use log transform
-                    logger.warning(f"Cannot apply log transform to '{param_name}' due to range [{min_val}, {max_val}]. Changing scale to 'lin'.")
-                    df.at[index, 'scale'] = 'lin' # Revert scale
-                    mixed_sign_fixed.append(param_name)
+                    # Mixed signs - use symlog transform
+                    transform = 'symlog'
+                    symlog_params.append(param_name)
+                    logger.info(f"Using symlog transform for '{param_name}' with range [{min_val}, {max_val}]")
             elif scale == 'log': # Log scale specified but type isn't numeric compatible or min/max missing
                     logger.warning(f"Log scale specified for non-numeric compatible param '{param_name}' or missing min/max. Changing scale to 'lin'.")
                     df.at[index, 'scale'] = 'lin'
@@ -564,6 +564,7 @@ def _set_transform_types(params_obj: 'Parameters') -> None:
     if mixed_sign_fixed: msg = f"Changed scale to 'lin' for params with incompatible range for log/neglog: {', '.join(mixed_sign_fixed)}"; logger.info(msg)
     if log_params: msg = f"Using 'log' transform for params: {', '.join(log_params)}"; logger.info(msg)
     if neglog_params: msg = f"Using 'neglog' transform for params: {', '.join(neglog_params)}"; logger.info(msg)
+    if symlog_params: msg = f"Using 'symlog' transform for params: {', '.join(symlog_params)}"; logger.info(msg)
 
 
 # --- END OF FILE validation.py ---

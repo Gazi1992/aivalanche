@@ -29,6 +29,7 @@ from .scale_norm import (
     normalize_parameter_value, denormalize_parameter_value,
     snap_discrete_value,
     normalize_categorical_value, denormalize_categorical_value,
+    SYMLOG_THRESHOLD  # Import the global constant
 )
 # Import the validation functions
 from .validation import run_all_validations, _expected_cols as expected_cols_structure
@@ -445,6 +446,15 @@ class Parameters:
                      s_min, s_max = -np.log10(-max_val_num), -np.log10(-min_val_num) # Note the swapped order
                      scaled_rand = random.uniform(s_min, s_max)
                      return -(10**(-scaled_rand)) # Corrected logic
+                elif transform == 'symlog':
+                     # Symlog can handle any real numbers
+                     # Transform to scaled space
+                     s_min = np.sign(min_val_num) * np.log10(1 + np.abs(min_val_num) / SYMLOG_THRESHOLD)
+                     s_max = np.sign(max_val_num) * np.log10(1 + np.abs(max_val_num) / SYMLOG_THRESHOLD)
+                     # Sample in scaled space
+                     scaled_rand = random.uniform(s_min, s_max)
+                     # Transform back
+                     return np.sign(scaled_rand) * SYMLOG_THRESHOLD * (10**np.abs(scaled_rand) - 1)
                 else: # Linear scale
                      return random.uniform(min_val_num, max_val_num)
 
@@ -865,6 +875,10 @@ class Parameters:
                      elif transform == 'neglog':
                          # Careful with the sign: scaled = -log10(-original) => original = -(10**(-scaled))
                          descaled_values[~na_mask] = -(10 ** (-numeric_col[~na_mask]))
+                     elif transform == 'symlog':
+                         # Apply inverse symlog transformation
+                         scaled_vals = numeric_col[~na_mask]
+                         descaled_values[~na_mask] = np.sign(scaled_vals) * SYMLOG_THRESHOLD * (10**np.abs(scaled_vals) - 1)
 
                      result_df[param_name] = descaled_values
                  else:
@@ -983,6 +997,10 @@ class Parameters:
                             descaled_values[~current_na_mask] = 10 ** descaled_values[~current_na_mask]
                         elif transform == 'neglog':
                             descaled_values[~current_na_mask] = -(10 ** (-descaled_values[~current_na_mask]))
+                        elif transform == 'symlog':
+                            # Apply inverse symlog transformation
+                            scaled_vals = descaled_values[~current_na_mask]
+                            descaled_values[~current_na_mask] = np.sign(scaled_vals) * SYMLOG_THRESHOLD * (10**np.abs(scaled_vals) - 1)
 
                 # --- Step 3: Snap (discrete) or Map (categorical) ---
                 if param_type == 'continuous':
@@ -1128,7 +1146,7 @@ class Parameters:
                     if na_mask.any():
                         logger.warning(f"Non-numeric values encountered in column '{param_name}' before scaling. NaNs will propagate.")
 
-                    if transform in ['log', 'neglog']:
+                    if transform in ['log', 'neglog', 'symlog']:
                         if transform == 'log':
                             # Check for non-positive values before log10
                             invalid_log_mask = numeric_vals <= 0
@@ -1145,6 +1163,10 @@ class Parameters:
                             # Apply neglog only to valid negative numbers
                             valid_mask = ~na_mask & ~invalid_neglog_mask
                             scaled_values[valid_mask] = -np.log10(-numeric_vals[valid_mask])
+                        elif transform == 'symlog':
+                            # Apply symlog transformation to non-NaN values
+                            valid_mask = ~na_mask
+                            scaled_values[valid_mask] = np.sign(numeric_vals[valid_mask]) * np.log10(1 + np.abs(numeric_vals[valid_mask]) / SYMLOG_THRESHOLD)
                     else: # Linear scale for numeric types
                         scaled_values = numeric_vals # Use the already coerced numeric values
 
