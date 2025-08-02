@@ -603,6 +603,69 @@ print(get_metamodel_mode_description('auto'))
 - Problems requiring extremely high precision
 - When function evaluations are extremely expensive
 
+## Handling of Categorical Parameters
+
+### Overview
+
+Differential Evolution internally converts categorical parameters to numerical indices (0, 1, 2, ..., N-1) for optimization. While DE can optimize categorical parameters through its standard operators (mutation, crossover, selection), certain advanced features handle them differently.
+
+### Perturbation System
+
+**Categorical parameters are automatically excluded from perturbation.**
+
+**Rationale:**
+- Perturbation adds continuous Gaussian noise to parameter values
+- For categorical parameters, this would create invalid intermediate values (e.g., 1.7 for a 3-category parameter)
+- Random jumps between categories don't align with the goal of escaping local minima in continuous space
+
+**Implementation:**
+- The perturbation system automatically filters out categorical parameters
+- Only continuous and discrete numeric parameters are perturbed
+- This applies to all perturbation modes ('auto', 'aggressive', etc.)
+
+### Local Refinement (DLS)
+
+**Categorical parameters are automatically excluded from refinement.**
+
+**Rationale:**
+- DLS (Damped Least Squares) is a gradient-based optimization method
+- Gradients are undefined for discrete categorical variables
+- The Levenberg-Marquardt algorithm assumes continuous, differentiable functions
+
+**Implementation:**
+- During refinement, categorical parameters are held fixed at their current best values
+- Only continuous and discrete numeric parameters are refined
+- The refined solution merges improved numeric parameters with existing categorical values
+
+### Example
+
+```python
+# Parameters with mixed types
+params = Parameters([
+    {'name': 'learning_rate', 'type': 'continuous', 'min': 0.001, 'max': 0.1},
+    {'name': 'batch_size', 'type': 'discrete', 'values': [16, 32, 64, 128]},
+    {'name': 'optimizer', 'type': 'categorical', 'values': ['adam', 'sgd', 'rmsprop']}
+])
+
+# DE will optimize all parameters
+optimizer = DifferentialEvolution(
+    eval_func=my_eval_func,
+    parameters=params,
+    perturbation_mode='auto',    # Will only perturb learning_rate and batch_size
+    refinement_mode='auto'       # Will only refine learning_rate and batch_size
+)
+
+# The optimizer parameter will be optimized through normal DE operations
+# but excluded from perturbation and refinement
+```
+
+### Best Practices
+
+1. **Use DE's standard operators** for categorical optimization - they work well
+2. **Perturbation is most effective** for continuous parameters that can truly "escape" local minima
+3. **Refinement provides high precision** for continuous parameters near the optimum
+4. **Consider problem structure** - if you have mostly categorical parameters, standard DE without perturbation/refinement may be sufficient
+
 ## Common Issues and Solutions
 
 1. **Slow convergence**: Use adaptive parameters or increase mutation factors

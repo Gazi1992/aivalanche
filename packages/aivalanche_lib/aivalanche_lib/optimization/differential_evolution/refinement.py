@@ -8,6 +8,7 @@ import pandas as pd
 from typing import Dict, Any, Optional, Tuple, Union
 from ..damped_least_squares import DampedLeastSquares
 from .refinement_modes import get_refinement_config, get_mode_description
+import copy
 
 
 def apply_local_refinement(de_instance, 
@@ -17,6 +18,9 @@ def apply_local_refinement(de_instance,
                           during_optimization: bool = False) -> Tuple[bool, Dict[str, Any]]:
     """
     Apply local refinement to the best solution found by DE.
+    
+    Note: Categorical parameters are automatically excluded from refinement
+    as gradient-based methods like DLS cannot optimize discrete variables.
     
     Args:
         de_instance: The DifferentialEvolution instance
@@ -31,8 +35,20 @@ def apply_local_refinement(de_instance,
     if method != 'dls':
         raise ValueError(f"Unknown refinement method: {method}")
     
-    # Get current best solution
-    best_point_df = pd.DataFrame([de_instance.best_parameters])
+    # Create a modified parameters object that excludes categorical parameters
+    # This ensures DLS only operates on continuous/discrete numeric parameters
+    refinement_parameters = _create_refinement_parameters(de_instance)
+    
+    if refinement_parameters.nr_variable_parameters == 0:
+        print("\n[INFO] No continuous/discrete parameters available for refinement.")
+        print("      All parameters are categorical or fixed.")
+        return False, {'method': method, 'improved': False, 'reason': 'no_refinable_parameters'}
+    
+    # Get current best solution (only non-categorical parameters)
+    best_params_full = de_instance.best_parameters
+    best_params_refinable = {k: v for k, v in best_params_full.items() 
+                            if k in refinement_parameters.variable_parameters_names}
+    best_point_df = pd.DataFrame([best_params_refinable])
     initial_metric = de_instance.best_metric
     
     print(f"\n{'='*60}")
@@ -43,9 +59,9 @@ def apply_local_refinement(de_instance,
     # Set up DLS options
     dls_options = {
         'seed': de_instance.seed + 1000,  # Different seed
-        'eval_func': de_instance.eval_func,
+        'eval_func': _create_wrapped_eval_func(de_instance, refinement_parameters),
         'eval_func_args': de_instance.eval_func_args,
-        'parameters': de_instance.parameters,
+        'parameters': refinement_parameters,  # Use filtered parameters
         'opt_min_or_max': de_instance.opt_min_or_max,
         'max_iterations': max_iterations,
         'initial_point': best_point_df,
@@ -89,7 +105,7 @@ def apply_local_refinement(de_instance,
             'iterations': dls.iter,
             'evaluations': dls.nr_evaluations,
             'stop_reason': dls.stop_reason,
-            'refined_parameters': dls.best_parameters,
+            'refined_parameters': _merge_refined_parameters(de_instance, dls.best_parameters),
             'optimizer_instance': dls
         }
         
@@ -119,7 +135,7 @@ def apply_local_refinement(de_instance,
             else:
                 # After optimization: update de_instance.best as before
                 de_instance.best_metric = dls.best_metric
-                de_instance.best_parameters = dls.best_parameters
+                de_instance.best_parameters = _merge_refined_parameters(de_instance, dls.best_parameters)
                 de_instance.best_response = dls.best_response
                 de_instance.refinement_applied = True
                 de_instance.refinement_info = refinement_info
@@ -224,3 +240,96 @@ def get_refinement_summary(refinement_info: Dict[str, Any]) -> str:
     summary += f"  Status: {'[IMPROVED]' if refinement_info['improved'] else '[NO IMPROVEMENT]'}"
     
     return summary
+
+
+def _create_refinement_parameters(de_instance):
+    """
+    Create a modified Parameters object that excludes categorical parameters.
+    
+    Args:
+        de_instance: DifferentialEvolution instance
+        
+    Returns:
+        Parameters object with only continuous/discrete parameters marked as variable
+    """
+    # Deep copy the parameters to avoid modifying the original
+    refinement_params = copy.deepcopy(de_instance.parameters)
+    
+    # Mark all categorical parameters as fixed
+    param_types = refinement_params.all_parameters['type'].values
+    param_modes = refinement_params.all_parameters['mode'].values
+    
+    for i, (ptype, mode) in enumerate(zip(param_types, param_modes)):
+        if ptype == 'categorical' and mode == 'variable':
+            # Change mode to fixed for categorical parameters
+            refinement_params.all_parameters.loc[i, 'mode'] = 'fixed'
+            if hasattr(refinement_params, 'all_parameters_scaled'):
+                refinement_params.all_parameters_scaled.loc[i, 'mode'] = 'fixed'
+            if hasattr(refinement_params, 'all_parameters_normed'):
+                refinement_params.all_parameters_normed.loc[i, 'mode'] = 'fixed'
+    
+    # Force re-computation of cached properties
+    if hasattr(refinement_params, '_variable_parameters_names'):
+        del refinement_params._variable_parameters_names
+    if hasattr(refinement_params, '_variable_parameters'):
+        del refinement_params._variable_parameters
+    
+    return refinement_params
+
+
+def _create_wrapped_eval_func(de_instance, refinement_parameters):
+    """
+    Create a wrapped evaluation function that handles parameter merging.
+    
+    The wrapped function receives only non-categorical parameters from DLS,
+    merges them with the current categorical parameter values, and calls
+    the original eval_func with the complete parameter set.
+    
+    Args:
+        de_instance: DifferentialEvolution instance
+        refinement_parameters: Parameters object with only refinable parameters
+        
+    Returns:
+        Wrapped evaluation function
+    """
+    def wrapped_eval_func(parameters_df, **kwargs):
+        # Get current best categorical parameter values
+        categorical_params = {}
+        for param_name in de_instance.variable_parameters_names:
+            if param_name not in refinement_parameters.variable_parameters_names:
+                # This is a categorical parameter
+                categorical_params[param_name] = de_instance.best_parameters[param_name]
+        
+        # Merge categorical parameters with the refinable parameters from DLS
+        if isinstance(parameters_df, pd.DataFrame):
+            # Add categorical columns to the DataFrame
+            for name, value in categorical_params.items():
+                parameters_df[name] = value
+        else:
+            # Handle dict case
+            parameters_df.update(categorical_params)
+        
+        # Call original eval_func with complete parameter set
+        return de_instance.eval_func(parameters_df, **kwargs)
+    
+    return wrapped_eval_func
+
+
+def _merge_refined_parameters(de_instance, refined_params):
+    """
+    Merge refined parameters with the original categorical parameters.
+    
+    Args:
+        de_instance: DifferentialEvolution instance
+        refined_params: Dictionary of refined parameter values (non-categorical only)
+        
+    Returns:
+        Complete parameter dictionary including both refined and categorical values
+    """
+    # Start with current best parameters
+    merged_params = de_instance.best_parameters.copy()
+    
+    # Update with refined values
+    merged_params.update(refined_params)
+    
+    return merged_params

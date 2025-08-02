@@ -77,9 +77,9 @@ def _sort_simplex(optimizer):
         # Convert to parameters DataFrame
         import pandas as pd
         params_df = pd.DataFrame(columns=optimizer.variable_parameters_names, data=[optimizer.best])
-        optimizer.best_parameters = optimizer.parameters.denormalize_and_descale_parameters_array(
-            params_df, include_fixed=True
-        ).to_dict('records')[0]
+        # Denormalize the best parameters
+        denorm_df = optimizer.parameters.unnorm_all(params_df)
+        optimizer.best_parameters = denorm_df.to_dict('records')[0]
         
         # Set flag for better solution found
         optimizer.better_solution_found = True
@@ -164,9 +164,8 @@ def _try_reflection(optimizer):
     # Evaluate reflected point
     import pandas as pd
     params_df = pd.DataFrame(columns=optimizer.variable_parameters_names, data=[optimizer.reflected])
-    parameters = optimizer.parameters.denormalize_and_descale_parameters_array(
-        params_df, include_fixed=True
-    )
+    # Denormalize the reflected point
+    parameters = optimizer.parameters.unnorm_all(params_df)
     
     extra_arguments = {
         'iteration': optimizer.iter,
@@ -201,9 +200,8 @@ def _try_expansion(optimizer):
     # Evaluate expanded point
     import pandas as pd
     params_df = pd.DataFrame(columns=optimizer.variable_parameters_names, data=[optimizer.expanded])
-    parameters = optimizer.parameters.denormalize_and_descale_parameters_array(
-        params_df, include_fixed=True
-    )
+    # Denormalize the expanded point
+    parameters = optimizer.parameters.unnorm_all(params_df)
     
     extra_arguments = {
         'iteration': optimizer.iter,
@@ -243,9 +241,8 @@ def _try_contraction(optimizer, mode='outside'):
     # Evaluate contracted point
     import pandas as pd
     params_df = pd.DataFrame(columns=optimizer.variable_parameters_names, data=[optimizer.contracted])
-    parameters = optimizer.parameters.denormalize_and_descale_parameters_array(
-        params_df, include_fixed=True
-    )
+    # Denormalize the contracted point
+    parameters = optimizer.parameters.unnorm_all(params_df)
     
     extra_arguments = {
         'iteration': optimizer.iter,
@@ -281,9 +278,8 @@ def _perform_shrink(optimizer):
     # Evaluate all new vertices (except the best)
     import pandas as pd
     params_df = pd.DataFrame(columns=optimizer.variable_parameters_names, data=optimizer.simplex[1:])
-    parameters = optimizer.parameters.denormalize_and_descale_parameters_array(
-        params_df, include_fixed=True
-    )
+    # Denormalize the shrunk points
+    parameters = optimizer.parameters.unnorm_all(params_df)
     
     extra_arguments = {
         'iteration': optimizer.iter,

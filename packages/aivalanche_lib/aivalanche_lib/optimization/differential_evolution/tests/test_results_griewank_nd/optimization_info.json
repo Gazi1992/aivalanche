@@ -1,0 +1,81 @@
+{
+    "input": {
+        "seed": "42",
+        "eval_func": "<function create_test_function_wrapper.<locals>.wrapper at 0x0000025C1EA6C0E0>",
+        "eval_func_args": {},
+        "callback_after_first_iter": null,
+        "callback_after_each_iter": null,
+        "callback_after_last_iter": null,
+        "callback_after_better_solution": null,
+        "parameters": [
+            {
+                "name": "x1",
+                "mode": "variable",
+                "scale": "lin",
+                "default": "0.0",
+                "type": "continuous",
+                "min": "-600.0",
+                "max": "600.0"
+            },
+            {
+                "name": "x2",
+                "mode": "variable",
+                "scale": "lin",
+                "default": "0.0",
+                "type": "continuous",
+                "min": "-600.0",
+                "max": "600.0"
+            }
+        ],
+        "opt_min_or_max": "min",
+        "pop_size": "30",
+        "max_iterations": "50",
+        "metric_threshold": "1e-08",
+        "max_iter_without_improvement": "30",
+        "improvement_threshold": "0.001",
+        "mutation_factor_1": [
+            "0.5",
+            "0.9"
+        ],
+        "mutation_factor_2": [
+            "0.0",
+            "0.3"
+        ],
+        "mutation_factor_3": [
+            "0",
+            "0.3"
+        ],
+        "recombination_factor": [
+            "0.7",
+            "0.95"
+        ],
+        "boundary_constraint_method": "random_from_target",
+        "init_pop": null,
+        "init_pop_out_of_range_param": "keep",
+        "defaults_in_init_pop": "False",
+        "defaults_in_init_pop_ratio": "0.2",
+        "adaptive_boundaries": "False",
+        "adaptive_boundaries_edge_threshold": "0.05",
+        "adaptive_boundaries_pop_quantile": "0.7",
+        "adaptive_boundaries_extension": "0.1",
+        "adaptive_boundaries_check_period": "10",
+        "results_dir": "C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\tests\\test_results_griewank_nd",
+        "metamodel_mode": "off",
+        "metamodel_config": null,
+        "perturbation_mode": "auto",
+        "perturbation_config": null,
+        "refinement_mode": "off"
+    },
+    "output": {
+        "iter": "50",
+        "nr_evaluations": "1500",
+        "best_metric": 0.012059621036286328,
+        "best_parameters": {
+            "x1": "3.236610080921764",
+            "x2": "-4.437792980151585"
+        },
+        "stop_reason": "maximum number of iterations reached",
+        "is_stop_criteria_reached": "True",
+        "iter_no_improvement": "23"
+    }
+}

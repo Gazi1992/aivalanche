@@ -66,7 +66,7 @@ def create_test_function_wrapper(func_details):
     return wrapper
 
 
-def test_function_optimization(func_name, max_iterations=100, results_base_dir=None):
+def run_function_optimization(func_name, max_iterations=100, results_base_dir=None):
     """
     Test optimization with a specific test function.
     
@@ -115,7 +115,6 @@ def test_function_optimization(func_name, max_iterations=100, results_base_dir=N
         recombination_factor=(0.7, 0.95),
         adaptive_boundaries=False,
         perturbation_mode='auto',
-        use_local_refinement=False,  # Can be enabled for hybrid optimization
         results_dir=test_results_dir
     )
     
@@ -263,7 +262,7 @@ def test_all_functions():
         try:
             print(f"\n\n{'*'*80}")
             print(f"{'*'*80}")
-            optimizer = test_function_optimization(func_name, max_iterations=50)
+            optimizer = run_function_optimization(func_name, max_iterations=50)
             
             results[func_name] = {
                 'success': True,
@@ -274,7 +273,10 @@ def test_all_functions():
             }
             
         except Exception as e:
+            import traceback
             print(f"\nError testing {func_name}: {str(e)}")
+            print("Full traceback:")
+            traceback.print_exc()
             results[func_name] = {
                 'success': False,
                 'error': str(e)
@@ -296,8 +298,8 @@ def test_all_functions():
             print(f"\n{func_name}: FAILED")
             print(f"  Error: {result['error']}")
     
-    return results
-
+    # Don't return anything from test function - pytest expects None
+    
 
 if __name__ == "__main__":
     # Test all functions

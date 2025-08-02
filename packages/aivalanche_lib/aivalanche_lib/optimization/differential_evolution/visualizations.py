@@ -809,9 +809,7 @@ def _plot_population_animation(de_instance, param_names=None, figsize=(10, 10),
                 
                 # Denormalize to get actual parameter values
                 params_df = pd.DataFrame([norm_params], columns=de_instance.variable_parameters_names)
-                denorm_params = de_instance.parameters.denormalize_and_descale_parameters_array(
-                    params_df, include_fixed=True
-                )
+                denorm_params = de_instance.parameters.unnorm_all(params_df)
                 
                 # Extract values in correct order for function
                 x_values = []

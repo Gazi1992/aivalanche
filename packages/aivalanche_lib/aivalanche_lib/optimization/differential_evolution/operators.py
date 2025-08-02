@@ -486,9 +486,9 @@ def _determine_best(de_instance):
         # Update best solution details
         de_instance.best = de_instance.survivors[best_index]
         best_survivor_params_normed = pd.DataFrame([de_instance.best], columns=de_instance.variable_parameters_names)
-        de_instance.best_parameters = de_instance.parameters.denormalize_and_descale_parameters_array(
-            best_survivor_params_normed,
-            include_fixed=True
+        # Denormalize the best parameters (unnorm_all returns DataFrame with fixed params added)
+        de_instance.best_parameters = de_instance.parameters.unnorm_all(
+            best_survivor_params_normed
         ).iloc[0] # Get the Series
 
         de_instance.best_metric = current_best_metric

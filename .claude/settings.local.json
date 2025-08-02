@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
@@ -16,7 +17,27 @@
       "Bash(Remove-Item \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\differential_evolution\\visualizations_animation.py\")",
       "Bash(C:UsersgazmeOneDriveDocumentsaivalanchecodemyPyEnvScriptspython.exe packages/aivalanche_lib/aivalanche_lib/optimization/adam/tests/test_adam_advanced.py)",
       "Bash(rm:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(git checkout:*)",
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cp:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(git restore:*)",
+      "Bash(grep:*)",
+      "Bash(touch:*)",
+      "Bash(mv:*)",
+      "Bash(tree:*)",
+      "Bash(git clean:*)",
+      "Bash(del \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\parameters\\test_warnings.py\")",
+      "Bash(ren:*)",
+      "Bash(sed:*)",
+      "Bash(true)",
+      "Bash(del \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\adam\\test_adam_parameters.py\")"
     ],
     "deny": []
   }

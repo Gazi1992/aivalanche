@@ -10,15 +10,12 @@
     "parameters": [
       {
         "name": "x1",
-        "min": -5.0,
-        "max": 5.0,
-        "default": 0.0,
-        "scale": "lin",
         "mode": "variable",
+        "scale": "lin",
+        "default": 0.0,
         "type": "continuous",
-        "values": null,
-        "step": NaN,
-        "transform": null
+        "min": -5.0,
+        "max": 5.0
       }
     ],
     "opt_min_or_max": "min",
@@ -47,6 +44,7 @@
     "initial_point_mode": "centroid",
     "initial_simplex_edge_length": 0.5,
     "defaults_in_initial_simplex": true,
+    "initial_simplex": null,
     "results_dir": "c:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\packages\\aivalanche_lib\\aivalanche_lib\\optimization\\nelder_mead\\tests\\test_results_parabola_1d"
   },
   "output": {
