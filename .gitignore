@@ -6,3 +6,8 @@
 node_modules/
 **/node_modules/
 **/node_modules/**
+.claude/
+.vscode/
+**/.claude/
+**/.vscode/
+**/nul
