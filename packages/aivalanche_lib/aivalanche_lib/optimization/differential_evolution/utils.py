@@ -231,7 +231,7 @@ def _get_all_denormalized_boundaries(de_instance):
     result = pd.DataFrame(
         index=de_instance.all_boundaries.index,
         columns=de_instance.variable_parameters_names,
-        dtype=float
+        dtype=object  # Use object dtype to handle mixed types
     )
 
     # Get all unique iterations
@@ -254,12 +254,51 @@ def _get_all_denormalized_boundaries(de_instance):
     denorm_maxs = denorm_maxs[de_instance.variable_parameters_names]
 
     # Calculate the range in denormalized space
-    denorm_ranges = denorm_maxs - denorm_mins
+    # Handle categorical parameters separately
+    denorm_ranges = pd.DataFrame(index=denorm_mins.index, columns=denorm_mins.columns, dtype=object)
+    
+    # Also prepare properly formatted min/max for categorical parameters
+    denorm_mins_formatted = denorm_mins.copy()
+    denorm_maxs_formatted = denorm_maxs.copy()
+    
+    for col in denorm_mins.columns:
+        param = de_instance.parameters.get_parameter(col)
+        if hasattr(param, 'categories'):  # Categorical parameter
+            # For categorical parameters:
+            # - min should be the first category (or the denormalized value at boundary min)
+            # - max should be the last category (or the denormalized value at boundary max)
+            # - range should be the number of categories
+            
+            # Get the actual categories from denormalized values
+            # Note: denorm_mins/maxs might contain category names or indices
+            for iter_num in iterations:
+                min_val = denorm_mins.loc[iter_num, col]
+                max_val = denorm_maxs.loc[iter_num, col]
+                
+                # Ensure we have the category names, not indices
+                if isinstance(min_val, (int, float)):
+                    # It's an index, convert to category name
+                    min_idx = int(round(min_val))
+                    max_idx = int(round(max_val))
+                    min_idx = max(0, min(len(param.categories) - 1, min_idx))
+                    max_idx = max(0, min(len(param.categories) - 1, max_idx))
+                    denorm_mins_formatted.loc[iter_num, col] = param.categories[min_idx]
+                    denorm_maxs_formatted.loc[iter_num, col] = param.categories[max_idx]
+                else:
+                    # Already a category name
+                    denorm_mins_formatted.loc[iter_num, col] = min_val
+                    denorm_maxs_formatted.loc[iter_num, col] = max_val
+                
+                # Range is always the number of categories
+                denorm_ranges.loc[iter_num, col] = len(param.categories)
+        else:
+            # For numeric parameters, calculate the range normally
+            denorm_ranges[col] = denorm_maxs[col] - denorm_mins[col]
 
     # Store the denormalized values in the result DataFrame
     for iter_num in iterations:
-        result.loc[(iter_num, 'min')] = denorm_mins.loc[iter_num]
-        result.loc[(iter_num, 'max')] = denorm_maxs.loc[iter_num]
+        result.loc[(iter_num, 'min')] = denorm_mins_formatted.loc[iter_num]
+        result.loc[(iter_num, 'max')] = denorm_maxs_formatted.loc[iter_num]
         result.loc[(iter_num, 'range')] = denorm_ranges.loc[iter_num]
 
     return result

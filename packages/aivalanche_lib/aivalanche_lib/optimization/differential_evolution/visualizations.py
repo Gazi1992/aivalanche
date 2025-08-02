@@ -313,29 +313,55 @@ def _plot_all_parameters_evolution(
             ax = axes_flat[i]
 
             # Get parameter values
-            values = np.array(filtered_df[param_name])
-
-            # Determine range for this parameter
-            param_min = np.min(values)
-            param_max = np.max(values)
-
-            # Ensure that min and max are different to avoid issues with histogram
-            if param_min == param_max:
-                param_min = param_min - 0.5
-                param_max = param_max + 0.5
-
-            # Create histogram
-            hist, edges = np.histogram(values, bins=bins, range=(param_min, param_max))
+            values = filtered_df[param_name].values
+            
+            # Check if values are categorical (strings)
+            is_categorical = len(values) > 0 and isinstance(values[0], str)
 
             # Clear the axis before plotting
             ax.clear()
 
-            # Plot the histogram as an image
-            ax.imshow(np.atleast_2d(hist).T, extent=[0, 1, param_min, param_max], **imshow_kwargs)
+            if is_categorical:
+                # Handle categorical parameters
+                # Count occurrences of each category
+                unique_categories, counts = np.unique(values, return_counts=True)
+                
+                # Create bar chart
+                bar_positions = np.arange(len(unique_categories))
+                bars = ax.bar(bar_positions, counts, color='skyblue', edgecolor='black')
+                
+                # Set x-axis labels
+                ax.set_xticks(bar_positions)
+                ax.set_xticklabels(unique_categories, rotation=45 if len(unique_categories) > 3 else 0)
+                ax.set_ylabel('Count')
+                
+                # Add value labels on bars
+                for bar, count in zip(bars, counts):
+                    height = bar.get_height()
+                    ax.text(bar.get_x() + bar.get_width()/2., height,
+                           f'{count}', ha='center', va='bottom')
+            else:
+                # Handle numeric parameters (original code)
+                values = np.array(values)
+                
+                # Determine range for this parameter
+                param_min = np.min(values)
+                param_max = np.max(values)
 
-            # Remove ticks
-            ax.set_xticks([])
-            ax.set_yticks([])
+                # Ensure that min and max are different to avoid issues with histogram
+                if param_min == param_max:
+                    param_min = param_min - 0.5
+                    param_max = param_max + 0.5
+
+                # Create histogram
+                hist, edges = np.histogram(values, bins=bins, range=(param_min, param_max))
+
+                # Plot the histogram as an image
+                ax.imshow(np.atleast_2d(hist).T, extent=[0, 1, param_min, param_max], **imshow_kwargs)
+
+                # Remove ticks for numeric parameters
+                ax.set_xticks([])
+                ax.set_yticks([])
 
             # Add parameter name at the bottom
             if show_parameter_names:
@@ -487,60 +513,98 @@ def _plot_parameters_evolution(
         if i < len(axes_flat):
             ax = axes_flat[i]
 
-            # Determine parameter range
-            param_min = df[param_name].min()
-            param_max = df[param_name].max()
+            # Check if parameter values are categorical (strings)
+            sample_value = df[param_name].iloc[0]
+            is_categorical = isinstance(sample_value, str)
 
-            # Ensure min and max are different
-            if param_min == param_max:
-                param_min -= 0.5
-                param_max += 0.5
+            if is_categorical:
+                # Handle categorical parameters with stacked bar charts
+                # Get unique categories
+                categories = sorted(df[param_name].unique())
+                n_categories = len(categories)
+                
+                # Create a matrix to store counts for each category at each iteration
+                count_matrix = np.zeros((len(selected_iters), n_categories))
+                
+                # Calculate counts for each iteration
+                for idx, iter_num in enumerate(selected_iters):
+                    iter_values = df[df['iter'] == iter_num][param_name].values
+                    for cat_idx, category in enumerate(categories):
+                        count_matrix[idx, cat_idx] = np.sum(iter_values == category)
+                
+                # Create stacked bar chart
+                bottom = np.zeros(len(selected_iters))
+                colors = plt.cm.tab10(np.linspace(0, 1, n_categories))
+                
+                for cat_idx, category in enumerate(categories):
+                    ax.bar(selected_iters, count_matrix[:, cat_idx], 
+                          bottom=bottom, label=category, color=colors[cat_idx],
+                          width=iter_step * 0.8)
+                    bottom += count_matrix[:, cat_idx]
+                
+                # Set labels and formatting
+                ax.set_xlabel('Iteration')
+                ax.set_ylabel('Count')
+                ax.set_title(f"Evolution of {param_name} (Categorical)")
+                ax.legend(title='Categories', bbox_to_anchor=(1.05, 1), loc='upper left')
+                ax.set_xlim(min(selected_iters) - iter_step/2, max(selected_iters) + iter_step/2)
+                
+            else:
+                # Handle numeric parameters with heatmap (original code)
+                # Determine parameter range
+                param_min = df[param_name].min()
+                param_max = df[param_name].max()
 
-            # Create a 2D array to store all histograms
-            hist_matrix = []
+                # Ensure min and max are different
+                if param_min == param_max:
+                    param_min -= 0.5
+                    param_max += 0.5
 
-            # Calculate histograms for each iteration
-            for iter_num in selected_iters:
-                # Get parameter values for this iteration
-                iter_values = df[df['iter'] == iter_num][param_name].values
+                # Create a 2D array to store all histograms
+                hist_matrix = []
 
-                # Calculate histogram
-                hist, _ = np.histogram(iter_values, bins=bins, range=(param_min, param_max))
+                # Calculate histograms for each iteration
+                for iter_num in selected_iters:
+                    # Get parameter values for this iteration
+                    iter_values = df[df['iter'] == iter_num][param_name].values
 
-                # Add to matrix
-                hist_matrix.append(hist)
+                    # Calculate histogram
+                    hist, _ = np.histogram(iter_values, bins=bins, range=(param_min, param_max))
 
-            # Convert to numpy array
-            hist_matrix = np.array(hist_matrix)
+                    # Add to matrix
+                    hist_matrix.append(hist)
 
-            # Transpose the matrix for the rotated view (iterations on x-axis)
-            hist_matrix = hist_matrix.T
+                # Convert to numpy array
+                hist_matrix = np.array(hist_matrix)
 
-            # Set default kwargs for imshow
-            imshow_kwargs = {
-                'aspect': 'auto',
-                'interpolation': 'nearest',
-                'cmap': 'YlGn',
-                'origin': 'lower',
-                'extent': [min(selected_iters), max(selected_iters), param_min, param_max]
-            }
+                # Transpose the matrix for the rotated view (iterations on x-axis)
+                hist_matrix = hist_matrix.T
 
-            # Update with user provided kwargs
-            imshow_kwargs.update(kwargs)
+                # Set default kwargs for imshow
+                imshow_kwargs = {
+                    'aspect': 'auto',
+                    'interpolation': 'nearest',
+                    'cmap': 'YlGn',
+                    'origin': 'lower',
+                    'extent': [min(selected_iters), max(selected_iters), param_min, param_max]
+                }
 
-            # Plot histograms as image
-            im = ax.imshow(hist_matrix, **imshow_kwargs)
+                # Update with user provided kwargs
+                imshow_kwargs.update(kwargs)
 
-            # Add colorbar
-            cbar = fig.colorbar(im, ax=ax)
-            cbar.set_label('Frequency')
+                # Plot histograms as image
+                im = ax.imshow(hist_matrix, **imshow_kwargs)
 
-            # Set labels
-            ax.set_xlabel('Iteration')
-            ax.set_ylabel(param_name)
+                # Add colorbar
+                cbar = fig.colorbar(im, ax=ax)
+                cbar.set_label('Frequency')
 
-            # Set title for each subplot
-            ax.set_title(f"Evolution of {param_name}")
+                # Set labels
+                ax.set_xlabel('Iteration')
+                ax.set_ylabel(param_name)
+
+                # Set title for each subplot
+                ax.set_title(f"Evolution of {param_name}")
 
     # Hide unused subplots
     for i in range(n_params, len(axes_flat)):
@@ -726,214 +790,3 @@ def _plot_boundaries_evolution(
         fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
     return fig, axes
-
-
-def _plot_population_animation(de_instance, param_names=None, figsize=(10, 10), 
-                              interval=100, fps=10, save_path=None, func_details=None):
-    """
-    Create an animation showing the evolution of the population in 2D parameter space.
-    
-    Args:
-        de_instance: The DifferentialEvolution optimizer instance
-        param_names: List of two parameter names to plot. If None, uses first two parameters.
-        figsize: Figure size as (width, height) tuple
-        interval: Delay between frames in milliseconds
-        fps: Frames per second for saved animation
-        save_path: Path to save the animation (as .gif or .mp4)
-        func_details: Optional function details dictionary for creating heatmap background
-        
-    Returns:
-        tuple: (figure, animation) objects
-    """
-    import numpy as np
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    from matplotlib.animation import FuncAnimation, PillowWriter
-    
-    # Check if we have 2D data
-    if param_names is None:
-        if len(de_instance.variable_parameters_names) >= 2:
-            param_names = de_instance.variable_parameters_names[:2]
-        else:
-            print("Warning: Less than 2 variable parameters, cannot create 2D animation")
-            return None, None
-    
-    if len(param_names) != 2:
-        print("Warning: Animation requires exactly 2 parameters")
-        return None, None
-    
-    # Get parameter indices
-    x_param = param_names[0]
-    y_param = param_names[1]
-    try:
-        x_idx = de_instance.variable_parameters_names.index(x_param)
-        y_idx = de_instance.variable_parameters_names.index(y_param)
-    except ValueError:
-        print(f"Warning: Parameters {param_names} not found in variable parameters")
-        return None, None
-    
-    # Get population history
-    survivors_history = de_instance.all_survivors
-    n_iterations = survivors_history.shape[0]
-    
-    if n_iterations == 0:
-        print("Warning: No optimization history available")
-        return None, None
-    
-    # Create background heatmap if function details provided
-    heatmap_data = None
-    if func_details is not None and 'func' in func_details:
-        # Create grid in normalized space
-        grid_size = 100
-        x_norm = np.linspace(0, 1, grid_size)
-        y_norm = np.linspace(0, 1, grid_size)
-        X_norm, Y_norm = np.meshgrid(x_norm, y_norm)
-        
-        # Get function
-        func = func_details['func']
-        dim = func_details['dim']
-        
-        # Evaluate function on grid
-        Z = np.zeros_like(X_norm)
-        for i in range(grid_size):
-            for j in range(grid_size):
-                # Create normalized parameter vector
-                norm_params = np.zeros(de_instance.nr_variable_parameters)
-                norm_params[x_idx] = X_norm[i, j]
-                norm_params[y_idx] = Y_norm[i, j]
-                
-                # For other parameters, use middle value
-                for k in range(de_instance.nr_variable_parameters):
-                    if k not in [x_idx, y_idx]:
-                        norm_params[k] = 0.5
-                
-                # Denormalize to get actual parameter values
-                params_df = pd.DataFrame([norm_params], columns=de_instance.variable_parameters_names)
-                denorm_params = de_instance.parameters.unnorm_all(params_df)
-                
-                # Extract values in correct order for function
-                x_values = []
-                for p_idx in range(dim):
-                    param_name = f'x{p_idx+1}'
-                    if param_name in denorm_params.columns:
-                        x_values.append(denorm_params[param_name].iloc[0])
-                
-                # Evaluate function
-                try:
-                    Z[i, j] = func(np.array(x_values))
-                except:
-                    Z[i, j] = np.nan
-        
-        # Apply log scale for better visualization
-        Z_log = np.log10(Z + 1e-10)  # Add small value to avoid log(0)
-        heatmap_data = (X_norm, Y_norm, Z_log)
-    
-    # Create figure
-    fig, ax = plt.subplots(figsize=figsize)
-    
-    # Plot initial heatmap if available
-    if heatmap_data is not None:
-        X_norm, Y_norm, Z_log = heatmap_data
-        ax.contourf(X_norm, Y_norm, Z_log, levels=50, cmap='viridis', alpha=0.7)
-        ax.contour(X_norm, Y_norm, Z_log, levels=20, colors='black', alpha=0.2, linewidths=0.5)
-    
-    # Set up the axes
-    ax.set_xlim(-0.05, 1.05)
-    ax.set_ylim(-0.05, 1.05)
-    ax.set_xlabel(f'{x_param} (normalized)', fontsize=12)
-    ax.set_ylabel(f'{y_param} (normalized)', fontsize=12)
-    ax.grid(True, alpha=0.3)
-    ax.set_aspect('equal')
-    
-    def init():
-        """Initialize animation."""
-        ax.clear()
-        
-        # Plot heatmap if available
-        if heatmap_data is not None:
-            X_norm, Y_norm, Z_log = heatmap_data
-            ax.contourf(X_norm, Y_norm, Z_log, levels=50, cmap='viridis', alpha=0.7)
-            ax.contour(X_norm, Y_norm, Z_log, levels=20, colors='black', alpha=0.2, linewidths=0.5)
-        
-        ax.set_xlim(-0.05, 1.05)
-        ax.set_ylim(-0.05, 1.05)
-        ax.set_xlabel(f'{x_param} (normalized)', fontsize=12)
-        ax.set_ylabel(f'{y_param} (normalized)', fontsize=12)
-        ax.grid(True, alpha=0.3)
-        ax.set_aspect('equal')
-        
-        return []
-    
-    def animate(frame):
-        """Animation function for each frame."""
-        ax.clear()
-        
-        # Plot heatmap if available
-        if heatmap_data is not None:
-            X_norm, Y_norm, Z_log = heatmap_data
-            ax.contourf(X_norm, Y_norm, Z_log, levels=50, cmap='viridis', alpha=0.7)
-            ax.contour(X_norm, Y_norm, Z_log, levels=20, colors='black', alpha=0.2, linewidths=0.5)
-        
-        ax.set_xlim(-0.05, 1.05)
-        ax.set_ylim(-0.05, 1.05)
-        ax.set_xlabel(f'{x_param} (normalized)', fontsize=12)
-        ax.set_ylabel(f'{y_param} (normalized)', fontsize=12)
-        ax.grid(True, alpha=0.3)
-        ax.set_aspect('equal')
-        
-        # Get current population
-        current_pop = survivors_history[frame, :, :]
-        current_pop_2d = current_pop[:, [x_idx, y_idx]]
-        
-        # Plot trail of previous populations
-        for j in range(max(0, frame-5), frame):
-            alpha = 0.1 + 0.3 * (j - max(0, frame-5)) / 5
-            prev_pop = survivors_history[j, :, :]
-            prev_pop_2d = prev_pop[:, [x_idx, y_idx]]
-            ax.scatter(prev_pop_2d[:, 0], prev_pop_2d[:, 1], 
-                      color='gray', s=20, alpha=alpha, zorder=2)
-        
-        # Plot current population
-        ax.scatter(current_pop_2d[:, 0], current_pop_2d[:, 1], 
-                  color='white', s=60, edgecolor='black', linewidth=1,
-                  label='Population', zorder=5)
-        
-        # Mark best point
-        if frame < len(de_instance.all_bests):
-            best_point = de_instance.all_bests[frame, [x_idx, y_idx]]
-            ax.scatter(best_point[0], best_point[1], 
-                      color='red', s=200, marker='*', edgecolor='black', linewidth=1,
-                      label=f'Best (metric={de_instance.all_bests_metrics[frame, 0]:.2e})', zorder=10)
-        
-        # Update title
-        ax.set_title(f'Differential Evolution - Iteration {frame+1}/{n_iterations}', fontsize=14)
-        ax.legend(loc='upper right')
-        
-        return []
-    
-    # Create animation
-    anim = FuncAnimation(fig, animate, init_func=init, frames=n_iterations,
-                        interval=interval, blit=False, repeat=True)
-    
-    # Save animation if path provided
-    if save_path:
-        if save_path.endswith('.gif'):
-            writer = PillowWriter(fps=fps)
-            anim.save(save_path, writer=writer)
-            print(f"Animation saved as GIF to: {save_path}")
-        elif save_path.endswith('.mp4'):
-            try:
-                from matplotlib.animation import FFMpegWriter
-                writer = FFMpegWriter(fps=fps, bitrate=1800)
-                anim.save(save_path, writer=writer)
-                print(f"Animation saved as MP4 to: {save_path}")
-            except:
-                print("Warning: FFmpeg not available, saving as GIF instead")
-                gif_path = save_path.replace('.mp4', '.gif')
-                writer = PillowWriter(fps=fps)
-                anim.save(gif_path, writer=writer)
-                print(f"Animation saved as GIF to: {gif_path}")
-        else:
-            print(f"Warning: Unsupported file format. Use .gif or .mp4")
-    
-    return fig, anim

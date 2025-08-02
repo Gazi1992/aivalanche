@@ -98,10 +98,13 @@ def _incorporate_initial_population(de_instance):
     init_pop_df = _handle_out_of_range_params(de_instance, init_pop_df)
 
     # Scale and normalize the DataFrame using Parameters class
-    normalized_df = de_instance.parameters.scale_and_normalize_parameters_array(init_pop_df)
+    normalized_df = de_instance.parameters.norm_all(init_pop_df)
 
     # Convert to numpy array
-    normalized_values = normalized_df.values
+    if isinstance(normalized_df, pd.DataFrame):
+        normalized_values = normalized_df.values
+    else:
+        normalized_values = normalized_df
 
     # Replace random or all donors based on size
     if len(normalized_values) == de_instance.pop_size:
@@ -166,9 +169,14 @@ def _handle_out_of_range_params(de_instance, init_pop_df):
             continue
 
         # Get parameter boundaries from the Parameters object
-        param_info = de_instance.parameters.get_parameter_info(param)
-        param_min = param_info['min']
-        param_max = param_info['max']
+        param_info = de_instance.parameters.get_parameter(param)
+        if hasattr(param_info, 'min') and hasattr(param_info, 'max'):
+            param_min = param_info.min
+            param_max = param_info.max
+        else:
+            # For discrete parameters, get the min/max from values
+            param_min = min(param_info.values)
+            param_max = max(param_info.values)
 
         # Find values outside boundaries
         below_min_mask = df[param] < param_min
@@ -260,10 +268,21 @@ def _incorporate_default_values(de_instance):
 
     print(f"Info: {replace_count} of {de_instance.pop_size} members will be replaced with default values (ratio = {de_instance.defaults_in_init_pop_ratio})")
 
-    # Get the default normalized values directly from the Parameters class
-    # The default values are already normalized in the variable_parameters_normed DataFrame
-    default_values = de_instance.parameters.variable_parameters_normed['default'].values
-
+    # Get the default values and normalize them
+    defaults_dict = de_instance.parameters.get_defaults()
+    # Filter to only variable parameters
+    variable_params = de_instance.variable_parameters_names
+    variable_defaults = {k: v for k, v in defaults_dict.items() if k in variable_params}
+    
+    # Normalize the default values
+    normalized_defaults = de_instance.parameters.norm_all(variable_defaults)
+    
+    # Convert to array
+    if isinstance(normalized_defaults, dict):
+        default_values = np.array([normalized_defaults[param] for param in variable_params])
+    else:
+        default_values = normalized_defaults
+    
     # Create array of default values for all members to replace
     # Repeat the default values for each member
     default_array = np.tile(default_values, (replace_count, 1))

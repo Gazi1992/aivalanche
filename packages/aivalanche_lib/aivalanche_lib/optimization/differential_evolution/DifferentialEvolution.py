@@ -412,8 +412,8 @@ class DifferentialEvolution:
             'survivors_normed': survivors_normed_df,
             'bests': bests_df,
             'bests_normed': bests_normed_df,
-            'boundaries': self.all_boundaries,
-            'boundaries_normed': _get_all_denormalized_boundaries(self)
+            'boundaries': _get_all_denormalized_boundaries(self),  # Denormalized boundaries
+            'boundaries_normed': self.all_boundaries  # Normalized boundaries
             }
 
     @property
@@ -522,6 +522,21 @@ class DifferentialEvolution:
             'is_stop_criteria_reached': self.is_stop_criteria_reached,
             'iter_no_improvement': self.iter_no_improvement
         }
+        
+        # Add perturbation information if perturbation is enabled
+        if self.perturbation_mode != 'off':
+            perturbation_info = {
+                'perturbation_mode': self.perturbation_mode,
+                'perturbations_applied': self.perturbation_memory['perturbations_applied'],
+                'last_perturbation_iter': self.perturbation_memory['last_perturbation_iter']
+            }
+            # Add perturbation history if available
+            if hasattr(self, '_perturbation_history'):
+                perturbation_info['perturbation_iterations'] = self._perturbation_history
+                # Count successful perturbations based on improvement messages
+                perturbation_info['perturbations_successful'] = len([i for i, event in enumerate(self.perturbation_memory.get('history', [])) 
+                                                                    if event.get('improved', False)])
+            output_info['perturbation'] = perturbation_info
 
         return {
             'input': input_info,

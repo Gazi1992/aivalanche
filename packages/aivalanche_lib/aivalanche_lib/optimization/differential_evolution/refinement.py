@@ -8,6 +8,7 @@ import pandas as pd
 from typing import Dict, Any, Optional, Tuple, Union
 from ..damped_least_squares import DampedLeastSquares
 from .refinement_modes import get_refinement_config, get_mode_description
+from ...parameters import Parameters
 import copy
 
 
@@ -39,7 +40,7 @@ def apply_local_refinement(de_instance,
     # This ensures DLS only operates on continuous/discrete numeric parameters
     refinement_parameters = _create_refinement_parameters(de_instance)
     
-    if refinement_parameters.nr_variable_parameters == 0:
+    if len(refinement_parameters.get_variable_parameters()) == 0:
         print("\n[INFO] No continuous/discrete parameters available for refinement.")
         print("      All parameters are categorical or fixed.")
         return False, {'method': method, 'improved': False, 'reason': 'no_refinable_parameters'}
@@ -47,7 +48,7 @@ def apply_local_refinement(de_instance,
     # Get current best solution (only non-categorical parameters)
     best_params_full = de_instance.best_parameters
     best_params_refinable = {k: v for k, v in best_params_full.items() 
-                            if k in refinement_parameters.variable_parameters_names}
+                            if k in refinement_parameters.variable_names}
     best_point_df = pd.DataFrame([best_params_refinable])
     initial_metric = de_instance.best_metric
     
@@ -121,8 +122,8 @@ def apply_local_refinement(de_instance,
                 
                 # Update the best trial with refined solution
                 # Convert parameters to normalized values for trials array
-                refined_params_norm = de_instance.parameters.scale_and_normalize_parameters_array(
-                    pd.DataFrame([dls.best_parameters])
+                refined_params_norm = de_instance.parameters.norm_all(
+                    pd.DataFrame([_merge_refined_parameters(de_instance, dls.best_parameters)])
                 ).values.flatten()
                 
                 de_instance.trials[best_trial_idx] = refined_params_norm
@@ -252,27 +253,47 @@ def _create_refinement_parameters(de_instance):
     Returns:
         Parameters object with only continuous/discrete parameters marked as variable
     """
-    # Deep copy the parameters to avoid modifying the original
-    refinement_params = copy.deepcopy(de_instance.parameters)
+    # Get all parameters
+    all_params = de_instance.parameters.parameters
     
-    # Mark all categorical parameters as fixed
-    param_types = refinement_params.all_parameters['type'].values
-    param_modes = refinement_params.all_parameters['mode'].values
+    # Create new parameter list with categorical parameters marked as fixed
+    new_params = []
+    for param in all_params:
+        # Create parameter dict based on type
+        if param.type == 'continuous':
+            param_dict = {
+                'name': param.name,
+                'type': 'continuous',
+                'min': param.min,
+                'max': param.max,
+                'default': param.default,
+                'scale': param.scale,
+                'mode': 'fixed' if param.type == 'categorical' else param.mode,
+                'description': param.description
+            }
+        elif param.type == 'discrete':
+            param_dict = {
+                'name': param.name,
+                'type': 'discrete',
+                'values': param.values,
+                'default': param.default,
+                'mode': param.mode,
+                'description': param.description
+            }
+        elif param.type == 'categorical':
+            param_dict = {
+                'name': param.name,
+                'type': 'categorical',
+                'values': param.categories,
+                'default': param.default,
+                'mode': 'fixed',  # Always fixed for categorical in refinement
+                'description': param.description
+            }
+        
+        new_params.append(param_dict)
     
-    for i, (ptype, mode) in enumerate(zip(param_types, param_modes)):
-        if ptype == 'categorical' and mode == 'variable':
-            # Change mode to fixed for categorical parameters
-            refinement_params.all_parameters.loc[i, 'mode'] = 'fixed'
-            if hasattr(refinement_params, 'all_parameters_scaled'):
-                refinement_params.all_parameters_scaled.loc[i, 'mode'] = 'fixed'
-            if hasattr(refinement_params, 'all_parameters_normed'):
-                refinement_params.all_parameters_normed.loc[i, 'mode'] = 'fixed'
-    
-    # Force re-computation of cached properties
-    if hasattr(refinement_params, '_variable_parameters_names'):
-        del refinement_params._variable_parameters_names
-    if hasattr(refinement_params, '_variable_parameters'):
-        del refinement_params._variable_parameters
+    # Create new Parameters object
+    refinement_params = Parameters(new_params)
     
     return refinement_params
 
@@ -292,25 +313,29 @@ def _create_wrapped_eval_func(de_instance, refinement_parameters):
     Returns:
         Wrapped evaluation function
     """
-    def wrapped_eval_func(parameters_df, **kwargs):
+    def wrapped_eval_func(parameters=None, **kwargs):
+        # Handle both 'parameters' and 'parameters_df' argument names
+        if parameters is None and 'parameters_df' in kwargs:
+            parameters = kwargs.pop('parameters_df')
+        
         # Get current best categorical parameter values
         categorical_params = {}
         for param_name in de_instance.variable_parameters_names:
-            if param_name not in refinement_parameters.variable_parameters_names:
+            if param_name not in refinement_parameters.variable_names:
                 # This is a categorical parameter
                 categorical_params[param_name] = de_instance.best_parameters[param_name]
         
         # Merge categorical parameters with the refinable parameters from DLS
-        if isinstance(parameters_df, pd.DataFrame):
+        if isinstance(parameters, pd.DataFrame):
             # Add categorical columns to the DataFrame
             for name, value in categorical_params.items():
-                parameters_df[name] = value
+                parameters[name] = value
         else:
             # Handle dict case
-            parameters_df.update(categorical_params)
+            parameters.update(categorical_params)
         
         # Call original eval_func with complete parameter set
-        return de_instance.eval_func(parameters_df, **kwargs)
+        return de_instance.eval_func(parameters=parameters, **kwargs)
     
     return wrapped_eval_func
 

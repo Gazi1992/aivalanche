@@ -462,6 +462,11 @@ def _apply_perturbation(de_instance):
     # Store pre-perturbation metric for tracking improvement
     pre_perturbation_best = de_instance.best_metric
     
+    # Track perturbation for visualization
+    if not hasattr(de_instance, '_perturbation_history'):
+        de_instance._perturbation_history = []
+    de_instance._perturbation_history.append(de_instance.iter)
+    
     # Print perturbation message
     print(f"\n{'='*60}")
     print(f"Applying perturbation (mode: {de_instance.perturbation_mode})")
