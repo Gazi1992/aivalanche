@@ -54,9 +54,8 @@ def _get_history_as_df(optimizer, which='trials'):
         normed_df['iter'] = np.arange(1, len(normed_df) + 1)
         
         # Denormalize and descale
-        params_df = optimizer.parameters.denormalize_and_descale_parameters_array(
-            normed_df[optimizer.variable_parameters_names],
-            include_fixed=True
+        params_df = optimizer.parameters.unnorm_all(
+            normed_df[optimizer.variable_parameters_names]
         )
         
         # Create denormalized DataFrame
@@ -93,9 +92,9 @@ def _get_history_as_df(optimizer, which='trials'):
                 # Denormalized data
                 vertex_data = optimizer.all_simplexes[iter_idx, vertex_idx, :]
                 params_df = pd.DataFrame(columns=optimizer.variable_parameters_names, data=[vertex_data])
-                params_denorm = optimizer.parameters.denormalize_and_descale_parameters_array(
-                    params_df, include_fixed=True
-                ).to_dict('records')[0]
+                # Denormalize parameters
+                denorm_df = optimizer.parameters.unnorm_all(params_df)
+                params_denorm = denorm_df.to_dict('records')[0]
                 
                 row = {
                     'iter': iter_idx + 1,
@@ -127,9 +126,8 @@ def _get_history_as_df(optimizer, which='trials'):
         normed_df['iter'] = np.arange(1, len(normed_df) + 1)
         
         # Denormalize and descale
-        params_df = optimizer.parameters.denormalize_and_descale_parameters_array(
-            normed_df[optimizer.variable_parameters_names],
-            include_fixed=True
+        params_df = optimizer.parameters.unnorm_all(
+            normed_df[optimizer.variable_parameters_names]
         )
         
         # Create denormalized DataFrame
@@ -163,7 +161,7 @@ def _run_callbacks(optimizer, last_iteration=False):
         'best_parameters': optimizer.best_parameters,
         'best_metric': optimizer.best_metric,
         'best_response': optimizer.best_response,
-        'parameters_names': optimizer.parameters.parameters_names,
+        'parameters_names': optimizer.parameters.names,
         'all_trials': optimizer.all_trials,
         'stop_reason': optimizer.stop_reason,
         **optimizer.eval_func_args
@@ -224,20 +222,18 @@ def _generate_spendley_points(optimizer):
                     params_list.append({param_name: initial_values[param_name]})
                 else:
                     # Use default if not provided
-                    default_val = optimizer.parameters.all_parameters[
-                        optimizer.parameters.all_parameters['name'] == param_name
-                    ]['default'].iloc[0]
-                    params_list.append({param_name: default_val})
+                    param = optimizer.parameters.get_parameter(param_name)
+                    params_list.append({param_name: param.default})
             
             params_df = pd.DataFrame(params_list)
             
             # Normalize the initial point
-            normalized = optimizer.parameters.scale_and_normalize_parameters_array(params_df)
+            normalized = optimizer.parameters.norm_all(params_df)
             initial_point = normalized.values[0]
             
         elif isinstance(optimizer.initial_point, pd.DataFrame):
             # Normalize the DataFrame
-            normalized = optimizer.parameters.scale_and_normalize_parameters_array(optimizer.initial_point)
+            normalized = optimizer.parameters.norm_all(optimizer.initial_point)
             initial_point = normalized.values[0]
         else:
             # Assume it's already normalized
@@ -247,13 +243,11 @@ def _generate_spendley_points(optimizer):
         # Use default values
         default_values = []
         for param_name in optimizer.variable_parameters_names:
-            default_val = optimizer.parameters.all_parameters[
-                optimizer.parameters.all_parameters['name'] == param_name
-            ]['default'].iloc[0]
-            default_values.append(default_val)
+            param = optimizer.parameters.get_parameter(param_name)
+            default_values.append(param.default)
         
         params_df = pd.DataFrame([default_values], columns=optimizer.variable_parameters_names)
-        normalized = optimizer.parameters.scale_and_normalize_parameters_array(params_df)
+        normalized = optimizer.parameters.norm_all(params_df)
         initial_point = normalized.values[0]
     
     else:

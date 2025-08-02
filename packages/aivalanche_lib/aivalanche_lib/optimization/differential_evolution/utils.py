@@ -200,10 +200,8 @@ def _get_history_as_df(de_instance, which='trials'):
     )
 
     # Convert normalized values to original parameter values
-    df = de_instance.parameters.denormalize_and_descale_parameters_array(
-        pd.DataFrame(columns=de_instance.variable_parameters_names, data=values_normed_flat),
-        include_fixed=True
-    )
+    df_temp = pd.DataFrame(columns=de_instance.variable_parameters_names, data=values_normed_flat)
+    df = de_instance.parameters.unnorm_all(df_temp)
 
     # Add iter and metric columns to both DataFrames
     # Insert iter as first column
@@ -245,17 +243,15 @@ def _get_all_denormalized_boundaries(de_instance):
     # Extract all max boundaries at once
     all_maxs = de_instance.all_boundaries.xs('max', level='type')
 
-    # Denormalize all min values at once
-    denorm_mins = de_instance.parameters.denormalize_and_descale_parameters_array(
-        all_mins,
-        include_fixed=False
-    )
+    # Denormalize all min values at once (only variable parameters)
+    denorm_mins = de_instance.parameters.unnorm_all(all_mins)
+    # Remove fixed parameters from the result since we only want variable params
+    denorm_mins = denorm_mins[de_instance.variable_parameters_names]
 
-    # Denormalize all max values at once
-    denorm_maxs = de_instance.parameters.denormalize_and_descale_parameters_array(
-        all_maxs,
-        include_fixed=False
-    )
+    # Denormalize all max values at once (only variable parameters)
+    denorm_maxs = de_instance.parameters.unnorm_all(all_maxs)
+    # Remove fixed parameters from the result since we only want variable params
+    denorm_maxs = denorm_maxs[de_instance.variable_parameters_names]
 
     # Calculate the range in denormalized space
     denorm_ranges = denorm_maxs - denorm_mins
@@ -289,7 +285,7 @@ def _run_callbacks(de_instance, last_iteration=False):
         'best_parameters': de_instance.best_parameters,
         'best_metric': de_instance.best_metric,
         'best_response': de_instance.best_response,
-        'parameters_names': de_instance.parameters.parameters_names,
+        'parameters_names': de_instance.parameters.names,
         'all_trials': de_instance.all_trials,
         'stop_reason': de_instance.stop_reason,
         **de_instance.eval_func_args

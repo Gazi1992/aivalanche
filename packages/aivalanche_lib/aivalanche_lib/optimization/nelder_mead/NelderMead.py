@@ -15,7 +15,7 @@ the NelderMead class.
 import numpy as np, pandas as pd, inspect
 from typing import Dict, List, Optional, Union, Any, Callable
 
-from aivalanche_lib.parameters.Parameters import Parameters
+from aivalanche_lib.parameters import Parameters
 from .utils import (
     _update_history, _get_history_as_df,
     _run_callbacks, _generate_spendley_points
@@ -110,10 +110,10 @@ class NelderMead:
         self.callback_after_better_solution = callback_after_better_solution
         
         self.parameters = parameters if isinstance(parameters, Parameters) else Parameters(parameters)
-        self.parameters_names = self.parameters.parameters_names
-        self.variable_parameters_names = self.parameters.variable_parameters_names
-        self.nr_parameters = self.parameters.nr_parameters
-        self.nr_variable_parameters = self.parameters.nr_variable_parameters
+        self.parameters_names = self.parameters.names
+        self.variable_parameters_names = self.parameters.variable_names
+        self.nr_parameters = len(self.parameters)
+        self.nr_variable_parameters = self.parameters.n_variable
         
         self.opt_min_or_max = opt_min_or_max
         
@@ -159,10 +159,9 @@ class NelderMead:
         if self.iter < 1:
             return None
             
-        return self.parameters.denormalize_and_descale_parameters_array(
-            pd.DataFrame(columns = self.variable_parameters_names, data = self.simplex),
-            include_fixed = True
-        )
+        # Create DataFrame with normalized values and denormalize
+        df_normalized = pd.DataFrame(columns=self.variable_parameters_names, data=self.simplex)
+        return self.parameters.unnorm_all(df_normalized)
     
     @property
     def history(self):
@@ -198,7 +197,7 @@ class NelderMead:
         input_info = {name: getattr(self, name) for name in param_names if hasattr(self, name)}
         
         # Add parameters data in the proper format
-        input_info['parameters'] = self.parameters.all_parameters.to_dict('records')
+        input_info['parameters'] = self.parameters.to_dict()
         
         # Current output state that changes during optimization
         output_info = {
@@ -394,7 +393,7 @@ class NelderMead:
                 # Assume DataFrame has columns matching variable parameter names
                 simplex_df = self.initial_simplex[self.variable_parameters_names]
                 # Normalize the simplex vertices
-                normalized_simplex = self.parameters.scale_and_normalize_parameters_array(simplex_df)
+                normalized_simplex = self.parameters.norm_all(simplex_df)
                 self.simplex = normalized_simplex.values
             else:
                 # Assume it's a numpy array
@@ -413,7 +412,7 @@ class NelderMead:
                     else:
                         # Need to normalize - create DataFrame for normalization
                         simplex_df = pd.DataFrame(self.initial_simplex, columns=self.variable_parameters_names)
-                        normalized_simplex = self.parameters.scale_and_normalize_parameters_array(simplex_df)
+                        normalized_simplex = self.parameters.norm_all(simplex_df)
                         self.simplex = normalized_simplex.values
                 else:
                     raise ValueError("initial_simplex must be a numpy array or pandas DataFrame")

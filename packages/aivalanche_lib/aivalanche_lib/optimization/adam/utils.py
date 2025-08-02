@@ -50,9 +50,8 @@ def _get_history_as_df(optimizer, which='points'):
         normed_df['iter'] = np.arange(1, len(normed_df) + 1)
         
         # Denormalize and descale
-        params_df = optimizer.parameters.denormalize_and_descale_parameters_array(
-            normed_df[optimizer.variable_parameters_names],
-            include_fixed=True
+        params_df = optimizer.parameters.unnorm_all(
+            normed_df[optimizer.variable_parameters_names]
         )
         
         # Create denormalized DataFrame
@@ -61,7 +60,7 @@ def _get_history_as_df(optimizer, which='points'):
         df['iter'] = normed_df['iter']
         
         # Reorder columns
-        df = df[['iter'] + optimizer.parameters_names + ['metric']]
+        df = df[['iter'] + optimizer.parameters.names + ['metric']]
         normed_df = normed_df[['iter'] + optimizer.variable_parameters_names + ['metric']]
         
         return df, normed_df
@@ -104,7 +103,7 @@ def _run_callbacks(optimizer, last_iteration=False):
         'best_parameters': optimizer.best_parameters,
         'best_metric': optimizer.best_metric,
         'best_response': optimizer.best_response,
-        'parameters_names': optimizer.parameters.parameters_names,
+        'parameters_names': optimizer.parameters.names,
         'gradient': optimizer.gradient,
         'gradient_norm': optimizer.gradient_norm,
         'stop_reason': optimizer.stop_reason,
@@ -180,9 +179,7 @@ def _finite_difference_gradient(optimizer):
         
         # Evaluate perturbed point
         params_df = pd.DataFrame([perturbed_point], columns=optimizer.variable_parameters_names)
-        denorm_params = optimizer.parameters.denormalize_and_descale_parameters_array(
-            params_df, include_fixed=True
-        )
+        denorm_params = optimizer.parameters.unnorm_all(params_df)
         
         responses = optimizer.eval_func(denorm_params, **optimizer.eval_func_args)
         optimizer.nr_evaluations += 1
@@ -225,18 +222,14 @@ def _simultaneous_perturbation_gradient(optimizer):
     
     # Evaluate positive perturbation
     params_df_plus = pd.DataFrame([point_plus], columns=optimizer.variable_parameters_names)
-    denorm_params_plus = optimizer.parameters.denormalize_and_descale_parameters_array(
-        params_df_plus, include_fixed=True
-    )
+    denorm_params_plus = optimizer.parameters.unnorm_all(params_df_plus)
     responses_plus = optimizer.eval_func(denorm_params_plus, **optimizer.eval_func_args)
     optimizer.nr_evaluations += 1
     metric_plus = responses_plus[0]['metric']
     
     # Evaluate negative perturbation
     params_df_minus = pd.DataFrame([point_minus], columns=optimizer.variable_parameters_names)
-    denorm_params_minus = optimizer.parameters.denormalize_and_descale_parameters_array(
-        params_df_minus, include_fixed=True
-    )
+    denorm_params_minus = optimizer.parameters.unnorm_all(params_df_minus)
     responses_minus = optimizer.eval_func(denorm_params_minus, **optimizer.eval_func_args)
     optimizer.nr_evaluations += 1
     metric_minus = responses_minus[0]['metric']

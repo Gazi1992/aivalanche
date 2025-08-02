@@ -19,7 +19,7 @@ import pandas as pd
 import inspect
 from typing import Dict, List, Optional, Union, Any, Callable, Tuple
 
-from aivalanche_lib.parameters.Parameters import Parameters
+from aivalanche_lib.parameters import Parameters
 from .utils import (
     _update_history, _get_history_as_df,
     _run_callbacks, _compute_jacobian,
@@ -130,10 +130,10 @@ class DampedLeastSquares:
         
         # Parameters
         self.parameters = parameters if isinstance(parameters, Parameters) else Parameters(parameters)
-        self.parameters_names = self.parameters.parameters_names
-        self.variable_parameters_names = self.parameters.variable_parameters_names
-        self.nr_parameters = self.parameters.nr_parameters
-        self.nr_variable_parameters = self.parameters.nr_variable_parameters
+        self.parameters_names = self.parameters.names
+        self.variable_parameters_names = self.parameters.variable_names
+        self.nr_parameters = len(self.parameters)
+        self.nr_variable_parameters = self.parameters.n_variable
         
         self.opt_min_or_max = opt_min_or_max
         
@@ -188,11 +188,8 @@ class DampedLeastSquares:
         if self.current_point is None:
             return None
         
-        return self.parameters.denormalize_and_descale_parameters_array(
-            pd.DataFrame(columns=self.variable_parameters_names, 
-                        data=self.current_point.reshape(1, -1)),
-            include_fixed=True
-        )
+        params_df = pd.DataFrame([self.current_point], columns=self.variable_parameters_names)
+        return self.parameters.unnorm_all(params_df)
     
     @property
     def history(self):
@@ -230,7 +227,7 @@ class DampedLeastSquares:
         input_info = {name: getattr(self, name) for name in param_names if hasattr(self, name)}
         
         # Add parameters data in the proper format
-        input_info['parameters'] = self.parameters.all_parameters.to_dict('records')
+        input_info['parameters'] = self.parameters.to_dict()
         
         # Current output state
         output_info = {
@@ -267,15 +264,13 @@ class DampedLeastSquares:
         else:
             # Use defaults or random initialization
             if self.use_defaults_in_initial_point:
-                defaults_df = pd.DataFrame([{
-                    name: self.parameters.all_parameters[
-                        self.parameters.all_parameters['name'] == name
-                    ]['default'].iloc[0] 
-                    for name in self.variable_parameters_names
-                }])
-                self.current_point = self.parameters.scale_and_normalize_parameters_array(
-                    defaults_df, include_fixed=False
-                ).values.flatten()
+                defaults_dict = {}
+                for name in self.variable_parameters_names:
+                    param = self.parameters.get_parameter(name)
+                    defaults_dict[name] = param.default
+                defaults_df = pd.DataFrame([defaults_dict])
+                normalized = self.parameters.norm_all(defaults_df)
+                self.current_point = normalized.values.flatten()
             else:
                 # Random point in [0, 1]
                 self.current_point = self.rng.random(self.nr_variable_parameters)
@@ -309,13 +304,11 @@ class DampedLeastSquares:
         if isinstance(self.initial_point, str):
             if self.initial_point.lower() == 'default':
                 # Use default values from parameters
-                defaults_df = pd.DataFrame([{
-                    name: self.parameters.all_parameters[
-                        self.parameters.all_parameters['name'] == name
-                    ]['default'].iloc[0] 
-                    for name in self.variable_parameters_names
-                }])
-                initial_df = defaults_df
+                defaults_dict = {}
+                for name in self.variable_parameters_names:
+                    param = self.parameters.get_parameter(name)
+                    defaults_dict[name] = param.default
+                initial_df = pd.DataFrame([defaults_dict])
             else:
                 # Load from file
                 initial_df = pd.read_csv(self.initial_point)
@@ -325,9 +318,7 @@ class DampedLeastSquares:
             raise ValueError("initial_point must be a DataFrame, path to CSV, or 'default'")
         
         # Normalize and scale
-        normalized = self.parameters.scale_and_normalize_parameters_array(
-            initial_df, include_fixed=False
-        )
+        normalized = self.parameters.norm_all(initial_df)
         
         return normalized.values.flatten()
     
@@ -496,21 +487,15 @@ class DampedLeastSquares:
             self.best_metric = self.current_metric
             self.best_point = self.current_point.copy()
             # Get denormalized parameters for best_parameters
-            params_df = self.parameters.denormalize_and_descale_parameters_array(
-                pd.DataFrame(columns=self.variable_parameters_names, 
-                            data=self.current_point.reshape(1, -1)),
-                include_fixed=True
-            )
-            self.best_parameters = params_df.iloc[0]
+            params_df = pd.DataFrame([self.current_point], columns=self.variable_parameters_names)
+            denorm_df = self.parameters.unnorm_all(params_df)
+            self.best_parameters = denorm_df.iloc[0]
     
     def _evaluate_point(self, point):
         """Evaluate a parameter point and return metric and residuals."""
         # Denormalize parameters
-        params_df = self.parameters.denormalize_and_descale_parameters_array(
-            pd.DataFrame(columns=self.variable_parameters_names, 
-                        data=point.reshape(1, -1)),
-            include_fixed=True
-        )
+        params_df = pd.DataFrame([point], columns=self.variable_parameters_names)
+        params_df = self.parameters.unnorm_all(params_df)
         
         # Add penalty for boundary violations if using penalty method
         penalty = 0

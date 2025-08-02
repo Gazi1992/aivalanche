@@ -74,10 +74,7 @@ def _get_history_as_df(dls_instance, which='points'):
     )
     
     # Convert normalized values to original parameter values
-    df = dls_instance.parameters.denormalize_and_descale_parameters_array(
-        df_normed.copy(),
-        include_fixed=True
-    )
+    df = dls_instance.parameters.unnorm_all(df_normed.copy())
     
     # Add iteration column
     df_normed.insert(0, 'iter', range(1, n_iters + 1))
@@ -232,7 +229,7 @@ def _run_callbacks(dls_instance, last_iteration=False):
         'gradient_norm': dls_instance.gradient_norm,
         'damping_factor': dls_instance.damping_factor,
         'step_norm': dls_instance.step_norm,
-        'parameters_names': dls_instance.parameters.parameters_names,
+        'parameters_names': dls_instance.parameters.names,
         'stop_reason': dls_instance.stop_reason,
         **dls_instance.eval_func_args
     }

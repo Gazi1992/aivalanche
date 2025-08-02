@@ -390,18 +390,17 @@ def _add_function_landscape(ax, parameters, param_names, func_details):
     grid_size = 100
     
     # Get parameter bounds
-    param_info = parameters.all_parameters
-    x_param = param_info[param_info['name'] == param_names[0]].iloc[0]
-    y_param = param_info[param_info['name'] == param_names[1]].iloc[0]
+    x_param = parameters.get_parameter(param_names[0])
+    y_param = parameters.get_parameter(param_names[1])
     
-    x_range = np.linspace(x_param['min'], x_param['max'], grid_size)
-    y_range = np.linspace(y_param['min'], y_param['max'], grid_size)
+    x_range = np.linspace(x_param.min_val, x_param.max_val, grid_size)
+    y_range = np.linspace(y_param.min_val, y_param.max_val, grid_size)
     X, Y = np.meshgrid(x_range, y_range)
     
     # Evaluate function
     Z = np.zeros_like(X)
     func = func_details['func']
-    dim = func_details.get('dim', len(parameters.variable_parameters_names))
+    dim = func_details.get('dim', len(parameters.variable_names))
     
     for i in range(grid_size):
         for j in range(grid_size):

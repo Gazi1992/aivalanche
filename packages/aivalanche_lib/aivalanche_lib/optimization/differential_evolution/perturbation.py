@@ -72,12 +72,20 @@ def _auto_adjust_config(de_instance, config: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Adjust based on dimensionality
     if de_instance.nr_variable_parameters > 50:
-        config['population_ratio'] *= 0.7  # Perturb fewer in high dimensions
+        # Handle both tuple and float types for population_ratio
+        if isinstance(config['population_ratio'], tuple):
+            config['population_ratio'] = tuple(r * 0.7 for r in config['population_ratio'])
+        else:
+            config['population_ratio'] *= 0.7  # Perturb fewer in high dimensions
         config['trigger_ratio'] *= 0.8  # Trigger earlier
     
     # Adjust based on population size
     if de_instance.pop_size < 50:
-        config['population_ratio'] = max(0.4, config['population_ratio'])  # Ensure enough diversity
+        # Handle both tuple and float types for population_ratio
+        if isinstance(config['population_ratio'], tuple):
+            config['population_ratio'] = tuple(max(0.4, r) for r in config['population_ratio'])
+        else:
+            config['population_ratio'] = max(0.4, config['population_ratio'])  # Ensure enough diversity
     
     # These adjustments will be made dynamically during optimization
     # based on convergence rate and other runtime metrics
@@ -102,8 +110,15 @@ def _should_apply_perturbation(de_instance) -> bool:
     trigger_ratio = de_instance._perturbation_active_config.get('trigger_ratio', 0.5)
     trigger_threshold = int(de_instance.max_iter_without_improvement * trigger_ratio)
     
-    return (de_instance.iter_no_improvement >= trigger_threshold and 
-            de_instance.iter > 10)
+    should_apply = (de_instance.iter_no_improvement >= trigger_threshold and 
+                    de_instance.iter > 10)
+    
+    # Optional debug message (can be commented out in production)
+    # Uncomment the following line for debugging:
+    # if should_apply:
+    #     print(f"\n[DEBUG] Perturbation conditions met at iteration {de_instance.iter}")
+    
+    return should_apply
 
 
 def _get_current_parameter_stats(de_instance) -> Dict[str, np.ndarray]:
@@ -180,18 +195,38 @@ def _select_parameters_for_perturbation(de_instance) -> np.ndarray:
     """
     Select which parameters to perturb based on the configured strategy.
     
+    Note: Categorical parameters are automatically excluded from perturbation
+    as adding continuous noise to discrete category indices is not meaningful.
+    
     Args:
         de_instance: Instance of DifferentialEvolution
         
     Returns:
-        np.ndarray: Indices of parameters to perturb
+        np.ndarray: Indices of parameters to perturb (excludes categorical)
     """
     selection_method = de_instance._perturbation_active_config.get('param_selection', 'smart')
+    
+    # Get indices of non-categorical parameters
+    # Get types for variable parameters only
+    variable_params = de_instance.parameters.get_variable_parameters()
+    if not variable_params:
+        return np.array([])
+    
+    # Build mask for non-categorical parameters
+    non_categorical_indices = []
+    for i, param in enumerate(variable_params):
+        if param.type != 'categorical':
+            non_categorical_indices.append(i)
+    non_categorical_indices = np.array(non_categorical_indices)
     
     if selection_method == 'random':
         # Random selection - param_ratio must be a number
         n_params = _determine_n_params_to_perturb(de_instance, selection_method)
-        return de_instance.rng.choice(de_instance.nr_variable_parameters, size=n_params, replace=False)
+        # Only select from non-categorical parameters
+        if len(non_categorical_indices) == 0:
+            return np.array([])  # No parameters to perturb
+        n_params = min(n_params, len(non_categorical_indices))
+        return de_instance.rng.choice(non_categorical_indices, size=n_params, replace=False)
     
     elif selection_method == 'variance':
         # Select parameters with variance below threshold
@@ -199,18 +234,25 @@ def _select_parameters_for_perturbation(de_instance) -> np.ndarray:
         sigma_threshold = de_instance._perturbation_active_config.get('sigma_threshold', 0.01)
         # Get indices of parameters with std below threshold
         low_variance_params = np.where(stats['std'] < sigma_threshold)[0]
-        # If no parameters below threshold, select the one with lowest variance
+        # Filter to only non-categorical parameters
+        low_variance_params = np.intersect1d(low_variance_params, non_categorical_indices)
+        # If no parameters below threshold, select the one with lowest variance (non-categorical)
         if len(low_variance_params) == 0:
-            return np.array([np.argmin(stats['std'])])
+            if len(non_categorical_indices) == 0:
+                return np.array([])
+            non_cat_stds = stats['std'][non_categorical_indices]
+            return np.array([non_categorical_indices[np.argmin(non_cat_stds)]])
         return low_variance_params
     
     elif selection_method == 'smart':
         # Smart selection considering multiple factors
-        return _smart_parameter_selection(de_instance)
+        selected = _smart_parameter_selection(de_instance)
+        # Filter to only non-categorical parameters
+        return np.intersect1d(selected, non_categorical_indices)
     
     elif selection_method == 'all':
-        # Select all parameters for perturbation
-        return np.arange(de_instance.nr_variable_parameters)
+        # Select all non-categorical parameters for perturbation
+        return non_categorical_indices
     
     else:
         raise ValueError(f"Unknown parameter selection method: {selection_method}")
@@ -220,6 +262,8 @@ def _smart_parameter_selection(de_instance) -> np.ndarray:
     """
     Intelligently select parameters to perturb using multiple criteria.
     
+    Note: Only considers non-categorical parameters as candidates.
+    
     Args:
         de_instance: Instance of DifferentialEvolution
         
@@ -228,6 +272,12 @@ def _smart_parameter_selection(de_instance) -> np.ndarray:
     """
     stats = _get_current_parameter_stats(de_instance)
     scores = np.zeros(de_instance.nr_variable_parameters)
+    
+    # Mask categorical parameters with score of -inf so they're never selected
+    variable_params = de_instance.parameters.get_variable_parameters()
+    for i, param in enumerate(variable_params):
+        if param.type == 'categorical':
+            scores[i] = -np.inf
     
     for i in range(de_instance.nr_variable_parameters):
         # Low variance score (parameters that have converged)
@@ -392,6 +442,16 @@ def _apply_perturbation(de_instance):
     
     # Select parameters to perturb
     param_indices = _select_parameters_for_perturbation(de_instance)
+    
+    # Check if any parameters were selected (important when all params are categorical)
+    if len(param_indices) == 0:
+        print(f"\n{'='*60}")
+        print(f"Perturbation triggered but skipped (mode: {de_instance.perturbation_mode})")
+        print(f"  Iteration: {de_instance.iter}")
+        print(f"  No improvement for: {de_instance.iter_no_improvement} iterations")
+        print(f"  Reason: No non-categorical parameters available for perturbation")
+        print(f"{'='*60}\n")
+        return
     
     # Select population members to perturb
     pop_ratio_config = de_instance._perturbation_active_config.get('population_ratio', 0.3)

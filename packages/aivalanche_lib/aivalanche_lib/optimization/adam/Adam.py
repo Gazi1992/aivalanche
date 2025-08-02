@@ -18,7 +18,7 @@ import pandas as pd
 import inspect
 from typing import Dict, List, Optional, Union, Any, Callable
 
-from aivalanche_lib.parameters.Parameters import Parameters
+from aivalanche_lib.parameters import Parameters
 from .utils import (
     _update_history, _get_history_as_df,
     _run_callbacks, _estimate_gradient
@@ -120,10 +120,10 @@ class Adam:
         
         # Parameters
         self.parameters = parameters if isinstance(parameters, Parameters) else Parameters(parameters)
-        self.parameters_names = self.parameters.parameters_names
-        self.variable_parameters_names = self.parameters.variable_parameters_names
-        self.nr_parameters = self.parameters.nr_parameters
-        self.nr_variable_parameters = self.parameters.nr_variable_parameters
+        self.parameters_names = self.parameters.names
+        self.variable_parameters_names = self.parameters.variable_names
+        self.nr_parameters = len(self.parameters)
+        self.nr_variable_parameters = self.parameters.n_variable
         
         self.opt_min_or_max = opt_min_or_max
         
@@ -170,9 +170,7 @@ class Adam:
         if self.current_point is None:
             return None
         params_df = pd.DataFrame([self.current_point], columns=self.variable_parameters_names)
-        return self.parameters.denormalize_and_descale_parameters_array(
-            params_df, include_fixed=True
-        )
+        return self.parameters.unnorm_all(params_df)
     
     @property
     def best_parameters(self):
@@ -180,9 +178,7 @@ class Adam:
         if self.best_point is None:
             return None
         params_df = pd.DataFrame([self.best_point], columns=self.variable_parameters_names)
-        denorm = self.parameters.denormalize_and_descale_parameters_array(
-            params_df, include_fixed=True
-        )
+        denorm = self.parameters.unnorm_all(params_df)
         return denorm.iloc[0]
     
     def get_info(self) -> Dict[str, Any]:
@@ -271,13 +267,16 @@ class Adam:
                     initial_values = initial_point_df.iloc[0].to_dict()
                 
                 # Create parameter DataFrame
-                params_list = [{param_name: initial_values.get(param_name, 
-                               self.parameters.all_parameters[
-                                   self.parameters.all_parameters['name'] == param_name
-                               ]['default'].iloc[0])}
-                               for param_name in self.parameters_names]
+                params_dict = {}
+                for param_name in self.parameters_names:
+                    if param_name in initial_values:
+                        params_dict[param_name] = initial_values[param_name]
+                    else:
+                        # Use default value
+                        param = self.parameters.get_parameter(param_name)
+                        params_dict[param_name] = param.default
                 
-                params_df = pd.DataFrame(params_list)
+                params_df = pd.DataFrame([params_dict])
                 
             elif isinstance(self.initial_point, pd.DataFrame):
                 params_df = self.initial_point
@@ -285,20 +284,18 @@ class Adam:
                 raise ValueError("initial_point must be a DataFrame or path to CSV")
             
             # Normalize the initial point
-            normalized = self.parameters.scale_and_normalize_parameters_array(params_df)
+            normalized = self.parameters.norm_all(params_df)
             self.current_point = normalized.values[0]
             
         elif self.use_defaults_in_initial_point:
             # Use default values
-            default_values = []
+            default_dict = {}
             for param_name in self.variable_parameters_names:
-                default_val = self.parameters.all_parameters[
-                    self.parameters.all_parameters['name'] == param_name
-                ]['default'].iloc[0]
-                default_values.append(default_val)
+                param = self.parameters.get_parameter(param_name)
+                default_dict[param_name] = param.default
             
-            params_df = pd.DataFrame([default_values], columns=self.variable_parameters_names)
-            normalized = self.parameters.scale_and_normalize_parameters_array(params_df)
+            params_df = pd.DataFrame([default_dict])
+            normalized = self.parameters.norm_all(params_df)
             self.current_point = normalized.values[0]
             
         else:
@@ -407,9 +404,7 @@ class Adam:
         """Evaluate the current point."""
         # Convert to denormalized parameters
         params_df = pd.DataFrame([self.current_point], columns=self.variable_parameters_names)
-        denorm_params = self.parameters.denormalize_and_descale_parameters_array(
-            params_df, include_fixed=True
-        )
+        denorm_params = self.parameters.unnorm_all(params_df)
         
         # Evaluate
         responses = self.eval_func(denorm_params, **self.eval_func_args)
