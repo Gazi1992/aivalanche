@@ -12,9 +12,3 @@ from .metamodel_modes import (
     get_mode_description as get_metamodel_mode_description,
     suggest_metamodel_mode
 )
-from .perturbation_modes import (
-    PERTURBATION_MODES,
-    get_perturbation_config,
-    get_mode_description as get_perturbation_mode_description,
-    suggest_perturbation_mode
-)

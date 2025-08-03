@@ -159,34 +159,15 @@ class DifferentialEvolution:
                 - verbose (bool): Print metamodel information during optimization
             
             # Perturbation parameters
-            perturbation_mode: Perturbation mode - predefined configurations for escaping local minima:
+            perturbation_mode: Enable/disable perturbation for escaping local minima:
                 'off': No perturbation (default)
-                'very_light': Minimal perturbation only in extreme stagnation
-                'light': Gentle perturbations late in stagnation
-                'conservative': Careful perturbations with moderate strength
-                'auto': Balanced perturbation strategy
-                'moderate': More frequent perturbations with moderate strength
-                'strong': Strong perturbations triggered early
-                'aggressive': Very strong and frequent perturbations
-                'very_aggressive': Extreme perturbations for difficult landscapes
-                'random_walk': Random perturbations without memory
-                'smart_escape': Intelligent escape using memory and success amplification
-                'periodic': Regular perturbations at fixed intervals
-                'emergency': Last resort massive perturbation for extreme stagnation
-                'custom': User-defined configuration
-            perturbation_config: Custom configuration dict for 'custom' mode or to override predefined settings.
+                'on': Enable perturbation with specified or default configuration
+            perturbation_config: Configuration dict for perturbation behavior.
                 Available fields:
-                - trigger_ratio (float): When to trigger (0-1, fraction of max_iter_without_improvement)
-                - param_selection (str): How to select parameters ('random', 'variance', 'smart', 'all')
-                - param_ratio (float/tuple): Fraction of parameters to perturb (ignored for 'variance'/'all')
-                - population_ratio (float/tuple): Fraction of population to perturb
-                - scale (str/float/tuple): Perturbation magnitude ('adaptive', 'adaptive_strong', 'adaptive_weak', float, or tuple)
-                - memory_enabled (bool): Track perturbation effectiveness for adaptation
-                - cooldown_ratio (float): Cooldown period after perturbation (0-1)
-                - sigma_threshold (float): Variance threshold for 'variance' selection
-                - memory_decay (float): Optional - decay factor for memory (smart_escape mode)
-                - success_amplification (float): Optional - amplify successful perturbations (smart_escape mode)
-                - periodic_interval (int): Optional - fixed interval for periodic mode
+                - trigger_ratio (float): When to trigger (0-1, fraction of max_iter_without_improvement). Default: 0.2
+                - std_threshold (float): Parameters with std below this are considered converged. Default: 0.1
+                - scale (float/tuple): Multiplier for std when generating perturbation. Default: (1, 3)
+                - population_ratio (float/tuple): Fraction of population to perturb. Default: (0.6, 1.0)
             
             # Local refinement parameters
             refinement_mode: Refinement mode - predefined configurations for different problem types:
@@ -284,11 +265,10 @@ class DifferentialEvolution:
         
         # Local refinement settings
         from .refinement_modes import get_refinement_config
-        from .metamodel_modes import get_metamodel_config
-        from .perturbation_modes import get_perturbation_config
-        
+        from .metamodel_modes import get_metamodel_config        
         # Set refinement mode
         self.refinement_mode = refinement_mode
+        
         
         # Get refinement configuration
         self._refinement_config = get_refinement_config(self.refinement_mode, refinement_config)
@@ -533,8 +513,8 @@ class DifferentialEvolution:
             # Add perturbation history if available
             if hasattr(self, '_perturbation_history'):
                 perturbation_info['perturbation_iterations'] = self._perturbation_history
-                # Count successful perturbations based on improvement messages
-                perturbation_info['perturbations_successful'] = len([i for i, event in enumerate(self.perturbation_memory.get('history', [])) 
+                # Count successful perturbations based on perturbation history
+                perturbation_info['perturbations_successful'] = len([event for event in self._perturbation_history 
                                                                     if event.get('improved', False)])
             output_info['perturbation'] = perturbation_info
 
@@ -614,13 +594,8 @@ class DifferentialEvolution:
         self.rand_mem_2 = None
         self.rand_mem_3 = None
         
-        # Initialize perturbation memory
+        # Initialize simplified perturbation tracking
         self.perturbation_memory = {
-            'history': [],  # List of perturbation events
-            'param_perturbation_count': np.zeros(self.nr_variable_parameters),
-            'param_last_perturbed_iter': np.zeros(self.nr_variable_parameters),
-            'param_improvement_after_perturbation': np.zeros(self.nr_variable_parameters),
-            'param_reconvergence_speed': np.zeros(self.nr_variable_parameters),
             'last_perturbation_iter': 0,
             'perturbations_applied': 0
         }

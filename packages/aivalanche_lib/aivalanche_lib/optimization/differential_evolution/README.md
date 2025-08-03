@@ -100,143 +100,110 @@ optimizer = DifferentialEvolution(
 )
 ```
 
-#### 2. Perturbation System
+#### 2. Perturbation System (Simplified)
 
-DE now supports a comprehensive perturbation system with many predefined modes:
+DE includes a streamlined perturbation system to help escape local minima by intelligently perturbing converged parameters.
 
-##### Available Perturbation Modes
+##### How It Works
 
-1. **`off`** (Default) - No perturbation
-2. **`very_light`** - Minimal perturbation only in extreme stagnation
-3. **`light`** - Gentle perturbations late in stagnation
-4. **`conservative`** - Careful perturbations with moderate strength
-5. **`auto`** - Balanced perturbation strategy (recommended)
-6. **`moderate`** - More frequent perturbations
-7. **`strong`** - Strong perturbations triggered early
-8. **`aggressive`** - Very strong and frequent perturbations
-9. **`very_aggressive`** - Extreme perturbations for difficult landscapes
-10. **`random_walk`** - Random perturbations without memory
-11. **`smart_escape`** - Intelligent escape using memory
-12. **`periodic`** - Regular perturbations at fixed intervals
-13. **`emergency`** - Last resort massive perturbation
-14. **`custom`** - User-defined configuration
+1. **Triggering**: Perturbations are triggered when the algorithm hasn't improved for a certain number of iterations
+2. **Parameter Selection**: Parameters with low variance (converged) are selected for perturbation
+3. **Perturbation Application**: Gaussian noise proportional to the parameter's current standard deviation is added
+4. **Population Coverage**: A random subset of the population is perturbed
 
-##### Usage Examples
+##### Configuration
 
 ```python
-# Simple usage with predefined mode
+# Enable with default settings
 optimizer = DifferentialEvolution(
-    perturbation_mode='auto'  # Balanced strategy
-)
-
-# For smooth landscapes
-optimizer = DifferentialEvolution(
-    perturbation_mode='light'
-)
-
-# For highly multimodal problems
-optimizer = DifferentialEvolution(
-    perturbation_mode='strong'
+    perturbation_mode='on'  # Simple on/off switch
 )
 
 # Custom configuration
 optimizer = DifferentialEvolution(
-    perturbation_mode='custom',
+    perturbation_mode='on',
     perturbation_config={
-        'trigger_ratio': 0.5,           # Trigger after 50% of max_iter_without_improvement
-        'param_selection': 'smart',     # 'random', 'variance', 'smart', 'all'
-        'param_ratio': (0.2, 0.4),      # Perturb 20-40% of parameters
-        'population_ratio': 0.3,        # Perturb 30% of population
-        'scale': 'adaptive',            # Perturbation scale
-        'memory_enabled': True,         # Track effectiveness
-        'cooldown_ratio': 0.2,          # Cooldown period
-        'sigma_threshold': 0.02         # Convergence threshold
+        'trigger_ratio': 0.2,         # Trigger after 20% of max_iter_without_improvement (default)
+        'std_threshold': 0.05,        # Parameters with std < 0.05 are considered converged (default)
+        'scale': (1.5, 4),            # Perturbation scale multiplier range (default)
+        'population_ratio': (0.6, 1.0) # Fraction of population to perturb (default)
     }
 )
 ```
 
-##### Choosing the Right Perturbation Mode
+##### Configuration Parameters
+
+1. **`trigger_ratio`** (float, default=0.2)
+   - When to trigger perturbation as a fraction of `max_iter_without_improvement`
+   - Example: 0.2 means trigger after 20% of allowed stagnation iterations
+   - Lower values = earlier perturbation, higher values = later perturbation
+
+2. **`std_threshold`** (float, default=0.05)
+   - Parameters with standard deviation below this are considered converged
+   - In normalized space [0,1], so 0.05 means 5% of the range
+   - Lower values = only very converged parameters, higher = more parameters selected
+
+3. **`scale`** (float or tuple, default=(1.5, 4))
+   - Multiplier for the parameter's standard deviation when generating perturbation
+   - Single value: fixed scale, tuple: random value from range
+   - Perturbation = Normal(0, current_std × scale)
+   - Higher values = stronger perturbations
+
+4. **`population_ratio`** (float or tuple, default=(0.6, 1.0))
+   - Fraction of population members to perturb
+   - Single value: fixed ratio, tuple: random value from range
+   - Lower values = fewer members perturbed, preserving more of the current population
+
+##### Example Configurations
 
 ```python
-from aivalanche_lib.optimization.differential_evolution import suggest_perturbation_mode
-
-# Get suggestion based on problem characteristics
-mode = suggest_perturbation_mode(
-    problem_type='multimodal',      # Returns 'moderate' or 'strong'
-    landscape='many_local_minima',  # Returns 'moderate'
-    noise_level='high'              # Returns 'conservative'
+# Early and gentle perturbations
+optimizer = DifferentialEvolution(
+    perturbation_mode='on',
+    perturbation_config={
+        'trigger_ratio': 0.1,    # Trigger at 10%
+        'std_threshold': 0.15,   # Higher threshold
+        'scale': (0.5, 1.5),     # Gentler perturbations
+        'population_ratio': 0.5   # Half the population
+    }
 )
 
-# Get description of what a mode does
-from aivalanche_lib.optimization.differential_evolution import get_perturbation_mode_description
-print(get_perturbation_mode_description('auto'))
-# Output: "Balanced perturbation strategy. Good general purpose choice."
+# Late and strong perturbations
+optimizer = DifferentialEvolution(
+    perturbation_mode='on',
+    perturbation_config={
+        'trigger_ratio': 0.3,    # Trigger at 30%
+        'std_threshold': 0.05,   # Lower threshold
+        'scale': (2, 5),         # Stronger perturbations
+        'population_ratio': (0.8, 1.0)  # Most of the population
+    }
+)
+
+# Fixed configuration (no randomness)
+optimizer = DifferentialEvolution(
+    perturbation_mode='on',
+    perturbation_config={
+        'trigger_ratio': 0.2,
+        'std_threshold': 0.1,
+        'scale': 2.0,            # Fixed scale
+        'population_ratio': 0.7   # Fixed ratio
+    }
+)
 ```
 
-##### Adaptive Perturbation Scaling
+##### When to Use Perturbations
 
-When using adaptive scaling modes ('adaptive', 'adaptive_strong', 'adaptive_weak'), the perturbation scale is calculated dynamically:
+- **Multimodal problems**: Many local optima where the algorithm can get stuck
+- **High-dimensional problems**: Where convergence to suboptimal solutions is common
+- **Plateau landscapes**: Where the objective function has flat regions
+- **When you see premature convergence**: Population diversity drops too quickly
 
-1. **Base Scale**: 
-   ```
-   base_scale = max(param_std * 3, param_range * 0.05)
-   ```
-   - Uses 3 times the parameter's standard deviation in the population
-   - Ensures minimum 5% of parameter range even if population has converged
-   - Provides exploration proportional to current population spread
+##### Perturbation Behavior
 
-2. **Progress Factor**:
-   ```
-   progress_factor = 1.0 - (iteration / max_iterations) * 0.5
-   ```
-   - Starts at 1.0 (full scale) and decreases to 0.5 (half scale)
-   - Larger perturbations early for exploration
-   - Smaller perturbations later for exploitation
-   - Similar to temperature scheduling in simulated annealing
-
-3. **Strength Multipliers**:
-   - `adaptive`: 1.0x base scale
-   - `adaptive_strong`: 1.5x base scale
-   - `adaptive_weak`: 0.5x base scale
-
-4. **Memory-based Adjustments** (if enabled):
-   
-   The memory system tracks the effectiveness of perturbations and adjusts future perturbation scales:
-
-   **a) Reconvergence Speed Multiplier**:
-   ```
-   reconvergence_mult = 1.0 + param_reconvergence_speed * 0.5
-   ```
-   - Tracks how quickly each parameter returns to low variance after perturbation
-   - If a parameter converges back quickly (within 2-20 iterations to std < 0.01), it indicates a strong attractor
-   - Reconvergence speed = 1/(iterations_to_reconverge + 1)
-   - Fast reconvergence → Higher multiplier → Larger future perturbations
-   - Example: If reconverges in 3 iterations → speed = 0.25 → multiplier = 1.125
-
-   **b) Attempt Count Multiplier**:
-   ```
-   attempt_mult = 1.0 + (param_perturbation_count * 0.1)
-   ```
-   - Counts how many times each parameter has been perturbed
-   - More attempts → Higher multiplier → More aggressive perturbations
-   - Example: After 5 perturbations → multiplier = 1.5
-
-   **c) Success History** (used in parameter selection, not scaling):
-   - Tracks if perturbation led to improvement in the objective function
-   - Updated using exponential moving average (α = 0.3)
-   - Parameters that improve after perturbation are less likely to be selected again
-
-   **Combined Memory Effect**:
-   ```
-   memory_mult = reconvergence_mult * attempt_mult
-   ```
-   - Example: Fast reconvergence (1.125) × 5 attempts (1.5) = 1.6875x scale increase
-   - This helps escape persistent local minima by progressively increasing perturbation strength
-
-**Example**: For a parameter with std=0.01, range=10, at iteration 50/100:
-- Base scale = max(0.03, 0.5) = 0.5
-- Progress factor = 1.0 - (50/100) * 0.5 = 0.75
-- Final scale = 0.5 * 0.75 = 0.375 (before memory adjustments)
+The perturbation system tracks its effectiveness:
+- Green markers in visualizations: Perturbation led to improvement
+- Red markers: Perturbation didn't improve (but may have helped exploration)
+- History tracking: All perturbation events are recorded for analysis
 
 #### 3. Local Refinement with DLS
 
@@ -354,10 +321,12 @@ if optimizer.results_dir:
 - Use tuple for adaptive range: (0.7, 0.95)
 
 ### Perturbation Settings
-- `auto`: Balanced exploration boost
-- `aggressive`: Strong perturbations for tough landscapes
-- `conservative`: Gentle perturbations for sensitive problems
-- `custom`: Fine-tuned control
+- `'off'`: No perturbation (default)
+- `'on'`: Enable perturbation with default or custom configuration
+- Use `trigger_ratio` to control when perturbations happen
+- Use `std_threshold` to control which parameters get perturbed
+- Use `scale` to control perturbation strength
+- Use `population_ratio` to control how many individuals are affected
 
 ### Refinement Modes
 
@@ -611,17 +580,13 @@ Differential Evolution internally converts categorical parameters to numerical i
 
 ### Perturbation System
 
-**Categorical parameters are automatically excluded from perturbation.**
+**Note:** In the simplified implementation, categorical parameters are included in perturbation for code simplicity. The perturbation is applied in the normalized space [0,1] and then mapped back to valid categorical values.
 
-**Rationale:**
-- Perturbation adds continuous Gaussian noise to parameter values
-- For categorical parameters, this would create invalid intermediate values (e.g., 1.7 for a 3-category parameter)
-- Random jumps between categories don't align with the goal of escaping local minima in continuous space
-
-**Implementation:**
-- The perturbation system automatically filters out categorical parameters
-- Only continuous and discrete numeric parameters are perturbed
-- This applies to all perturbation modes ('auto', 'aggressive', etc.)
+**Behavior:**
+- Perturbation adds Gaussian noise to all parameter values
+- For categorical parameters, the perturbed continuous value is mapped to the nearest valid category
+- This can cause random jumps between categories
+- While not theoretically ideal for categorical variables, it maintains code simplicity
 
 ### Local Refinement (DLS)
 
@@ -651,12 +616,13 @@ params = Parameters([
 optimizer = DifferentialEvolution(
     eval_func=my_eval_func,
     parameters=params,
-    perturbation_mode='auto',    # Will only perturb learning_rate and batch_size
+    perturbation_mode='on',      # Will perturb all parameters including categorical
     refinement_mode='auto'       # Will only refine learning_rate and batch_size
 )
 
 # The optimizer parameter will be optimized through normal DE operations
-# but excluded from perturbation and refinement
+# and included in perturbation (though effects may be limited)
+# but excluded from gradient-based refinement
 ```
 
 ### Best Practices
@@ -680,8 +646,7 @@ optimizer = DifferentialEvolution(
 differential_evolution/
 ├── DifferentialEvolution.py    # Main optimizer class
 ├── operators.py               # Core DE operators
-├── perturbation.py           # Perturbation system implementation
-├── perturbation_modes.py     # Predefined perturbation configurations
+├── perturbation.py           # Simplified perturbation system
 ├── refinement.py             # DLS integration
 ├── refinement_modes.py       # Predefined refinement configurations
 ├── metamodel_modes.py        # Predefined metamodel configurations
