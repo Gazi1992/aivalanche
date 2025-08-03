@@ -37,13 +37,15 @@ from .perturbation import (
     _setup_perturbation_config, _apply_perturbation, _update_perturbation_effectiveness
     )
 from .refinement import (
-    apply_local_refinement, should_trigger_refinement, get_refinement_summary
+    _apply_local_refinement, _should_trigger_refinement, _get_refinement_summary,
+    _setup_refinement_config
     )
 from .adaptive_boundaries import (
     _update_boundaries,
     _setup_adaptive_boundaries_config
     )
-
+from .metamodel_modes import get_metamodel_config    
+        
 class DifferentialEvolution:
     """
     Differential Evolution optimizer for high-dimensional parameter spaces.
@@ -181,25 +183,15 @@ class DifferentialEvolution:
                 - population_ratio (float/tuple): Fraction of population to perturb. Default: (0.6, 1.0)
             
             # Local refinement parameters
-            refinement_mode: Refinement mode - predefined configurations for different problem types:
+            refinement_mode: Refinement mode:
                 'off': No refinement (default)
-                'auto': Balanced general-purpose refinement
-                'light': Quick polish with loose tolerances
-                'moderate': Refinement on stagnation with balanced settings
-                'aggressive': Thorough refinement with tight tolerances
-                'high_precision': Ultra-precise for problems requiring extreme accuracy
-                'curve_fitting': Optimized for least squares problems
-                'multi_objective': For problems with multiple objectives
-                'sensitive': Conservative refinement for sensitive problems
-                'custom': User-defined configuration
-            refinement_config: Custom configuration dict for 'custom' mode or to override predefined settings.
-                Available fields:
-                - method (str): Refinement method (currently only 'dls' supported)
-                - max_iterations (int): Maximum iterations for refinement
-                - trigger (str): When to apply ('on_completion', 'on_stagnation', 'adaptive', 'both')
-                - stagnation_threshold (int): Iterations without improvement to trigger (for 'on_stagnation')
-                - adaptive_interval (int): Interval for adaptive triggering
-                - options (dict): Method-specific options for DLS:
+                'on': Enable refinement with DLS method
+            refinement_config: Refinement configuration dict with keys:
+                - method (str): Refinement method (only 'dls' supported, default)
+                - trigger_ratio (float): When to trigger during optimization (0-1, default 0.2 = 20% of max_iter_without_improvement)
+                                       Set to -1 to only refine after optimization completes
+                - max_iterations (int): Maximum refinement iterations (default 200)
+                - options (dict): DLS-specific options dict:
                     - initial_damping (float): Starting damping parameter
                     - damping_increase_factor (float): Factor to increase damping
                     - damping_decrease_factor (float): Factor to decrease damping
@@ -273,32 +265,9 @@ class DifferentialEvolution:
         self._perturbation_active_config = None  # Will be set based on mode
         
         # Local refinement settings
-        from .refinement_modes import get_refinement_config
-        from .metamodel_modes import get_metamodel_config        
-        # Set refinement mode
         self.refinement_mode = refinement_mode
-        
-        # Get refinement configuration
-        self._refinement_config = get_refinement_config(self.refinement_mode, refinement_config)
-        self.use_local_refinement = (self.refinement_mode != 'off')
-        
-        # Extract main settings from config
-        if self._refinement_config:
-            self.refinement_method = self._refinement_config.get('method', 'dls')
-            self.refinement_max_iterations = self._refinement_config.get('max_iterations', 50)
-            self.refinement_trigger = self._refinement_config.get('trigger', 'on_completion')
-            self.refinement_options = self._refinement_config.get('options', {})
-            
-            # Additional trigger settings
-            self.refinement_stagnation_threshold = self._refinement_config.get('stagnation_threshold', 50)
-            self.refinement_adaptive_interval = self._refinement_config.get('adaptive_interval', 100)
-        else:
-            self.refinement_method = None
-            self.refinement_max_iterations = None
-            self.refinement_trigger = None
-            self.refinement_options = {}
-            self.refinement_stagnation_threshold = 50
-            self.refinement_adaptive_interval = 100
+        self.refinement_config = refinement_config
+        self._refinement_active_config = None  # Will be set based on mode
         
         self.refinement_applied = False
         self.refinement_info = None
@@ -528,6 +497,21 @@ class DifferentialEvolution:
                 perturbation_info['perturbations_successful'] = len([event for event in self._perturbation_history 
                                                                     if event.get('improved', False)])
             output_info['perturbation'] = perturbation_info
+        
+        # Add refinement information if refinement is enabled
+        if self.refinement_mode != 'off':
+            refinement_info = {
+                'refinement_mode': self.refinement_mode,
+                'refinement_config': getattr(self, '_refinement_active_config', None)
+            }
+            # Add refinement history if available
+            if hasattr(self, '_refinement_history'):
+                refinement_info['refinement_history'] = self._refinement_history
+                # Count successful refinements
+                refinement_info['refinements_successful'] = len([event for event in self._refinement_history 
+                                                                if event.get('improved', False)])
+                refinement_info['refinements_total'] = len(self._refinement_history)
+            output_info['refinement'] = refinement_info
 
         return {
             'input': input_info,
@@ -616,11 +600,17 @@ class DifferentialEvolution:
             'perturbations_applied': 0
         }
         
+        # Initialize refinement history
+        self._refinement_history = []
+        
         # Set perturbation configuration based on mode
         _setup_perturbation_config(self)
         
         # Set adaptive boundaries configuration based on mode
         _setup_adaptive_boundaries_config(self)
+        
+        # Set refinement configuration based on mode
+        _setup_refinement_config(self)
 
     def run_optimization(self):
         """Run the optimization loop until stop criteria are met."""
@@ -642,32 +632,22 @@ class DifferentialEvolution:
 
                 # Generate new trials for next iteration
                 self._prepare_next_iter()
-
-            _run_callbacks(self, last_iteration = True)
-            
-            # Apply local refinement if enabled
-            if self.use_local_refinement:
-                if self.refinement_trigger in ['on_completion', 'both']:
-                    if should_trigger_refinement(self, self.refinement_trigger):
-                        # Mark that refinement was applied at the end (for 'both' mode)
-                        if self.refinement_trigger == 'both':
-                            self._refinement_applied_at_end = True
-                        
-                        improved, info = apply_local_refinement(
-                            self,
-                            method=self.refinement_method,
-                            max_iterations=self.refinement_max_iterations,
-                            options=self.refinement_options,
-                            during_optimization=False  # This is after optimization completes
-                        )
-
-            # Final processing
-            self.show_final_result()
             
         finally:
             # Always update status flags when optimization ends
             self.is_running = False
             self.has_finished = True
+            
+            # Run final callbacks
+            _run_callbacks(self, last_iteration = True)
+            
+            # Apply local refinement if enabled
+            if self.refinement_mode != 'off':
+                if _should_trigger_refinement(self):
+                    improved, info = _apply_local_refinement(self)
+
+            # Final processing
+            self.show_final_result()
 
     def _run_iteration(self):
         """Run a single iteration of the optimization algorithm."""
@@ -690,30 +670,24 @@ class DifferentialEvolution:
 
         # Save metrics
         self.trials_metrics = np.array(self.current_metrics)
-        
-        # Apply refinement to best trial if enabled and conditions are met
-        if self.use_local_refinement:
-            if self.refinement_trigger in ['on_stagnation', 'adaptive', 'both']:
-                if should_trigger_refinement(self, self.refinement_trigger):
-                    print(f"\n--- Triggering refinement at iteration {self.iter} ---")
-                    improved, info = apply_local_refinement(
-                        self,
-                        method=self.refinement_method,
-                        max_iterations=self.refinement_max_iterations,
-                        options=self.refinement_options,
-                        during_optimization=True  # New flag to indicate we're during optimization
-                    )
-                    # If refinement improved, reset stagnation counter
-                    if improved:
-                        self.iter_no_improvement = 0
 
         # Determine survivors, best solution and update history
         _determine_survivors(self)
         _determine_best(self)
         _update_history(self)
-
+        
         # Update nr of evaluations
         self.nr_evaluations += len(self.current_responses)
+        
+        # Apply refinement to best solution if enabled and conditions are met
+        # This is done AFTER survivors are determined to ensure we refine the actual best
+        if self.refinement_mode != 'off':
+            if _should_trigger_refinement(self):
+                print(f"\n--- Triggering refinement at iteration {self.iter} ---")
+                improved, info = _apply_local_refinement(self)
+                # If refinement improved, reset stagnation counter
+                if improved:
+                    self.iter_no_improvement = 0
         
         # Update perturbation effectiveness if perturbation is enabled
         if self.perturbation_mode != 'off':
@@ -801,7 +775,7 @@ class DifferentialEvolution:
         # Show refinement results if applied
         if self.refinement_applied and self.refinement_info:
             print("\n-------------------------- Refinement Results ----------------------------\n")
-            print(get_refinement_summary(self.refinement_info))
+            print(_get_refinement_summary(self.refinement_info))
             print("\n--------------------------------------------------------------------------------\n\n")
     
     def get_metamodel_statistics(self) -> Optional[Dict[str, Any]]:

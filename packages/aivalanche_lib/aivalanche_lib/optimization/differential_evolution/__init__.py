@@ -1,10 +1,9 @@
 
 from .DifferentialEvolution import DifferentialEvolution
-from .refinement_modes import (
-    REFINEMENT_MODES, 
-    get_refinement_config, 
-    get_mode_description as get_refinement_mode_description,
-    suggest_refinement_mode
+from .refinement import (
+    get_default_config as get_refinement_default_config,
+    validate_config as validate_refinement_config,
+    get_refinement_history
 )
 from .metamodel_modes import (
     METAMODEL_MODES,

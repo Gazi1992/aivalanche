@@ -270,7 +270,12 @@ class DampedLeastSquares:
                     defaults_dict[name] = param.default
                 defaults_df = pd.DataFrame([defaults_dict])
                 normalized = self.parameters.norm_all(defaults_df)
-                self.current_point = normalized.values.flatten()
+                # Extract only variable parameter values
+                variable_values = []
+                for param_name in self.variable_parameters_names:
+                    if param_name in normalized.columns:
+                        variable_values.append(normalized[param_name].iloc[0])
+                self.current_point = np.array(variable_values)
             else:
                 # Random point in [0, 1]
                 self.current_point = self.rng.random(self.nr_variable_parameters)
@@ -320,7 +325,13 @@ class DampedLeastSquares:
         # Normalize and scale
         normalized = self.parameters.norm_all(initial_df)
         
-        return normalized.values.flatten()
+        # Extract only variable parameters
+        variable_values = []
+        for param_name in self.variable_parameters_names:
+            if param_name in normalized.columns:
+                variable_values.append(normalized[param_name].iloc[0])
+        
+        return np.array(variable_values)
     
     def run_optimization(self):
         """Run the optimization loop until stop criteria are met."""

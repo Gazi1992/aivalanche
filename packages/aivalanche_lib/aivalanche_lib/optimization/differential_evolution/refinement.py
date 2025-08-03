@@ -7,16 +7,159 @@ import numpy as np
 import pandas as pd
 from typing import Dict, Any, Optional, Tuple, Union
 from ..damped_least_squares import DampedLeastSquares
-from .refinement_modes import get_refinement_config, get_mode_description
 from ...parameters import Parameters
 import copy
 
 
-def apply_local_refinement(de_instance, 
-                          method: str = 'dls',
-                          max_iterations: int = 50,
-                          options: Optional[Dict[str, Any]] = None,
-                          during_optimization: bool = False) -> Tuple[bool, Dict[str, Any]]:
+def get_default_config():
+    """
+    Get the default configuration for refinement.
+    
+    Returns:
+        dict: Default configuration parameters optimized for convergence
+    """
+    return {
+        'method': 'dls',                # Only 'dls' supported for now
+        'trigger_ratio': 0.2,           # Trigger at 20% of max_iter_without_improvement
+        'max_iterations': 1000,         # Allow more iterations for convergence
+        'options': {
+            'initial_damping': 0.01,
+            'damping_increase_factor': 10.0,
+            'damping_decrease_factor': 0.1,
+            'gradient_tolerance': 1e-10,
+            'parameter_tolerance': 1e-10,
+            'improvement_threshold': 1e-8,
+            'max_iter_without_improvement': 50,  # Stop if no improvement
+            'jacobian_step_size': 1e-8,
+            'residual_type': 'scalar',
+            'use_qr_decomposition': True,
+            'boundary_handling': 'reflect'
+        }
+    }
+
+
+def validate_config(config):
+    """
+    Validate refinement configuration.
+    
+    Args:
+        config (dict): Configuration to validate
+        
+    Returns:
+        dict: Validated configuration
+        
+    Raises:
+        ValueError: If configuration is invalid
+    """
+    default_config = get_default_config()
+    
+    # Start with default config
+    validated = default_config.copy()
+    
+    # Deep copy the options
+    validated['options'] = default_config['options'].copy()
+    
+    # Update with user config
+    if config:
+        # Handle method
+        if 'method' in config:
+            if config['method'] != 'dls':
+                raise ValueError(f"Only 'dls' method is currently supported, got: {config['method']}")
+            validated['method'] = config['method']
+        
+        # Handle trigger_ratio
+        if 'trigger_ratio' in config:
+            trigger_ratio = config['trigger_ratio']
+            if trigger_ratio != -1 and not (0 < trigger_ratio <= 1):
+                raise ValueError("trigger_ratio must be between 0 and 1, or -1 for post-optimization only")
+            validated['trigger_ratio'] = trigger_ratio
+        
+        # Handle max_iterations
+        if 'max_iterations' in config:
+            if not isinstance(config['max_iterations'], int) or config['max_iterations'] < 1:
+                raise ValueError("max_iterations must be a positive integer")
+            validated['max_iterations'] = config['max_iterations']
+        
+        # Handle options
+        if 'options' in config and isinstance(config['options'], dict):
+            validated['options'].update(config['options'])
+    
+    return validated
+
+
+def _setup_refinement_config(de_instance):
+    """
+    Setup refinement configuration with defaults.
+    
+    Args:
+        de_instance: Instance of DifferentialEvolution
+        
+    Returns:
+        None: Sets the _refinement_active_config attribute
+    """
+    if de_instance.refinement_mode == 'off':
+        de_instance._refinement_active_config = None
+        return
+    
+    # Validate and set configuration
+    try:
+        de_instance._refinement_active_config = validate_config(de_instance.refinement_config)
+    except Exception as e:
+        print(f"\n[WARNING] Refinement configuration validation failed: {str(e)}")
+        print("[WARNING] Setting refinement_mode to 'off'")
+        de_instance.refinement_mode = 'off'
+        de_instance._refinement_active_config = None
+        return
+    
+    # Extract specific values for easier access
+    config = de_instance._refinement_active_config
+    de_instance.refinement_method = config['method']
+    de_instance.refinement_max_iterations = config['max_iterations']
+    de_instance.refinement_options = config['options']
+    de_instance.refinement_trigger_ratio = config['trigger_ratio']
+
+
+def _should_trigger_refinement(de_instance) -> bool:
+    """
+    Determine if refinement should be triggered.
+    
+    Args:
+        de_instance: The DifferentialEvolution instance
+        
+    Returns:
+        bool: Whether to trigger refinement
+    """
+    if de_instance.refinement_mode == 'off':
+        return False
+    
+    trigger_ratio = de_instance.refinement_trigger_ratio
+    
+    # Post-optimization only mode
+    if trigger_ratio == -1:
+        return not de_instance.is_running
+    
+    # Always refine after optimization when mode is 'on'
+    if not de_instance.is_running:
+        return True
+    
+    # During optimization checks
+    if de_instance.is_running:
+        # Don't refine too frequently
+        min_gap = max(20, de_instance.pop_size // 2)
+        last_iter = getattr(de_instance, '_last_refinement_iter', -min_gap)
+        if de_instance.iter - last_iter < min_gap:
+            return False
+        
+        # Check if we've stagnated enough
+        threshold = int(trigger_ratio * de_instance.max_iter_without_improvement)
+        if de_instance.iter_no_improvement >= threshold:
+            de_instance._last_refinement_iter = de_instance.iter
+            return True
+    
+    return False
+
+
+def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
     """
     Apply local refinement to the best solution found by DE.
     
@@ -25,16 +168,15 @@ def apply_local_refinement(de_instance,
     
     Args:
         de_instance: The DifferentialEvolution instance
-        method: Refinement method ('dls' currently supported)
-        max_iterations: Maximum iterations for refinement
-        options: Additional options for the refinement method
-        during_optimization: If True, updates best trial instead of de_instance.best
         
     Returns:
         Tuple of (success, refinement_info)
     """
-    if method != 'dls':
-        raise ValueError(f"Unknown refinement method: {method}")
+    # Get configuration from de_instance
+    config = de_instance._refinement_active_config
+    method = config['method']
+    max_iterations = config['max_iterations']
+    options = config['options']
     
     # Create a modified parameters object that excludes categorical parameters
     # This ensures DLS only operates on continuous/discrete numeric parameters
@@ -47,10 +189,15 @@ def apply_local_refinement(de_instance,
     
     # Get current best solution (only non-categorical parameters)
     best_params_full = de_instance.best_parameters
-    best_params_refinable = {k: v for k, v in best_params_full.items() 
-                            if k in refinement_parameters.variable_names}
+    best_params_refinable = {k: v for k, v in best_params_full.items() if k in refinement_parameters.variable_names}
     best_point_df = pd.DataFrame([best_params_refinable])
     initial_metric = de_instance.best_metric
+    
+    # Info about parameters being refined
+    if len(refinement_parameters.variable_names) < len(de_instance.variable_parameters_names):
+        excluded_params = [p for p in de_instance.variable_parameters_names if p not in refinement_parameters.variable_names]
+        print(f"\n[INFO] Refinement will optimize: {refinement_parameters.variable_names}")
+        print(f"[INFO] Categorical parameters excluded: {excluded_params}")
     
     print(f"\n{'='*60}")
     print(f"Starting local refinement with {method.upper()}")
@@ -60,8 +207,8 @@ def apply_local_refinement(de_instance,
     # Set up DLS options
     dls_options = {
         'seed': de_instance.seed + 1000,  # Different seed
-        'eval_func': _create_wrapped_eval_func(de_instance, refinement_parameters),
-        'eval_func_args': de_instance.eval_func_args,
+        'eval_func': de_instance.eval_func,
+        'eval_func_args': de_instance.eval_func_args if de_instance.eval_func_args else {},
         'parameters': refinement_parameters,  # Use filtered parameters
         'opt_min_or_max': de_instance.opt_min_or_max,
         'max_iterations': max_iterations,
@@ -106,37 +253,39 @@ def apply_local_refinement(de_instance,
             'iterations': dls.iter,
             'evaluations': dls.nr_evaluations,
             'stop_reason': dls.stop_reason,
-            'refined_parameters': _merge_refined_parameters(de_instance, dls.best_parameters),
+            'refined_parameters': dls.best_parameters,
             'optimizer_instance': dls
         }
         
         # Update DE instance if improved
         if improved:
-            if during_optimization:
-                # During optimization: update the best trial but not de_instance.best
-                # Find the best trial to refine
+            if de_instance.is_running:
+                # During optimization: update the survivor that corresponds to the best solution
+                # At this point, survivors have been determined and best has been updated
+                # Find which survivor is the best
                 if de_instance.opt_min_or_max == 'min':
-                    best_trial_idx = np.argmin(de_instance.trials_metrics)
+                    best_survivor_idx = np.argmin(de_instance.survivors_metrics)
                 else:
-                    best_trial_idx = np.argmax(de_instance.trials_metrics)
+                    best_survivor_idx = np.argmax(de_instance.survivors_metrics)
                 
-                # Update the best trial with refined solution
-                # Convert parameters to normalized values for trials array
+                # Update the best survivor with refined solution
+                # Convert parameters to normalized values for survivors array
                 refined_params_norm = de_instance.parameters.norm_all(
-                    pd.DataFrame([_merge_refined_parameters(de_instance, dls.best_parameters)])
+                    pd.DataFrame([dls.best_parameters])
                 ).values.flatten()
                 
-                de_instance.trials[best_trial_idx] = refined_params_norm
-                de_instance.trials_metrics[best_trial_idx] = dls.best_metric
+                # Update survivors array
+                de_instance.survivors[best_survivor_idx] = refined_params_norm
+                de_instance.survivors_metrics[best_survivor_idx] = dls.best_metric
                 
-                # Update current_responses for proper tracking
-                if hasattr(de_instance, 'current_responses') and de_instance.current_responses:
-                    de_instance.current_responses[best_trial_idx] = dls.best_response
-                    de_instance.current_metrics[best_trial_idx] = dls.best_metric
+                # Also update the best solution tracking
+                de_instance.best_metric = dls.best_metric
+                de_instance.best_parameters = dls.best_parameters
+                de_instance.best_response = dls.best_response
             else:
                 # After optimization: update de_instance.best as before
                 de_instance.best_metric = dls.best_metric
-                de_instance.best_parameters = _merge_refined_parameters(de_instance, dls.best_parameters)
+                de_instance.best_parameters = dls.best_parameters
                 de_instance.best_response = dls.best_response
                 de_instance.refinement_applied = True
                 de_instance.refinement_info = refinement_info
@@ -148,6 +297,9 @@ def apply_local_refinement(de_instance,
             print(f"\n[INFO] Refinement did not improve solution")
             print(f"  Best remains: {initial_metric:.6e}")
         
+        # Record refinement in history
+        _record_refinement_history(de_instance, refinement_info)
+        
         return improved, refinement_info
         
     except Exception as e:
@@ -158,73 +310,16 @@ def apply_local_refinement(de_instance,
             'error': str(e),
             'initial_metric': initial_metric
         }
+        
+        # Record failed refinement in history
+        _record_refinement_history(de_instance, refinement_info)
+        
         return False, refinement_info
 
 
-def should_trigger_refinement(de_instance, trigger_mode: str) -> bool:
-    """
-    Determine if refinement should be triggered.
-    
-    Args:
-        de_instance: The DifferentialEvolution instance
-        trigger_mode: When to trigger ('on_completion', 'on_stagnation', 'adaptive', 'both')
-        
-    Returns:
-        bool: Whether to trigger refinement
-    """
-    # Handle 'both' mode - trigger during AND after optimization
-    if trigger_mode == 'both':
-        # Check if we should trigger during optimization
-        if not de_instance.is_stop_criteria_reached:
-            # Use adaptive logic during optimization
-            return should_trigger_refinement(de_instance, 'adaptive')
-        else:
-            # Always trigger after optimization completes (if not already applied at the end)
-            return not getattr(de_instance, '_refinement_applied_at_end', False)
-    
-    # Don't trigger if already applied (unless adaptive mode allows multiple)
-    if de_instance.refinement_applied and trigger_mode not in ['adaptive', 'both']:
-        return False
-    
-    if trigger_mode == 'on_completion':
-        # Only trigger when DE is done
-        return de_instance.is_stop_criteria_reached
-    
-    elif trigger_mode == 'on_stagnation':
-        # Trigger when DE has stagnated for a while
-        stagnation_threshold = getattr(de_instance, 'refinement_stagnation_threshold', 
-                                      max(10, de_instance.max_iter_without_improvement // 2))
-        stagnated = de_instance.iter_no_improvement >= stagnation_threshold
-        
-        # Additional check: must have run for minimum iterations
-        min_iter = max(20, de_instance.pop_size)
-        return stagnated and de_instance.iter >= min_iter
-    
-    elif trigger_mode == 'adaptive':
-        # Don't refine too frequently
-        min_gap = max(20, de_instance.pop_size // 2)
-        if de_instance.iter - de_instance._last_refinement_iter < min_gap:
-            return False
-        
-        # Use configured interval or default
-        period = getattr(de_instance, 'refinement_adaptive_interval', 
-                        max(50, de_instance.max_iterations // 4))
-        at_period = de_instance.iter > 0 and de_instance.iter % period == 0
-        stagnating = de_instance.iter_no_improvement >= 15
-        
-        should_trigger = at_period or stagnating
-        
-        # Update last refinement iteration if triggering
-        if should_trigger:
-            de_instance._last_refinement_iter = de_instance.iter
-        
-        return should_trigger
-    
-    else:
-        return False
 
 
-def get_refinement_summary(refinement_info: Dict[str, Any]) -> str:
+def _get_refinement_summary(refinement_info: Dict[str, Any]) -> str:
     """Generate a summary string of refinement results."""
     if not refinement_info:
         return "No refinement applied"
@@ -245,16 +340,19 @@ def get_refinement_summary(refinement_info: Dict[str, Any]) -> str:
 
 def _create_refinement_parameters(de_instance):
     """
-    Create a modified Parameters object that excludes categorical parameters.
+    Create a modified Parameters object that marks categorical parameters as fixed
+    with their current best values as defaults.
     
     Args:
         de_instance: DifferentialEvolution instance
         
     Returns:
-        Parameters object with only continuous/discrete parameters marked as variable
+        Parameters object with categorical parameters marked as fixed and
+        current best values as defaults for all fixed parameters
     """
     # Get all parameters
     all_params = de_instance.parameters.parameters
+    best_values = de_instance.best_parameters
     
     # Create new parameter list with categorical parameters marked as fixed
     new_params = []
@@ -266,9 +364,9 @@ def _create_refinement_parameters(de_instance):
                 'type': 'continuous',
                 'min': param.min,
                 'max': param.max,
-                'default': param.default,
+                'default': best_values.get(param.name, param.default),  # Use current best value
                 'scale': param.scale,
-                'mode': 'fixed' if param.type == 'categorical' else param.mode,
+                'mode': param.mode,
                 'description': param.description
             }
         elif param.type == 'discrete':
@@ -276,7 +374,7 @@ def _create_refinement_parameters(de_instance):
                 'name': param.name,
                 'type': 'discrete',
                 'values': param.values,
-                'default': param.default,
+                'default': best_values.get(param.name, param.default),  # Use current best value
                 'mode': param.mode,
                 'description': param.description
             }
@@ -285,7 +383,7 @@ def _create_refinement_parameters(de_instance):
                 'name': param.name,
                 'type': 'categorical',
                 'values': param.categories,
-                'default': param.default,
+                'default': best_values.get(param.name, param.default),  # Use current best value
                 'mode': 'fixed',  # Always fixed for categorical in refinement
                 'description': param.description
             }
@@ -298,63 +396,46 @@ def _create_refinement_parameters(de_instance):
     return refinement_params
 
 
-def _create_wrapped_eval_func(de_instance, refinement_parameters):
+
+def _record_refinement_history(de_instance, refinement_info: Dict[str, Any]):
     """
-    Create a wrapped evaluation function that handles parameter merging.
-    
-    The wrapped function receives only non-categorical parameters from DLS,
-    merges them with the current categorical parameter values, and calls
-    the original eval_func with the complete parameter set.
+    Record refinement event in the history.
     
     Args:
-        de_instance: DifferentialEvolution instance
-        refinement_parameters: Parameters object with only refinable parameters
-        
-    Returns:
-        Wrapped evaluation function
+        de_instance: The DifferentialEvolution instance
+        refinement_info: Information about the refinement
     """
-    def wrapped_eval_func(parameters=None, **kwargs):
-        # Handle both 'parameters' and 'parameters_df' argument names
-        if parameters is None and 'parameters_df' in kwargs:
-            parameters = kwargs.pop('parameters_df')
-        
-        # Get current best categorical parameter values
-        categorical_params = {}
-        for param_name in de_instance.variable_parameters_names:
-            if param_name not in refinement_parameters.variable_names:
-                # This is a categorical parameter
-                categorical_params[param_name] = de_instance.best_parameters[param_name]
-        
-        # Merge categorical parameters with the refinable parameters from DLS
-        if isinstance(parameters, pd.DataFrame):
-            # Add categorical columns to the DataFrame
-            for name, value in categorical_params.items():
-                parameters[name] = value
-        else:
-            # Handle dict case
-            parameters.update(categorical_params)
-        
-        # Call original eval_func with complete parameter set
-        return de_instance.eval_func(parameters=parameters, **kwargs)
+    if not hasattr(de_instance, '_refinement_history'):
+        de_instance._refinement_history = []
     
-    return wrapped_eval_func
+    # Create history entry
+    history_entry = {
+        'iteration': de_instance.iter,
+        'evaluations': de_instance.nr_evaluations,
+        'when': 'during' if de_instance.is_running else 'after',
+        'method': refinement_info.get('method', 'unknown'),
+        'improved': refinement_info.get('improved', False),
+        'initial_metric': refinement_info.get('initial_metric'),
+        'refined_metric': refinement_info.get('refined_metric'),
+        'improvement': refinement_info.get('improvement'),
+        'relative_improvement': refinement_info.get('relative_improvement'),
+        'refinement_iterations': refinement_info.get('iterations'),
+        'refinement_evaluations': refinement_info.get('evaluations'),
+        'stop_reason': refinement_info.get('stop_reason'),
+        'error': refinement_info.get('error', None)
+    }
+    
+    de_instance._refinement_history.append(history_entry)
 
 
-def _merge_refined_parameters(de_instance, refined_params):
+def get_refinement_history(de_instance) -> list:
     """
-    Merge refined parameters with the original categorical parameters.
+    Get the refinement history.
     
     Args:
-        de_instance: DifferentialEvolution instance
-        refined_params: Dictionary of refined parameter values (non-categorical only)
+        de_instance: The DifferentialEvolution instance
         
     Returns:
-        Complete parameter dictionary including both refined and categorical values
+        list: List of refinement history entries
     """
-    # Start with current best parameters
-    merged_params = de_instance.best_parameters.copy()
-    
-    # Update with refined values
-    merged_params.update(refined_params)
-    
-    return merged_params
+    return getattr(de_instance, '_refinement_history', [])

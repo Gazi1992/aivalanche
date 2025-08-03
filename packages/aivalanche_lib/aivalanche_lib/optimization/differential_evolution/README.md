@@ -208,37 +208,34 @@ The perturbation system tracks its effectiveness:
 #### 3. Local Refinement with DLS
 
 ```python
-# Simple usage with predefined modes
+# Enable refinement with default settings
 optimizer = DifferentialEvolution(
     # ... other parameters ...
-    refinement_mode='auto'  # Automatic refinement configuration
+    refinement_mode='on'  # Enable DLS refinement
 )
-
-# Available refinement modes:
-# 'off': No refinement
-# 'auto': Balanced general-purpose (default)
-# 'light': Quick polish with loose tolerances
-# 'moderate': Refinement on stagnation
-# 'aggressive': Thorough with tight tolerances
-# 'high_precision': Ultra-precise refinement
-# 'curve_fitting': Optimized for least squares
-# 'multi_objective': For multiple objectives
-# 'sensitive': Conservative for sensitive problems
-# 'custom': User-defined configuration
 
 # Custom refinement configuration
 optimizer = DifferentialEvolution(
     # ... other parameters ...
-    refinement_mode='custom',
+    refinement_mode='on',
     refinement_config={
-        'method': 'dls',
-        'max_iterations': 100,
-        'trigger': 'on_stagnation',
-        'stagnation_threshold': 30,
-        'options': {
+        'method': 'dls',  # Only 'dls' supported currently
+        'trigger_ratio': 0.2,  # Trigger at 20% of max_iter_without_improvement
+        'max_iterations': 200,  # Max refinement iterations
+        'options': {  # DLS-specific options
             'gradient_tolerance': 1e-10,
-            'residual_type': 'vector'
+            'parameter_tolerance': 1e-10,
+            'improvement_threshold': 1e-8
         }
+    }
+)
+
+# Refine only after optimization completes
+optimizer = DifferentialEvolution(
+    # ... other parameters ...
+    refinement_mode='on',
+    refinement_config={
+        'trigger_ratio': -1  # Only refine after DE finishes
     }
 )
 ```
@@ -434,130 +431,44 @@ print(info['output']['has_finished']) # True
 - Use `scale` to control perturbation strength
 - Use `population_ratio` to control how many individuals are affected
 
-### Refinement Modes
+### Refinement Configuration
 
-DE now supports predefined refinement configurations for different problem types:
+DE supports local refinement with the Damped Least Squares (DLS) method to polish solutions:
 
-#### Available Modes
+#### Key Parameters
 
-1. **`auto`** (Default)
-   - Balanced general-purpose refinement
-   - Triggers on completion
-   - Moderate tolerances (1e-8)
-   - Good for most problems
+- **`refinement_mode`**: 'off' (default) or 'on'
+- **`refinement_config`**: Dictionary with configuration options:
+  - **`method`**: Currently only 'dls' is supported
+  - **`trigger_ratio`**: When to trigger refinement during optimization (0-1, default 0.2)
+    - 0.2 = trigger at 20% of max_iter_without_improvement
+    - -1 = only refine after optimization completes
+  - **`max_iterations`**: Maximum refinement iterations (default 200)
+  - **`options`**: DLS-specific options
 
-2. **`light`**
-   - Quick polish with loose tolerances
-   - Only 20 iterations
-   - Fast but less precise
-   - Good for rough optimization
+#### When Refinement Happens
 
-3. **`moderate`**
-   - Triggers on stagnation (not just completion)
-   - 100 iterations with balanced settings
-   - Good for problems that get stuck
+1. **During optimization**: When stagnation reaches `trigger_ratio * max_iter_without_improvement`
+2. **After optimization**: Always runs if `refinement_mode='on'` (unless `trigger_ratio=-1` is set)
 
-4. **`aggressive`**
-   - Thorough refinement with tight tolerances (1e-10)
-   - 200 iterations
-   - Triggers adaptively during optimization
-   - Good when precision matters
+#### Default Configuration
 
-5. **`high_precision`**
-   - Ultra-precise with tolerances down to 1e-12
-   - 500 iterations allowed
-   - Very conservative damping
-   - For problems requiring extreme accuracy
-
-6. **`curve_fitting`**
-   - Optimized for least squares problems
-   - Uses vector residuals
-   - QR decomposition for stability
-   - Perfect for data fitting
-
-7. **`multi_objective`**
-   - For problems with multiple objectives
-   - Vector residuals with balanced settings
-   - Triggers on stagnation
-
-8. **`sensitive`**
-   - Very conservative settings
-   - Large initial damping (10.0)
-   - Tiny trust region (0.001)
-   - For problems where small changes matter
-
-9. **`custom`**
-   - Define your own configuration
-   - Full control over all parameters
-
-#### Usage Examples
+The default refinement configuration is optimized for convergence:
 
 ```python
-# Let the system choose refinement settings
-optimizer = DifferentialEvolution(
-    refinement_mode='auto'
-)
-
-# Quick final polish
-optimizer = DifferentialEvolution(
-    refinement_mode='light'
-)
-
-# High precision optimization
-optimizer = DifferentialEvolution(
-    refinement_mode='high_precision'
-)
-
-# Curve fitting problem
-optimizer = DifferentialEvolution(
-    refinement_mode='curve_fitting'
-)
-
-# Fully custom configuration
-optimizer = DifferentialEvolution(
-    refinement_mode='custom',
-    refinement_config={
-        'method': 'dls',
-        'max_iterations': 150,
-        'trigger': 'both',  # During and after
-        'stagnation_threshold': 25,
-        'adaptive_interval': 75,
-        'options': {
-            'initial_damping': 0.5,
-            'gradient_tolerance': 1e-9,
-            'parameter_tolerance': 1e-9,
-            'residual_type': 'vector',
-            'trust_region_radius': 0.05
-        }
+{
+    'method': 'dls',
+    'trigger_ratio': 0.2,  # Trigger at 20% stagnation
+    'max_iterations': 200,  # Allow sufficient iterations
+    'options': {
+        'initial_damping': 0.01,
+        'gradient_tolerance': 1e-10,
+        'parameter_tolerance': 1e-10,
+        'improvement_threshold': 1e-8,
+        'max_iter_without_improvement': 50
     }
-)
+}
 ```
-
-#### Choosing the Right Mode
-
-```python
-from aivalanche_lib.optimization.differential_evolution import suggest_refinement_mode
-
-# Get suggestion based on problem type
-mode = suggest_refinement_mode(
-    problem_type='fitting',      # Returns 'curve_fitting'
-    precision_required='high'    # Or would return 'aggressive'
-)
-
-# Get description of what a mode does
-from aivalanche_lib.optimization.differential_evolution import get_mode_description
-print(get_mode_description('auto'))
-# Output: "Balanced refinement after DE converges. Good general purpose choice."
-```
-
-### Refinement Triggers
-
-Each mode can specify when refinement happens:
-
-- **`on_completion`**: Polish final solution after DE converges
-- **`on_stagnation`**: Apply when DE hasn't improved for N iterations
-- **`adaptive`**: Apply periodically during optimization
-- **`both`**: Apply both adaptively and on completion
 
 ### Metamodel-Assisted Optimization
 
@@ -723,7 +634,7 @@ optimizer = DifferentialEvolution(
     eval_func=my_eval_func,
     parameters=params,
     perturbation_mode='on',      # Will perturb all parameters including categorical
-    refinement_mode='auto'       # Will only refine learning_rate and batch_size
+    refinement_mode='on'         # Will only refine learning_rate and batch_size
 )
 
 # The optimizer parameter will be optimized through normal DE operations
@@ -742,7 +653,7 @@ optimizer = DifferentialEvolution(
 
 1. **Slow convergence**: Use adaptive parameters or increase mutation factors
 2. **Premature convergence**: Enable perturbation system or increase population
-3. **Stagnation**: Use refinement with 'on_stagnation' trigger
+3. **Stagnation**: Enable refinement - it triggers automatically on stagnation
 4. **Low precision**: Enable local refinement with DLS
 5. **Wide search space**: Enable adaptive boundaries
 
@@ -753,8 +664,7 @@ differential_evolution/
 ├── DifferentialEvolution.py    # Main optimizer class
 ├── operators.py               # Core DE operators
 ├── perturbation.py           # Simplified perturbation system
-├── refinement.py             # DLS integration
-├── refinement_modes.py       # Predefined refinement configurations
+├── refinement.py             # DLS integration and configuration
 ├── metamodel_modes.py        # Predefined metamodel configurations
 ├── utils.py                  # Utility functions
 ├── visualizations.py         # Plotting functions

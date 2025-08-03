@@ -24,7 +24,7 @@ def get_default_config():
     }
 
 
-def should_update_boundaries(de_instance):
+def _should_update_boundaries(de_instance):
     """
     Check if boundaries should be updated based on current iteration and config.
     
@@ -57,7 +57,7 @@ def _update_boundaries(de_instance):
     Returns:
         bool: True if boundaries were changed, False otherwise
     """
-    if not should_update_boundaries(de_instance):
+    if not _should_update_boundaries(de_instance):
         return False
     
     config = de_instance._adaptive_boundaries_active_config

@@ -1,10 +1,10 @@
 """
 Test Differential Evolution refinement mechanisms with DLS.
 
-This test evaluates different refinement modes including:
-- Different refinement modes (light, moderate, aggressive, etc.)
-- Refinement on problems with categorical parameters
-- Timing of refinement (on_completion, on_stagnation, adaptive, both)
+This test evaluates different refinement configurations including:
+- Different trigger ratios (early, default, late, post-only)
+- Refinement on problems with categorical parameters  
+- Timing of refinement based on stagnation percentage
 - Visual comparison of with/without refinement
 """
 
@@ -19,7 +19,7 @@ from typing import Dict, Any, List
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-from aivalanche_lib.optimization.differential_evolution import DifferentialEvolution
+from aivalanche_lib.optimization.differential_evolution import DifferentialEvolution, get_refinement_history
 from aivalanche_lib.parameters import Parameters
 from aivalanche_lib.test_functions import get_function_details
 
@@ -27,9 +27,9 @@ from test_utils import create_test_results_dir, save_test_summary, create_test_f
 
 
 def test_refinement_modes(function_name: str = 'rastrigin_nd', n_dim: int = 20):
-    """Test different refinement modes on a challenging function."""
+    """Test different refinement configurations on a challenging function."""
     print("\n" + "="*60)
-    print(f"Testing Different Refinement Modes on {n_dim}D {function_name}")
+    print(f"Testing Different Refinement Configurations on {n_dim}D {function_name}")
     print("="*60)
     
     func_details = get_function_details(function_name, n_dim=n_dim)
@@ -47,11 +47,27 @@ def test_refinement_modes(function_name: str = 'rastrigin_nd', n_dim: int = 20):
         })
     parameters = Parameters(params_list)
     
-    modes = ['off', 'light', 'moderate', 'aggressive']
+    # Test different refinement configurations
+    configs = {
+        'off': {'refinement_mode': 'off'},
+        'default': {'refinement_mode': 'on'},
+        'early_trigger': {
+            'refinement_mode': 'on',
+            'refinement_config': {'trigger_ratio': 0.1}  # Trigger at 10%
+        },
+        'late_trigger': {
+            'refinement_mode': 'on',
+            'refinement_config': {'trigger_ratio': 0.5}  # Trigger at 50%
+        },
+        'post_only': {
+            'refinement_mode': 'on',
+            'refinement_config': {'trigger_ratio': -1}  # Only after optimization
+        }
+    }
     results = {}
     
-    for mode in modes:
-        print(f"\nTesting refinement mode: {mode}")
+    for name, config in configs.items():
+        print(f"\nTesting refinement config: {name}")
         
         optimizer = DifferentialEvolution(
             seed=42,
@@ -60,12 +76,12 @@ def test_refinement_modes(function_name: str = 'rastrigin_nd', n_dim: int = 20):
             pop_size=30,
             max_iterations=1000,
             max_iter_without_improvement=200,
-            refinement_mode=mode
+            **config
         )
         
         optimizer.run_optimization()
         
-        results[mode] = {
+        results[name] = {
             'optimizer': optimizer,
             'best_metric': optimizer.best_metric,
             'iterations': optimizer.iter,
@@ -77,13 +93,23 @@ def test_refinement_modes(function_name: str = 'rastrigin_nd', n_dim: int = 20):
         print(f"  Best metric: {optimizer.best_metric:.6e}")
         print(f"  Total evaluations: {optimizer.nr_evaluations}")
         
-        if mode != 'off' and hasattr(optimizer, 'refinement_info'):
-            info = optimizer.refinement_info
-            if info and 'improved' in info:
-                print(f"  Refinement: {'IMPROVED' if info['improved'] else 'NO IMPROVEMENT'}")
-                if info['improved']:
-                    print(f"  Refinement iterations: {info.get('iterations', 'N/A')}")
-                    print(f"  Relative improvement: {info.get('relative_improvement', 0):.2%}")
+        if name != 'off':
+            # Get refinement history
+            history = get_refinement_history(optimizer)
+            print(f"  Refinement applications: {len(history)}")
+            
+            # Show details of each refinement
+            for i, event in enumerate(history):
+                if event['improved']:
+                    print(f"    Refinement {i+1}: Improved by {event['relative_improvement']:.2%} at iter {event['iteration']}")
+                else:
+                    print(f"    Refinement {i+1}: No improvement at iter {event['iteration']}")
+            
+            # Also check the last refinement info if available
+            if hasattr(optimizer, 'refinement_info') and optimizer.refinement_info:
+                info = optimizer.refinement_info
+                if info and 'improved' in info:
+                    print(f"  Final refinement: {'IMPROVED' if info['improved'] else 'NO IMPROVEMENT'}")
     
     return results
 
@@ -108,7 +134,7 @@ def test_refinement_with_categorical():
     results = {}
     
     for use_refinement in [False, True]:
-        mode = 'moderate' if use_refinement else 'off'
+        config_name = 'with_refinement' if use_refinement else 'off'
         print(f"\n{'With' if use_refinement else 'Without'} refinement:")
         
         optimizer = DifferentialEvolution(
@@ -117,12 +143,12 @@ def test_refinement_with_categorical():
             parameters=parameters,
             pop_size=30,
             max_iterations=100,
-            refinement_mode=mode
+            refinement_mode='on' if use_refinement else 'off'
         )
         
         optimizer.run_optimization()
         
-        results[mode] = {
+        results[config_name] = {
             'optimizer': optimizer,
             'best_metric': optimizer.best_metric,
             'best_params': optimizer.best_parameters,
@@ -133,10 +159,26 @@ def test_refinement_with_categorical():
         print(f"  Best x: {optimizer.best_parameters['x']:.4f}")
         print(f"  Best y: {optimizer.best_parameters['y']}")
         
-        if use_refinement and hasattr(optimizer, 'refinement_info'):
-            info = optimizer.refinement_info
-            if info and info.get('reason') == 'no_refinable_parameters':
-                print("  Note: Only continuous parameter 'x' was refined")
+        if use_refinement:
+            # Get refinement history
+            history = get_refinement_history(optimizer)
+            print(f"  Refinement applications: {len(history)}")
+            
+            # Check if refinement was limited to continuous parameters
+            if history:
+                for event in history:
+                    if event.get('error') and 'columns passed' in str(event.get('error', '')):
+                        print("  Note: Refinement failed due to categorical parameters")
+                        break
+                else:
+                    if event.get('improved'):
+                        print("  Note: Only continuous parameter 'x' was refined")
+            
+            # Also check refinement info
+            if hasattr(optimizer, 'refinement_info'):
+                info = optimizer.refinement_info
+                if info and info.get('reason') == 'no_refinable_parameters':
+                    print("  Note: No refinable parameters available")
     
     return results
 
@@ -155,33 +197,25 @@ def test_refinement_timing(function_name: str = 'griewank_2d'):
         {'name': 'y', 'type': 'continuous', 'min': -5.0, 'max': 5.0, 'default': 0.0}
     ])
     
-    # Test different trigger modes
+    # Test different trigger timing configurations
     trigger_tests = [
-        ('on_completion', {'refinement_mode': 'moderate'}),
-        ('on_stagnation', {
-            'refinement_mode': 'custom',
+        ('default_20%', {'refinement_mode': 'on'}),  # Default 20%
+        ('early_10%', {
+            'refinement_mode': 'on',
             'refinement_config': {
-                'method': 'dls',
-                'max_iterations': 50,
-                'trigger': 'on_stagnation',
-                'stagnation_threshold': 30
+                'trigger_ratio': 0.1  # Trigger at 10% of max_iter_without_improvement
             }
         }),
-        ('adaptive', {
-            'refinement_mode': 'custom',
+        ('late_50%', {
+            'refinement_mode': 'on',
             'refinement_config': {
-                'method': 'dls',
-                'max_iterations': 50,
-                'trigger': 'adaptive',
-                'adaptive_interval': 50
+                'trigger_ratio': 0.5  # Trigger at 50%
             }
         }),
-        ('both', {
-            'refinement_mode': 'custom',
+        ('post_only', {
+            'refinement_mode': 'on',
             'refinement_config': {
-                'method': 'dls',
-                'max_iterations': 50,
-                'trigger': 'both'
+                'trigger_ratio': -1  # Only after optimization completes
             }
         })
     ]
@@ -202,23 +236,30 @@ def test_refinement_timing(function_name: str = 'griewank_2d'):
         
         optimizer.run_optimization()
         
-        # Count refinement applications
-        refinement_count = 0
-        if hasattr(optimizer, '_refinement_history'):
-            refinement_count = len(optimizer._refinement_history)
-        elif hasattr(optimizer, 'refinement_info') and optimizer.refinement_info:
-            refinement_count = 1
+        # Get refinement history
+        history = get_refinement_history(optimizer)
+        refinement_count = len(history)
+        
+        # Get successful refinements
+        successful_refinements = sum(1 for event in history if event.get('improved', False))
         
         results[trigger_name] = {
             'optimizer': optimizer,
             'best_metric': optimizer.best_metric,
             'refinement_count': refinement_count,
+            'successful_refinements': successful_refinements,
+            'refinement_history': history,
             'stop_reason': optimizer.stop_reason
         }
         
         print(f"  Best metric: {optimizer.best_metric:.6e}")
-        print(f"  Refinement applications: {refinement_count}")
+        print(f"  Refinement applications: {refinement_count} (successful: {successful_refinements})")
         print(f"  Stop reason: {optimizer.stop_reason}")
+        
+        # Show when refinements occurred
+        if history:
+            iterations = [event['iteration'] for event in history]
+            print(f"  Refinement iterations: {iterations}")
     
     return results
 
@@ -378,12 +419,30 @@ def main():
     # Plot refinement counts
     triggers = list(timing_results.keys())
     counts = [timing_results[t]['refinement_count'] for t in triggers]
+    successful_counts = [timing_results[t]['successful_refinements'] for t in triggers]
     metrics = [timing_results[t]['best_metric'] for t in triggers]
     
-    ax1.bar(triggers, counts, color='lightblue', edgecolor='darkblue')
+    # Create grouped bar chart for total vs successful refinements
+    x = np.arange(len(triggers))
+    width = 0.35
+    
+    bars1 = ax1.bar(x - width/2, counts, width, label='Total', color='lightblue', edgecolor='darkblue')
+    bars2 = ax1.bar(x + width/2, successful_counts, width, label='Successful', color='lightgreen', edgecolor='darkgreen')
+    
+    ax1.set_xlabel('Trigger Mode')
     ax1.set_ylabel('Refinement Applications')
     ax1.set_title('Refinement Frequency by Trigger Mode')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(triggers, rotation=45, ha='right')
+    ax1.legend()
     ax1.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for bars in [bars1, bars2]:
+        for bar in bars:
+            height = bar.get_height()
+            ax1.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{int(height)}', ha='center', va='bottom')
     
     # Plot final metrics
     bars = ax2.bar(triggers, metrics, color='lightgreen', edgecolor='darkgreen')
@@ -417,12 +476,13 @@ def main():
         },
         'categorical_test': {
             'without_refinement': categorical_results['off']['best_metric'],
-            'with_refinement': categorical_results['moderate']['best_metric'] if 'moderate' in categorical_results else None
+            'with_refinement': categorical_results['with_refinement']['best_metric'] if 'with_refinement' in categorical_results else None
         },
         'timing_test': {
             trigger: {
                 'best_metric': data['best_metric'],
-                'refinement_count': data['refinement_count']
+                'refinement_count': data['refinement_count'],
+                'successful_refinements': data['successful_refinements']
             }
             for trigger, data in timing_results.items()
         },
