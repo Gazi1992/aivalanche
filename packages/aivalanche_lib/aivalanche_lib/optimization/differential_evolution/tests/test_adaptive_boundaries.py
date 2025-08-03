@@ -163,7 +163,7 @@ def test_adaptive_boundaries_disabled():
         parameters=params,
         pop_size=30,
         max_iterations=100,
-        adaptive_boundaries=False,  # Disabled
+        adaptive_boundaries_mode='off',  # Disabled
         mutation_factor_1=(0.5, 0.9),
         recombination_factor=(0.7, 0.95)
     )
@@ -198,11 +198,13 @@ def test_adaptive_boundaries_enabled():
         parameters=params,
         pop_size=30,
         max_iterations=100,
-        adaptive_boundaries=True,  # Enabled
-        adaptive_boundaries_edge_threshold=0.1,  # 10% from edge considered "at boundary"
-        adaptive_boundaries_pop_quantile=0.5,    # Extend if 50% of pop is at edge
-        adaptive_boundaries_extension=0.2,       # Extend by 20% of range
-        adaptive_boundaries_check_period=10,     # Check every 10 iterations
+        adaptive_boundaries_mode='on',  # Enabled
+        adaptive_boundaries_config={
+            'edge_threshold': 0.1,     # 10% from edge considered "at boundary"
+            'pop_quantile': 0.5,       # Extend if 50% of pop is at edge
+            'extension': 0.2,          # Extend by 20% of range
+            'check_period': 10         # Check every 10 iterations
+        },
         mutation_factor_1=(0.5, 0.9),
         recombination_factor=(0.7, 0.95)
     )
@@ -254,11 +256,13 @@ def test_adaptive_boundaries_mixed_parameters():
         parameters=params,
         pop_size=40,
         max_iterations=100,
-        adaptive_boundaries=True,
-        adaptive_boundaries_edge_threshold=0.1,
-        adaptive_boundaries_pop_quantile=0.6,
-        adaptive_boundaries_extension=0.15,
-        adaptive_boundaries_check_period=15
+        adaptive_boundaries_mode='on',
+        adaptive_boundaries_config={
+            'edge_threshold': 0.1,
+            'pop_quantile': 0.6,
+            'extension': 0.15,
+            'check_period': 15
+        }
     )
     
     optimizer.run_optimization()

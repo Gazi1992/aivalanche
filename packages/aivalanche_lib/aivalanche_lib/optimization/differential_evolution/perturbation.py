@@ -115,7 +115,7 @@ def _apply_perturbation(de_instance):
     param_stds = np.std(de_instance.trials, axis=0)
     
     # Select converged parameters (those with std below threshold)
-    std_threshold = config.get('std_threshold', 0.1)
+    std_threshold = config.get('std_threshold', 0.05)
     converged_params = np.where(param_stds < std_threshold)[0]
     
     if len(converged_params) == 0:
@@ -133,7 +133,7 @@ def _apply_perturbation(de_instance):
     member_indices = de_instance.rng.choice(de_instance.pop_size, size=n_members, replace=False)
     
     # Get scale for perturbation
-    scale = _get_scalar_value(de_instance, config.get('scale', (1, 3)))
+    scale = _get_scalar_value(de_instance, config.get('scale', (1.5, 4)))
     
     # Store pre-perturbation metric for tracking
     pre_perturbation_best = de_instance.best_metric

@@ -77,11 +77,9 @@ class DifferentialEvolution:
                  defaults_in_init_pop: bool = False,
                  defaults_in_init_pop_ratio: float = 0.2,
 
-                 adaptive_boundaries: bool = False,
-                 adaptive_boundaries_edge_threshold: float = 0.05,
-                 adaptive_boundaries_pop_quantile: float = 0.7,
-                 adaptive_boundaries_extension: float = 0.1,
-                 adaptive_boundaries_check_period: int = 10,
+                 # Adaptive boundaries parameters
+                 adaptive_boundaries_mode: str = 'off',
+                 adaptive_boundaries_config: Optional[Dict[str, Any]] = None,
 
                  results_dir: Optional[str] = None,
                  
@@ -121,9 +119,18 @@ class DifferentialEvolution:
             init_pop_out_of_range_param: How to handle out-of-range parameters
             defaults_in_init_pop: Whether to use default parameter values in initial population
             defaults_in_init_pop_ratio: Ratio of members with default values
-            adaptive_boundaries: Whether to adapt parameter boundaries during optimization
-            adaptive_boundaries_*: Settings for adaptive boundaries
             results_dir: Directory to save results
+            
+            # Adaptive boundaries parameters
+            adaptive_boundaries_mode: Enable/disable adaptive boundaries:
+                'off': No adaptive boundaries (default)
+                'on': Enable adaptive boundaries with specified or default configuration
+            adaptive_boundaries_config: Configuration dict for adaptive boundaries behavior.
+                Available fields:
+                - edge_threshold (float): How close to boundary is considered "edge". Default: 0.05
+                - pop_quantile (float): Fraction of population needed at edge to trigger. Default: 0.7
+                - extension (float): How much to extend boundaries. Default: 0.1
+                - check_period (int): Check boundaries every N iterations. Default: 10
             
             # Metamodel parameters
             metamodel_mode: Metamodel mode - predefined configurations for different use cases:
@@ -249,11 +256,9 @@ class DifferentialEvolution:
         self.defaults_in_init_pop_ratio = defaults_in_init_pop_ratio
 
         # Adaptive boundaries
-        self.adaptive_boundaries = bool(adaptive_boundaries)
-        self.adaptive_boundaries_edge_threshold = adaptive_boundaries_edge_threshold
-        self.adaptive_boundaries_pop_quantile = adaptive_boundaries_pop_quantile
-        self.adaptive_boundaries_extension = adaptive_boundaries_extension
-        self.adaptive_boundaries_check_period = adaptive_boundaries_check_period
+        self.adaptive_boundaries_mode = adaptive_boundaries_mode
+        self.adaptive_boundaries_config = adaptive_boundaries_config
+        self._adaptive_boundaries_active_config = None  # Will be set based on mode
 
         # Results directory
         self.results_dir = results_dir
@@ -268,7 +273,6 @@ class DifferentialEvolution:
         from .metamodel_modes import get_metamodel_config        
         # Set refinement mode
         self.refinement_mode = refinement_mode
-        
         
         # Get refinement configuration
         self._refinement_config = get_refinement_config(self.refinement_mode, refinement_config)
@@ -500,7 +504,10 @@ class DifferentialEvolution:
             'best_parameters': self.best_parameters,
             'stop_reason': self.stop_reason,
             'is_stop_criteria_reached': self.is_stop_criteria_reached,
-            'iter_no_improvement': self.iter_no_improvement
+            'iter_no_improvement': self.iter_no_improvement,
+            'has_started': self.has_started,
+            'is_running': self.is_running,
+            'has_finished': self.has_finished
         }
         
         # Add perturbation information if perturbation is enabled
@@ -531,6 +538,11 @@ class DifferentialEvolution:
         self.is_stop_criteria_reached = False
         self.stop_reason = ""
         self.nr_evaluations = 0
+        
+        # Status flags
+        self.has_started = False
+        self.is_running = False
+        self.has_finished = False
 
         # Initialize the targets, donors, trials and survivors to None
         self.targets = np.full((self.pop_size, self.nr_variable_parameters), np.nan)
@@ -602,42 +614,56 @@ class DifferentialEvolution:
         
         # Set perturbation configuration based on mode
         _setup_perturbation_config(self)
+        
+        # Set adaptive boundaries configuration based on mode
+        _setup_adaptive_boundaries_config(self)
 
     def run_optimization(self):
         """Run the optimization loop until stop criteria are met."""
-        # Prepare first iteration
-        self._prepare_next_iter()
-
-        # Main optimization loop
-        while not self.is_stop_criteria_reached:
-            self._run_iteration()
-
-            # Run callbacks
-            _run_callbacks(self, last_iteration = False)
-
-            # Generate new trials for next iteration
+        # Set status flags
+        self.has_started = True
+        self.is_running = True
+        self.has_finished = False
+        
+        try:
+            # Prepare first iteration
             self._prepare_next_iter()
 
-        _run_callbacks(self, last_iteration = True)
-        
-        # Apply local refinement if enabled
-        if self.use_local_refinement:
-            if self.refinement_trigger in ['on_completion', 'both']:
-                if should_trigger_refinement(self, self.refinement_trigger):
-                    # Mark that refinement was applied at the end (for 'both' mode)
-                    if self.refinement_trigger == 'both':
-                        self._refinement_applied_at_end = True
-                    
-                    improved, info = apply_local_refinement(
-                        self,
-                        method=self.refinement_method,
-                        max_iterations=self.refinement_max_iterations,
-                        options=self.refinement_options,
-                        during_optimization=False  # This is after optimization completes
-                    )
+            # Main optimization loop
+            while not self.is_stop_criteria_reached:
+                self._run_iteration()
 
-        # Final processing
-        self.show_final_result()
+                # Run callbacks
+                _run_callbacks(self, last_iteration = False)
+
+                # Generate new trials for next iteration
+                self._prepare_next_iter()
+
+            _run_callbacks(self, last_iteration = True)
+            
+            # Apply local refinement if enabled
+            if self.use_local_refinement:
+                if self.refinement_trigger in ['on_completion', 'both']:
+                    if should_trigger_refinement(self, self.refinement_trigger):
+                        # Mark that refinement was applied at the end (for 'both' mode)
+                        if self.refinement_trigger == 'both':
+                            self._refinement_applied_at_end = True
+                        
+                        improved, info = apply_local_refinement(
+                            self,
+                            method=self.refinement_method,
+                            max_iterations=self.refinement_max_iterations,
+                            options=self.refinement_options,
+                            during_optimization=False  # This is after optimization completes
+                        )
+
+            # Final processing
+            self.show_final_result()
+            
+        finally:
+            # Always update status flags when optimization ends
+            self.is_running = False
+            self.has_finished = True
 
     def _run_iteration(self):
         """Run a single iteration of the optimization algorithm."""
@@ -706,7 +732,7 @@ class DifferentialEvolution:
             self.targets_metrics = self.survivors_metrics
 
             # Adapt boundaries if enabled
-            if self.adaptive_boundaries:
+            if self.adaptive_boundaries_mode != 'off' and self._adaptive_boundaries_active_config is not None:
                 _update_boundaries(self)
 
             # Generate new donors and trials
@@ -1091,3 +1117,33 @@ class DifferentialEvolution:
         )
 
         return fig, axes
+
+
+# Helper function for adaptive boundaries
+def _setup_adaptive_boundaries_config(de_instance):
+    """
+    Setup adaptive boundaries configuration with defaults.
+    
+    Args:
+        de_instance: Instance of DifferentialEvolution
+        
+    Returns:
+        None: Sets the _adaptive_boundaries_active_config attribute
+    """
+    if de_instance.adaptive_boundaries_mode == 'off':
+        de_instance._adaptive_boundaries_active_config = None
+        return
+    
+    # Set default configuration
+    default_config = {
+        'edge_threshold': 0.05,
+        'pop_quantile': 0.7,
+        'extension': 0.1,
+        'check_period': 10
+    }
+    
+    # Override with user config if provided
+    if de_instance.adaptive_boundaries_config:
+        default_config.update(de_instance.adaptive_boundaries_config)
+    
+    de_instance._adaptive_boundaries_active_config = default_config

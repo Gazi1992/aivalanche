@@ -255,10 +255,72 @@ optimizer = DifferentialEvolution(
 
 #### 5. Adaptive Boundaries
 
+Adaptive boundaries allow the search space to dynamically expand or contract based on where the population is exploring.
+
 ```python
+# Enable with default settings
 optimizer = DifferentialEvolution(
     # ... other parameters ...
-    adaptive_boundaries=True  # Dynamically adjust search space
+    adaptive_boundaries_mode='on'  # Enable adaptive boundaries
+)
+
+# Custom configuration
+optimizer = DifferentialEvolution(
+    # ... other parameters ...
+    adaptive_boundaries_mode='on',
+    adaptive_boundaries_config={
+        'edge_threshold': 0.05,    # How close to boundary is "edge" (default)
+        'pop_quantile': 0.7,       # Fraction of population needed at edge (default)
+        'extension': 0.1,          # How much to extend boundaries (default)
+        'check_period': 10         # Check every N iterations (default)
+    }
+)
+```
+
+##### Configuration Parameters
+
+1. **`edge_threshold`** (float, default=0.05)
+   - Defines how close to the boundary is considered "at the edge"
+   - Value between 0 and 1, where 0.05 means within 5% of the boundary
+   - Lower values = stricter edge detection
+
+2. **`pop_quantile`** (float, default=0.7)
+   - Fraction of population that must be at the edge to trigger extension
+   - Value between 0 and 1, where 0.7 means 70% of population
+   - Higher values = more conservative extension
+
+3. **`extension`** (float, default=0.1)
+   - How much to extend the boundaries when triggered
+   - Value between 0 and 1, where 0.1 means extend by 10% of current range
+   - Higher values = larger extensions
+
+4. **`check_period`** (int, default=10)
+   - Check boundaries every N iterations
+   - Higher values = less frequent checks (better performance)
+
+##### Example Configurations
+
+```python
+# Conservative - careful boundary adjustments
+optimizer = DifferentialEvolution(
+    adaptive_boundaries_mode='on',
+    adaptive_boundaries_config={
+        'edge_threshold': 0.02,    # Stricter edge detection
+        'pop_quantile': 0.9,       # Need 90% of population
+        'extension': 0.05,         # Small extensions
+        'check_period': 20         # Check less frequently
+    }
+)
+
+# Aggressive - for unknown search spaces
+optimizer = DifferentialEvolution(
+    adaptive_boundaries_mode='on',
+    adaptive_boundaries_config={
+        'edge_threshold': 0.1,     # Looser edge detection
+        'pop_quantile': 0.5,       # Only 50% needed
+        'extension': 0.2,          # Large extensions
+        'check_period': 5          # Frequent checks
+    }
 )
 ```
 
@@ -292,6 +354,11 @@ print(f"Best parameters: {optimizer.best_parameters}")
 print(f"Stop reason: {optimizer.stop_reason}")
 print(f"Total evaluations: {optimizer.nr_evaluations}")
 
+# Check optimization status
+print(f"Has started: {optimizer.has_started}")
+print(f"Is running: {optimizer.is_running}")
+print(f"Has finished: {optimizer.has_finished}")
+
 # Access history
 best_history = optimizer.history['bests']  # Best solutions per iteration
 trial_history = optimizer.history['trials']  # All trials
@@ -300,6 +367,45 @@ trial_history = optimizer.history['trials']  # All trials
 if optimizer.results_dir:
     # Results are automatically saved to the specified directory
     pass
+```
+
+### Status Flags
+
+DE provides three status flags to track the optimization state:
+
+- **`has_started`**: `True` if `run_optimization()` has been called, `False` otherwise
+- **`is_running`**: `True` if optimization is currently in progress, `False` otherwise
+- **`has_finished`**: `True` if optimization has completed (either successfully or with an error), `False` otherwise
+
+These flags are useful for:
+- Monitoring optimization progress in real-time
+- Building user interfaces that show optimization status
+- Handling callbacks and external monitoring
+- Ensuring proper cleanup even if optimization fails
+
+Example usage:
+```python
+# Before optimization
+assert optimizer.has_started == False
+assert optimizer.is_running == False
+assert optimizer.has_finished == False
+
+# During optimization (in a callback)
+def my_callback(**kwargs):
+    opt = kwargs['optimizer']
+    print(f"Running: {opt.is_running}")  # Will be True
+    
+# After optimization
+optimizer.run_optimization()
+assert optimizer.has_started == True
+assert optimizer.is_running == False
+assert optimizer.has_finished == True
+
+# The flags are also available in optimization_info
+info = optimizer.optimization_info
+print(info['output']['has_started'])  # True
+print(info['output']['is_running'])   # False
+print(info['output']['has_finished']) # True
 ```
 
 ## Parameter Guidelines

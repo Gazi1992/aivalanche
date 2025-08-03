@@ -66,20 +66,23 @@ def _update_boundaries(de_instance):
         None: Updates boundary attributes in the de_instance directly
     """
     # Skip if adaptive boundaries are not enabled
-    if not de_instance.adaptive_boundaries:
+    if de_instance.adaptive_boundaries_mode == 'off' or de_instance._adaptive_boundaries_active_config is None:
         return
-
+    
+    # Get config values
+    config = de_instance._adaptive_boundaries_active_config
+    
     # Skip if it's not time to check boundaries based on the period
-    if de_instance.iter % de_instance.adaptive_boundaries_check_period != 0:
+    if de_instance.iter % config['check_period'] != 0:
         return
 
     # Calculate quantiles for all parameters at once
-    lower_quantiles = np.quantile(de_instance.survivors, 1 - de_instance.adaptive_boundaries_pop_quantile, axis=0)
-    upper_quantiles = np.quantile(de_instance.survivors, de_instance.adaptive_boundaries_pop_quantile, axis=0)
+    lower_quantiles = np.quantile(de_instance.survivors, 1 - config['pop_quantile'], axis=0)
+    upper_quantiles = np.quantile(de_instance.survivors, config['pop_quantile'], axis=0)
 
     # Calculate thresholds for boundary extension
-    lower_thresholds = de_instance.boundaries_min + de_instance.adaptive_boundaries_edge_threshold * de_instance.boundaries_range
-    upper_thresholds = de_instance.boundaries_max - de_instance.adaptive_boundaries_edge_threshold * de_instance.boundaries_range
+    lower_thresholds = de_instance.boundaries_min + config['edge_threshold'] * de_instance.boundaries_range
+    upper_thresholds = de_instance.boundaries_max - config['edge_threshold'] * de_instance.boundaries_range
 
     # Check which parameters need boundary extensions
     lower_extension_mask = lower_quantiles < lower_thresholds
@@ -92,7 +95,7 @@ def _update_boundaries(de_instance):
     if np.any(lower_extension_mask):
         boundaries_changed = True
         # Extend lower boundaries where needed
-        extension_amount = de_instance.adaptive_boundaries_extension * de_instance.boundaries_range[lower_extension_mask]
+        extension_amount = config['extension'] * de_instance.boundaries_range[lower_extension_mask]
         new_mins = de_instance.boundaries_min[lower_extension_mask] - extension_amount
 
         # Log the parameters that were extended
@@ -105,7 +108,7 @@ def _update_boundaries(de_instance):
     if np.any(upper_extension_mask):
         boundaries_changed = True
         # Extend upper boundaries where needed
-        extension_amount = de_instance.adaptive_boundaries_extension * de_instance.boundaries_range[upper_extension_mask]
+        extension_amount = config['extension'] * de_instance.boundaries_range[upper_extension_mask]
         new_maxs = de_instance.boundaries_max[upper_extension_mask] + extension_amount
 
         # Log the parameters that were extended

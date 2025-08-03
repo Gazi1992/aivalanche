@@ -42,7 +42,7 @@ optimizer = DifferentialEvolution(
     parameters=parameters,
     pop_size=10,
     max_iterations=5,  # Just a few iterations to check boundaries
-    adaptive_boundaries=True  # Enable adaptive boundaries
+    adaptive_boundaries_mode='on'  # Enable adaptive boundaries
 )
 
 print(f"Testing: {test_func}")
