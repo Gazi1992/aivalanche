@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Union, Any, Callable
 
 from aivalanche_lib.parameters import Parameters
 from .utils import (
-    _update_history, _update_boundaries,
+    _update_history,
     _get_history_as_df, _get_all_denormalized_boundaries,
     _run_callbacks
     )
@@ -38,6 +38,10 @@ from .perturbation import (
     )
 from .refinement import (
     apply_local_refinement, should_trigger_refinement, get_refinement_summary
+    )
+from .adaptive_boundaries import (
+    update_boundaries as _update_boundaries,
+    validate_config as _validate_adaptive_boundaries_config
     )
 
 class DifferentialEvolution:
@@ -1134,16 +1138,7 @@ def _setup_adaptive_boundaries_config(de_instance):
         de_instance._adaptive_boundaries_active_config = None
         return
     
-    # Set default configuration
-    default_config = {
-        'edge_threshold': 0.05,
-        'pop_quantile': 0.7,
-        'extension': 0.1,
-        'check_period': 10
-    }
-    
-    # Override with user config if provided
-    if de_instance.adaptive_boundaries_config:
-        default_config.update(de_instance.adaptive_boundaries_config)
-    
-    de_instance._adaptive_boundaries_active_config = default_config
+    # Validate and set configuration
+    de_instance._adaptive_boundaries_active_config = _validate_adaptive_boundaries_config(
+        de_instance.adaptive_boundaries_config
+    )
