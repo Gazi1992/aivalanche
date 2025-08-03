@@ -44,7 +44,7 @@ def should_update_boundaries(de_instance):
     return de_instance.iter % de_instance._adaptive_boundaries_active_config['check_period'] == 0
 
 
-def update_boundaries(de_instance):
+def _update_boundaries(de_instance):
     """
     Update the parameter boundaries based on population distribution.
     
@@ -225,3 +225,23 @@ def validate_config(config):
         raise ValueError("check_period must be a positive integer")
     
     return validated
+
+
+def _setup_adaptive_boundaries_config(de_instance):
+    """
+    Setup adaptive boundaries configuration with defaults.
+    
+    Args:
+        de_instance: Instance of DifferentialEvolution
+        
+    Returns:
+        None: Sets the _adaptive_boundaries_active_config attribute
+    """
+    if de_instance.adaptive_boundaries_mode == 'off':
+        de_instance._adaptive_boundaries_active_config = None
+        return
+    
+    # Validate and set configuration
+    de_instance._adaptive_boundaries_active_config = validate_config(
+        de_instance.adaptive_boundaries_config
+    )

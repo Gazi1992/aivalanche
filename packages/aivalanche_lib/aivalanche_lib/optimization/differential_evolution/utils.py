@@ -52,8 +52,6 @@ def _update_history(de_instance):
     de_instance.all_bests_metrics = np.vstack((de_instance.all_bests_metrics, best_metric_to_append))
 
 
-
-
 def _get_history_as_df(de_instance, which='trials'):
     """
     Convert the optimization history to two DataFrames for analysis.

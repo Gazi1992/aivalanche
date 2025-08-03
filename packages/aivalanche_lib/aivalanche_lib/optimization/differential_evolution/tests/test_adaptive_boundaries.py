@@ -275,10 +275,91 @@ def test_adaptive_boundaries_mixed_parameters():
     return optimizer
 
 
+def test_boundary_tracking():
+    """Test that boundary changes are properly tracked."""
+    print("\n" + "="*60)
+    print("Testing Boundary Change Tracking")
+    print("="*60)
+    
+    # Import the get_boundary_statistics function
+    from aivalanche_lib.optimization.differential_evolution.adaptive_boundaries import get_boundary_statistics
+    
+    # Create parameters with tight bounds
+    params = Parameters([
+        {'name': 'x', 'type': 'continuous', 'min': -2.0, 'max': 2.0, 'default': 0.0},
+        {'name': 'y', 'type': 'continuous', 'min': -2.0, 'max': 2.0, 'default': 0.0}
+    ])
+    
+    # Create optimizer with frequent boundary checks
+    optimizer = DifferentialEvolution(
+        seed=42,
+        eval_func=create_shifted_rosenbrock(),  # Optimum at (7,7) - way outside bounds
+        parameters=params,
+        pop_size=20,
+        max_iterations=50,
+        adaptive_boundaries_mode='on',
+        adaptive_boundaries_config={
+            'edge_threshold': 0.15,     # More lenient edge detection
+            'pop_quantile': 0.6,        # Lower threshold for triggering
+            'extension': 0.25,          # Larger extensions
+            'check_period': 5           # Check every 5 iterations
+        }
+    )
+    
+    # Run optimization
+    optimizer.run_optimization()
+    
+    # Get boundary statistics
+    stats = get_boundary_statistics(optimizer)
+    
+    print(f"\nBoundary Change Statistics:")
+    print(f"Total boundary updates: {stats['total_changes']}")
+    print(f"Parameters that had boundary changes: {stats['parameters_changed']}")
+    print(f"Iterations with boundary changes: {stats['iterations_with_changes']}")
+    
+    # Verify the tracking
+    assert stats['total_changes'] > 0, "Expected at least one boundary change"
+    assert len(stats['parameters_changed']) > 0, "Expected at least one parameter to have boundary changes"
+    assert len(stats['iterations_with_changes']) == stats['total_changes'], "Mismatch in tracking"
+    
+    # Check the boundary history in detail
+    print("\nDetailed Boundary History:")
+    all_iters = optimizer.all_boundaries.index.get_level_values('iter').unique()
+    for iter_num in sorted(all_iters)[:5]:  # Show first 5 iterations
+        print(f"\nIteration {iter_num}:")
+        for param in ['x', 'y']:
+            min_val = optimizer.all_boundaries.loc[(iter_num, 'min'), param]
+            max_val = optimizer.all_boundaries.loc[(iter_num, 'max'), param]
+            range_val = optimizer.all_boundaries.loc[(iter_num, 'range'), param]
+            print(f"  {param}: [{min_val:.3f}, {max_val:.3f}] (range: {range_val:.3f})")
+    
+    # Verify that boundaries actually expanded
+    initial_range_x = optimizer.all_boundaries.loc[(0, 'range'), 'x']
+    initial_range_y = optimizer.all_boundaries.loc[(0, 'range'), 'y']
+    
+    final_iter = max(all_iters)
+    final_range_x = optimizer.all_boundaries.loc[(final_iter, 'range'), 'x']
+    final_range_y = optimizer.all_boundaries.loc[(final_iter, 'range'), 'y']
+    
+    print(f"\nBoundary expansion:")
+    print(f"X range: {initial_range_x:.3f} -> {final_range_x:.3f} ({(final_range_x/initial_range_x - 1)*100:.1f}% increase)")
+    print(f"Y range: {initial_range_y:.3f} -> {final_range_y:.3f} ({(final_range_y/initial_range_y - 1)*100:.1f}% increase)")
+    
+    assert final_range_x > initial_range_x, "Expected X boundaries to expand"
+    assert final_range_y > initial_range_y, "Expected Y boundaries to expand"
+    
+    print("\nBoundary tracking test passed!")
+    
+    return optimizer
+
+
 def main():
     """Run all adaptive boundaries tests."""
     print("Adaptive Boundaries Test Suite")
     print("=" * 60)
+    
+    # Import get_boundary_statistics for the results
+    from aivalanche_lib.optimization.differential_evolution.adaptive_boundaries import get_boundary_statistics
     
     # Create results directory
     results_dir = create_test_results_dir('adaptive_boundaries')
@@ -311,6 +392,14 @@ def main():
         'best_parameters': optimizer_mixed.best_parameters.to_dict() if hasattr(optimizer_mixed.best_parameters, 'to_dict') else optimizer_mixed.best_parameters,
         'iterations': optimizer_mixed.iter,
         'stop_reason': optimizer_mixed.stop_reason
+    }
+    
+    # Test 4: Boundary tracking
+    optimizer_tracking = test_boundary_tracking()
+    results['boundary_tracking'] = {
+        'best_metric': optimizer_tracking.best_metric,
+        'iterations': optimizer_tracking.iter,
+        'boundary_statistics': get_boundary_statistics(optimizer_tracking)
     }
     
     # Create comparison plots
