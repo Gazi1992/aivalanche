@@ -185,13 +185,16 @@ class DifferentialEvolution:
             # Local refinement parameters
             refinement_mode: Refinement mode:
                 'off': No refinement (default)
-                'on': Enable refinement with DLS method
+                'on': Enable refinement
             refinement_config: Refinement configuration dict with keys:
-                - method (str): Refinement method (only 'dls' supported, default)
-                - trigger_ratio (float): When to trigger during optimization (0-1, default 0.2 = 20% of max_iter_without_improvement)
-                                       Set to -1 to only refine after optimization completes
-                - max_iterations (int): Maximum refinement iterations (default 200)
-                - options (dict): DLS-specific options dict:
+                - method (str): Refinement method ('dls', 'adam', or 'nelder_mead', default: 'dls')
+                - trigger_ratio (float): When to trigger refinement:
+                    * 0-1: Trigger during optimization when stagnation reaches this ratio of max_iter_without_improvement (default: 0.2)
+                    * -1: Only refine after optimization completes (post-optimization refinement)
+                - max_iterations (int): Maximum refinement iterations (default 1000)
+                - options (dict): Method-specific options dict:
+                    
+                    For 'dls':
                     - initial_damping (float): Starting damping parameter
                     - damping_increase_factor (float): Factor to increase damping
                     - damping_decrease_factor (float): Factor to decrease damping
@@ -200,9 +203,31 @@ class DifferentialEvolution:
                     - improvement_threshold (float): Minimum improvement to continue
                     - jacobian_step_size (float): Step size for finite difference Jacobian
                     - residual_type (str): 'scalar' or 'vector' residuals
-                    - trust_region_radius (float): Initial trust region size
                     - use_qr_decomposition (bool): Use QR decomposition for stability
                     - boundary_handling (str): How to handle bounds ('reflect', 'clip', 'project')
+                    
+                    For 'adam':
+                    - learning_rate (float): Learning rate (default: 0.001)
+                    - beta1 (float): First moment decay rate (default: 0.9)
+                    - beta2 (float): Second moment decay rate (default: 0.999)
+                    - epsilon (float): Small constant for numerical stability (default: 1e-8)
+                    - learning_rate_decay (float): Learning rate decay factor (default: 0.95)
+                    - gradient_tolerance (float): Convergence tolerance for gradient norm
+                    - gradient_step_size (float): Step size for gradient estimation (default: 1e-6)
+                    - boundary_handling (str): How to handle bounds ('clip', 'reflect')
+                    
+                    For 'nelder_mead':
+                    - best_point_position (str): How to use DE's best point in initial simplex:
+                        * 'corner': Use as a corner of the simplex (default)
+                        * 'centroid': Use as the centroid of the simplex
+                    - initial_simplex_scale (float): Scale of initial simplex as fraction of parameter range (default: 0.05)
+                    - initial_simplex_absolute_scale (float): Optional absolute scale, overrides relative scale
+                    - reflection_coefficient (float): Reflection coefficient (default: 1.0)
+                    - expansion_coefficient (float): Expansion coefficient (default: 2.0)
+                    - contraction_coefficient (float): Contraction coefficient (default: 0.5)
+                    - shrink_coefficient (float): Shrink coefficient (default: 0.5)
+                    - parameter_tolerance (float): Convergence tolerance for simplex size
+                    - improvement_threshold (float): Minimum improvement to continue
         """
         # Set random seed
         self.seed = seed if seed is not None else np.random.randint(0, 1000)

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Differential Evolution (DE) is a robust population-based metaheuristic optimization algorithm. This implementation includes advanced features like adaptive perturbation, local refinement with DLS, and adaptive boundaries, making it suitable for challenging optimization problems.
+Differential Evolution (DE) is a robust population-based metaheuristic optimization algorithm. This implementation includes advanced features like adaptive perturbation, local refinement with DLS/Adam/Nelder-Mead, and adaptive boundaries, making it suitable for challenging optimization problems.
 
 ## How Differential Evolution Works
 
@@ -29,7 +29,7 @@ DE maintains a population of candidate solutions (called individuals or vectors)
 - **Self-adaptive**: Parameters can be adapted during optimization
 - **Global search**: Good at escaping local optima
 - **Perturbation system**: Intelligent escape from stagnation
-- **Local refinement**: DLS integration for high precision
+- **Local refinement**: DLS/Adam/Nelder-Mead integration for high precision
 - **Adaptive boundaries**: Dynamic search space adjustment
 - **Multiple stop criteria**: Flexible termination conditions
 - **Robust**: Works well on a wide variety of problems
@@ -205,27 +205,61 @@ The perturbation system tracks its effectiveness:
 - Red markers: Perturbation didn't improve (but may have helped exploration)
 - History tracking: All perturbation events are recorded for analysis
 
-#### 3. Local Refinement with DLS
+#### 3. Local Refinement with DLS/Adam/Nelder-Mead
 
 ```python
-# Enable refinement with default settings
+# Enable refinement with default settings (DLS)
 optimizer = DifferentialEvolution(
     # ... other parameters ...
-    refinement_mode='on'  # Enable DLS refinement
+    refinement_mode='on'  # Enable refinement with default DLS
 )
 
-# Custom refinement configuration
+# Custom refinement configuration with DLS
 optimizer = DifferentialEvolution(
     # ... other parameters ...
     refinement_mode='on',
     refinement_config={
-        'method': 'dls',  # Only 'dls' supported currently
+        'method': 'dls',  # Damped Least Squares
         'trigger_ratio': 0.2,  # Trigger at 20% of max_iter_without_improvement
         'max_iterations': 200,  # Max refinement iterations
         'options': {  # DLS-specific options
             'gradient_tolerance': 1e-10,
             'parameter_tolerance': 1e-10,
             'improvement_threshold': 1e-8
+        }
+    }
+)
+
+# Using Adam optimizer for refinement
+optimizer = DifferentialEvolution(
+    # ... other parameters ...
+    refinement_mode='on',
+    refinement_config={
+        'method': 'adam',
+        'trigger_ratio': -1,  # Post-optimization only
+        'max_iterations': 500,
+        'options': {
+            'learning_rate': 0.001,
+            'beta1': 0.9,
+            'beta2': 0.999,
+            'learning_rate_decay': 0.95
+        }
+    }
+)
+
+# Using Nelder-Mead for refinement
+optimizer = DifferentialEvolution(
+    # ... other parameters ...
+    refinement_mode='on',
+    refinement_config={
+        'method': 'nelder_mead',
+        'trigger_ratio': -1,  # Post-optimization only
+        'max_iterations': 300,
+        'options': {
+            'best_point_position': 'centroid',  # or 'corner'
+            'initial_simplex_scale': 0.02,  # 2% of parameter range
+            'reflection_coefficient': 1.0,
+            'expansion_coefficient': 2.0
         }
     }
 )
@@ -433,18 +467,18 @@ print(info['output']['has_finished']) # True
 
 ### Refinement Configuration
 
-DE supports local refinement with the Damped Least Squares (DLS) method to polish solutions:
+DE supports local refinement with multiple methods to polish solutions:
 
 #### Key Parameters
 
 - **`refinement_mode`**: 'off' (default) or 'on'
 - **`refinement_config`**: Dictionary with configuration options:
-  - **`method`**: Currently only 'dls' is supported
+  - **`method`**: Refinement method - 'dls' (default), 'adam', or 'nelder_mead'
   - **`trigger_ratio`**: When to trigger refinement during optimization (0-1, default 0.2)
     - 0.2 = trigger at 20% of max_iter_without_improvement
     - -1 = only refine after optimization completes
-  - **`max_iterations`**: Maximum refinement iterations (default 200)
-  - **`options`**: DLS-specific options
+  - **`max_iterations`**: Maximum refinement iterations (default 1000)
+  - **`options`**: Method-specific options dict
 
 #### When Refinement Happens
 
@@ -454,6 +488,20 @@ DE supports local refinement with the Damped Least Squares (DLS) method to polis
 #### Default Configuration
 
 The default refinement configuration is optimized for convergence:
+
+```python
+# Default configuration structure
+{
+    'method': 'dls',  # Default method
+    'trigger_ratio': 0.2,
+    'max_iterations': 1000,
+    'options': {
+        # Method-specific defaults are applied automatically
+    }
+}
+```
+
+Each method has its own optimized defaults that are automatically applied:
 
 ```python
 {
@@ -605,17 +653,37 @@ Differential Evolution internally converts categorical parameters to numerical i
 - This can cause random jumps between categories
 - While not theoretically ideal for categorical variables, it maintains code simplicity
 
-### Local Refinement (DLS)
+### Local Refinement
 
 **Categorical parameters are automatically excluded from refinement.**
 
 **Rationale:**
-- DLS (Damped Least Squares) is a gradient-based optimization method
+- DLS and Adam are gradient-based optimization methods
+- Nelder-Mead, while derivative-free, still assumes continuous variables
 - Gradients are undefined for discrete categorical variables
-- The Levenberg-Marquardt algorithm assumes continuous, differentiable functions
+- These algorithms assume continuous, differentiable (or at least continuous) functions
 
 **Implementation:**
 - During refinement, categorical parameters are held fixed at their current best values
+
+#### Method-Specific Details:
+
+**DLS (Damped Least Squares)**:
+- Gradient-based method using the Levenberg-Marquardt algorithm
+- Best for smooth, well-behaved functions
+- Very efficient when close to optimum
+
+**Adam**:
+- Adaptive learning rate gradient-based optimizer
+- Good for noisy or sparse gradients
+- Includes momentum for faster convergence
+
+**Nelder-Mead**:
+- Derivative-free simplex method
+- Good for non-smooth or discontinuous functions
+- Initial simplex can be configured:
+  - `best_point_position`: 'corner' (default) or 'centroid'
+  - `initial_simplex_scale`: Controls initial simplex size (default 0.05 = 5% of range)
 - Only continuous and discrete numeric parameters are refined
 - The refined solution merges improved numeric parameters with existing categorical values
 
