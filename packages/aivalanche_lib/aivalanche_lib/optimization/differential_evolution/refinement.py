@@ -1,14 +1,67 @@
 """
 Local refinement module for Differential Evolution.
-Provides integration with local optimization methods like DLS.
+Provides integration with local optimization methods like DLS and Adam.
 """
 
 import numpy as np
 import pandas as pd
 from typing import Dict, Any, Optional, Tuple, Union
 from ..damped_least_squares import DampedLeastSquares
+from ..adam import Adam
+from ..nelder_mead import NelderMead
 from ...parameters import Parameters
 import copy
+
+
+# Default configurations for each refinement method
+_METHOD_DEFAULTS = {
+    'common': {
+        # Common parameters used by multiple methods
+        'max_iter_without_improvement': 50,
+        'improvement_threshold': 1e-8
+    },
+    'gradient_based': {
+        # Parameters only for gradient-based methods (Adam, DLS)
+        'gradient_tolerance': 1e-8
+    },
+    'dls': {
+        # DLS-specific defaults
+        'initial_damping': 0.01,
+        'damping_increase_factor': 10.0,
+        'damping_decrease_factor': 0.1,
+        'parameter_tolerance': 1e-10,
+        'jacobian_step_size': 1e-8,
+        'residual_type': 'scalar',
+        'use_qr_decomposition': True,
+        'boundary_handling': 'reflect'
+    },
+    'adam': {
+        # Adam-specific defaults - tuned for refinement
+        'learning_rate': 0.001,  # Low learning rate for refinement
+        'beta1': 0.9,
+        'beta2': 0.999,
+        'epsilon': 1e-8,
+        'learning_rate_decay': 0.95,  # Fast decay for refinement
+        'amsgrad': False,
+        'gradient_method': 'finite_difference',
+        'gradient_step_size': 1e-6,  # Small step for more accurate gradients
+        'gradient_step_size_relative': True,
+        'boundary_handling': 'clip'
+    },
+    'nelder_mead': {
+        # Nelder-Mead specific defaults - tuned for refinement
+        'reflection_coefficient': 1.0,
+        'expansion_coefficient': 2.0,
+        'contraction_coefficient': 0.5,
+        'shrink_coefficient': 0.5,
+        'initial_simplex_edge_length': 0.05,  # 5% of parameter range for refinement
+        'defaults_in_initial_simplex': False,
+        # Refinement-specific options (not NelderMead parameters)
+        'initial_simplex_scale': 0.05,  # 5% of parameter range
+        'initial_simplex_absolute_scale': None,  # Optional absolute scale
+        'best_point_position': 'corner'  # 'corner' or 'centroid'
+    }
+}
 
 
 def get_default_config():
@@ -18,24 +71,45 @@ def get_default_config():
     Returns:
         dict: Default configuration parameters optimized for convergence
     """
+    # Merge all defaults for backward compatibility
+    all_options = {}
+    all_options.update(_METHOD_DEFAULTS['common'])
+    all_options.update(_METHOD_DEFAULTS['dls'])
+    all_options.update(_METHOD_DEFAULTS['adam'])
+    all_options.update(_METHOD_DEFAULTS['nelder_mead'])
+    
     return {
-        'method': 'dls',                # Only 'dls' supported for now
+        'method': 'dls',                # 'dls', 'adam', or 'nelder_mead'
         'trigger_ratio': 0.2,           # Trigger at 20% of max_iter_without_improvement
         'max_iterations': 1000,         # Allow more iterations for convergence
-        'options': {
-            'initial_damping': 0.01,
-            'damping_increase_factor': 10.0,
-            'damping_decrease_factor': 0.1,
-            'gradient_tolerance': 1e-10,
-            'parameter_tolerance': 1e-10,
-            'improvement_threshold': 1e-8,
-            'max_iter_without_improvement': 50,  # Stop if no improvement
-            'jacobian_step_size': 1e-8,
-            'residual_type': 'scalar',
-            'use_qr_decomposition': True,
-            'boundary_handling': 'reflect'
-        }
+        'options': all_options
     }
+
+
+def get_method_defaults(method: str) -> dict:
+    """
+    Get default options for a specific refinement method.
+    
+    Args:
+        method: The refinement method ('dls', 'adam', or 'nelder_mead')
+        
+    Returns:
+        dict: Default options for the specified method
+    """
+    if method not in ['dls', 'adam', 'nelder_mead']:
+        raise ValueError(f"Unknown refinement method: {method}")
+    
+    # Start with common defaults
+    defaults = _METHOD_DEFAULTS['common'].copy()
+    
+    # Add gradient-based defaults for Adam and DLS
+    if method in ['adam', 'dls']:
+        defaults.update(_METHOD_DEFAULTS['gradient_based'])
+    
+    # Add method-specific defaults
+    defaults.update(_METHOD_DEFAULTS[method])
+    
+    return defaults
 
 
 def validate_config(config):
@@ -46,7 +120,7 @@ def validate_config(config):
         config (dict): Configuration to validate
         
     Returns:
-        dict: Validated configuration
+        dict: Validated configuration with user_options tracked separately
         
     Raises:
         ValueError: If configuration is invalid
@@ -59,12 +133,15 @@ def validate_config(config):
     # Deep copy the options
     validated['options'] = default_config['options'].copy()
     
+    # Track user-provided options separately
+    validated['user_options'] = {}
+    
     # Update with user config
     if config:
         # Handle method
         if 'method' in config:
-            if config['method'] != 'dls':
-                raise ValueError(f"Only 'dls' method is currently supported, got: {config['method']}")
+            if config['method'] not in ['dls', 'adam', 'nelder_mead']:
+                raise ValueError(f"Only 'dls', 'adam', and 'nelder_mead' methods are supported, got: {config['method']}")
             validated['method'] = config['method']
         
         # Handle trigger_ratio
@@ -80,9 +157,10 @@ def validate_config(config):
                 raise ValueError("max_iterations must be a positive integer")
             validated['max_iterations'] = config['max_iterations']
         
-        # Handle options
+        # Handle options - update full options AND track user options separately
         if 'options' in config and isinstance(config['options'], dict):
             validated['options'].update(config['options'])
+            validated['user_options'] = config['options'].copy()
     
     return validated
 
@@ -159,12 +237,267 @@ def _should_trigger_refinement(de_instance) -> bool:
     return False
 
 
+def _get_scale_tier(metric_value: float) -> tuple:
+    """
+    Determine the scale tier based on metric value.
+    
+    Returns:
+        tuple: (tier_name, scale_factor)
+    """
+    if metric_value >= 1.0:
+        return 'normal', 1.0
+    elif metric_value >= 1e-3:
+        return 'small', 1e-1
+    elif metric_value >= 1e-6:
+        return 'micro', 1e-2
+    elif metric_value >= 1e-9:
+        return 'nano', 1e-3
+    elif metric_value >= 1e-12:
+        return 'pico', 1e-4
+    else:
+        return 'extreme', 1e-5
+
+
+def _adapt_adam_config_for_scale(optimizer_options: dict, initial_metric: float, 
+                                 user_provided_options: set) -> None:
+    """
+    Adapt Adam optimizer configuration based on problem scale.
+    
+    Args:
+        optimizer_options: The optimizer configuration dictionary (modified in-place)
+        initial_metric: The initial metric value
+        user_provided_options: Set of options explicitly provided by user
+    """
+    tier_name, scale_factor = _get_scale_tier(initial_metric)
+    
+    if tier_name == 'normal':
+        # No adaptation needed for normal scale
+        return
+    
+    print(f"\n[INFO] Detected {tier_name}-scale problem (metric={initial_metric:.2e})")
+    
+    # Adapt learning rate only if not user-specified
+    if 'learning_rate' not in user_provided_options:
+        original_lr = optimizer_options.get('learning_rate', 0.001)
+        # Scale learning rate based on problem scale
+        new_lr = original_lr * scale_factor
+        optimizer_options['learning_rate'] = new_lr
+        print(f"[INFO] Auto-adapting learning rate: {original_lr} -> {new_lr:.2e}")
+    
+    # Adapt gradient step size only if not user-specified
+    if 'gradient_step_size' not in user_provided_options:
+        original_gs = optimizer_options.get('gradient_step_size', 1e-6)
+        # For very small scales, use even smaller gradient steps
+        if tier_name in ['pico', 'extreme']:
+            new_gs = 1e-10
+        elif tier_name in ['nano']:
+            new_gs = 1e-8
+        else:
+            new_gs = original_gs * scale_factor
+        optimizer_options['gradient_step_size'] = new_gs
+        print(f"[INFO] Auto-adapting gradient_step_size: {original_gs:.2e} -> {new_gs:.2e}")
+    
+    # Adapt epsilon only if not user-specified (important for numerical stability)
+    if 'epsilon' not in user_provided_options and tier_name in ['nano', 'pico', 'extreme']:
+        original_eps = optimizer_options.get('epsilon', 1e-8)
+        # Scale epsilon for very small problems
+        new_eps = original_eps * scale_factor
+        optimizer_options['epsilon'] = new_eps
+        print(f"[INFO] Auto-adapting epsilon: {original_eps:.2e} -> {new_eps:.2e}")
+    
+    # Adapt gradient tolerance for very small scales
+    if 'gradient_tolerance' not in user_provided_options and tier_name in ['pico', 'extreme']:
+        original_tol = optimizer_options.get('gradient_tolerance', 1e-8)
+        new_tol = original_tol * scale_factor
+        optimizer_options['gradient_tolerance'] = new_tol
+        print(f"[INFO] Auto-adapting gradient_tolerance: {original_tol:.2e} -> {new_tol:.2e}")
+
+
+def _adapt_dls_config_for_scale(optimizer_options: dict, initial_metric: float,
+                                user_provided_options: set) -> None:
+    """
+    Adapt DLS optimizer configuration based on problem scale.
+    
+    Args:
+        optimizer_options: The optimizer configuration dictionary (modified in-place)
+        initial_metric: The initial metric value
+        user_provided_options: Set of options explicitly provided by user
+    """
+    tier_name, scale_factor = _get_scale_tier(initial_metric)
+    
+    if tier_name == 'normal':
+        # No adaptation needed for normal scale
+        return
+    
+    print(f"\n[INFO] Detected {tier_name}-scale problem (metric={initial_metric:.2e})")
+    
+    # Adapt jacobian step size for numerical differentiation
+    if 'jacobian_step_size' not in user_provided_options:
+        original_js = optimizer_options.get('jacobian_step_size', 1e-8)
+        # Scale based on problem scale
+        if tier_name in ['pico', 'extreme']:
+            new_js = 1e-12
+        elif tier_name == 'nano':
+            new_js = 1e-10
+        else:
+            new_js = original_js * scale_factor
+        optimizer_options['jacobian_step_size'] = new_js
+        print(f"[INFO] Auto-adapting jacobian_step_size: {original_js:.2e} -> {new_js:.2e}")
+    
+    # Adapt parameter tolerance
+    if 'parameter_tolerance' not in user_provided_options:
+        original_tol = optimizer_options.get('parameter_tolerance', 1e-10)
+        new_tol = original_tol * scale_factor * scale_factor  # Square for more aggressive scaling
+        optimizer_options['parameter_tolerance'] = new_tol
+        print(f"[INFO] Auto-adapting parameter_tolerance: {original_tol:.2e} -> {new_tol:.2e}")
+    
+    # Adapt initial damping for very small scales
+    if 'initial_damping' not in user_provided_options and tier_name in ['nano', 'pico', 'extreme']:
+        original_damp = optimizer_options.get('initial_damping', 0.01)
+        # Smaller initial damping for small-scale problems
+        new_damp = original_damp * scale_factor
+        optimizer_options['initial_damping'] = new_damp
+        print(f"[INFO] Auto-adapting initial_damping: {original_damp:.2e} -> {new_damp:.2e}")
+
+
+def _adapt_nelder_mead_config_for_scale(optimizer_options: dict, initial_metric: float,
+                                       user_provided_options: set) -> None:
+    """
+    Adapt Nelder-Mead optimizer configuration based on problem scale.
+    
+    Args:
+        optimizer_options: The optimizer configuration dictionary (modified in-place)
+        initial_metric: The initial metric value
+        user_provided_options: Set of options explicitly provided by user
+    """
+    tier_name, scale_factor = _get_scale_tier(initial_metric)
+    
+    if tier_name == 'normal':
+        # No adaptation needed for normal scale
+        return
+    
+    print(f"\n[INFO] Detected {tier_name}-scale problem (metric={initial_metric:.2e})")
+    
+    # Adapt initial simplex scale only if not user-specified
+    if 'initial_simplex_scale' not in user_provided_options:
+        original_scale = optimizer_options.get('initial_simplex_scale', 0.05)
+        # For small-scale problems, use smaller initial simplex
+        if tier_name in ['pico', 'extreme']:
+            new_scale = 0.001  # 0.1% of range
+        elif tier_name == 'nano':
+            new_scale = 0.005  # 0.5% of range
+        elif tier_name == 'micro':
+            new_scale = 0.01   # 1% of range
+        elif tier_name == 'small':
+            new_scale = 0.02   # 2% of range
+        else:
+            new_scale = original_scale * scale_factor
+        
+        optimizer_options['initial_simplex_scale'] = new_scale
+        print(f"[INFO] Auto-adapting initial_simplex_scale: {original_scale} -> {new_scale:.3f}")
+    
+    # Adapt parameter tolerance if not user-specified
+    if 'parameter_tolerance' not in user_provided_options and tier_name in ['nano', 'pico', 'extreme']:
+        original_tol = optimizer_options.get('parameter_tolerance', 1e-10)
+        new_tol = original_tol * scale_factor
+        optimizer_options['parameter_tolerance'] = new_tol
+        print(f"[INFO] Auto-adapting parameter_tolerance: {original_tol:.2e} -> {new_tol:.2e}")
+    
+    # Adapt improvement threshold for very small scales
+    if 'improvement_threshold' not in user_provided_options and tier_name in ['pico', 'extreme']:
+        original_tol = optimizer_options.get('improvement_threshold', 1e-8)
+        new_tol = original_tol * scale_factor
+        optimizer_options['improvement_threshold'] = new_tol
+        print(f"[INFO] Auto-adapting improvement_threshold: {original_tol:.2e} -> {new_tol:.2e}")
+
+
+def _build_optimizer_config(method: str, common_options: dict, options: dict = None) -> tuple:
+    """
+    Build optimizer configuration by merging common options, method defaults, and user options.
+    
+    Args:
+        method: The optimization method ('dls' or 'adam')
+        common_options: Common options for all optimizers
+        options: User-provided options (optional)
+        
+    Returns:
+        tuple: (optimizer_options, user_provided_options)
+    """
+    # Get method-specific defaults
+    method_defaults = get_method_defaults(method)
+    
+    # Start with common options
+    optimizer_options = common_options.copy()
+    optimizer_options.update(method_defaults)
+    
+    # Track which options were explicitly provided by user
+    user_provided_options = set()
+    
+    if options:
+        # Apply user options (filter to only valid ones)
+        for key, value in options.items():
+            if key in optimizer_options:  # Check if it's a valid option
+                optimizer_options[key] = value
+                user_provided_options.add(key)
+    
+    return optimizer_options, user_provided_options
+
+
+def _create_optimizer(method: str, optimizer_options: dict, initial_metric: float = None, 
+                     best_point: pd.DataFrame = None, parameters: Parameters = None):
+    """
+    Create optimizer instance based on method.
+    
+    Args:
+        method: The optimization method ('dls', 'adam', or 'nelder_mead')
+        optimizer_options: The optimizer configuration
+        initial_metric: Initial metric value (used for Adam adaptive scaling)
+        best_point: Best point for Nelder-Mead initialization
+        parameters: Parameters object for Nelder-Mead initialization
+        
+    Returns:
+        Optimizer instance
+    """
+    if method == 'dls':
+        return DampedLeastSquares(**optimizer_options)
+    
+    elif method == 'adam':
+        return Adam(**optimizer_options)
+    
+    elif method == 'nelder_mead':
+        # For Nelder-Mead, handle special refinement parameters
+        nm_options = optimizer_options.copy()
+        
+        # Extract refinement-specific options that aren't NelderMead parameters
+        best_point_position = nm_options.pop('best_point_position', 'corner')
+        initial_simplex_scale = nm_options.pop('initial_simplex_scale', 0.05)
+        initial_simplex_absolute_scale = nm_options.pop('initial_simplex_absolute_scale', None)
+        
+        # Set initial_point_mode based on best_point_position
+        if best_point is not None:
+            nm_options['initial_point'] = best_point
+            nm_options['initial_point_mode'] = 'centroid' if best_point_position == 'centroid' else 'corner'
+            
+            # Handle simplex scale - convert from percentage to edge length
+            if initial_simplex_absolute_scale is not None:
+                # Use absolute scale if provided
+                nm_options['initial_simplex_edge_length'] = initial_simplex_absolute_scale
+            else:
+                # Use relative scale (percentage of parameter range)
+                nm_options['initial_simplex_edge_length'] = initial_simplex_scale
+        
+        return NelderMead(**nm_options)
+    
+    else:
+        raise ValueError(f"Unknown refinement method: {method}")
+
+
 def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
     """
     Apply local refinement to the best solution found by DE.
     
     Note: Categorical parameters are automatically excluded from refinement
-    as gradient-based methods like DLS cannot optimize discrete variables.
+    as gradient-based methods like DLS and Adam cannot optimize discrete variables.
     
     Args:
         de_instance: The DifferentialEvolution instance
@@ -176,7 +509,8 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
     config = de_instance._refinement_active_config
     method = config['method']
     max_iterations = config['max_iterations']
-    options = config['options']
+    # Use user_options to track what the user explicitly provided
+    user_options = config.get('user_options', {})
     
     # Create a modified parameters object that excludes categorical parameters
     # This ensures DLS only operates on continuous/discrete numeric parameters
@@ -189,6 +523,12 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
     
     # Get current best solution (only non-categorical parameters)
     best_params_full = de_instance.best_parameters
+    
+    # If best_parameters is None, skip refinement
+    if best_params_full is None:
+        print("\n[INFO] No best solution available for refinement yet.")
+        return False, {'method': method, 'improved': False, 'reason': 'no_best_solution'}
+    
     best_params_refinable = {k: v for k, v in best_params_full.items() if k in refinement_parameters.variable_names}
     best_point_df = pd.DataFrame([best_params_refinable])
     initial_metric = de_instance.best_metric
@@ -204,8 +544,8 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
     print(f"Initial metric: {initial_metric:.6e}")
     print(f"{'='*60}\n")
     
-    # Set up DLS options
-    dls_options = {
+    # Common options for both optimizers
+    common_options = {
         'seed': de_instance.seed + 1000,  # Different seed
         'eval_func': de_instance.eval_func,
         'eval_func_args': de_instance.eval_func_args if de_instance.eval_func_args else {},
@@ -214,47 +554,49 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
         'max_iterations': max_iterations,
         'initial_point': best_point_df,
         'metric_threshold': de_instance.metric_threshold,
-        
-        # DLS-specific defaults for refinement
-        'initial_damping': 0.01,
-        'damping_increase_factor': 2.0,
-        'damping_decrease_factor': 0.5,
-        'gradient_tolerance': 1e-8,
-        'parameter_tolerance': 1e-10,
-        'jacobian_step_size': 1e-8,
-        'residual_type': 'scalar',  # Default to scalar
-        'use_qr_decomposition': True,
-        'boundary_handling': 'reflect'
     }
     
-    # Override with user options
-    if options:
-        dls_options.update(options)
-    
-    # Create and run DLS
+    # Create and run optimizer based on method
     try:
-        dls = DampedLeastSquares(**dls_options)
-        dls.run_optimization()
+        # Build optimizer configuration
+        optimizer_options, user_provided_options = _build_optimizer_config(
+            method, common_options, user_options
+        )
         
-        # Check if DLS improved the solution
+        # Apply method-specific adaptations
+        if method == 'adam':
+            _adapt_adam_config_for_scale(optimizer_options, initial_metric, user_provided_options)
+        elif method == 'dls':
+            _adapt_dls_config_for_scale(optimizer_options, initial_metric, user_provided_options)
+        elif method == 'nelder_mead':
+            _adapt_nelder_mead_config_for_scale(optimizer_options, initial_metric, user_provided_options)
+        
+        # Create optimizer instance
+        optimizer = _create_optimizer(method, optimizer_options, initial_metric, 
+                                    best_point_df, refinement_parameters)
+        
+        # Run optimization
+        optimizer.run_optimization()
+        
+        # Check if optimizer improved the solution
         improved = False
         if de_instance.opt_min_or_max == 'min':
-            improved = dls.best_metric < initial_metric
+            improved = optimizer.best_metric < initial_metric
         else:
-            improved = dls.best_metric > initial_metric
+            improved = optimizer.best_metric > initial_metric
         
         refinement_info = {
             'method': method,
             'improved': improved,
             'initial_metric': initial_metric,
-            'refined_metric': dls.best_metric,
-            'improvement': abs(dls.best_metric - initial_metric),
-            'relative_improvement': abs(dls.best_metric - initial_metric) / (abs(initial_metric) + 1e-10),
-            'iterations': dls.iter,
-            'evaluations': dls.nr_evaluations,
-            'stop_reason': dls.stop_reason,
-            'refined_parameters': dls.best_parameters,
-            'optimizer_instance': dls
+            'refined_metric': optimizer.best_metric,
+            'improvement': abs(optimizer.best_metric - initial_metric),
+            'relative_improvement': abs(optimizer.best_metric - initial_metric) / (abs(initial_metric) + 1e-10),
+            'iterations': optimizer.iter,
+            'evaluations': optimizer.nr_evaluations,
+            'stop_reason': optimizer.stop_reason,
+            'refined_parameters': optimizer.best_parameters,
+            'optimizer_instance': optimizer
         }
         
         # Update DE instance if improved
@@ -271,27 +613,27 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
                 # Update the best survivor with refined solution
                 # Convert parameters to normalized values for survivors array
                 refined_params_norm = de_instance.parameters.norm_all(
-                    pd.DataFrame([dls.best_parameters])
+                    pd.DataFrame([optimizer.best_parameters])
                 ).values.flatten()
                 
                 # Update survivors array
                 de_instance.survivors[best_survivor_idx] = refined_params_norm
-                de_instance.survivors_metrics[best_survivor_idx] = dls.best_metric
+                de_instance.survivors_metrics[best_survivor_idx] = optimizer.best_metric
                 
                 # Also update the best solution tracking
-                de_instance.best_metric = dls.best_metric
-                de_instance.best_parameters = dls.best_parameters
-                de_instance.best_response = dls.best_response
+                de_instance.best_metric = optimizer.best_metric
+                de_instance.best_parameters = optimizer.best_parameters
+                de_instance.best_response = optimizer.best_response
             else:
                 # After optimization: update de_instance.best as before
-                de_instance.best_metric = dls.best_metric
-                de_instance.best_parameters = dls.best_parameters
-                de_instance.best_response = dls.best_response
+                de_instance.best_metric = optimizer.best_metric
+                de_instance.best_parameters = optimizer.best_parameters
+                de_instance.best_response = optimizer.best_response
                 de_instance.refinement_applied = True
                 de_instance.refinement_info = refinement_info
             
             print(f"\n[SUCCESS] Refinement successful!")
-            print(f"  Improved from {initial_metric:.6e} to {dls.best_metric:.6e}")
+            print(f"  Improved from {initial_metric:.6e} to {optimizer.best_metric:.6e}")
             print(f"  Relative improvement: {refinement_info['relative_improvement']:.2%}")
         else:
             print(f"\n[INFO] Refinement did not improve solution")
@@ -315,8 +657,6 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
         _record_refinement_history(de_instance, refinement_info)
         
         return False, refinement_info
-
-
 
 
 def _get_refinement_summary(refinement_info: Dict[str, Any]) -> str:
@@ -353,6 +693,10 @@ def _create_refinement_parameters(de_instance):
     # Get all parameters
     all_params = de_instance.parameters.parameters
     best_values = de_instance.best_parameters
+    
+    # If best_values is None, use parameter defaults
+    if best_values is None:
+        best_values = {}
     
     # Create new parameter list with categorical parameters marked as fixed
     new_params = []
@@ -394,7 +738,6 @@ def _create_refinement_parameters(de_instance):
     refinement_params = Parameters(new_params)
     
     return refinement_params
-
 
 
 def _record_refinement_history(de_instance, refinement_info: Dict[str, Any]):
