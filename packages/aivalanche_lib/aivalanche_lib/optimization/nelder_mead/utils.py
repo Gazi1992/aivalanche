@@ -217,7 +217,7 @@ def _generate_spendley_points(optimizer):
             
             # Create parameter DataFrame
             params_list = []
-            for param_name in optimizer.parameters_names:
+            for param_name in optimizer.variable_parameters_names:
                 if param_name in initial_values:
                     params_list.append({param_name: initial_values[param_name]})
                 else:
@@ -229,12 +229,22 @@ def _generate_spendley_points(optimizer):
             
             # Normalize the initial point
             normalized = optimizer.parameters.norm_all(params_df)
-            initial_point = normalized.values[0]
+            # Extract only variable parameters
+            variable_values = []
+            for param_name in optimizer.variable_parameters_names:
+                if param_name in normalized.columns:
+                    variable_values.append(normalized[param_name].iloc[0])
+            initial_point = np.array(variable_values)
             
         elif isinstance(optimizer.initial_point, pd.DataFrame):
             # Normalize the DataFrame
             normalized = optimizer.parameters.norm_all(optimizer.initial_point)
-            initial_point = normalized.values[0]
+            # Extract only variable parameters
+            variable_values = []
+            for param_name in optimizer.variable_parameters_names:
+                if param_name in normalized.columns:
+                    variable_values.append(normalized[param_name].iloc[0])
+            initial_point = np.array(variable_values)
         else:
             # Assume it's already normalized
             initial_point = np.array(optimizer.initial_point)
@@ -248,7 +258,12 @@ def _generate_spendley_points(optimizer):
         
         params_df = pd.DataFrame([default_values], columns=optimizer.variable_parameters_names)
         normalized = optimizer.parameters.norm_all(params_df)
-        initial_point = normalized.values[0]
+        # Extract only variable parameters (should already be only variable, but be consistent)
+        variable_values = []
+        for param_name in optimizer.variable_parameters_names:
+            if param_name in normalized.columns:
+                variable_values.append(normalized[param_name].iloc[0])
+        initial_point = np.array(variable_values)
     
     else:
         # Use center of normalized space

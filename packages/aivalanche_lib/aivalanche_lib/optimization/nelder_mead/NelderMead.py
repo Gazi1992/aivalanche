@@ -394,7 +394,15 @@ class NelderMead:
                 simplex_df = self.initial_simplex[self.variable_parameters_names]
                 # Normalize the simplex vertices
                 normalized_simplex = self.parameters.norm_all(simplex_df)
-                self.simplex = normalized_simplex.values
+                # Extract only variable parameters
+                variable_values = []
+                for vertex_idx in range(len(normalized_simplex)):
+                    vertex_values = []
+                    for param_name in self.variable_parameters_names:
+                        if param_name in normalized_simplex.columns:
+                            vertex_values.append(normalized_simplex[param_name].iloc[vertex_idx])
+                    variable_values.append(vertex_values)
+                self.simplex = np.array(variable_values)
             else:
                 # Assume it's a numpy array
                 if isinstance(self.initial_simplex, np.ndarray):
@@ -413,7 +421,15 @@ class NelderMead:
                         # Need to normalize - create DataFrame for normalization
                         simplex_df = pd.DataFrame(self.initial_simplex, columns=self.variable_parameters_names)
                         normalized_simplex = self.parameters.norm_all(simplex_df)
-                        self.simplex = normalized_simplex.values
+                        # Extract only variable parameters
+                        variable_values = []
+                        for vertex_idx in range(len(normalized_simplex)):
+                            vertex_values = []
+                            for param_name in self.variable_parameters_names:
+                                if param_name in normalized_simplex.columns:
+                                    vertex_values.append(normalized_simplex[param_name].iloc[vertex_idx])
+                            variable_values.append(vertex_values)
+                        self.simplex = np.array(variable_values)
                 else:
                     raise ValueError("initial_simplex must be a numpy array or pandas DataFrame")
         else:
