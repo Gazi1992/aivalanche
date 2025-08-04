@@ -285,7 +285,12 @@ class Adam:
             
             # Normalize the initial point
             normalized = self.parameters.norm_all(params_df)
-            self.current_point = normalized.values[0]
+            # Extract only variable parameters
+            variable_values = []
+            for param_name in self.variable_parameters_names:
+                if param_name in normalized.columns:
+                    variable_values.append(normalized[param_name].iloc[0])
+            self.current_point = np.array(variable_values)
             
         elif self.use_defaults_in_initial_point:
             # Use default values
@@ -296,7 +301,12 @@ class Adam:
             
             params_df = pd.DataFrame([default_dict])
             normalized = self.parameters.norm_all(params_df)
-            self.current_point = normalized.values[0]
+            # Extract only variable parameters (should already be only variable, but be consistent)
+            variable_values = []
+            for param_name in self.variable_parameters_names:
+                if param_name in normalized.columns:
+                    variable_values.append(normalized[param_name].iloc[0])
+            self.current_point = np.array(variable_values)
             
         else:
             # Use center of normalized space
