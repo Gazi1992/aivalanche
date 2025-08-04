@@ -10,19 +10,22 @@ from ..damped_least_squares import DampedLeastSquares
 from ..adam import Adam
 from ..nelder_mead import NelderMead
 from ...parameters import Parameters
+from .utils import _get_current_denormalized_boundaries
 import copy
 
 
 # Default configurations for each refinement method
 _METHOD_DEFAULTS = {
     'common': {
-        # Common parameters used by multiple methods
+        # Common parameters used by all methods
         'max_iter_without_improvement': 50,
         'improvement_threshold': 1e-8
     },
-    'gradient_based': {
-        # Parameters only for gradient-based methods (Adam, DLS)
-        'gradient_tolerance': 1e-8
+    'refinement': {
+        # Default refinement configuration
+        'method': 'dls',
+        'trigger_ratio': 0.2,  # Trigger at 20% of max_iter_without_improvement
+        'max_iterations': 1000  # Allow more iterations for convergence
     },
     'dls': {
         # DLS-specific defaults
@@ -30,6 +33,7 @@ _METHOD_DEFAULTS = {
         'damping_increase_factor': 10.0,
         'damping_decrease_factor': 0.1,
         'parameter_tolerance': 1e-10,
+        'gradient_tolerance': 1e-8,
         'jacobian_step_size': 1e-8,
         'residual_type': 'scalar',
         'use_qr_decomposition': True,
@@ -43,6 +47,7 @@ _METHOD_DEFAULTS = {
         'epsilon': 1e-8,
         'learning_rate_decay': 0.95,  # Fast decay for refinement
         'amsgrad': False,
+        'gradient_tolerance': 1e-8,
         'gradient_method': 'finite_difference',
         'gradient_step_size': 1e-6,  # Small step for more accurate gradients
         'gradient_step_size_relative': True,
@@ -59,7 +64,7 @@ _METHOD_DEFAULTS = {
         # Refinement-specific options (not NelderMead parameters)
         'initial_simplex_scale': 0.05,  # 5% of parameter range
         'initial_simplex_absolute_scale': None,  # Optional absolute scale
-        'best_point_position': 'corner'  # 'corner' or 'centroid'
+        'best_point_position': 'corner',  # 'corner' or 'centroid'
     }
 }
 
@@ -71,19 +76,11 @@ def get_default_config():
     Returns:
         dict: Default configuration parameters optimized for convergence
     """
-    # Merge all defaults for backward compatibility
-    all_options = {}
-    all_options.update(_METHOD_DEFAULTS['common'])
-    all_options.update(_METHOD_DEFAULTS['dls'])
-    all_options.update(_METHOD_DEFAULTS['adam'])
-    all_options.update(_METHOD_DEFAULTS['nelder_mead'])
-    
-    return {
-        'method': 'dls',                # 'dls', 'adam', or 'nelder_mead'
-        'trigger_ratio': 0.2,           # Trigger at 20% of max_iter_without_improvement
-        'max_iterations': 1000,         # Allow more iterations for convergence
-        'options': all_options
-    }
+    # Return refinement defaults from _METHOD_DEFAULTS
+    config = _METHOD_DEFAULTS['refinement'].copy()
+    # Add default options for the default method
+    config['options'] = get_method_defaults(config['method'])
+    return config
 
 
 def get_method_defaults(method: str) -> dict:
@@ -101,10 +98,6 @@ def get_method_defaults(method: str) -> dict:
     
     # Start with common defaults
     defaults = _METHOD_DEFAULTS['common'].copy()
-    
-    # Add gradient-based defaults for Adam and DLS
-    if method in ['adam', 'dls']:
-        defaults.update(_METHOD_DEFAULTS['gradient_based'])
     
     # Add method-specific defaults
     defaults.update(_METHOD_DEFAULTS[method])
@@ -395,14 +388,7 @@ def _adapt_nelder_mead_config_for_scale(optimizer_options: dict, initial_metric:
         
         optimizer_options['initial_simplex_scale'] = new_scale
         print(f"[INFO] Auto-adapting initial_simplex_scale: {original_scale} -> {new_scale:.3f}")
-    
-    # Adapt parameter tolerance if not user-specified
-    if 'parameter_tolerance' not in user_provided_options and tier_name in ['nano', 'pico', 'extreme']:
-        original_tol = optimizer_options.get('parameter_tolerance', 1e-10)
-        new_tol = original_tol * scale_factor
-        optimizer_options['parameter_tolerance'] = new_tol
-        print(f"[INFO] Auto-adapting parameter_tolerance: {original_tol:.2e} -> {new_tol:.2e}")
-    
+        
     # Adapt improvement threshold for very small scales
     if 'improvement_threshold' not in user_provided_options and tier_name in ['pico', 'extreme']:
         original_tol = optimizer_options.get('improvement_threshold', 1e-8)
@@ -681,7 +667,7 @@ def _get_refinement_summary(refinement_info: Dict[str, Any]) -> str:
 def _create_refinement_parameters(de_instance):
     """
     Create a modified Parameters object that marks categorical parameters as fixed
-    with their current best values as defaults.
+    with their current best values as defaults. Uses adaptive boundaries if active.
     
     Args:
         de_instance: DifferentialEvolution instance
@@ -698,16 +684,30 @@ def _create_refinement_parameters(de_instance):
     if best_values is None:
         best_values = {}
     
+    # Get current denormalized boundaries (adaptive or original)
+    denorm_mins, denorm_maxs = _get_current_denormalized_boundaries(de_instance)
+    
     # Create new parameter list with categorical parameters marked as fixed
     new_params = []
     for param in all_params:
         # Create parameter dict based on type
         if param.type == 'continuous':
+            # Get bounds - use adaptive if available and parameter is variable
+            if (param.mode == 'variable' and denorm_mins is not None and 
+                param.name in denorm_mins):
+                # Use adaptive boundaries (already denormalized)
+                param_min = denorm_mins[param.name]
+                param_max = denorm_maxs[param.name]
+            else:
+                # Use original boundaries
+                param_min = param.min
+                param_max = param.max
+                
             param_dict = {
                 'name': param.name,
                 'type': 'continuous',
-                'min': param.min,
-                'max': param.max,
+                'min': param_min,
+                'max': param_max,
                 'default': best_values.get(param.name, param.default),  # Use current best value
                 'scale': param.scale,
                 'mode': param.mode,
@@ -736,6 +736,10 @@ def _create_refinement_parameters(de_instance):
     
     # Create new Parameters object
     refinement_params = Parameters(new_params)
+    
+    # Log if adaptive boundaries were used
+    if hasattr(de_instance, 'adaptive_boundaries_mode') and de_instance.adaptive_boundaries_mode != 'off':
+        print("[INFO] Using adaptive boundaries for refinement parameters")
     
     return refinement_params
 

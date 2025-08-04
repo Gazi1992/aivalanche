@@ -220,6 +220,13 @@ def test_categorical_exclusion():
     print(f"  Final metric: {de.best_metric:.6e}")
     
     print("\n[PASSED] Categorical exclusion test")
+    
+    # Return detailed data for summary
+    return {
+        'excluded_params': ['category'],
+        'refinable_params': ['x', 'y'],
+        'final_metric': de.best_metric
+    }
 
 
 def test_fixed_parameters():
@@ -465,6 +472,8 @@ def test_nelder_mead_configurations():
         }
     ]
     
+    results = {'configs': {}}
+    
     for config in configs:
         print(f"\n  Testing: {config['name']}")
         
@@ -491,14 +500,110 @@ def test_nelder_mead_configurations():
             print(f"    Initial metric: {ref_info['initial_metric']:.6e}")
             print(f"    Refined metric: {ref_info['refined_metric']:.6e}")
             print(f"    Improvement: {ref_info['relative_improvement']:.2%}")
+            
+            results['configs'][config['name']] = {
+                'improved': ref_info['improved'],
+                'initial_metric': ref_info['initial_metric'],
+                'refined_metric': ref_info['refined_metric'],
+                'improvement': ref_info['relative_improvement']
+            }
     
     print("\n[PASSED] Nelder-Mead configurations test")
+    return results
+
+
+def test_adaptive_boundaries_with_refinement():
+    """Test that refinement uses adaptive boundaries when available."""
+    print("\n" + "="*80)
+    print("Test 9: Adaptive Boundaries with Refinement")
+    print("="*80)
+    
+    # Test function with optimum near boundary
+    def eval_func(parameters, **kwargs):
+        results = []
+        for idx in range(len(parameters)):
+            x = parameters['x'].iloc[idx]
+            y = parameters['y'].iloc[idx]
+            # Optimum at (4.5, 4.5) - near the upper boundary
+            metric = (x - 4.5)**2 + (y - 4.5)**2
+            results.append({'metric': metric})
+        return results
+    
+    parameters = Parameters([
+        {'name': 'x', 'type': 'continuous', 'min': -5, 'max': 5},
+        {'name': 'y', 'type': 'continuous', 'min': -5, 'max': 5}
+    ])
+    
+    print(f"\n  Original bounds: x,y in [-5, 5]")
+    print(f"  Optimum at (4.5, 4.5) - near upper boundary")
+    
+    # Run with adaptive boundaries and refinement
+    de = DifferentialEvolution(
+        seed=42,
+        eval_func=eval_func,
+        parameters=parameters,
+        pop_size=20,
+        max_iterations=30,
+        # Enable adaptive boundaries
+        adaptive_boundaries_mode='on',
+        adaptive_boundaries_config={
+            'edge_threshold': 0.1,
+            'pop_quantile': 0.5,
+            'extension': 0.2,
+            'check_period': 5
+        },
+        # Enable refinement
+        refinement_mode='on',
+        refinement_config={
+            'method': 'nelder_mead',
+            'trigger_ratio': -1,
+            'max_iterations': 50
+        }
+    )
+    
+    # Capture output to check for adaptive boundaries message
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        de.run_optimization()
+    
+    output = buffer.getvalue()
+    
+    # Check if boundaries were extended
+    x_idx = de.variable_parameters_names.index('x')
+    y_idx = de.variable_parameters_names.index('y')
+    
+    # Get actual boundaries
+    x_min_norm = de.boundaries_min[x_idx]
+    x_max_norm = de.boundaries_max[x_idx]
+    
+    # Check if boundaries were extended (normalized max should be > 1.0)
+    boundaries_extended = x_max_norm > 1.0 or de.boundaries_max[y_idx] > 1.0
+    
+    # Check if refinement used adaptive boundaries
+    used_adaptive = "[INFO] Using adaptive boundaries for refinement parameters" in output
+    
+    print(f"\n  Boundaries extended: {boundaries_extended}")
+    print(f"  Refinement used adaptive boundaries: {used_adaptive}")
+    print(f"  Final metric: {de.best_metric:.6e}")
+    
+    # Verify
+    assert boundaries_extended, "Boundaries should have been extended"
+    assert used_adaptive, "Refinement should use adaptive boundaries"
+    
+    print("\n[PASSED] Adaptive boundaries with refinement test")
+    
+    # Return data for summary
+    return {
+        'boundaries_expanded': boundaries_extended,
+        'refinement_used_adaptive': used_adaptive,
+        'final_metric': de.best_metric
+    }
 
 
 def test_config_validation():
     """Test configuration validation."""
     print("\n" + "="*80)
-    print("Test 9: Configuration Validation")
+    print("Test 10: Configuration Validation")
     print("="*80)
     
     # Test valid config
@@ -534,14 +639,186 @@ def test_config_validation():
     print("\n[PASSED] Configuration validation test")
 
 
-def run_all_tests(visualize=True, results_dir=None):
+def generate_detailed_summary(test_results, test_data, test_timing):
+    """Generate a detailed summary of test results."""
+    output = io.StringIO()
+    
+    # Header
+    output.write("\n" + "="*80 + "\n")
+    output.write("DIFFERENTIAL EVOLUTION REFINEMENT TEST SUITE\n")
+    output.write("="*80 + "\n")
+    output.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    output.write("="*80 + "\n\n")
+    
+    passed = sum(1 for r in test_results.values() if r == "PASSED")
+    total = len(test_results)
+    total_time = sum(test_timing.values()) if test_timing else 0
+    
+    # Overall summary
+    output.write(f"Overall Results: {passed}/{total} tests passed ({passed/total*100:.1f}%)\n")
+    output.write(f"Total Execution Time: {total_time:.2f} seconds\n")
+    output.write("-"*80 + "\n\n")
+    
+    # Detailed results for each test
+    output.write("DETAILED TEST RESULTS\n")
+    output.write("="*80 + "\n")
+    
+    for test_name, result in test_results.items():
+        status = "[PASS]" if result == "PASSED" else "[FAIL]"
+        output.write(f"\n{status} {test_name}\n")
+        output.write(f"  Execution Time: {test_timing.get(test_name, 0):.3f} seconds\n")
+        
+        # Add test-specific details if available
+        if test_name in test_data and test_data[test_name]:
+            data = test_data[test_name]
+            
+            if test_name == "Refinement Modes":
+                output.write("  - Tested modes: off, on (during), on (post)\n")
+                output.write("  - Purpose: Verify refinement triggers correctly based on mode and trigger_ratio\n")
+                for mode, info in data.items():
+                    mode_display = {
+                        'off': 'Mode: off (no refinement)',
+                        'on_during': 'Mode: on, trigger_ratio: 0.5 (during optimization)',
+                        'on_post': 'Mode: on, trigger_ratio: -1 (post-optimization only)'
+                    }.get(mode, mode)
+                    output.write(f"    - {mode_display}\n")
+                    output.write(f"      Final metric: {info['final_metric']:.2e}\n")
+                    output.write(f"      Refinements applied: {info['refinements']}\n")
+                    output.write(f"      Total evaluations: {info['evaluations']}\n")
+                    
+            elif test_name == "Refinement Methods":
+                output.write("  - Tested methods: Adam, DLS, Nelder-Mead\n")
+                output.write("  - Purpose: Compare effectiveness of different optimization methods for refinement\n")
+                for method, info in data.items():
+                    if info:
+                        output.write(f"    - {method.upper()}:\n")
+                        output.write(f"      Initial metric: {info['initial_metric']:.2e}\n")
+                        output.write(f"      Refined metric: {info['refined_metric']:.2e}\n")
+                        output.write(f"      Improvement: {info['improvement']:.1%}\n")
+                        output.write(f"      Iterations: {info['iterations']}\n")
+                        
+            elif test_name == "Categorical Exclusion":
+                output.write("  - Purpose: Ensure categorical parameters are excluded from gradient-based refinement\n")
+                output.write("  - Test includes: 2 continuous + 1 categorical parameter\n")
+                if 'excluded_params' in data:
+                    output.write(f"  - Excluded parameters: {data['excluded_params']}\n")
+                if 'refinable_params' in data:
+                    output.write(f"  - Refinable parameters: {data['refinable_params']}\n")
+                    
+            elif test_name == "Fixed Parameters":
+                output.write("  - Purpose: Verify fixed parameters maintain their values during refinement\n")
+                output.write("  - Test configuration: 1 variable + 1 fixed continuous parameter\n")
+                
+            elif test_name == "Multi-Scale Adaptation":
+                output.write("  - Purpose: Test automatic parameter adaptation based on problem scale\n")
+                output.write("  - Tested scales: normal (1e0), small (1e-3), micro (1e-6), nano (1e-9), pico (1e-12), extreme (1e-15)\n")
+                
+            elif test_name == "User Config Precedence":
+                output.write("  - Purpose: Ensure user-provided options override automatic adaptations\n")
+                output.write("  - Verified: User learning_rate preserved despite small-scale adaptation\n")
+                
+            elif test_name == "Trigger Ratios":
+                output.write("  - Purpose: Test different trigger_ratio values for during-optimization refinement\n")
+                output.write("  - Tested ratios: 0.2 (early), 0.5 (middle), 0.8 (late), -1 (post-only)\n")
+                
+            elif test_name == "Nelder-Mead Configurations":
+                output.write("  - Purpose: Test Nelder-Mead specific options for initial simplex\n")
+                output.write("  - Tested configurations:\n")
+                output.write("    - Corner positioning with default scale (5%)\n")
+                output.write("    - Centroid positioning with small scale (1%)\n")
+                output.write("    - Corner positioning with large scale (10%)\n")
+                if 'configs' in data:
+                    for config_name, info in data['configs'].items():
+                        output.write(f"    - {config_name}: improved={info.get('improved', False)}\n")
+                
+            elif test_name == "Adaptive Boundaries":
+                output.write("  - Purpose: Verify refinement uses expanded boundaries when DE has adaptive boundaries active\n")
+                output.write("  - Configuration: Adaptive boundaries enabled, expansion verified\n")
+                if 'boundaries_expanded' in data:
+                    output.write(f"  - Boundaries expanded: {data['boundaries_expanded']}\n")
+                if 'refinement_used_adaptive' in data:
+                    output.write(f"  - Refinement used adaptive boundaries: {data['refinement_used_adaptive']}\n")
+                    
+            elif test_name == "Config Validation":
+                output.write("  - Purpose: Test configuration validation and error handling\n")
+                output.write("  - Verified: Invalid methods and trigger_ratios are properly rejected\n")
+        
+        # Show failure details
+        if result != "PASSED":
+            output.write(f"  ERROR: {result}\n")
+    
+    # Coverage summary
+    output.write("\n" + "-"*80 + "\n")
+    output.write("Test Coverage Summary:\n")
+    output.write("-"*80 + "\n")
+    output.write("- Refinement modes (off/on with trigger_ratio)\n")
+    output.write("- All three methods (DLS/Adam/Nelder-Mead)\n")
+    output.write("- Categorical parameter exclusion\n")
+    output.write("- Fixed parameter handling\n")
+    output.write("- Multi-scale adaptation (normal to extreme scales)\n")
+    output.write("- User configuration precedence\n")
+    output.write("- Trigger ratio variations\n")
+    output.write("- Nelder-Mead specific configurations\n")
+    output.write("- Adaptive boundaries integration\n")
+    output.write("- Configuration validation\n")
+    
+    # Performance summary
+    output.write("\n" + "-"*80 + "\n")
+    output.write("Performance Summary:\n")
+    output.write("-"*80 + "\n")
+    if test_timing:
+        sorted_times = sorted(test_timing.items(), key=lambda x: x[1])
+        fastest = sorted_times[0]
+        slowest = sorted_times[-1]
+        avg_time = sum(test_timing.values()) / len(test_timing)
+        
+        output.write(f"Fastest Test: {fastest[0]} ({fastest[1]:.3f}s)\n")
+        output.write(f"Slowest Test: {slowest[0]} ({slowest[1]:.3f}s)\n")
+        output.write(f"Average Test Time: {avg_time:.3f}s\n")
+        output.write(f"Total Suite Time: {total_time:.2f}s\n")
+    
+    # Final status
+    if passed == total:
+        output.write("\n" + "="*80 + "\n")
+        output.write("[SUCCESS] All refinement tests passed!\n")
+        output.write("="*80 + "\n")
+        output.write("\nRefinement System Status: FULLY OPERATIONAL\n")
+        output.write("- All optimization methods working correctly\n")
+        output.write("- Adaptive boundaries integration verified\n")
+        output.write("- Multi-scale adaptation functioning\n")
+        output.write("- Configuration validation robust\n")
+    else:
+        output.write("\n" + "="*80 + "\n")
+        output.write(f"[WARNING] {total - passed} test(s) failed!\n")
+        output.write("="*80 + "\n")
+        failed_tests = [name for name, result in test_results.items() if result != "PASSED"]
+        output.write("\nFailed Tests:\n")
+        for test in failed_tests:
+            output.write(f"  - {test}\n")
+        output.write("\nPlease review the error messages above and fix the issues.\n")
+    
+    return output.getvalue()
+
+
+def run_all_tests(visualize=True, results_dir=None, capture_output=True):
     """Run all refinement tests with optional visualization."""
-    print("\n" + "="*80)
-    print("DIFFERENTIAL EVOLUTION REFINEMENT TEST SUITE")
-    print("="*80)
+    # Capture all output for both console and file
+    full_output = io.StringIO()
+    
+    def print_both(text=""):
+        """Print to both console and captured output"""
+        print(text)
+        full_output.write(text + "\n")
+    
+    print_both("\n" + "="*80)
+    print_both("DIFFERENTIAL EVOLUTION REFINEMENT TEST SUITE")
+    print_both("="*80)
+    print_both(f"Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print_both("="*80)
     
     test_results = {}
     test_data = {}  # Store test-specific data for visualization
+    test_timing = {}  # Store timing information
     
     # Run each test
     tests = [
@@ -553,37 +830,191 @@ def run_all_tests(visualize=True, results_dir=None):
         ("User Config Precedence", test_user_config_precedence),
         ("Trigger Ratios", test_refinement_trigger_ratio),
         ("Nelder-Mead Configurations", test_nelder_mead_configurations),
+        ("Adaptive Boundaries", test_adaptive_boundaries_with_refinement),
         ("Config Validation", test_config_validation)
     ]
     
+    total_start_time = datetime.now()
+    
     for test_name, test_func in tests:
+        test_start_time = datetime.now()
         try:
-            result = test_func()
+            # Capture stdout to get additional details
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                result = test_func()
+            
+            # Get captured output
+            output = buffer.getvalue()
+            
             test_results[test_name] = "PASSED"
             if result and isinstance(result, dict):
                 test_data[test_name] = result
+                
+            # Store timing
+            test_timing[test_name] = (datetime.now() - test_start_time).total_seconds()
+            
+            # Print test output to both console and capture
+            print(output, end='')
+            full_output.write(output)
+            
         except Exception as e:
             test_results[test_name] = f"FAILED: {str(e)}"
-            print(f"\n[FAILED] {test_name}: {e}")
+            test_timing[test_name] = (datetime.now() - test_start_time).total_seconds()
+            error_msg = f"\n[FAILED] {test_name}: {e}"
+            print(error_msg)
+            full_output.write(error_msg + "\n")
     
-    # Summary
-    print("\n" + "="*80)
-    print("TEST SUMMARY")
-    print("="*80)
+    total_time = (datetime.now() - total_start_time).total_seconds()
+    
+    # Detailed Summary
+    print_both("\n" + "="*80)
+    print_both("DETAILED TEST SUMMARY")
+    print_both("="*80)
     
     passed = sum(1 for r in test_results.values() if r == "PASSED")
     total = len(test_results)
     
+    # Print summary header
+    print_both(f"\nOverall Results: {passed}/{total} tests passed ({passed/total*100:.1f}%)")
+    print_both(f"Total Execution Time: {total_time:.2f} seconds")
+    print_both("-"*80)
+    
+    # Detailed results for each test
     for test_name, result in test_results.items():
         status = "[PASS]" if result == "PASSED" else "[FAIL]"
-        print(f"{status} {test_name}: {result}")
+        print_both(f"\n{status} {test_name}")
+        print_both(f"  Execution Time: {test_timing.get(test_name, 0):.3f} seconds")
+        
+        # Add test-specific details if available
+        if test_name in test_data and test_data[test_name]:
+            data = test_data[test_name]
+            
+            if test_name == "Refinement Modes":
+                print_both("  - Tested modes: off, on (during), on (post)")
+                print_both("  - Purpose: Verify refinement triggers correctly based on mode and trigger_ratio")
+                for mode, info in data.items():
+                    mode_display = {
+                        'off': 'Mode: off (no refinement)',
+                        'on_during': 'Mode: on, trigger_ratio: 0.5 (during optimization)',
+                        'on_post': 'Mode: on, trigger_ratio: -1 (post-optimization only)'
+                    }.get(mode, mode)
+                    print(f"    - {mode_display}")
+                    print(f"      Final metric: {info['final_metric']:.2e}")
+                    print(f"      Refinements applied: {info['refinements']}")
+                    print(f"      Total evaluations: {info['evaluations']}")
+                    
+            elif test_name == "Refinement Methods":
+                print("  - Tested methods: Adam, DLS, Nelder-Mead")
+                print("  - Purpose: Compare effectiveness of different optimization methods for refinement")
+                for method, info in data.items():
+                    if info:
+                        print(f"    - {method.upper()}:")
+                        print(f"      Initial metric: {info['initial_metric']:.2e}")
+                        print(f"      Refined metric: {info['refined_metric']:.2e}")
+                        print(f"      Improvement: {info['improvement']:.1%}")
+                        print(f"      Iterations: {info['iterations']}")
+                        
+            elif test_name == "Categorical Exclusion":
+                print("  - Purpose: Ensure categorical parameters are excluded from gradient-based refinement")
+                print("  - Test includes: 2 continuous + 1 categorical parameter")
+                if 'excluded_params' in data:
+                    print(f"  - Excluded parameters: {data['excluded_params']}")
+                if 'refinable_params' in data:
+                    print(f"  - Refinable parameters: {data['refinable_params']}")
+                    
+            elif test_name == "Fixed Parameters":
+                print("  - Purpose: Verify fixed parameters maintain their values during refinement")
+                print("  - Test configuration: 1 variable + 1 fixed continuous parameter")
+                
+            elif test_name == "Multi-Scale Adaptation":
+                print("  - Purpose: Test automatic parameter adaptation based on problem scale")
+                print("  - Tested scales: normal (1e0), small (1e-3), micro (1e-6), nano (1e-9), pico (1e-12), extreme (1e-15)")
+                if 'scale_results' in data:
+                    for scale, info in data['scale_results'].items():
+                        print(f"    - {scale}: adapted_lr={info.get('learning_rate', 'N/A'):.2e}")
+                        
+            elif test_name == "User Config Precedence":
+                print("  - Purpose: Ensure user-provided options override automatic adaptations")
+                print("  - Verified: User learning_rate preserved despite small-scale adaptation")
+                
+            elif test_name == "Trigger Ratios":
+                print("  - Purpose: Test different trigger_ratio values for during-optimization refinement")
+                print("  - Tested ratios: 0.2 (early), 0.5 (middle), 0.8 (late), -1 (post-only)")
+                
+            elif test_name == "Nelder-Mead Configurations":
+                print("  - Purpose: Test Nelder-Mead specific options for initial simplex")
+                print("  - Tested configurations:")
+                print("    - Corner positioning with default scale (5%)")
+                print("    - Centroid positioning with small scale (1%)")
+                print("    - Corner positioning with large scale (10%)")
+                if 'configs' in data:
+                    for config_name, info in data['configs'].items():
+                        print(f"    - {config_name}: improved={info.get('improved', False)}")
+                
+            elif test_name == "Adaptive Boundaries":
+                print("  - Purpose: Verify refinement uses expanded boundaries when DE has adaptive boundaries active")
+                print("  - Configuration: Adaptive boundaries enabled, expansion verified")
+                if 'boundaries_expanded' in data:
+                    print(f"  - Boundaries expanded: {data['boundaries_expanded']}")
+                if 'refinement_used_adaptive' in data:
+                    print(f"  - Refinement used adaptive boundaries: {data['refinement_used_adaptive']}")
+                    
+            elif test_name == "Config Validation":
+                print("  - Purpose: Test configuration validation and error handling")
+                print("  - Verified: Invalid methods and trigger_ratios are properly rejected")
+        
+        # Show failure details
+        if result != "PASSED":
+            print(f"  ERROR: {result}")
     
-    print(f"\nTotal: {passed}/{total} tests passed")
+    print("\n" + "-"*80)
+    print("Test Coverage Summary:")
+    print("-"*80)
+    print("- Refinement modes (off/on with trigger_ratio)")
+    print("- All three methods (DLS/Adam/Nelder-Mead)")  
+    print("- Categorical parameter exclusion")
+    print("- Fixed parameter handling")
+    print("- Multi-scale adaptation (normal to extreme scales)")
+    print("- User configuration precedence")
+    print("- Trigger ratio variations")
+    print("- Nelder-Mead specific configurations")
+    print("- Adaptive boundaries integration")
+    print("- Configuration validation")
+    
+    print("\n" + "-"*80)
+    print("Performance Summary:")
+    print("-"*80)
+    # Find slowest and fastest tests
+    if test_timing:
+        sorted_times = sorted(test_timing.items(), key=lambda x: x[1])
+        fastest = sorted_times[0]
+        slowest = sorted_times[-1]
+        avg_time = sum(test_timing.values()) / len(test_timing)
+        
+        print(f"Fastest Test: {fastest[0]} ({fastest[1]:.3f}s)")
+        print(f"Slowest Test: {slowest[0]} ({slowest[1]:.3f}s)")
+        print(f"Average Test Time: {avg_time:.3f}s")
+        print(f"Total Suite Time: {total_time:.2f}s")
     
     if passed == total:
-        print("\n[SUCCESS] All refinement tests passed!")
+        print("\n" + "="*80)
+        print("[SUCCESS] All refinement tests passed!")
+        print("="*80)
+        print("\nRefinement System Status: FULLY OPERATIONAL")
+        print("- All optimization methods working correctly")
+        print("- Adaptive boundaries integration verified")
+        print("- Multi-scale adaptation functioning")
+        print("- Configuration validation robust")
     else:
-        print("\n[WARNING] Some tests failed!")
+        print("\n" + "="*80) 
+        print(f"[WARNING] {total - passed} test(s) failed!")
+        print("="*80)
+        failed_tests = [name for name, result in test_results.items() if result != "PASSED"]
+        print("\nFailed Tests:")
+        for test in failed_tests:
+            print(f"  - {test}")
+        print("\nPlease review the error messages above and fix the issues.")
     
     # Create visualizations if requested
     if visualize and results_dir:
@@ -609,7 +1040,8 @@ def run_all_tests(visualize=True, results_dir=None):
         
         print(f"Visualizations saved to: {results_dir}")
     
-    return test_results
+    # Return all data needed for detailed summary
+    return test_results, test_data, test_timing
 
 
 def visualize_refinement_modes(results, save_path=None):
@@ -851,7 +1283,7 @@ def create_summary_visualization(all_results, save_path=None):
     # 3. Feature coverage
     ax3 = fig.add_subplot(gs[1, :])
     features = ['Modes', 'Methods', 'Categorical', 'Fixed Params', 
-                'Multi-Scale', 'User Config', 'Triggers', 'NM Config', 'Validation']
+                'Multi-Scale', 'User Config', 'Triggers', 'NM Config', 'Adaptive', 'Validation']
     coverage = [test_status[i] for i in range(min(len(features), len(test_status)))]
     bars = ax3.bar(features, coverage, color=['green' if c else 'red' for c in coverage])
     ax3.set_ylim(0, 1.2)
@@ -897,25 +1329,14 @@ if __name__ == "__main__":
     os.makedirs(results_dir, exist_ok=True)
     
     # Run tests with visualization
-    results = run_all_tests(visualize=True, results_dir=results_dir)
+    test_results, test_data, test_timing = run_all_tests(visualize=True, results_dir=results_dir)
     
-    # Save results
+    # Get the detailed summary output
+    summary_output = generate_detailed_summary(test_results, test_data, test_timing)
+    
+    # Save results with detailed summary
     with open(os.path.join(results_dir, 'test_results.txt'), 'w') as f:
-        f.write("Refinement Test Results\n")
-        f.write("=" * 50 + "\n")
-        f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write("=" * 50 + "\n\n")
-        
-        # Summary
-        passed = sum(1 for r in results.values() if r == "PASSED")
-        total = len(results)
-        f.write(f"Summary: {passed}/{total} tests passed ({passed/total*100:.1f}%)\n\n")
-        
-        # Individual results
-        f.write("Individual Test Results:\n")
-        f.write("-" * 30 + "\n")
-        for test_name, result in results.items():
-            status = "PASS" if result == "PASSED" else "FAIL"
-            f.write(f"[{status}] {test_name}: {result}\n")
+        # Write the complete captured output including all test details
+        f.write(summary_output)
     
     print(f"\nResults and visualizations saved to: {results_dir}")

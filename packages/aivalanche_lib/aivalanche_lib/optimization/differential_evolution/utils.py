@@ -128,6 +128,34 @@ def _get_history_as_df(de_instance, which='trials'):
     return df, df_normed
 
 
+def _get_current_denormalized_boundaries(de_instance):
+    """
+    Get the current denormalized boundary values for all variable parameters.
+    
+    Args:
+        de_instance: Instance of DifferentialEvolution
+        
+    Returns:
+        tuple: (denorm_mins, denorm_maxs) - dictionaries mapping parameter names to denormalized bounds
+    """
+    if not hasattr(de_instance, 'boundaries_min') or not hasattr(de_instance, 'boundaries_max'):
+        return None, None
+    
+    # Create DataFrames with current normalized boundaries
+    current_mins_df = pd.DataFrame([de_instance.boundaries_min], columns=de_instance.variable_parameters_names)
+    current_maxs_df = pd.DataFrame([de_instance.boundaries_max], columns=de_instance.variable_parameters_names)
+    
+    # Denormalize
+    denorm_mins_df = de_instance.parameters.unnorm_all(current_mins_df)
+    denorm_maxs_df = de_instance.parameters.unnorm_all(current_maxs_df)
+    
+    # Convert to dictionaries
+    denorm_mins = denorm_mins_df.iloc[0].to_dict()
+    denorm_maxs = denorm_maxs_df.iloc[0].to_dict()
+    
+    return denorm_mins, denorm_maxs
+
+
 def _get_all_denormalized_boundaries(de_instance):
     """
     Get the denormalized boundary values for all iterations in history using vectorized operations.
