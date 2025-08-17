@@ -320,6 +320,30 @@ function App() {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
+  const handleConfigUpdateFromChat = (newConfig) => {
+    // Validate the config has required structure
+    if (!newConfig || typeof newConfig !== 'object') {
+      console.error('Invalid config received from chat');
+      return;
+    }
+
+    // Ensure config has required properties with defaults
+    const validConfig = {
+      ...newConfig,
+      figures: newConfig.figures || [],
+      grid_layout: newConfig.grid_layout || { rows: 1, cols: 1 }
+    };
+
+    // Update the config and local figures
+    setConfig(validConfig);
+    setLocalFigures(validConfig.figures);
+    
+    // Apply theme if specified in config
+    if (validConfig.theme) {
+      setTheme(validConfig.theme);
+    }
+  };
+
   const restoreSidebar = () => {
     const computedStyle = getComputedStyle(document.documentElement);
     const expandedWidth = parseInt(computedStyle.getPropertyValue('--sidebar-width-expanded')) || 500;
@@ -403,6 +427,8 @@ function App() {
           sidebarHidden={sidebarHidden}
           onDragStart={handleMouseDown}
           appTitle="Loading…"
+          currentConfig={config}
+          onConfigUpdate={handleConfigUpdateFromChat}
         />
         
         {sidebarHidden && (
@@ -540,6 +566,8 @@ function App() {
         sidebarHidden={sidebarHidden}
         onDragStart={handleMouseDown}
         appTitle={appTitle}
+        currentConfig={config}
+        onConfigUpdate={handleConfigUpdateFromChat}
       />
 
       {sidebarHidden && (

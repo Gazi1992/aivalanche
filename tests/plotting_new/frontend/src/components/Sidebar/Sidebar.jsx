@@ -11,7 +11,9 @@ const Sidebar = ({
   sidebarExpanded,
   sidebarHidden,
   onDragStart,
-  appTitle
+  appTitle,
+  currentConfig,
+  onConfigUpdate
 }) => {
   const sidebarRef = useRef(null);
 
@@ -32,7 +34,11 @@ const Sidebar = ({
       </div>
 
       <div className="sidebar-content">
-        <ChatInterface expanded={sidebarExpanded} />
+        <ChatInterface 
+          expanded={sidebarExpanded} 
+          currentConfig={currentConfig}
+          onConfigUpdate={onConfigUpdate}
+        />
       </div>
 
       <div 

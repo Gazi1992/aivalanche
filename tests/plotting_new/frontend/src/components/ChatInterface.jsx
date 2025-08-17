@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import { ChatAssistantIcon, UserIcon } from './icons';
 
-const ChatInterface = ({ expanded }) => {
+const ChatInterface = ({ expanded, currentConfig, onConfigUpdate }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hello! I'm your data visualization assistant. I can help you understand your plots, suggest improvements, or answer questions about your data. How can I help you today?",
+      text: "Hello! I'm your AI visualization assistant powered by Gemini. I can help you:\n• Create new plot configurations from your descriptions\n• Modify existing plots\n• Explain data patterns\n• Suggest improvements\n\nTry asking me to 'create a line chart' or 'change the theme to dark'!",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -14,20 +15,6 @@ const ChatInterface = ({ expanded }) => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-
-  // Mock responses for testing
-  const mockResponses = [
-    "That's an interesting question! Based on your data visualization, I can see several patterns that might be worth exploring further.",
-    "Great observation! The trends in your plots suggest there might be seasonal variations in your data. Have you considered adding time-based filtering?",
-    "I notice your scatter plot shows some clustering. This could indicate distinct groups in your data that might benefit from separate analysis.",
-    "Your bar chart shows clear leaders in the data. Would you like me to help you highlight the top performers or add annotations?",
-    "That's a thoughtful question about data interpretation. The correlation you're seeing might be influenced by external factors not shown in the current visualization.",
-    "I can help you improve the readability of your plots. Consider adjusting the color palette or adding grid lines for better visual clarity.",
-    "Your histogram reveals an interesting distribution. The skewness suggests you might want to consider logarithmic scaling or data transformation.",
-    "Based on the patterns I see, you might want to add error bars or confidence intervals to better represent data uncertainty.",
-    "That's a great point about data storytelling. Adding annotations or callout boxes could help highlight key insights for your audience.",
-    "I see potential for interactive features in your visualization. Hover tooltips or clickable legends could enhance user engagement."
-  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -38,9 +25,10 @@ const ChatInterface = ({ expanded }) => {
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
+    const userText = inputText.trim();
     const userMessage = {
       id: Date.now(),
-      text: inputText.trim(),
+      text: userText,
       sender: 'user',
       timestamp: new Date()
     };
@@ -54,18 +42,45 @@ const ChatInterface = ({ expanded }) => {
       inputRef.current.style.height = 'auto';
     }
 
-    // Simulate typing delay
-    setTimeout(() => {
-      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+    try {
+      // Use the unified chat endpoint
+      const response = await axios.post('http://localhost:8000/api/chat', {
+        message: userText,
+        current_config: currentConfig
+      });
+
+      const responseData = response.data;
+
+      // Handle different response types
+      if (responseData.type === 'config_new' || responseData.type === 'config_update') {
+        // Update the visualization with new/updated config
+        if (onConfigUpdate && responseData.config) {
+          onConfigUpdate(responseData.config);
+        }
+      }
+
+      // Display the message from the AI
       const botMessage = {
         id: Date.now() + 1,
-        text: randomResponse,
+        text: responseData.message || 'I processed your request.',
         sender: 'bot',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
+
+    } catch (error) {
+      console.error('Error calling chat API:', error);
+      
+      const errorMessage = {
+        id: Date.now() + 1,
+        text: `I encountered an issue processing your request. Please try again or check that the backend server is running.`,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+    }
   };
 
   const handleKeyPress = (e) => {

@@ -6,7 +6,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 # Third-party
 from fastapi import FastAPI, HTTPException
@@ -60,9 +60,17 @@ from backend.core.gemini_service import GeminiService
 # Directory is taken from data_handler when imported
 from backend.core.data_handler import DATA_DIR
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
 # Initialize Gemini service
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyAx2VSqOPHuVNZFKGO89VDcI1PSZYStPew")
-gemini_service = GeminiService(GEMINI_API_KEY)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    logging.warning("GEMINI_API_KEY not found in environment variables. AI features will be disabled.")
+    gemini_service = None
+else:
+    gemini_service = GeminiService(GEMINI_API_KEY)
 
 
 # ----------------------------------------------------------------------------
@@ -353,12 +361,34 @@ def dashboard(config_name: str):
 # Gemini AI Endpoints
 # ---------------------------------------------------------------------------
 
+class ChatRequest(BaseModel):
+    message: str
+    current_config: Optional[dict] = None
+
 class GenerateConfigRequest(BaseModel):
     prompt: str
 
 class ImproveConfigRequest(BaseModel):
     current_config: dict
     improvement_request: str
+
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
+    """Handle chat messages with Gemini AI"""
+    if not gemini_service:
+        return {
+            "type": "error",
+            "message": "AI service is not configured. Please set GEMINI_API_KEY environment variable."
+        }
+    try:
+        response = gemini_service.chat_response(request.message, request.current_config)
+        return response
+    except Exception as e:
+        logging.error(f"Error in chat endpoint: {e}")
+        return {
+            "type": "error",
+            "message": f"Sorry, I encountered an error: {str(e)}"
+        }
 
 @app.post("/api/generate-config")
 async def generate_config(request: GenerateConfigRequest):

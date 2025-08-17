@@ -12,3 +12,12 @@ node_modules/
 **/.claude/
 **/.vscode/
 **/nul
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Test files
+**/test_*.py
+!**/test_*.py.example
