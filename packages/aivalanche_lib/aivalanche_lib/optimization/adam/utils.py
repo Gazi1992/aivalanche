@@ -132,23 +132,84 @@ def _estimate_gradient(optimizer):
     """
     Estimate the gradient at the current point.
     
+    This function first checks if gradients were provided in the eval_func response.
+    If not, it falls back to numerical estimation methods.
+    
     Args:
         optimizer: The Adam optimizer instance
     
     Returns:
         numpy array: Estimated gradient in normalized space
     """
+    # Check if gradients were provided in the response
+    if hasattr(optimizer, 'current_response') and optimizer.current_response is not None:
+        if 'gradients' in optimizer.current_response:
+            return _extract_provided_gradients(optimizer)
+    
+    # Check if gradient_method is 'provided' but no gradients were found
+    if optimizer.gradient_method == 'provided':
+        raise ValueError("gradient_method='provided' but no gradients found in eval_func response. "
+                        "Expected response format: {'metric': value, 'gradients': {'param1': grad1, ...}}")
+    
+    # Fall back to numerical estimation
     if optimizer.gradient_method == 'finite_difference':
         return _finite_difference_gradient(optimizer)
+    elif optimizer.gradient_method == 'central_difference':
+        return _central_difference_gradient(optimizer)
     elif optimizer.gradient_method == 'simultaneous_perturbation':
         return _simultaneous_perturbation_gradient(optimizer)
     else:
         raise ValueError(f"Unknown gradient method: {optimizer.gradient_method}")
 
 
+def _extract_provided_gradients(optimizer):
+    """
+    Extract gradients that were provided in the eval_func response.
+    
+    The gradients are expected to be in the denormalized parameter space,
+    so they need to be transformed to the normalized space used internally.
+    
+    Args:
+        optimizer: The Adam optimizer instance
+    
+    Returns:
+        numpy array: Gradient in normalized space
+    """
+    provided_grads = optimizer.current_response['gradients']
+    
+    # Check that all variable parameters have gradients
+    for param_name in optimizer.variable_parameters_names:
+        if param_name not in provided_grads:
+            if optimizer.gradient_method == 'provided':
+                raise ValueError(f"Gradient for parameter '{param_name}' not provided")
+            else:
+                # Will need to estimate this gradient separately
+                # For now, raise an error - full mixed mode would require more refactoring
+                raise ValueError(f"Gradient for parameter '{param_name}' not provided. "
+                               f"All gradients must be provided when using provided gradients.")
+    
+    # Get current parameter values in denormalized space
+    current_denorm = optimizer.current_parameters
+    
+    # Use Parameters class to properly transform gradients to normalized space
+    # This handles all the complexity of different scales (log, symlog, etc.)
+    norm_grads = optimizer.parameters.norm_gradients(provided_grads, current_denorm)
+    
+    # Convert to numpy array in the correct order
+    gradient = np.zeros(optimizer.nr_variable_parameters)
+    for i, param_name in enumerate(optimizer.variable_parameters_names):
+        gradient[i] = norm_grads[param_name]
+    
+    return gradient
+
+
 def _finite_difference_gradient(optimizer):
     """
-    Estimate gradient using finite differences.
+    Estimate gradient using finite differences with batch evaluation.
+    
+    This implementation creates all perturbed points at once and evaluates
+    them in a single batch call to eval_func, which is much more efficient
+    than the previous loop-based approach.
     
     Args:
         optimizer: The Adam optimizer instance
@@ -160,7 +221,10 @@ def _finite_difference_gradient(optimizer):
     base_point = optimizer.current_point.copy()
     base_metric = optimizer.current_metric
     
-    # For each parameter, estimate partial derivative
+    # Create all perturbed points at once
+    perturbed_points = []
+    step_sizes = []
+    
     for i in range(optimizer.nr_variable_parameters):
         # Determine step size
         if optimizer.gradient_step_size_relative:
@@ -170,30 +234,125 @@ def _finite_difference_gradient(optimizer):
             # Absolute step size
             step = optimizer.gradient_step_size
         
+        step_sizes.append(step)
+        
         # Forward difference
         perturbed_point = base_point.copy()
         perturbed_point[i] += step
         
         # Apply boundary constraints
         perturbed_point = optimizer._apply_boundary_constraints(perturbed_point)
-        
-        # Evaluate perturbed point
-        params_df = pd.DataFrame([perturbed_point], columns=optimizer.variable_parameters_names)
+        perturbed_points.append(perturbed_point)
+    
+    # Batch evaluate all perturbed points at once
+    if len(perturbed_points) > 0:
+        params_df = pd.DataFrame(perturbed_points, columns=optimizer.variable_parameters_names)
         denorm_params = optimizer.parameters.unnorm_all(params_df)
         
+        # Single batch call to eval_func
         responses = optimizer.eval_func(denorm_params, **optimizer.eval_func_args)
-        optimizer.nr_evaluations += 1
-        perturbed_metric = responses[0]['metric']
+        optimizer.nr_evaluations += len(perturbed_points)
         
-        # Compute partial derivative
-        gradient[i] = (perturbed_metric - base_metric) / step
+        # Extract gradients from responses
+        for i in range(optimizer.nr_variable_parameters):
+            perturbed_metric = responses[i]['metric']
+            
+            # Add penalty if using penalty boundary handling
+            if optimizer.boundary_handling == 'penalty':
+                violations = np.maximum(0, -perturbed_points[i]) + np.maximum(0, perturbed_points[i] - 1)
+                penalty = 1000 * np.sum(violations**2)
+                perturbed_metric += penalty
+            
+            gradient[i] = (perturbed_metric - base_metric) / step_sizes[i]
+    
+    return gradient
+
+
+def _central_difference_gradient(optimizer):
+    """
+    Estimate gradient using central differences with batch evaluation.
+    
+    Central differences is more accurate than forward differences as it uses
+    both forward and backward perturbations: f'(x) ≈ [f(x+h) - f(x-h)] / (2h)
+    
+    This implementation evaluates all perturbed points in a single batch call.
+    
+    Args:
+        optimizer: The Adam optimizer instance
+    
+    Returns:
+        numpy array: Gradient estimate
+    """
+    gradient = np.zeros(optimizer.nr_variable_parameters)
+    base_point = optimizer.current_point.copy()
+    
+    # Create all perturbed points at once (both forward and backward)
+    perturbed_points = []
+    step_sizes = []
+    
+    for i in range(optimizer.nr_variable_parameters):
+        # Determine step size
+        if optimizer.gradient_step_size_relative:
+            # Relative step size
+            step = optimizer.gradient_step_size * max(abs(base_point[i]), 0.1)
+        else:
+            # Absolute step size
+            step = optimizer.gradient_step_size
+        
+        step_sizes.append(step)
+        
+        # Forward perturbation
+        point_forward = base_point.copy()
+        point_forward[i] += step
+        point_forward = optimizer._apply_boundary_constraints(point_forward)
+        
+        # Backward perturbation
+        point_backward = base_point.copy()
+        point_backward[i] -= step
+        point_backward = optimizer._apply_boundary_constraints(point_backward)
+        
+        # Add both to the batch
+        perturbed_points.append(point_forward)
+        perturbed_points.append(point_backward)
+    
+    # Batch evaluate all perturbed points at once
+    if len(perturbed_points) > 0:
+        params_df = pd.DataFrame(perturbed_points, columns=optimizer.variable_parameters_names)
+        denorm_params = optimizer.parameters.unnorm_all(params_df)
+        
+        # Single batch call to eval_func for all perturbations
+        responses = optimizer.eval_func(denorm_params, **optimizer.eval_func_args)
+        optimizer.nr_evaluations += len(perturbed_points)
+        
+        # Extract gradients from responses (pairs of forward/backward)
+        for i in range(optimizer.nr_variable_parameters):
+            metric_forward = responses[2*i]['metric']
+            metric_backward = responses[2*i + 1]['metric']
+            
+            # Add penalties if using penalty boundary handling
+            if optimizer.boundary_handling == 'penalty':
+                # Forward point penalty
+                violations_forward = np.maximum(0, -perturbed_points[2*i]) + np.maximum(0, perturbed_points[2*i] - 1)
+                penalty_forward = 1000 * np.sum(violations_forward**2)
+                metric_forward += penalty_forward
+                
+                # Backward point penalty
+                violations_backward = np.maximum(0, -perturbed_points[2*i + 1]) + np.maximum(0, perturbed_points[2*i + 1] - 1)
+                penalty_backward = 1000 * np.sum(violations_backward**2)
+                metric_backward += penalty_backward
+            
+            # Central difference formula
+            gradient[i] = (metric_forward - metric_backward) / (2 * step_sizes[i])
     
     return gradient
 
 
 def _simultaneous_perturbation_gradient(optimizer):
     """
-    Estimate gradient using simultaneous perturbation (SPSA-like).
+    Estimate gradient using simultaneous perturbation (SPSA-like) with batch evaluation.
+    
+    This method evaluates both positive and negative perturbations in a single
+    batch call to eval_func, reducing the number of function calls from 2 to 1.
     
     Args:
         optimizer: The Adam optimizer instance
@@ -220,19 +379,29 @@ def _simultaneous_perturbation_gradient(optimizer):
     point_plus = optimizer._apply_boundary_constraints(point_plus)
     point_minus = optimizer._apply_boundary_constraints(point_minus)
     
-    # Evaluate positive perturbation
-    params_df_plus = pd.DataFrame([point_plus], columns=optimizer.variable_parameters_names)
-    denorm_params_plus = optimizer.parameters.unnorm_all(params_df_plus)
-    responses_plus = optimizer.eval_func(denorm_params_plus, **optimizer.eval_func_args)
-    optimizer.nr_evaluations += 1
-    metric_plus = responses_plus[0]['metric']
+    # Batch evaluate both perturbations at once
+    perturbed_points = [point_plus, point_minus]
+    params_df = pd.DataFrame(perturbed_points, columns=optimizer.variable_parameters_names)
+    denorm_params = optimizer.parameters.unnorm_all(params_df)
     
-    # Evaluate negative perturbation
-    params_df_minus = pd.DataFrame([point_minus], columns=optimizer.variable_parameters_names)
-    denorm_params_minus = optimizer.parameters.unnorm_all(params_df_minus)
-    responses_minus = optimizer.eval_func(denorm_params_minus, **optimizer.eval_func_args)
-    optimizer.nr_evaluations += 1
-    metric_minus = responses_minus[0]['metric']
+    # Single batch call to eval_func for both perturbations
+    responses = optimizer.eval_func(denorm_params, **optimizer.eval_func_args)
+    optimizer.nr_evaluations += 2
+    
+    metric_plus = responses[0]['metric']
+    metric_minus = responses[1]['metric']
+    
+    # Add penalties if using penalty boundary handling
+    if optimizer.boundary_handling == 'penalty':
+        # Plus point penalty
+        violations_plus = np.maximum(0, -point_plus) + np.maximum(0, point_plus - 1)
+        penalty_plus = 1000 * np.sum(violations_plus**2)
+        metric_plus += penalty_plus
+        
+        # Minus point penalty
+        violations_minus = np.maximum(0, -point_minus) + np.maximum(0, point_minus - 1)
+        penalty_minus = 1000 * np.sum(violations_minus**2)
+        metric_minus += penalty_minus
     
     # Compute gradient estimate
     gradient = (metric_plus - metric_minus) / (2 * steps) * delta

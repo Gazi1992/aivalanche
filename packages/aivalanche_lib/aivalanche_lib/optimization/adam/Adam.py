@@ -39,6 +39,13 @@ class Adam:
     
     This implementation provides the ADAM optimization algorithm with support
     for the Parameters class for parameter handling and gradient estimation.
+    
+    Supports three gradient methods:
+    1. Numerical estimation via finite differences or simultaneous perturbation
+    2. Provided gradients from eval_func (for automatic differentiation, analytical gradients, etc.)
+    
+    When using provided gradients, the eval_func should return:
+    [{'metric': value, 'gradients': {'param1': grad1, 'param2': grad2, ...}}]
     """
     
     def __init__(self,
@@ -74,7 +81,7 @@ class Adam:
                  learning_rate_decay: Optional[float] = None,
                  amsgrad: bool = False,
                  
-                 boundary_handling: str = 'clip',
+                 boundary_handling: str = None,
                  
                  results_dir: Optional[str] = None):
         """
@@ -96,14 +103,19 @@ class Adam:
             beta1: Exponential decay rate for first moment estimates
             beta2: Exponential decay rate for second moment estimates
             epsilon: Small value to prevent division by zero
-            gradient_method: Method for gradient estimation ('finite_difference' or 'simultaneous_perturbation')
+            gradient_method: Method for gradient estimation:
+                - 'finite_difference': Forward differences with batch evaluation (O(1) batch call)
+                - 'central_difference': Central differences with batch evaluation (more accurate, O(1) batch call)
+                - 'simultaneous_perturbation': SPSA-like method (fastest but noisy, O(1) batch call)
+                - 'provided': Use gradients provided by eval_func in response['gradients']
+                - Note: All numerical methods now use batch evaluation for efficiency
             gradient_step_size: Step size for gradient estimation
             gradient_step_size_relative: Whether step size is relative to parameter value
             initial_point: Initial point (DataFrame or path to CSV)
             use_defaults_in_initial_point: Whether to use default parameter values
             learning_rate_decay: Optional learning rate decay factor per iteration
             amsgrad: Whether to use AMSGrad variant
-            boundary_handling: How to handle parameter boundaries ('clip', 'reflect', or 'none')
+            boundary_handling: How to handle parameter boundaries ('clip', 'reflect', 'penalty', 'none', or None). Default is None (no boundary handling)
             results_dir: Directory to save results
         """
         # Set random seed
@@ -141,11 +153,12 @@ class Adam:
         self.gradient_step_size_relative = gradient_step_size_relative
         
         # Boundary handling
-        valid_boundary_methods = ['clip', 'reflect', 'none']
+        valid_boundary_methods = ['clip', 'reflect', 'penalty', 'none', None]
         if boundary_handling not in valid_boundary_methods:
             raise ValueError(f"Invalid boundary_handling: '{boundary_handling}'. "
-                           f"Must be one of: {', '.join(valid_boundary_methods)}")
-        self.boundary_handling = boundary_handling
+                           f"Must be one of: 'clip', 'reflect', 'penalty', 'none', or None")
+        # Normalize None to 'none' for consistency
+        self.boundary_handling = 'none' if boundary_handling is None else boundary_handling
         
         # Stopping criteria
         self.max_iterations = int(max_iterations)
@@ -309,8 +322,8 @@ class Adam:
             self.current_point = np.array(variable_values)
             
         else:
-            # Use center of normalized space
-            self.current_point = np.full(self.nr_variable_parameters, 0.5)
+            # Use random point in normalized space
+            self.current_point = self.rng.uniform(0, 1, self.nr_variable_parameters)
     
     def _apply_boundary_constraints(self, point):
         """Apply boundary constraints to a point in normalized space."""
@@ -327,6 +340,9 @@ class Adam:
             reflected[mask_high] = 2 - reflected[mask_high]
             # Ensure still within bounds after reflection
             return np.clip(reflected, 0, 1)
+        elif self.boundary_handling == 'penalty':
+            # Return as-is, penalty will be added during evaluation
+            return point
         else:  # 'none'
             return point
     
@@ -416,13 +432,20 @@ class Adam:
         params_df = pd.DataFrame([self.current_point], columns=self.variable_parameters_names)
         denorm_params = self.parameters.unnorm_all(params_df)
         
+        # Calculate penalty for boundary violations if using penalty method
+        penalty = 0
+        if self.boundary_handling == 'penalty':
+            # Quadratic penalty for violations (in normalized space)
+            violations = np.maximum(0, -self.current_point) + np.maximum(0, self.current_point - 1)
+            penalty = 1000 * np.sum(violations**2)
+        
         # Evaluate
         responses = self.eval_func(denorm_params, **self.eval_func_args)
         self.nr_evaluations += 1
         
-        # Extract metric
+        # Extract metric and add penalty
         self.current_response = responses[0]
-        self.current_metric = self.current_response['metric']
+        self.current_metric = self.current_response['metric'] + penalty
     
     def _update_best_if_better(self):
         """Update best solution if current is better."""
@@ -460,7 +483,7 @@ class Adam:
         elif self.iter > self.max_iterations:
             self.is_stop_criteria_reached = True
             self.stop_reason = "maximum number of iterations reached"
-        elif self.gradient_norm < self.gradient_tolerance:
+        elif self.gradient_tolerance is not None and self.gradient_norm < self.gradient_tolerance:
             self.is_stop_criteria_reached = True
             self.stop_reason = "gradient tolerance reached"
         else:

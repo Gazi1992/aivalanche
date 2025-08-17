@@ -42,6 +42,14 @@ class DampedLeastSquares:
     This implementation provides the DLS/LM algorithm with support for the Parameters 
     class for parameter handling. It's particularly effective for problems where the
     objective can be expressed as a sum of squared residuals.
+    
+    Supports two gradient provision methods:
+    1. Numerical estimation via batch finite differences (all perturbations in one call)
+    2. Provided gradients/Jacobian from eval_func (for automatic differentiation, analytical gradients)
+    
+    When using provided gradients:
+    - For scalar problems: eval_func should return {'metric': value, 'gradients': {'param1': grad1, ...}}
+    - For vector problems: eval_func should return {'residuals': [...], 'jacobian': [[...], ...]}
     """
     
     def __init__(self,
@@ -81,7 +89,7 @@ class DampedLeastSquares:
                  
                  use_qr_decomposition: bool = True,
                  
-                 boundary_handling: str = 'reflect',
+                 boundary_handling: str = None,
                  
                  results_dir: Optional[str] = None):
         """
@@ -105,7 +113,13 @@ class DampedLeastSquares:
             damping_decrease_factor: Factor to decrease damping when step is accepted
             min_damping: Minimum allowed damping value
             max_damping: Maximum allowed damping value
-            jacobian_method: Method for Jacobian estimation ('finite_difference', 'complex_step', 'automatic')
+            jacobian_method: Method for Jacobian estimation:
+                - 'finite_difference': Forward differences with batch evaluation (O(1) batch call)
+                - 'central_difference': Central differences with batch evaluation (more accurate, O(1) batch call)
+                - 'provided': Use gradients/Jacobian provided by eval_func
+                - 'complex_step': Complex step differentiation (not yet implemented)
+                - 'automatic': Automatic differentiation (not yet implemented)
+                Note: All numerical methods now use batch evaluation for efficiency
             jacobian_step_size: Step size for Jacobian estimation
             jacobian_step_size_relative: Whether step size is relative to parameter value
             initial_point: Initial parameter values (DataFrame, path to CSV, or 'default')
@@ -113,7 +127,7 @@ class DampedLeastSquares:
             residual_type: 'scalar' for single objective, 'vector' for multi-objective
             trust_region_radius: Optional trust region constraint on step size
             use_qr_decomposition: Use QR decomposition for numerical stability
-            boundary_handling: How to handle boundary constraints ('reflect', 'clip', 'penalty')
+            boundary_handling: How to handle boundary constraints ('reflect', 'clip', 'penalty', 'none', or None). Default is None (no boundary handling)
             results_dir: Directory to save results
         """
         # Set random seed
@@ -167,11 +181,12 @@ class DampedLeastSquares:
         self.use_qr_decomposition = use_qr_decomposition
         
         # Boundary handling
-        valid_boundary_methods = ['reflect', 'clip', 'penalty']
+        valid_boundary_methods = ['reflect', 'clip', 'penalty', 'none', None]
         if boundary_handling not in valid_boundary_methods:
             raise ValueError(f"Invalid boundary_handling: '{boundary_handling}'. "
-                           f"Must be one of: {', '.join(valid_boundary_methods)}")
-        self.boundary_handling = boundary_handling
+                           f"Must be one of: 'reflect', 'clip', 'penalty', 'none', or None")
+        # Normalize None to 'none' for consistency
+        self.boundary_handling = 'none' if boundary_handling is None else boundary_handling
         
         # Results directory
         self.results_dir = results_dir
@@ -485,7 +500,8 @@ class DampedLeastSquares:
         elif self.boundary_handling == 'penalty':
             # Return as-is, penalty will be added in evaluation
             return point
-        else:
+        else:  # 'none'
+            # No boundary handling - allow parameters to go outside [0, 1]
             return point
     
     def _evaluate_current_point(self):
@@ -524,6 +540,9 @@ class DampedLeastSquares:
         }
         
         response = self.eval_func(parameters=params_df, **extra_arguments)
+        
+        # Store response for gradient extraction if provided
+        self.current_response = response
         
         # Extract metric and residuals based on response type
         if isinstance(response, list) and len(response) > 0:
