@@ -50,6 +50,7 @@ from backend.api.schemas import (
 
 # Local modules
 from backend.core.data_handler import load_dataset, available_datasets
+from backend.core.gemini_service import GeminiService
 
 
 # ----------------------------------------------------------------------------
@@ -58,6 +59,10 @@ from backend.core.data_handler import load_dataset, available_datasets
 
 # Directory is taken from data_handler when imported
 from backend.core.data_handler import DATA_DIR
+
+# Initialize Gemini service
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyAx2VSqOPHuVNZFKGO89VDcI1PSZYStPew")
+gemini_service = GeminiService(GEMINI_API_KEY)
 
 
 # ----------------------------------------------------------------------------
@@ -342,6 +347,42 @@ def dashboard(config_name: str):
     logging.getLogger(__name__).debug("Dashboard response size=%d bytes", len(json.dumps(dashboard_json)))
     logging.getLogger(__name__).debug("Dashboard snippet: %s", json.dumps(dashboard_json)[:500])
     return JSONResponse(content=dashboard_json, media_type="application/json; charset=utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Gemini AI Endpoints
+# ---------------------------------------------------------------------------
+
+class GenerateConfigRequest(BaseModel):
+    prompt: str
+
+class ImproveConfigRequest(BaseModel):
+    current_config: dict
+    improvement_request: str
+
+@app.post("/api/generate-config")
+async def generate_config(request: GenerateConfigRequest):
+    """Generate a visualization configuration using Gemini AI"""
+    try:
+        config = gemini_service.generate_plot_config(request.prompt)
+        if config is None:
+            raise HTTPException(status_code=500, detail="Failed to generate configuration")
+        return {"success": True, "config": config}
+    except Exception as e:
+        logging.error(f"Error in generate_config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/improve-config")
+async def improve_config(request: ImproveConfigRequest):
+    """Improve an existing configuration using Gemini AI"""
+    try:
+        config = gemini_service.improve_config(request.current_config, request.improvement_request)
+        if config is None:
+            raise HTTPException(status_code=500, detail="Failed to improve configuration")
+        return {"success": True, "config": config}
+    except Exception as e:
+        logging.error(f"Error in improve_config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ---------------------------------------------------------------------------

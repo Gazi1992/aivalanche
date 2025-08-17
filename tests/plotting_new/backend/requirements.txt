@@ -4,4 +4,5 @@ pandas
 plotly
 pydantic
 numpy
-scipy 
+scipy
+google-generativeai 
