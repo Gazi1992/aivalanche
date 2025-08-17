@@ -37,7 +37,7 @@ _METHOD_DEFAULTS = {
         'jacobian_step_size': 1e-8,
         'residual_type': 'scalar',
         'use_qr_decomposition': True,
-        'boundary_handling': 'reflect'
+        'boundary_handling': None
     },
     'adam': {
         # Adam-specific defaults - tuned for refinement
@@ -51,7 +51,7 @@ _METHOD_DEFAULTS = {
         'gradient_method': 'finite_difference',
         'gradient_step_size': 1e-6,  # Small step for more accurate gradients
         'gradient_step_size_relative': True,
-        'boundary_handling': 'clip'
+        'boundary_handling': None
     },
     'nelder_mead': {
         # Nelder-Mead specific defaults - tuned for refinement

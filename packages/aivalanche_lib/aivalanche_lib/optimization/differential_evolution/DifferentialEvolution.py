@@ -44,7 +44,10 @@ from .adaptive_boundaries import (
     _update_boundaries,
     _setup_adaptive_boundaries_config
     )
-from .metamodel_modes import get_metamodel_config    
+from .metamodels import (
+    _initialize_metamodel_manager, _should_use_metamodel_de, 
+    _run_metamodel_de_optimization
+)  
         
 class DifferentialEvolution:
     """
@@ -93,13 +96,13 @@ class DifferentialEvolution:
                  metamodel_mode: str = 'off',
                  metamodel_config: Optional[Dict[str, Any]] = None,
                 
-                # Perturbation parameters
-                perturbation_mode: str = 'off',
-                perturbation_config: Optional[Dict[str, Any]] = None,
-                
-                # Local refinement parameters
-                refinement_mode: str = 'off',
-                refinement_config: Optional[Dict[str, Any]] = None):
+                 # Perturbation parameters
+                 perturbation_mode: str = 'off',
+                 perturbation_config: Optional[Dict[str, Any]] = None,
+
+                 # Local refinement parameters
+                 refinement_mode: str = 'off',
+                 refinement_config: Optional[Dict[str, Any]] = None):
         """
         Initialize the Differential Evolution optimizer.
 
@@ -139,37 +142,34 @@ class DifferentialEvolution:
                 - check_period (int): Check boundaries every N iterations. Default: 10
             
             # Metamodel parameters
-            metamodel_mode: Metamodel mode - predefined configurations for different use cases:
+            metamodel_mode: Enable/disable metamodel-based trial generation:
                 'off': No metamodel (default)
-                'auto': Balanced general-purpose metamodel usage
-                'exploration': Emphasizes exploration with uncertain predictions
-                'exploitation': Trusts model more for exploitation
-                'fast': Maximum speedup, may sacrifice accuracy
-                'accurate': Conservative usage only when model is certain
-                'periodic': Periodically validates metamodel predictions
-                'noisy': Configured for noisy objective functions
-                'high_dimensional': Optimized for high-dimensional problems
-                'custom': User-defined configuration
-            metamodel_config: Custom configuration dict for 'custom' mode or to override predefined settings.
+                'on': Enable metamodel with specified or default configuration
+            metamodel_config: Configuration dict for metamodel behavior.
                 Available fields:
-                - enabled (bool): Whether metamodel is active
-                - type (str): Metamodel type (currently only 'gaussian_process' supported)
-                - model_config (dict): Model-specific configuration:
-                    - kernel (str): Kernel type ('rbf', 'matern', 'matern32', 'matern52', 'exponential')
-                    - alpha (float): Noise level/regularization parameter
-                    - n_restarts_optimizer (int): Number of restarts for hyperparameter optimization
-                    - normalize_y (bool): Whether to normalize target values
-                    - optimize_kernel (bool): Whether to optimize kernel hyperparameters
-                - acquisition_strategy (str): How to use metamodel ('all_actual', 'all_metamodel', 
-                                              'mixed', 'adaptive', 'uncertainty', 'periodic')
-                - acquisition_function (str): For 'mixed' strategy ('expected_improvement', 
-                                              'probability_of_improvement', 'upper_confidence_bound')
-                - min_training_points (int): Minimum points before using metamodel (None = auto)
-                - update_frequency (int): How often to retrain metamodel
-                - exploration_ratio (float): Ratio of exploratory evaluations (for 'mixed')
-                - uncertainty_threshold (float): Max uncertainty for predictions (for 'uncertainty')
-                - validation_frequency (int): How often to validate (for 'periodic')
-                - verbose (bool): Print metamodel information during optimization
+                - type (str): Metamodel type (currently only 'gaussian_process' supported). Default: 'gaussian_process'
+                - min_training_points (int): Minimum points before using metamodel. Default: pop_size
+                - min_accuracy (float): Minimum R² score to use metamodel. Default: 0.8
+                - accuracy_check_window (int): Last N points for accuracy check. Default: min(50, pop_size)
+                - gp_config (dict): Gaussian Process specific settings:
+                    - kernel (str): Kernel type ('rbf', 'matern'). Default: 'matern'
+                    - alpha (float): Noise level. Default: 1e-6
+                    - n_restarts_optimizer (int): Restarts for optimization. Default: 5
+                    - normalize_y (bool): Normalize targets. Default: True
+                - nested_de_config (dict): Nested DE optimization settings:
+                    - max_iterations (int): Base iterations for metamodel DE. Default: 30
+                    - mutation_factor_1 (tuple): F1 range. Default: (0.8, 1.2)
+                    - mutation_factor_2 (tuple): F2 range. Default: (0.3, 0.7)
+                    - mutation_factor_3 (tuple): F3 range. Default: (0.0, 0.3)
+                    - recombination_factor (tuple): CR range. Default: (0.9, 0.99)
+                    - adaptive_iterations (bool): Scale iterations with accuracy. Default: True
+                    - max_iterations_multiplier (float): Max scaling factor. Default: 3.0
+                - retrain_interval_base (int): Base iterations between retraining. Default: 10
+                - retrain_accuracy_multiplier (float): Adjust interval by accuracy. Default: 2.0
+                - max_retrain_interval (int): Maximum retraining interval. Default: 100
+                - validation_ratio (float): Hold-out ratio for validation. Default: 0.2
+                - min_validation_points (int): Minimum validation points. Default: 10
+                - verbose (bool): Print metamodel information. Default: False
             
             # Perturbation parameters
             perturbation_mode: Enable/disable perturbation for escaping local minima:
@@ -300,69 +300,9 @@ class DifferentialEvolution:
         
         # Metamodel settings
         self.metamodel_mode = metamodel_mode
-        self.metamodel_config = get_metamodel_config(metamodel_mode, metamodel_config)
-        self.metamodel_evaluator = None
-        self.use_metamodel = self.metamodel_config is not None and self.metamodel_config.get('enabled', False)
+        self.metamodel_config = metamodel_config
+        self.metamodel_manager = None  # Will be initialized after parameters are set
         
-        if self.use_metamodel:
-            # Import metamodel components
-            try:
-                from aivalanche_lib.metamodels import MetamodelEvaluator, GaussianProcessMetamodel, AcquisitionStrategy
-            except ImportError:
-                raise ImportError(
-                    "Metamodel support requires the aivalanche_lib.metamodels package. "
-                    "Please ensure it is properly installed."
-                )
-            
-            # Extract configuration
-            mm_cfg = self.metamodel_config
-            mm_type = mm_cfg.get('type', 'gaussian_process')
-            mm_model_config = mm_cfg.get('model_config', {})
-            
-            # Create metamodel instance based on type
-            if mm_type == 'gaussian_process':
-                metamodel = GaussianProcessMetamodel(
-                    random_state=self.seed,
-                    **mm_model_config
-                )
-            else:
-                raise ValueError(f"Unsupported metamodel type: {mm_type}")
-            
-            # Set default min training points if not specified
-            min_training_points = mm_cfg.get('min_training_points')
-            if min_training_points is None:
-                # Different defaults based on mode
-                if self.metamodel_mode == 'fast':
-                    min_training_points = int(0.3 * self.pop_size)
-                elif self.metamodel_mode == 'exploitation':
-                    min_training_points = int(0.5 * self.pop_size)
-                elif self.metamodel_mode == 'accurate':
-                    min_training_points = int(3 * self.pop_size)
-                elif self.metamodel_mode == 'exploration':
-                    min_training_points = int(2 * self.pop_size)
-                elif self.metamodel_mode == 'high_dimensional':
-                    min_training_points = int(5 * len(self.parameters_names))
-                else:
-                    min_training_points = self.pop_size
-            
-            # Create metamodel evaluator wrapper
-            self.metamodel_evaluator = MetamodelEvaluator(
-                actual_eval_func=self.eval_func,
-                metamodel=metamodel,
-                acquisition_strategy=AcquisitionStrategy(mm_cfg.get('acquisition_strategy', 'mixed')),
-                acquisition_function=mm_cfg.get('acquisition_function', 'expected_improvement'),
-                min_training_points=min_training_points,
-                update_frequency=mm_cfg.get('update_frequency', 5),
-                exploration_ratio=mm_cfg.get('exploration_ratio', 0.2),
-                uncertainty_threshold=mm_cfg.get('uncertainty_threshold', 0.2),
-                validation_frequency=mm_cfg.get('validation_frequency', 10),
-                verbose=mm_cfg.get('verbose', False)
-            )
-            
-            # Store original eval_func for reference
-            self._original_eval_func = self.eval_func
-            # Replace eval_func with metamodel evaluator
-            self.eval_func = self.metamodel_evaluator
 
         # Initialize variables
         self._initialize_variables()
@@ -554,6 +494,9 @@ class DifferentialEvolution:
         
         # Status flags
         self.has_started = False
+        
+        # Initialize metamodel manager if needed
+        _initialize_metamodel_manager(self)
         self.is_running = False
         self.has_finished = False
 
@@ -685,10 +628,6 @@ class DifferentialEvolution:
             **self.eval_func_args
         }
         
-        # Add optimization direction for metamodel evaluator
-        if self.use_metamodel:
-            extra_arguments['opt_min_or_max'] = self.opt_min_or_max
-
         # The eval_func should return a list, where each item is a dict that has at least the element 'metric'.
         self.current_responses = self.eval_func(parameters = self.current_parameters, **extra_arguments)
         self.current_metrics = [item['metric'] for item in self.current_responses]
@@ -731,16 +670,23 @@ class DifferentialEvolution:
             self.iter -= 1
         else:
             # Set the survivors as targets for the next iteration
-            self.targets = self.survivors
-            self.targets_metrics = self.survivors_metrics
+            # (except for the first iteration where survivors don't exist yet)
+            if self.iter > 1:
+                self.targets = self.survivors
+                self.targets_metrics = self.survivors_metrics
 
             # Adapt boundaries if enabled
             if self.adaptive_boundaries_mode != 'off' and self._adaptive_boundaries_active_config is not None:
                 _update_boundaries(self)
 
-            # Generate new donors and trials
+            # Generate donors and trials
             _generate_donors(self)
             _generate_trials(self)
+            
+            # Check if we should use metamodel DE to replace trials
+            if _should_use_metamodel_de(self):
+                # Use metamodel-based DE to generate better trials
+                self.trials = _run_metamodel_de_optimization(self)
             
             # Apply perturbation to trials if conditions are met
             if self.perturbation_mode != 'off':
@@ -784,17 +730,18 @@ class DifferentialEvolution:
         print("--------------------------------------------------------------------------------\n\n")
         
         # Show metamodel statistics if used
-        if self.use_metamodel and self.metamodel_evaluator:
+        if self.metamodel_manager is not None:
             print("\n-------------------------- Metamodel Statistics --------------------------\n")
             stats = self.get_metamodel_statistics()
             if stats:
-                print(f"Actual function evaluations: {stats['n_actual_evaluations']}")
-                print(f"Metamodel predictions: {stats['n_metamodel_evaluations']}")
-                print(f"Metamodel usage ratio: {stats['metamodel_usage_ratio']:.2%}")
-                print(f"Time saved: {stats['time_saved']:.2f} seconds")
-                print(f"Speedup factor: {stats['speedup_factor']:.2f}x")
-                if stats['avg_validation_error'] is not None:
-                    print(f"Average validation error: {stats['avg_validation_error']:.4f}")
+                print(f"Metamodel trained: {stats['is_trained']}")
+                if stats['is_trained']:
+                    print(f"Current accuracy (R²): {stats['current_accuracy']:.3f}")
+                    print(f"Training points used: {stats['n_training_points']}")
+                    print(f"Last trained at iteration: {stats['last_train_iter']}")
+                    if len(stats['training_history']) > 0:
+                        recent_acc = stats['training_history'][-1]['accuracy']
+                        print(f"Most recent accuracy: {recent_acc:.3f}")
             print("\n--------------------------------------------------------------------------------\n\n")
         
         # Show refinement results if applied
@@ -810,8 +757,8 @@ class DifferentialEvolution:
         Returns:
             Dictionary with metamodel statistics or None if metamodel not used
         """
-        if self.use_metamodel and self.metamodel_evaluator:
-            return self.metamodel_evaluator.get_statistics()
+        if self.metamodel_manager is not None:
+            return self.metamodel_manager.get_statistics()
         return None
 
     # i/o functions
