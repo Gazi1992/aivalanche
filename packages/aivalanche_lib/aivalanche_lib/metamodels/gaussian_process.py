@@ -78,12 +78,12 @@ class GaussianProcessMetamodel(BaseMetamodel):
         # GP model
         self.model = None
         
-        # DE configuration (exactly as in gaussian_process_de.py)
+        # DE configuration
         if self.optimization_method == 'de':
             self.de_config = {
-                'pop_size': 50,
-                'max_iterations': 10000,  # Large number to let other criteria stop
-                'max_iter_without_improvement': 100,  # Stop after 100 iterations without improvement
+                'pop_size': 30,  # Increased for better exploration
+                'max_iterations': 200,  # Increased for better convergence
+                'max_iter_without_improvement': 30,  # Stop after 30 iterations without improvement
                 'metric_threshold': float('-inf'),  # Don't stop based on metric value
                 'verbose': self.verbose_de
             }
@@ -145,14 +145,19 @@ class GaussianProcessMetamodel(BaseMetamodel):
         from aivalanche_lib.optimization.differential_evolution import DifferentialEvolution
         from aivalanche_lib.parameters import Parameters
         
-        # Get current parameter values as starting point
-        current_params = self.get_kernel_parameters()
-        
         # Calculate data characteristics for adaptive bounds
         n_dims = X_norm.shape[1]
+        n_samples = X_norm.shape[0]
         
-        # Estimate reasonable bounds from data
-        output_var = np.var(y_norm)  # Variance of outputs
+        # Estimate data characteristics
+        output_var = np.var(y_norm)
+        output_std = np.std(y_norm)
+        
+        # Better bounds based on data
+        # Kernel variance should be around the data variance
+        kernel_var_min = output_var * 0.01
+        kernel_var_max = output_var * 100
+        kernel_var_default = output_var
         
         # Define the parameter space for optimization with adaptive bounds
         param_configs = []
@@ -160,32 +165,44 @@ class GaussianProcessMetamodel(BaseMetamodel):
         param_configs.append({
             'name': 'kernel_variance',
             'type': 'continuous',
-            'min': 1e-10,
-            'max': 1e10,
+            'min': max(1e-10, kernel_var_min),
+            'max': min(1e10, kernel_var_max),
             'scale': 'log',
-            'default': 1
+            'default': kernel_var_default
         })
         
         # Length scale(s)
         if self.kernel_type in ['rbf', 'matern32', 'matern52']:
             # ARD: one length scale per dimension
-            for i in range(n_dims):                
+            # Length scales should be related to the data range
+            for i in range(n_dims):
+                data_range = X_norm[:, i].max() - X_norm[:, i].min()
+                # Length scale between 1% and 200% of data range
+                ls_min = data_range * 0.01
+                ls_max = data_range * 2.0
+                ls_default = data_range * 0.3  # Start with 30% of range
+                
                 param_configs.append({
                     'name': f'length_scale_{i}',
                     'type': 'continuous',
-                    'min': 1e-10,
-                    'max': 1e10,
+                    'min': max(1e-10, ls_min),
+                    'max': min(1e10, ls_max),
                     'scale': 'log',
-                    'default': 1.0
+                    'default': ls_default
                 })
+        
+        # Noise variance should be small relative to output variance
+        noise_min = output_var * 1e-6
+        noise_max = output_var * 0.5  # At most 50% of signal variance
+        noise_default = output_var * 0.01  # Start with 1% noise
         
         param_configs.append({
             'name': 'noise_variance',
             'type': 'continuous',
-            'min': 1e-10,
-            'max': 1e3,
+            'min': max(1e-10, noise_min),
+            'max': min(1e3, noise_max),
             'scale': 'log',
-            'default': 1e-6
+            'default': noise_default
         })
         
         # Create parameters object
@@ -266,14 +283,20 @@ class GaussianProcessMetamodel(BaseMetamodel):
         
         # Run DE optimization with refinement at the end
         de = DifferentialEvolution(
+            seed=self.random_state if self.random_state is not None else 42,
             eval_func=eval_func,
             parameters=param_space,
             pop_size=self.de_config['pop_size'],
             max_iterations=self.de_config['max_iterations'],
             max_iter_without_improvement=self.de_config['max_iter_without_improvement'],
             metric_threshold=self.de_config['metric_threshold'],
-            refinement_mode='on',  # Always use Adam refinement
-            refinement_config=refinement_config,
+            refinement_mode='on',  # Use DLS refinement for fine-tuning
+            refinement_config={
+                'trigger_ratio': -1,  # Only at end
+                'method': 'dls',
+                'max_iterations': 50,  # Limit refinement iterations
+                'max_iter_without_improvement': 10
+            },
             adaptive_boundaries_mode='on'
         )
         
