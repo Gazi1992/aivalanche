@@ -30,6 +30,7 @@ class ContinuousParameter(BaseParameterType):
         """Get the maximum value."""
         return self.max_val
     
+    
     @property
     def type(self) -> str:
         """Get the parameter type as a string."""
@@ -98,10 +99,15 @@ class ContinuousParameter(BaseParameterType):
         # Now determine and set the transform based on scale and range
         self._transform = self._determine_transform(self._scale, self.min_val, self.max_val)
         
+        # Calculate range
+        self._range = self.max_val - self.min_val
+        
         # Calculate scaled min and max for normalization
         # We can't use scale_value yet as it's not fully initialized, so use transform directly
         self._scaled_min = self._transform.scale(self.min_val)
         self._scaled_max = self._transform.scale(self.max_val)
+        self._scaled_default = self._transform.scale(self._default)
+        self._scaled_range = self._scaled_max - self._scaled_min
     
     def validate(self, value: Any) -> bool:
         """

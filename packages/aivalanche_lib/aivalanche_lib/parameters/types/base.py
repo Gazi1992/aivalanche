@@ -50,6 +50,13 @@ class BaseParameterType(ABC):
         self._mode = mode
         self._description = description
         self._transform = None  # Will be set by subclasses
+        
+        # Initialize scaled properties - will be set by subclasses
+        self._scaled_min = None
+        self._scaled_max = None
+        self._scaled_default = None
+        self._range = None
+        self._scaled_range = None
     
     @property
     def name(self) -> str:
@@ -90,6 +97,31 @@ class BaseParameterType(ABC):
     def is_fixed(self) -> bool:
         """Check if this parameter is fixed."""
         return self._mode == 'fixed'
+    
+    @property
+    def scaled_min(self) -> float:
+        """Get the scaled minimum value."""
+        return self._scaled_min if self._scaled_min is not None else 0.0
+    
+    @property
+    def scaled_max(self) -> float:
+        """Get the scaled maximum value."""
+        return self._scaled_max if self._scaled_max is not None else 1.0
+    
+    @property
+    def scaled_default(self) -> float:
+        """Get the scaled default value."""
+        return self._scaled_default if self._scaled_default is not None else 0.5
+    
+    @property
+    def scaled_range(self) -> float:
+        """Get the scaled range (scaled_max - scaled_min)."""
+        return self._scaled_range if self._scaled_range is not None else (self.scaled_max - self.scaled_min)
+    
+    @property
+    def range(self) -> float:
+        """Get the parameter range (max - min)."""
+        return self._range if self._range is not None else 0.0
     
     @property
     @abstractmethod

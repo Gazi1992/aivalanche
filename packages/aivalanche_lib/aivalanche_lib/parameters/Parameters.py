@@ -382,7 +382,6 @@ class Parameters:
             
             return result
     
-    
     def sample_random(
         self, 
         n_samples: int = 1,
@@ -440,6 +439,148 @@ class Parameters:
             Dictionary mapping parameter names to default values
         """
         return {param.name: param.default for param in self.parameters}
+    
+    def norm_gradients(
+        self,
+        gradients: Union[Dict[str, float], pd.DataFrame],
+        values: Union[Dict[str, float], pd.DataFrame]
+    ) -> Union[Dict[str, float], pd.DataFrame]:
+        """
+        Transform gradients from denormalized (original) space to normalized space.
+        
+        This applies the chain rule to transform gradients according to the parameter
+        transformations (linear, log, symlog, etc.) and normalization.
+        
+        Args:
+            gradients: Gradients in denormalized space as dict or DataFrame
+            values: Current parameter values in denormalized space (needed for scale-dependent transforms)
+            
+        Returns:
+            Gradients in normalized space, same format as input
+            
+        Example:
+            >>> gradients = {'x': 2.0, 'y': -1.5}  # Gradients in original space
+            >>> values = {'x': 10.0, 'y': 0.5}     # Current values in original space
+            >>> norm_grads = params.norm_gradients(gradients, values)
+        """
+        if isinstance(gradients, pd.DataFrame):
+            # DataFrame input
+            result_df = gradients.copy()
+            values_df = values if isinstance(values, pd.DataFrame) else pd.DataFrame([values])
+            
+            for param in self.get_variable_parameters():
+                if param.name in result_df.columns:
+                    for idx in range(len(result_df)):
+                        grad = result_df[param.name].iloc[idx]
+                        val = values_df[param.name].iloc[min(idx, len(values_df)-1)]
+                        
+                        # First apply scale transformation (e.g., log)
+                        grad = param.transform.scale_gradient(grad, val)
+                        val = param.transform.scale(val)
+                        
+                        # Then apply normalization to [0,1]
+                        # Chain rule: df/dz = df/dy * dy/dz = df/dy / (dz/dy) = df/dy * range
+                        if param.scaled_range != 0:
+                            grad = grad * param.scaled_range  # Multiply by range for chain rule!
+                        
+                        result_df.at[idx, param.name] = grad
+            
+            return result_df
+        
+        elif isinstance(gradients, dict):
+            # Dictionary input
+            result = {}
+            vals = values if isinstance(values, dict) else values.iloc[0].to_dict()
+            
+            for param in self.get_variable_parameters():
+                if param.name in gradients:
+                    grad = gradients[param.name]
+                    val = vals[param.name]
+                    
+                    # First apply scale transformation
+                    grad = param.transform.scale_gradient(grad, val)
+                    val = param.transform.scale(val)
+                    
+                    # Then apply normalization
+                    # For normalization: z = (y - y_min) / range
+                    # Chain rule: df/dz = df/dy * dy/dz = df/dy / (dz/dy) = df/dy * range
+                    if param.scaled_range != 0:
+                        grad = grad * param.scaled_range  # Multiply, not divide!
+                    
+                    result[param.name] = grad
+            
+            return result
+        
+        else:
+            raise TypeError(f"Unsupported gradients type: {type(gradients)}")
+    
+    def unnorm_gradients(
+        self,
+        norm_gradients: Union[Dict[str, float], pd.DataFrame],
+        norm_values: Union[Dict[str, float], pd.DataFrame]
+    ) -> Union[Dict[str, float], pd.DataFrame]:
+        """
+        Transform gradients from normalized space to denormalized (original) space.
+        
+        This is the inverse of norm_gradients, used when we have gradients in the
+        normalized [0,1] space and need them in the original parameter space.
+        
+        Args:
+            norm_gradients: Gradients in normalized [0,1] space
+            norm_values: Current parameter values in normalized [0,1] space
+            
+        Returns:
+            Gradients in denormalized (original) space, same format as input
+        """
+        if isinstance(norm_gradients, pd.DataFrame):
+            # DataFrame input
+            result_df = norm_gradients.copy()
+            values_df = norm_values if isinstance(norm_values, pd.DataFrame) else pd.DataFrame([norm_values])
+            
+            for param in self.get_variable_parameters():
+                if param.name in result_df.columns:
+                    for idx in range(len(result_df)):
+                        grad = result_df[param.name].iloc[idx]
+                        norm_val = values_df[param.name].iloc[min(idx, len(values_df)-1)]
+                        
+                        # First undo normalization from [0,1]
+                        # Chain rule: we multiplied by range in norm_gradients, so divide here
+                        if param.scaled_range != 0:
+                            grad = grad / param.scaled_range
+                        scaled_val = param.scaled_min + norm_val * param.scaled_range
+                        
+                        # Then undo scale transformation
+                        grad = param.transform.unscale_gradient(grad, scaled_val)
+                        
+                        result_df.at[idx, param.name] = grad
+            
+            return result_df
+        
+        elif isinstance(norm_gradients, dict):
+            # Dictionary input
+            result = {}
+            vals = norm_values if isinstance(norm_values, dict) else norm_values.iloc[0].to_dict()
+            
+            for param in self.get_variable_parameters():
+                if param.name in norm_gradients:
+                    grad = norm_gradients[param.name]
+                    norm_val = vals[param.name]
+                    
+                    # First undo normalization
+                    # Chain rule: we multiplied by range in norm_gradients, so divide here
+                    if param.scaled_range != 0:
+                        grad = grad / param.scaled_range
+                    scaled_val = param.scaled_min + norm_val * param.scaled_range
+                    
+                    # Then undo scale transformation
+                    grad = param.transform.unscale_gradient(grad, scaled_val)
+                    
+                    result[param.name] = grad
+            
+            return result
+        
+        else:
+            raise TypeError(f"Unsupported norm_gradients type: {type(norm_gradients)}")
     
     def get_bounds(self, only_variable: bool = True) -> Dict[str, tuple]:
         """

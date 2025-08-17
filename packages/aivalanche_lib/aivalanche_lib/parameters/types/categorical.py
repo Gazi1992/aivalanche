@@ -24,6 +24,7 @@ class CategoricalParameter(BaseParameterType):
         """Get the parameter type as a string."""
         return "categorical"
     
+    
     def __init__(
         self,
         name: str,
@@ -69,8 +70,17 @@ class CategoricalParameter(BaseParameterType):
         from ..transformations.no_transform import NoTransform
         self._transform = NoTransform()
         
-        # Create mapping for efficient lookups
+        # Create mapping for efficient lookups first
         self._category_to_index = {cat: i for i, cat in enumerate(self.categories)}
+        
+        # For categorical parameters, range is the number of categories minus 1
+        self._range = float(len(self.categories) - 1) if len(self.categories) > 1 else 0.0
+        
+        # For categorical parameters, scaled values are just indices
+        self._scaled_min = 0.0
+        self._scaled_max = float(len(self.categories) - 1) if len(self.categories) > 1 else 0.0
+        self._scaled_default = float(self._category_to_index.get(default, 0))
+        self._scaled_range = self._scaled_max - self._scaled_min
     
     def validate(self, value: Any) -> bool:
         """

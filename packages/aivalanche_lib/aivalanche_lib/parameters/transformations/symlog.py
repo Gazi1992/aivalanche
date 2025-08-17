@@ -82,3 +82,45 @@ class SymLogTransform(BaseTransform):
     def name(self) -> str:
         """Get the name of this transformation."""
         return "symlog"
+    
+    def scale_gradient(self, gradient: float, value: float) -> float:
+        """
+        Transform gradient from original to symlog space.
+        
+        For symlog: scale(x) = sign(x) * log10(1 + |x|/t)
+        Chain rule: df/dy = df/dx * dx/dy
+        Since dy/dx = 1 / (t * ln(10) * (1 + |x|/t))
+        We have dx/dy = t * ln(10) * (1 + |x|/t)
+        Therefore: df/dy = df/dx * t * ln(10) * (1 + |x|/t)
+        
+        Args:
+            gradient: The gradient in original space (df/dx)
+            value: The current value in original space (x)
+            
+        Returns:
+            The gradient in symlog space (df/dy)
+        """
+        abs_value = np.abs(value)
+        multiplier = self.threshold * np.log(10) * (1 + abs_value / self.threshold)
+        return gradient * multiplier
+    
+    def unscale_gradient(self, gradient: float, scaled_value: float) -> float:
+        """
+        Transform gradient from symlog space to original space.
+        
+        For symlog: unscale(y) = sign(y) * t * (10^|y| - 1)
+        Chain rule: df/dx = df/dy * dy/dx
+        Since dx/dy = t * 10^|y| * ln(10)
+        And dy/dx = 1/(dx/dy), we have:
+        df/dx = df/dy / (t * 10^|y| * ln(10))
+        
+        Args:
+            gradient: The gradient in symlog space (df/dy)
+            scaled_value: The current value in symlog space (y)
+            
+        Returns:
+            The gradient in original space (df/dx)
+        """
+        abs_scaled = np.abs(scaled_value)
+        divisor = self.threshold * (10.0 ** abs_scaled) * np.log(10)
+        return gradient / divisor

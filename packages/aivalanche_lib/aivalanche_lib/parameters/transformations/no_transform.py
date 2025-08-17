@@ -65,3 +65,33 @@ class NoTransform(BaseTransform):
     def name(self) -> str:
         """Get the name of this transformation."""
         return "none"
+    
+    def scale_gradient(self, gradient: float, value: float) -> float:
+        """
+        Transform gradient for identity transformation (no change).
+        
+        For identity: d(scale)/d(value) = 1
+        
+        Args:
+            gradient: The gradient in original space
+            value: The current value (unused for identity)
+            
+        Returns:
+            The same gradient
+        """
+        return gradient
+    
+    def unscale_gradient(self, gradient: float, scaled_value: float) -> float:
+        """
+        Inverse transform gradient for identity transformation (no change).
+        
+        For identity: d(unscale)/d(scaled) = 1
+        
+        Args:
+            gradient: The gradient in scaled space
+            scaled_value: The current scaled value (unused for identity)
+            
+        Returns:
+            The same gradient
+        """
+        return gradient

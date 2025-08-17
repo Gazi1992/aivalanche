@@ -69,3 +69,35 @@ class BaseTransform(ABC):
     def name(self) -> str:
         """Get the name of this transformation."""
         pass
+    
+    @abstractmethod
+    def scale_gradient(self, gradient: float, value: float) -> float:
+        """
+        Transform a gradient from original space to scaled space.
+        
+        Uses the chain rule: grad_scaled = grad_original * d(scale)/d(value)
+        
+        Args:
+            gradient: The gradient in the original space
+            value: The current value in the original space (needed for scale-dependent derivatives)
+            
+        Returns:
+            The gradient in the scaled space
+        """
+        pass
+    
+    @abstractmethod
+    def unscale_gradient(self, gradient: float, scaled_value: float) -> float:
+        """
+        Transform a gradient from scaled space to original space.
+        
+        Uses the chain rule: grad_original = grad_scaled * d(unscale)/d(scaled_value)
+        
+        Args:
+            gradient: The gradient in the scaled space
+            scaled_value: The current value in the scaled space (needed for scale-dependent derivatives)
+            
+        Returns:
+            The gradient in the original space
+        """
+        pass
