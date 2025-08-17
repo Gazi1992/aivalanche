@@ -89,7 +89,12 @@ def _get_history_as_df(dls_instance, which='points'):
 
 def _compute_jacobian(dls_instance) -> np.ndarray:
     """
-    Compute the Jacobian matrix using finite differences or other methods.
+    Compute the Jacobian matrix using batch evaluation or provided gradients.
+    
+    This implementation supports:
+    1. Provided gradients/Jacobian from eval_func
+    2. Batch finite differences (all perturbations evaluated at once)
+    3. Central differences for better accuracy
     
     Args:
         dls_instance: Instance of DampedLeastSquares
@@ -97,63 +102,197 @@ def _compute_jacobian(dls_instance) -> np.ndarray:
     Returns:
         np.ndarray: Jacobian matrix (n_residuals x n_parameters) or gradient vector
     """
+    # First check if gradients/Jacobian were provided in the response
+    if hasattr(dls_instance, 'current_response') and dls_instance.current_response is not None:
+        if isinstance(dls_instance.current_response, list) and len(dls_instance.current_response) > 0:
+            response = dls_instance.current_response[0]
+            
+            # Check for provided Jacobian (for vector residuals)
+            if 'jacobian' in response and dls_instance.residual_type == 'vector':
+                return np.array(response['jacobian'])
+            
+            # Check for provided gradients (for scalar case)
+            if 'gradients' in response and dls_instance.residual_type == 'scalar':
+                return _extract_provided_gradients(dls_instance, response['gradients'])
+    
+    # Check if jacobian_method is 'provided' but no jacobian/gradients were found
+    if dls_instance.jacobian_method == 'provided':
+        if dls_instance.residual_type == 'vector':
+            raise ValueError("jacobian_method='provided' but no 'jacobian' found in eval_func response")
+        else:
+            raise ValueError("jacobian_method='provided' but no 'gradients' found in eval_func response")
+    
     n_params = dls_instance.nr_variable_parameters
     
     if dls_instance.jacobian_method == 'finite_difference':
-        # Finite difference approximation
-        if dls_instance.residual_type == 'vector':
-            n_residuals = len(dls_instance.current_residuals)
-            jacobian = np.zeros((n_residuals, n_params))
-        else:
-            # For scalar case, we compute gradient directly
-            jacobian = np.zeros(n_params)
-        
-        # Save current state
-        original_point = dls_instance.current_point.copy()
-        original_metric = dls_instance.current_metric
-        
-        for i in range(n_params):
-            # Compute step size
-            if dls_instance.jacobian_step_size_relative:
-                h = dls_instance.jacobian_step_size * max(abs(original_point[i]), 1.0)
-            else:
-                h = dls_instance.jacobian_step_size
-            
-            # Forward difference
-            perturbed_point = original_point.copy()
-            perturbed_point[i] += h
-            
-            # Apply boundaries
-            perturbed_point = dls_instance._apply_boundary_constraints(perturbed_point)
-            
-            # Evaluate perturbed point
-            perturbed_metric, perturbed_residuals = dls_instance._evaluate_point(perturbed_point)
-            dls_instance.nr_evaluations += 1
-            
-            if dls_instance.residual_type == 'vector':
-                # Jacobian column is derivative of residuals
-                jacobian[:, i] = (perturbed_residuals - dls_instance.current_residuals) / h
-            else:
-                # Gradient element is derivative of metric
-                jacobian[i] = (perturbed_metric - original_metric) / h
-                
+        return _compute_jacobian_finite_difference_batch(dls_instance)
+    elif dls_instance.jacobian_method == 'central_difference':
+        return _compute_jacobian_central_difference_batch(dls_instance)
     elif dls_instance.jacobian_method == 'complex_step':
         # Complex step differentiation for higher accuracy
         if dls_instance.residual_type != 'vector':
             raise NotImplementedError("Complex step only implemented for vector residuals")
-        
-        n_residuals = len(dls_instance.current_residuals)
-        jacobian = np.zeros((n_residuals, n_params))
-        
-        # Note: This requires the eval_func to handle complex parameters
         raise NotImplementedError("Complex step differentiation not yet implemented")
-        
     elif dls_instance.jacobian_method == 'automatic':
         # Automatic differentiation
         raise NotImplementedError("Automatic differentiation not yet implemented")
-    
     else:
         raise ValueError(f"Unknown jacobian_method: {dls_instance.jacobian_method}")
+
+
+def _extract_provided_gradients(dls_instance, gradients_dict):
+    """
+    Extract gradients that were provided in the eval_func response.
+    
+    The gradients are expected to be in the denormalized parameter space,
+    so they need to be transformed to the normalized space used internally.
+    
+    Args:
+        dls_instance: Instance of DampedLeastSquares
+        gradients_dict: Dictionary of gradients from eval_func
+    
+    Returns:
+        np.ndarray: Gradient in normalized space
+    """
+    # Get current parameter values in denormalized space
+    current_denorm = dls_instance.current_parameters
+    
+    # Use Parameters class to properly transform gradients to normalized space
+    norm_grads = dls_instance.parameters.norm_gradients(gradients_dict, current_denorm)
+    
+    # Convert to numpy array in the correct order
+    gradient = np.zeros(dls_instance.nr_variable_parameters)
+    for i, param_name in enumerate(dls_instance.variable_parameters_names):
+        if param_name not in norm_grads:
+            raise ValueError(f"Gradient for parameter '{param_name}' not provided")
+        gradient[i] = norm_grads[param_name]
+    
+    return gradient
+
+
+def _compute_jacobian_finite_difference_batch(dls_instance) -> np.ndarray:
+    """
+    Compute Jacobian using forward finite differences with batch evaluation.
+    
+    All perturbations are evaluated in a single batch call to eval_func.
+    """
+    n_params = dls_instance.nr_variable_parameters
+    original_point = dls_instance.current_point.copy()
+    
+    # Create all perturbed points at once
+    perturbed_points = []
+    step_sizes = []
+    
+    for i in range(n_params):
+        # Compute step size
+        if dls_instance.jacobian_step_size_relative:
+            h = dls_instance.jacobian_step_size * max(abs(original_point[i]), 1.0)
+        else:
+            h = dls_instance.jacobian_step_size
+        
+        step_sizes.append(h)
+        
+        # Forward perturbation
+        perturbed_point = original_point.copy()
+        perturbed_point[i] += h
+        
+        # Apply boundaries
+        perturbed_point = dls_instance._apply_boundary_constraints(perturbed_point)
+        perturbed_points.append(perturbed_point)
+    
+    # Batch evaluate all perturbed points
+    if len(perturbed_points) > 0:
+        # Convert to DataFrame for batch evaluation
+        params_df = pd.DataFrame(perturbed_points, columns=dls_instance.variable_parameters_names)
+        denorm_params = dls_instance.parameters.unnorm_all(params_df)
+        
+        # Single batch call to eval_func
+        responses = dls_instance.eval_func(denorm_params, **dls_instance.eval_func_args)
+        dls_instance.nr_evaluations += len(perturbed_points)
+        
+        # Build Jacobian from responses
+        if dls_instance.residual_type == 'vector':
+            n_residuals = len(dls_instance.current_residuals)
+            jacobian = np.zeros((n_residuals, n_params))
+            
+            for i in range(n_params):
+                perturbed_residuals = _compute_residuals(responses[i:i+1])
+                jacobian[:, i] = (perturbed_residuals - dls_instance.current_residuals) / step_sizes[i]
+        else:
+            # For scalar case, compute gradient
+            jacobian = np.zeros(n_params)
+            original_metric = dls_instance.current_metric
+            
+            for i in range(n_params):
+                perturbed_metric = responses[i]['metric']
+                jacobian[i] = (perturbed_metric - original_metric) / step_sizes[i]
+    
+    return jacobian
+
+
+def _compute_jacobian_central_difference_batch(dls_instance) -> np.ndarray:
+    """
+    Compute Jacobian using central finite differences with batch evaluation.
+    
+    More accurate than forward differences but requires 2N evaluations.
+    All perturbations are evaluated in a single batch call.
+    """
+    n_params = dls_instance.nr_variable_parameters
+    original_point = dls_instance.current_point.copy()
+    
+    # Create all perturbed points (forward and backward)
+    perturbed_points = []
+    step_sizes = []
+    
+    for i in range(n_params):
+        # Compute step size
+        if dls_instance.jacobian_step_size_relative:
+            h = dls_instance.jacobian_step_size * max(abs(original_point[i]), 1.0)
+        else:
+            h = dls_instance.jacobian_step_size
+        
+        step_sizes.append(h)
+        
+        # Forward perturbation
+        point_forward = original_point.copy()
+        point_forward[i] += h
+        point_forward = dls_instance._apply_boundary_constraints(point_forward)
+        
+        # Backward perturbation
+        point_backward = original_point.copy()
+        point_backward[i] -= h
+        point_backward = dls_instance._apply_boundary_constraints(point_backward)
+        
+        # Add both to batch
+        perturbed_points.append(point_forward)
+        perturbed_points.append(point_backward)
+    
+    # Batch evaluate all perturbed points
+    if len(perturbed_points) > 0:
+        params_df = pd.DataFrame(perturbed_points, columns=dls_instance.variable_parameters_names)
+        denorm_params = dls_instance.parameters.unnorm_all(params_df)
+        
+        # Single batch call to eval_func
+        responses = dls_instance.eval_func(denorm_params, **dls_instance.eval_func_args)
+        dls_instance.nr_evaluations += len(perturbed_points)
+        
+        # Build Jacobian from responses
+        if dls_instance.residual_type == 'vector':
+            n_residuals = len(dls_instance.current_residuals)
+            jacobian = np.zeros((n_residuals, n_params))
+            
+            for i in range(n_params):
+                forward_residuals = _compute_residuals(responses[2*i:2*i+1])
+                backward_residuals = _compute_residuals(responses[2*i+1:2*i+2])
+                jacobian[:, i] = (forward_residuals - backward_residuals) / (2 * step_sizes[i])
+        else:
+            # For scalar case, compute gradient
+            jacobian = np.zeros(n_params)
+            
+            for i in range(n_params):
+                forward_metric = responses[2*i]['metric']
+                backward_metric = responses[2*i+1]['metric']
+                jacobian[i] = (forward_metric - backward_metric) / (2 * step_sizes[i])
     
     return jacobian
 
