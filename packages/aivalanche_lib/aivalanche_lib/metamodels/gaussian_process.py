@@ -90,7 +90,9 @@ class GaussianProcessMetamodel(BaseMetamodel):
             
             # Always use refinement at the end only for DE
             self.refinement_config = {
-                'trigger_ratio': -1,  # Only refine at the end
+                'trigger_ratio': -1,  # Only at end
+                'method': 'dls',
+                'max_iter_without_improvement': 10
             }
         
     def _fit_model(self, X_train: np.ndarray, y_train: np.ndarray) -> None:
@@ -153,10 +155,10 @@ class GaussianProcessMetamodel(BaseMetamodel):
         output_var = np.var(y_norm)
         output_std = np.std(y_norm)
         
-        # Better bounds based on data
-        # Kernel variance should be around the data variance
-        kernel_var_min = output_var * 0.01
-        kernel_var_max = output_var * 100
+        # Wider bounds for better exploration
+        # Kernel variance: allow more range for exploration
+        kernel_var_min = output_var * 0.001  # Wider lower bound (was 0.01)
+        kernel_var_max = output_var * 1000   # Wider upper bound (was 100)
         kernel_var_default = output_var
         
         # Define the parameter space for optimization with adaptive bounds
@@ -177,9 +179,9 @@ class GaussianProcessMetamodel(BaseMetamodel):
             # Length scales should be related to the data range
             for i in range(n_dims):
                 data_range = X_norm[:, i].max() - X_norm[:, i].min()
-                # Length scale between 1% and 200% of data range
-                ls_min = data_range * 0.01
-                ls_max = data_range * 2.0
+                # Wider length scale range for better exploration
+                ls_min = data_range * 0.001  # Wider lower bound (was 0.01)
+                ls_max = data_range * 10.0   # Wider upper bound (was 2.0)
                 ls_default = data_range * 0.3  # Start with 30% of range
                 
                 param_configs.append({
@@ -191,9 +193,9 @@ class GaussianProcessMetamodel(BaseMetamodel):
                     'default': ls_default
                 })
         
-        # Noise variance should be small relative to output variance
-        noise_min = output_var * 1e-6
-        noise_max = output_var * 0.5  # At most 50% of signal variance
+        # Noise variance: wider range for exploration
+        noise_min = output_var * 1e-8    # Wider lower bound (was 1e-6)
+        noise_max = output_var * 1.0     # Can go up to signal variance (was 0.5)
         noise_default = output_var * 0.01  # Start with 1% noise
         
         param_configs.append({
@@ -278,9 +280,6 @@ class GaussianProcessMetamodel(BaseMetamodel):
             
             return results
         
-        # Always use refinement at the end only
-        refinement_config = self.refinement_config.copy()
-        
         # Run DE optimization with refinement at the end
         de = DifferentialEvolution(
             seed=self.random_state if self.random_state is not None else 42,
@@ -291,12 +290,7 @@ class GaussianProcessMetamodel(BaseMetamodel):
             max_iter_without_improvement=self.de_config['max_iter_without_improvement'],
             metric_threshold=self.de_config['metric_threshold'],
             refinement_mode='on',  # Use DLS refinement for fine-tuning
-            refinement_config={
-                'trigger_ratio': -1,  # Only at end
-                'method': 'dls',
-                'max_iterations': 50,  # Limit refinement iterations
-                'max_iter_without_improvement': 10
-            },
+            refinement_config=self.refinement_config,
             adaptive_boundaries_mode='on'
         )
         
