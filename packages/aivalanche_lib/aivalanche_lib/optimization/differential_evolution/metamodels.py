@@ -429,6 +429,154 @@ def _run_metamodel_de_optimization(de_instance) -> pd.DataFrame:
     return final_population
 
 
+def create_metamodel_eval_func(metamodel_manager):
+    """
+    Create an evaluation function that uses the metamodel for predictions.
+    
+    Args:
+        metamodel_manager: MetamodelManager instance with trained model
+        
+    Returns:
+        Callable evaluation function that mimics the original eval_func signature
+    """
+    def metamodel_eval_func(parameters, **kwargs):
+        """
+        Evaluation function using metamodel predictions.
+        
+        Args:
+            parameters: DataFrame with parameter values
+            **kwargs: Additional arguments (ignored)
+            
+        Returns:
+            List of dictionaries with 'metric' key
+        """
+        # Parameters are in DataFrame format in original scale
+        # Pass directly to metamodel which handles normalization internally
+        predictions, uncertainties = metamodel_manager.predict(parameters.values)
+        
+        # Return in format expected by optimizers
+        return [{'metric': pred} for pred in predictions]
+    
+    return metamodel_eval_func
+
+
+def check_metamodel_criteria(de_instance, min_training_points: int = None, min_accuracy: float = None) -> Tuple[bool, str]:
+    """
+    Check if metamodel meets criteria for use.
+    
+    Args:
+        de_instance: DifferentialEvolution instance
+        min_training_points: Minimum number of training points required (optional)
+        min_accuracy: Minimum accuracy (R²) required (optional)
+        
+    Returns:
+        Tuple of (can_use_metamodel, reason_if_not)
+    """
+    # Check if metamodel is available
+    if not hasattr(de_instance, 'metamodel_manager') or de_instance.metamodel_manager is None:
+        # If no manager exists but we have data, create one temporarily for refinement
+        return _check_metamodel_criteria_with_temporary_manager(de_instance, min_training_points, min_accuracy)
+    
+    manager = de_instance.metamodel_manager
+    
+    # Get criteria from manager config if not provided
+    if min_training_points is None:
+        min_training_points = manager.config.get('min_training_points', de_instance.pop_size)
+    if min_accuracy is None:
+        min_accuracy = manager.config.get('min_accuracy', 0.9)
+    
+    # Count available training points
+    available_points = 0
+    if hasattr(de_instance, 'all_trials_metrics') and de_instance.all_trials_metrics is not None:
+        if de_instance.all_trials_metrics.shape[0] > 0:
+            available_points = np.sum(~np.isnan(de_instance.all_trials_metrics))
+    
+    # Check training points
+    if available_points < min_training_points:
+        return False, f"Insufficient training points ({available_points} < {min_training_points})"
+    
+    # Try to train/update the metamodel
+    manager._prepare_training_data()
+    if manager.X_all is None or len(manager.X_all) < min_training_points:
+        return False, f"Insufficient valid training data"
+    
+    # Train if not already trained at current iteration
+    if not manager.is_trained or manager.last_train_iter < de_instance.iter:
+        manager._train_metamodel()
+    
+    # Check if training was successful
+    if not manager.is_trained:
+        return False, "Metamodel training failed"
+    
+    # Check accuracy
+    if manager.current_accuracy < min_accuracy:
+        return False, f"Metamodel accuracy too low ({manager.current_accuracy:.3f} < {min_accuracy})"
+    
+    return True, "Metamodel ready"
+
+
+def _check_metamodel_criteria_with_temporary_manager(de_instance, min_training_points: int = None, min_accuracy: float = None) -> Tuple[bool, str]:
+    """
+    Check metamodel criteria by creating a temporary metamodel manager.
+    This is used when metamodel_mode is 'off' but refinement wants to use metamodel.
+    
+    Args:
+        de_instance: DifferentialEvolution instance
+        min_training_points: Minimum number of training points required
+        min_accuracy: Minimum accuracy required
+        
+    Returns:
+        Tuple of (can_use_metamodel, reason_if_not)
+    """
+    # Check if we have enough data
+    available_points = 0
+    if hasattr(de_instance, 'all_trials_metrics') and de_instance.all_trials_metrics is not None:
+        if de_instance.all_trials_metrics.shape[0] > 0:
+            available_points = np.sum(~np.isnan(de_instance.all_trials_metrics))
+    
+    # Use defaults if not provided
+    if min_training_points is None:
+        min_training_points = de_instance.pop_size
+    if min_accuracy is None:
+        min_accuracy = 0.95  # High accuracy for refinement
+    
+    # Check training points
+    if available_points < min_training_points:
+        return False, f"Insufficient training points ({available_points} < {min_training_points})"
+    
+    # Create a temporary metamodel manager for refinement
+    config = _setup_metamodel_config(de_instance, {
+        'min_training_points': min_training_points,
+        'min_accuracy': min_accuracy,
+        'verbose': False  # Don't print during temporary creation
+    })
+    
+    # Create temporary manager
+    temp_manager = MetamodelManager(de_instance, config)
+    
+    # Try to train the metamodel
+    temp_manager._prepare_training_data()
+    if temp_manager.X_all is None or len(temp_manager.X_all) < min_training_points:
+        return False, f"Insufficient valid training data"
+    
+    # Train the metamodel
+    temp_manager._train_metamodel()
+    
+    # Check if training was successful
+    if not temp_manager.is_trained:
+        return False, "Metamodel training failed"
+    
+    # Check accuracy
+    if temp_manager.current_accuracy < min_accuracy:
+        return False, f"Metamodel accuracy too low ({temp_manager.current_accuracy:.3f} < {min_accuracy})"
+    
+    # Store the temporary manager for use in refinement
+    # This avoids retraining when create_metamodel_eval_func is called
+    de_instance._temp_metamodel_manager = temp_manager
+    
+    return True, "Metamodel ready"
+
+
 def _initialize_metamodel_manager(de_instance):
     """
     Initialize the metamodel manager for a DE instance.

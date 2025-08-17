@@ -5,6 +5,15 @@ This implementation provides an efficient optimization algorithm for high-dimens
 using the Differential Evolution method. It integrates with the Parameters class for parameter
 handling and supports various DE strategies, adaptive boundaries, and customizable stopping criteria.
 
+Key Features:
+- Core DE algorithm with multiple mutation strategies
+- Adaptive boundary handling for dynamic parameter space exploration
+- Metamodel-accelerated optimization using Gaussian Processes
+- Local refinement with DLS, Adam, or Nelder-Mead methods
+- Metamodel-based refinement: Use GP surrogate for ~99% reduction in refinement evaluations
+- Perturbation mechanisms for escaping local minima
+- Comprehensive visualization and monitoring capabilities
+
 Author: Gazmend Alia
 
 Note: All functions in this module prefixed with an underscore (_) indicate
@@ -54,7 +63,12 @@ class DifferentialEvolution:
     Differential Evolution optimizer for high-dimensional parameter spaces.
 
     This implementation provides the core DE algorithm functionality with support
-    for the Parameters class for parameter handling.
+    for the Parameters class for parameter handling, including advanced features
+    like metamodel-accelerated optimization and local refinement.
+    
+    The optimizer supports metamodel-based refinement which can reduce evaluation
+    costs by ~99% during the refinement phase, making it ideal for expensive
+    objective functions.
     """
 
     def __init__(self,
@@ -192,6 +206,27 @@ class DifferentialEvolution:
                     * 0-1: Trigger during optimization when stagnation reaches this ratio of max_iter_without_improvement (default: 0.2)
                     * -1: Only refine after optimization completes (post-optimization refinement)
                 - max_iterations (int): Maximum refinement iterations (default 1000)
+                
+                # Metamodel-based refinement settings (NEW)
+                - use_metamodel (bool): Whether to use metamodel for refinement instead of real evaluation function 
+                    (default: False). When True, a Gaussian Process metamodel is trained on the DE optimization 
+                    history and used for refinement, dramatically reducing the number of expensive evaluations.
+                    Note: This works even when metamodel_mode='off' during the main DE optimization.
+                - metamodel_min_training_points (int): Minimum number of training points required to use metamodel 
+                    for refinement (default: pop_size). The metamodel needs sufficient data to be accurate.
+                - metamodel_min_accuracy (float): Minimum R² accuracy required for the metamodel to be used 
+                    (default: 0.95). High accuracy is needed for refinement to ensure the refined solution is valid.
+                    
+                When metamodel refinement is enabled:
+                    1. At refinement time, a GP metamodel is trained on all evaluated points from DE
+                    2. If training points >= min_training_points and accuracy >= min_accuracy, metamodel is used
+                    3. Refinement runs using fast metamodel predictions instead of expensive evaluations
+                    4. Final refined solution is validated with one real evaluation
+                    5. If criteria not met, falls back to regular refinement with real evaluations
+                    
+                Benefits: Can reduce refinement evaluations by ~99% for expensive functions
+                Trade-offs: Small accuracy loss possible, training overhead for cheap functions
+                
                 - options (dict): Method-specific options dict:
                     
                     For 'dls':

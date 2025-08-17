@@ -25,7 +25,12 @@ _METHOD_DEFAULTS = {
         # Default refinement configuration
         'method': 'dls',
         'trigger_ratio': 0.2,  # Trigger at 20% of max_iter_without_improvement
-        'max_iterations': 1000  # Allow more iterations for convergence
+        'max_iterations': 1000,  # Allow more iterations for convergence
+        
+        # Metamodel-based refinement settings
+        'use_metamodel': False,  # Whether to use metamodel for refinement (default: False)
+        'metamodel_min_training_points': None,  # Min points for metamodel (None = pop_size)
+        'metamodel_min_accuracy': 0.95  # Min R² for metamodel (0.95 for high accuracy in refinement)
     },
     'dls': {
         # DLS-specific defaults
@@ -149,6 +154,19 @@ def validate_config(config):
             if not isinstance(config['max_iterations'], int) or config['max_iterations'] < 1:
                 raise ValueError("max_iterations must be a positive integer")
             validated['max_iterations'] = config['max_iterations']
+        
+        # Handle metamodel-based refinement settings
+        if 'use_metamodel' in config:
+            validated['use_metamodel'] = bool(config['use_metamodel'])
+        
+        if 'metamodel_min_training_points' in config:
+            validated['metamodel_min_training_points'] = config['metamodel_min_training_points']
+        
+        if 'metamodel_min_accuracy' in config:
+            min_acc = config['metamodel_min_accuracy']
+            if not (0 <= min_acc <= 1):
+                raise ValueError("metamodel_min_accuracy must be between 0 and 1")
+            validated['metamodel_min_accuracy'] = min_acc
         
         # Handle options - update full options AND track user options separately
         if 'options' in config and isinstance(config['options'], dict):
@@ -530,11 +548,49 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
     print(f"Initial metric: {initial_metric:.6e}")
     print(f"{'='*60}\n")
     
+    # Check if we should use metamodel for refinement
+    use_metamodel = config.get('use_metamodel', False)
+    metamodel_eval_func = None
+    using_metamodel = False
+    
+    if use_metamodel:
+        # Import metamodel functions
+        from .metamodels import check_metamodel_criteria, create_metamodel_eval_func
+        
+        # Get metamodel criteria from config
+        min_points = config.get('metamodel_min_training_points')
+        if min_points is None:
+            min_points = de_instance.pop_size  # Default to pop_size
+        min_accuracy = config.get('metamodel_min_accuracy', 0.95)
+        
+        # Check if metamodel criteria are met
+        can_use, reason = check_metamodel_criteria(de_instance, min_points, min_accuracy)
+        
+        if can_use:
+            # Get the metamodel manager (either regular or temporary)
+            if hasattr(de_instance, 'metamodel_manager') and de_instance.metamodel_manager is not None:
+                manager = de_instance.metamodel_manager
+            elif hasattr(de_instance, '_temp_metamodel_manager'):
+                manager = de_instance._temp_metamodel_manager
+            else:
+                # Should not happen if can_use is True
+                print(f"[ERROR] Metamodel manager not found despite criteria being met")
+                can_use = False
+            
+            if can_use:
+                # Create metamodel evaluation function
+                metamodel_eval_func = create_metamodel_eval_func(manager)
+                using_metamodel = True
+                print(f"[INFO] Using METAMODEL for refinement (accuracy: {manager.current_accuracy:.3f})")
+        else:
+            print(f"[INFO] Cannot use metamodel for refinement: {reason}")
+            print(f"[INFO] Falling back to real evaluation function")
+    
     # Common options for both optimizers
     common_options = {
         'seed': de_instance.seed + 1000,  # Different seed
-        'eval_func': de_instance.eval_func,
-        'eval_func_args': de_instance.eval_func_args if de_instance.eval_func_args else {},
+        'eval_func': metamodel_eval_func if using_metamodel else de_instance.eval_func,
+        'eval_func_args': {} if using_metamodel else (de_instance.eval_func_args if de_instance.eval_func_args else {}),
         'parameters': refinement_parameters,  # Use filtered parameters
         'opt_min_or_max': de_instance.opt_min_or_max,
         'max_iterations': max_iterations,
@@ -564,6 +620,33 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
         # Run optimization
         optimizer.run_optimization()
         
+        # If we used metamodel, validate the final result with real evaluation function
+        if using_metamodel and optimizer.best_parameters is not None:
+            print(f"\n[INFO] Validating metamodel-refined solution with real evaluation function...")
+            
+            # Prepare parameters for real evaluation
+            best_params_df = pd.DataFrame([optimizer.best_parameters])
+            
+            # Call real evaluation function
+            real_eval_func = de_instance.eval_func
+            real_eval_args = de_instance.eval_func_args if de_instance.eval_func_args else {}
+            real_response = real_eval_func(best_params_df, **real_eval_args)[0]
+            real_metric = real_response['metric']
+            
+            # Report the difference
+            metamodel_metric = optimizer.best_metric
+            difference = abs(real_metric - metamodel_metric)
+            rel_difference = difference / (abs(real_metric) + 1e-10)
+            
+            print(f"  Metamodel prediction: {metamodel_metric:.6e}")
+            print(f"  Real evaluation:     {real_metric:.6e}")
+            print(f"  Difference:          {difference:.6e} ({rel_difference:.2%})")
+            
+            # Update optimizer's best metric with the real value
+            optimizer.best_metric = real_metric
+            optimizer.best_response = real_response
+            optimizer.nr_evaluations += 1  # Count the validation evaluation
+        
         # Check if optimizer improved the solution
         improved = False
         if de_instance.opt_min_or_max == 'min':
@@ -582,7 +665,8 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
             'evaluations': optimizer.nr_evaluations,
             'stop_reason': optimizer.stop_reason,
             'refined_parameters': optimizer.best_parameters,
-            'optimizer_instance': optimizer
+            'optimizer_instance': optimizer,
+            'used_metamodel': using_metamodel
         }
         
         # Update DE instance if improved
@@ -628,6 +712,10 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
         # Record refinement in history
         _record_refinement_history(de_instance, refinement_info)
         
+        # Clean up temporary metamodel manager if it was created
+        if hasattr(de_instance, '_temp_metamodel_manager'):
+            del de_instance._temp_metamodel_manager
+        
         return improved, refinement_info
         
     except Exception as e:
@@ -641,6 +729,10 @@ def _apply_local_refinement(de_instance) -> Tuple[bool, Dict[str, Any]]:
         
         # Record failed refinement in history
         _record_refinement_history(de_instance, refinement_info)
+        
+        # Clean up temporary metamodel manager if it was created
+        if hasattr(de_instance, '_temp_metamodel_manager'):
+            del de_instance._temp_metamodel_manager
         
         return False, refinement_info
 

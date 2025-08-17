@@ -518,9 +518,130 @@ Each method has its own optimized defaults that are automatically applied:
 }
 ```
 
-### Metamodel-Assisted Optimization
+### Metamodel-Based Refinement (NEW)
 
-DE now supports metamodel-assisted optimization to reduce function evaluations:
+DE now supports using Gaussian Process metamodels during the refinement phase to dramatically reduce evaluation costs for expensive objective functions.
+
+#### How It Works
+
+When metamodel refinement is enabled:
+1. During DE optimization, all evaluated points are collected
+2. At refinement time, a GP metamodel is trained on this data
+3. If the metamodel meets accuracy criteria, it's used for refinement
+4. The refinement optimizer uses fast metamodel predictions instead of expensive evaluations
+5. The final refined solution is validated with one real evaluation
+
+#### Benefits
+
+- **~99% reduction in refinement evaluations** for expensive functions
+- Works even when `metamodel_mode='off'` during main optimization
+- Automatic fallback to real evaluations if accuracy criteria not met
+- Final validation ensures solution quality
+
+#### Configuration
+
+```python
+# Enable metamodel-based refinement
+optimizer = DifferentialEvolution(
+    eval_func=expensive_simulation,
+    parameters=params,
+    refinement_mode='on',
+    refinement_config={
+        'method': 'dls',  # Works with dls, adam, or nelder_mead
+        
+        # Metamodel refinement settings
+        'use_metamodel': True,  # Enable metamodel for refinement
+        'metamodel_min_training_points': 20,  # Min points needed (default: pop_size)
+        'metamodel_min_accuracy': 0.9,  # Min R² required (default: 0.95)
+        
+        'max_iterations': 100  # Refinement iterations
+    }
+)
+
+# After optimization, check if metamodel was used
+if optimizer.refinement_info and optimizer.refinement_info.get('used_metamodel'):
+    print("Metamodel was used for refinement!")
+```
+
+#### When to Use Metamodel Refinement
+
+**Ideal for:**
+- CFD/FEM simulations (minutes to hours per evaluation)
+- External software calls (COMSOL, ANSYS, etc.)
+- Expensive black-box functions
+- Limited computational budget
+
+**Not recommended for:**
+- Very cheap functions (overhead exceeds benefit)
+- Highly discontinuous functions (GP assumptions violated)
+- When extreme precision is critical
+
+#### Example: Expensive Function Optimization
+
+```python
+import time
+from aivalanche_lib.optimization.differential_evolution import DifferentialEvolution
+from aivalanche_lib.parameters import Parameters
+
+# Simulate an expensive function
+def expensive_simulation(parameters_df, **kwargs):
+    responses = []
+    for _, row in parameters_df.iterrows():
+        # Simulate expensive computation
+        time.sleep(0.1)  # Each evaluation takes 0.1 seconds
+        
+        # Actual computation
+        x, y = row['x'], row['y']
+        metric = (x - 3)**2 + (y - 2)**2
+        responses.append({'metric': metric})
+    return responses
+
+# Configure with metamodel refinement
+params = Parameters([
+    {'name': 'x', 'min': -10, 'max': 10},
+    {'name': 'y', 'min': -10, 'max': 10}
+])
+
+optimizer = DifferentialEvolution(
+    eval_func=expensive_simulation,
+    parameters=params,
+    pop_size=20,
+    max_iterations=10,
+    
+    # Enable metamodel refinement
+    refinement_mode='on',
+    refinement_config={
+        'method': 'dls',
+        'trigger_ratio': -1,  # Only refine at end
+        'max_iterations': 100,
+        
+        # Metamodel settings
+        'use_metamodel': True,
+        'metamodel_min_training_points': 20,
+        'metamodel_min_accuracy': 0.85
+    }
+)
+
+# Run optimization
+optimizer.run_optimization()
+
+# Check results
+if optimizer.refinement_info:
+    info = optimizer.refinement_info
+    if info.get('used_metamodel'):
+        # Calculate savings
+        total_evals = 20 * 10  # DE evaluations
+        refinement_evals = info.get('evaluations', 0)
+        without_metamodel = 100 * 2 + 1  # Typical DLS evaluations
+        saved = without_metamodel - refinement_evals
+        
+        print(f"Metamodel refinement saved {saved} evaluations!")
+        print(f"Time saved: {saved * 0.1:.1f} seconds")
+```
+
+### Metamodel-Assisted Optimization (During DE)
+
+DE also supports metamodel-assisted optimization during the main evolutionary process:
 
 #### Available Metamodel Modes
 
