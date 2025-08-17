@@ -1,0 +1,174 @@
+{
+  "filter_specifications": {
+    "name": "Half-Band Filter (S-band/C-band separator)",
+    "description": "Separates S-band (1480-1517 nm) from C-band (1528-1568 nm)",
+    "wavelength_start": 1.480,
+    "wavelength_stop": 1.568,
+    "wavelength_points": 200,
+    "s_band_start": 1.480,
+    "s_band_stop": 1.517,
+    "c_band_start": 1.528,
+    "c_band_stop": 1.568,
+    "transition_start": 1.517,
+    "transition_stop": 1.528
+  },
+  
+  "performance_targets": {
+    "max_insertion_loss": 0.45,
+    "max_crosstalk": -20.7,
+    "min_extinction_ratio": 35,
+    "target_rolloff": 2.2,
+    "max_passband_ripple": 0.5
+  },
+  
+  "material_properties": {
+    "core_index": 1.474,
+    "cladding_index": 1.444,
+    "effective_index": 1.457,
+    "group_index": 4.3,
+    "thermo_optic_coeff": 1.0e-5
+  },
+  
+  "mzi_configuration": {
+    "num_stages": 13,
+    "initial_delta_L": 15.41,
+    "optimized_delta_L": 14.89
+  },
+  
+  "optimization_parameters": [
+    {
+      "name": "delta_L_base",
+      "type": "continuous",
+      "min": 10.0,
+      "max": 20.0,
+      "initial": 15.41,
+      "description": "Base path length difference in micrometers"
+    },
+    {
+      "name": "coupling_angle_0",
+      "type": "continuous", 
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.085,
+      "description": "Coupling angle for stage 0 (rad)"
+    },
+    {
+      "name": "coupling_angle_1",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.070,
+      "description": "Coupling angle for stage 1 (rad)"
+    },
+    {
+      "name": "coupling_angle_2",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.060,
+      "description": "Coupling angle for stage 2 (rad)"
+    },
+    {
+      "name": "coupling_angle_3",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.050,
+      "description": "Coupling angle for stage 3 (rad)"
+    },
+    {
+      "name": "coupling_angle_4",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.045,
+      "description": "Coupling angle for stage 4 (rad)"
+    },
+    {
+      "name": "coupling_angle_5",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.040,
+      "description": "Coupling angle for stage 5 (rad)"
+    },
+    {
+      "name": "coupling_angle_6",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.035,
+      "description": "Coupling angle for stage 6 (rad)"
+    },
+    {
+      "name": "coupling_angle_7",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.030,
+      "description": "Coupling angle for stage 7 (rad)"
+    },
+    {
+      "name": "coupling_angle_8",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.028,
+      "description": "Coupling angle for stage 8 (rad)"
+    },
+    {
+      "name": "coupling_angle_9",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.025,
+      "description": "Coupling angle for stage 9 (rad)"
+    },
+    {
+      "name": "coupling_angle_10",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.023,
+      "description": "Coupling angle for stage 10 (rad)"
+    },
+    {
+      "name": "coupling_angle_11",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.021,
+      "description": "Coupling angle for stage 11 (rad)"
+    },
+    {
+      "name": "coupling_angle_12",
+      "type": "continuous",
+      "min": 0.02,
+      "max": 0.5,
+      "initial": 0.020,
+      "description": "Coupling angle for stage 12 (rad)"
+    }
+  ],
+  
+  "optimizer_config": {
+    "algorithm": "differential_evolution",
+    "population_size": 30,
+    "max_iterations": 50,
+    "mutation_factor": 0.8,
+    "crossover_prob": 0.9,
+    "seed": 42,
+    "refinement_mode": "on",
+    "refinement_config": {
+      "method": "nelder_mead",
+      "trigger_ratio": 0.7,
+      "max_iterations": 100
+    }
+  },
+  
+  "objective_weights": {
+    "insertion_loss": 10.0,
+    "crosstalk": 20.0,
+    "ripple": 5.0,
+    "rolloff": 8.0
+  }
+}

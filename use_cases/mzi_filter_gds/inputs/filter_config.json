@@ -1,0 +1,34 @@
+{
+  "filter_specs": {
+    "name": "Half-Band Filter",
+    "num_stages": 13,
+    "wavelength_start": 1.480,
+    "wavelength_stop": 1.568,
+    "wavelength_points": 200,
+    "s_band": [1.480, 1.517],
+    "c_band": [1.528, 1.568],
+    "transition_band": [1.517, 1.528]
+  },
+  
+  "targets": {
+    "max_insertion_loss_dB": 0.45,
+    "max_crosstalk_dB": -20.7,
+    "min_extinction_ratio_dB": 35,
+    "min_rolloff_dB_per_nm": 2.2,
+    "max_passband_ripple_dB": 0.5
+  },
+  
+  "material": {
+    "n_eff": 1.457,
+    "n_group": 4.3
+  },
+  
+  "optimization": {
+    "weights": {
+      "insertion_loss": 10.0,
+      "crosstalk": 20.0,
+      "ripple": 5.0,
+      "rolloff": 8.0
+    }
+  }
+}

@@ -1,0 +1,147 @@
+# Cascaded MZI Half-Band Filter Parameters
+# Based on: "Design and Optimization of Broadband Optical Half-Band Filters Based on Cascaded MZIs"
+# This file contains all configurable parameters for the filter design
+
+# Filter Specifications
+filter_specs:
+  name: "Half-Band Filter (S-band/C-band separator)"
+  description: "Separates S-band (1480-1517 nm) from C-band (1528-1568 nm)"
+  
+  # Wavelength specifications (in micrometers)
+  wavelength_range:
+    start: 1.480  # μm
+    stop: 1.568   # μm
+    points: 200   # Number of wavelength points for simulation
+  
+  # Band definitions
+  bands:
+    s_band:
+      start: 1.480  # μm
+      stop: 1.517   # μm
+      target_transmission: 1.0  # Target transmission (0-1)
+    
+    c_band:
+      start: 1.528  # μm
+      stop: 1.568   # μm
+      target_transmission: 0.0  # Target transmission (0-1)
+    
+    transition_band:
+      start: 1.517  # μm
+      stop: 1.528   # μm
+      
+  # Performance targets
+  targets:
+    max_insertion_loss: 0.45  # dB (in passband)
+    max_crosstalk: -20.7      # dB (inter-band)
+    min_extinction_ratio: 35  # dB
+    target_rolloff: 2.2       # dB/nm (transition band)
+    max_passband_ripple: 0.5  # dB
+
+# MZI Structure Parameters
+mzi_structure:
+  num_stages: 13  # Number of cascaded MZI stages
+  
+  # Material parameters
+  material:
+    core_index: 1.474        # Core refractive index
+    cladding_index: 1.444    # Cladding refractive index
+    effective_index: 1.457   # Effective index at center wavelength
+    group_index: 4.3         # Group index (for dispersion)
+    thermo_optic_coeff: 1.0e-5  # Thermo-optic coefficient (/°C)
+  
+  # Waveguide parameters
+  waveguide:
+    width: 4.5       # μm
+    height: 4.5      # μm
+    gap: 0.25        # μm (for directional couplers)
+    bend_radius: 5.0 # μm (minimum)
+
+# Initial Design Parameters (from paper)
+initial_parameters:
+  # Path length differences for each stage (μm)
+  # First stage: ΔL, subsequent stages: 2ΔL
+  delta_L_base: 15.41  # Base path length difference (can be optimized to 14.89)
+  
+  # Coupling angles for each stage (radians)
+  # These will be optimized
+  coupling_angles:
+    - 0.085   # Stage 1
+    - 0.070   # Stage 2
+    - 0.060   # Stage 3
+    - 0.050   # Stage 4
+    - 0.045   # Stage 5
+    - 0.040   # Stage 6
+    - 0.035   # Stage 7
+    - 0.030   # Stage 8
+    - 0.028   # Stage 9
+    - 0.025   # Stage 10
+    - 0.023   # Stage 11
+    - 0.021   # Stage 12
+    - 0.020   # Stage 13
+  
+  # Phase compensations (initially π for all stages)
+  phase_compensations:
+    - 3.14159  # Stage 1
+    - 3.14159  # Stage 2
+    - 3.14159  # Stage 3
+    - 3.14159  # Stage 4
+    - 3.14159  # Stage 5
+    - 3.14159  # Stage 6
+    - 3.14159  # Stage 7
+    - 3.14159  # Stage 8
+    - 3.14159  # Stage 9
+    - 3.14159  # Stage 10
+    - 3.14159  # Stage 11
+    - 3.14159  # Stage 12
+    - 3.14159  # Stage 13
+
+# Optimization Settings
+optimization:
+  # Parameter bounds for optimization
+  bounds:
+    delta_L:
+      min: 10.0   # μm
+      max: 20.0   # μm
+    
+    coupling_angle:
+      min: 0.02   # rad (practical minimum from paper)
+      max: 0.5    # rad (corresponds to 50% coupling)
+    
+    phase_compensation:
+      min: 0.0    # rad
+      max: 6.283  # rad (2π)
+  
+  # Optimization algorithm settings
+  algorithm:
+    type: "differential_evolution"
+    population_size: 50
+    max_iterations: 100
+    tolerance: 1e-6
+    seed: 42
+  
+  # Objective function weights
+  weights:
+    insertion_loss: 10.0     # Weight for insertion loss minimization
+    crosstalk: 20.0         # Weight for crosstalk minimization
+    ripple: 5.0            # Weight for passband ripple minimization
+    rolloff: 8.0           # Weight for transition sharpness
+
+# Simulation Settings
+simulation:
+  method: "transfer_matrix"  # Options: "transfer_matrix", "beam_propagation"
+  temperature: 25.0          # °C (operating temperature)
+  polarization: "TE"         # Options: "TE", "TM", "both"
+  
+  # Numerical settings
+  numerical:
+    resolution: 0.001        # Wavelength resolution (nm)
+    convergence_threshold: 1e-10
+    max_iterations: 1000
+  
+  # Output settings
+  output:
+    save_plots: true
+    save_data: true
+    verbose: true
+    plot_format: "png"
+    dpi: 150
