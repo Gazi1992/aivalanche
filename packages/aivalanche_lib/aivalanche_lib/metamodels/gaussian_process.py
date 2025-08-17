@@ -4,6 +4,10 @@ Gaussian Process metamodel implementation using GPy.
 This module provides a Gaussian Process surrogate model that can be used
 for approximating expensive objective functions. It provides mean predictions
 and uncertainty estimates.
+
+Supports two hyperparameter optimization methods:
+1. Standard GPy gradient-based optimization (default)
+2. Differential Evolution for more robust global optimization
 """
 
 import numpy as np
@@ -20,7 +24,6 @@ except ImportError:
     )
 
 from .base import BaseMetamodel
-from .utils import check_array_shape
 
 
 class GaussianProcessMetamodel(BaseMetamodel):
@@ -28,217 +31,322 @@ class GaussianProcessMetamodel(BaseMetamodel):
     Gaussian Process metamodel using GPy.
     
     This implementation provides a flexible GP surrogate model with various
-    kernel options and automatic hyperparameter optimization.
+    kernel options and automatic hyperparameter optimization using either
+    standard gradient-based methods or Differential Evolution.
     """
     
     def __init__(self,
                  kernel_type: str = 'rbf',
-                 length_scale: Optional[Union[float, np.ndarray]] = None,
-                 variance: Optional[float] = None,
-                 noise_variance: Optional[float] = None,
                  optimize_hyperparameters: bool = True,
                  n_restarts: int = 10,
-                 normalize_inputs: bool = True,
-                 normalize_outputs: bool = True,
+                 optimization_method: str = 'standard',
+                 noise_variance: float = 1e-6,
                  random_state: Optional[int] = None,
+                 test_size: float = 0.2,
+                 verbose_de: bool = False,
                  **kwargs):
         """
         Initialize the Gaussian Process metamodel.
         
         Args:
-            kernel_type: Type of kernel to use ('rbf', 'matern32', 'matern52', 'exponential')
-            length_scale: Initial length scale(s) for the kernel. If None, will be estimated.
-            variance: Initial variance for the kernel. If None, will be estimated.
-            noise_variance: Gaussian noise variance. If None, will be estimated.
+            kernel_type: Type of kernel ('rbf', 'matern32', 'matern52')
             optimize_hyperparameters: Whether to optimize hyperparameters
-            n_restarts: Number of random restarts for hyperparameter optimization
-            normalize_inputs: Whether to normalize inputs to [0, 1]
-            normalize_outputs: Whether to standardize outputs
+            n_restarts: Number of restarts for standard optimization (ignored for DE)
+            optimization_method: Optimization method ('standard' or 'de'/'differential_evolution')
+            noise_variance: Initial noise variance for the GP
             random_state: Random seed
-            **kwargs: Additional arguments passed to parent class
+            test_size: Fraction for validation
+            verbose_de: Whether to show verbose output for DE optimization
+            **kwargs: Additional arguments
         """
-        super().__init__(
-            normalize_inputs=normalize_inputs,
-            normalize_outputs=normalize_outputs,
-            random_state=random_state,
-            **kwargs
-        )
+        super().__init__(random_state=random_state, test_size=test_size, **kwargs)
         
         self.kernel_type = kernel_type
-        self.length_scale = length_scale
-        self.variance = variance
-        self.noise_variance = noise_variance
         self.optimize_hyperparameters = optimize_hyperparameters
         self.n_restarts = n_restarts
+        self.optimization_method = optimization_method.lower()
+        self.noise_variance = noise_variance
+        self.verbose_de = verbose_de
         
-        # GP model placeholder
+        # Validate optimization method
+        if self.optimization_method in ['de', 'differential_evolution']:
+            self.optimization_method = 'de'
+        elif self.optimization_method != 'standard':
+            raise ValueError(f"Unknown optimization method: {optimization_method}. "
+                           "Use 'standard' or 'de'/'differential_evolution'")
+        
+        # GP model
         self.model = None
-        self._kernel = None
         
-    def _create_kernel(self, input_dim: int) -> GPy.kern.Kern:
+        # DE configuration (exactly as in gaussian_process_de.py)
+        if self.optimization_method == 'de':
+            self.de_config = {
+                'pop_size': 50,
+                'max_iterations': 10000,  # Large number to let other criteria stop
+                'max_iter_without_improvement': 100,  # Stop after 100 iterations without improvement
+                'metric_threshold': float('-inf'),  # Don't stop based on metric value
+                'verbose': self.verbose_de
+            }
+            
+            # Always use refinement at the end only for DE
+            self.refinement_config = {
+                'trigger_ratio': -1,  # Only refine at the end
+            }
+        
+    def _fit_model(self, X_train: np.ndarray, y_train: np.ndarray) -> None:
         """
-        Create the GP kernel based on specified type.
+        Fit the GP model to normalized training data.
         
         Args:
-            input_dim: Number of input dimensions
-            
-        Returns:
-            GPy kernel object
+            X_train: Normalized training features
+            y_train: Normalized training targets
         """
-        # Set initial parameters
-        if self.length_scale is None:
-            # Default: start with length scale of 0.5 (in normalized space)
-            ls = 0.5 * np.ones(input_dim) if self.normalize_inputs else np.ones(input_dim)
-        else:
-            ls = self.length_scale
-            
-        if self.variance is None:
-            var = 1.0
-        else:
-            var = self.variance
-        
-        # Create kernel based on type
-        if self.kernel_type == 'rbf':
-            kernel = GPy.kern.RBF(input_dim, variance=var, lengthscale=ls, ARD=True)
-        elif self.kernel_type == 'matern32':
-            kernel = GPy.kern.Matern32(input_dim, variance=var, lengthscale=ls, ARD=True)
-        elif self.kernel_type == 'matern52':
-            kernel = GPy.kern.Matern52(input_dim, variance=var, lengthscale=ls, ARD=True)
-        elif self.kernel_type == 'exponential':
-            kernel = GPy.kern.Exponential(input_dim, variance=var, lengthscale=ls, ARD=True)
-        else:
-            raise ValueError(f"Unknown kernel type: {self.kernel_type}. "
-                           f"Supported types: rbf, matern32, matern52, exponential")
-        
-        return kernel
-    
-    def fit(self, X: Union[np.ndarray, pd.DataFrame], 
-            y: Union[np.ndarray, pd.Series]) -> 'GaussianProcessMetamodel':
-        """
-        Fit the Gaussian Process to training data.
-        
-        Args:
-            X: Input features of shape (n_samples, n_features)
-            y: Target values of shape (n_samples,) or (n_samples, 1)
-            
-        Returns:
-            self: The fitted metamodel instance
-        """
-        # Convert to numpy
-        X = self._to_numpy(X)
-        y = self._to_numpy(y)
-        
-        # Ensure correct shapes
-        X = check_array_shape(X, expected_dim=self.input_dim, name="X")
-        if y.ndim == 1:
-            y = y.reshape(-1, 1)
-            
-        # Update input dimension if not set
-        if self.input_dim is None:
-            self.input_dim = X.shape[1]
-            
-        # Normalize data
-        X_norm = self._normalize_inputs(X, fit=True)
-        y_norm = self._normalize_outputs(y, fit=True)
-        
-        # Store training data
-        self.X_train = X_norm
-        self.y_train = y_norm
-        self.n_samples = X.shape[0]
-        
         # Create kernel
-        self._kernel = self._create_kernel(self.input_dim)
-        
+        input_dim = X_train.shape[1]
+        if self.kernel_type == 'rbf':
+            kernel = GPy.kern.RBF(input_dim, ARD=True)
+        elif self.kernel_type == 'matern32':
+            kernel = GPy.kern.Matern32(input_dim, ARD=True)
+        elif self.kernel_type == 'matern52':
+            kernel = GPy.kern.Matern52(input_dim, ARD=True)
+        else:
+            raise ValueError(f"Unknown kernel type: {self.kernel_type}")
+            
         # Create GP model
         self.model = GPy.models.GPRegression(
-            X_norm, y_norm, 
-            self._kernel,
-            normalizer=None  # We handle normalization ourselves
+            X_train, y_train.reshape(-1, 1), 
+            kernel,
+            noise_var=self.noise_variance,
+            normalizer=None  # We handle normalization in base class
         )
-        
-        # Set noise variance if specified
-        if self.noise_variance is not None:
-            self.model.Gaussian_noise.variance = self.noise_variance
-            self.model.Gaussian_noise.variance.fix()
         
         # Optimize hyperparameters
         if self.optimize_hyperparameters:
-            # Suppress warnings during optimization
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                self.model.optimize_restarts(
-                    num_restarts=self.n_restarts,
-                    messages=False,
-                    verbose=False
-                )
-        
-        self.is_fitted = True
-        return self
+            if self.optimization_method == 'de':
+                self._optimize_with_de(X_train, y_train)
+            else:
+                # Standard GPy optimization
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    self.model.optimize_restarts(
+                        num_restarts=self.n_restarts,
+                        messages=False,
+                        verbose=False
+                    )
     
-    def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+    def _optimize_with_de(self, X_norm: np.ndarray, y_norm: np.ndarray):
         """
-        Make predictions using the GP model.
+        Optimize GP hyperparameters using Differential Evolution.
         
         Args:
-            X: Input features of shape (n_samples, n_features)
+            X_norm: Normalized training features
+            y_norm: Normalized training targets
+        """        
+        from aivalanche_lib.optimization.differential_evolution import DifferentialEvolution
+        from aivalanche_lib.parameters import Parameters
+        
+        # Get current parameter values as starting point
+        current_params = self.get_kernel_parameters()
+        
+        # Calculate data characteristics for adaptive bounds
+        n_dims = X_norm.shape[1]
+        
+        # Estimate reasonable bounds from data
+        output_var = np.var(y_norm)  # Variance of outputs
+        
+        # Define the parameter space for optimization with adaptive bounds
+        param_configs = []
+        
+        param_configs.append({
+            'name': 'kernel_variance',
+            'type': 'continuous',
+            'min': 1e-10,
+            'max': 1e10,
+            'scale': 'log',
+            'default': 1
+        })
+        
+        # Length scale(s)
+        if self.kernel_type in ['rbf', 'matern32', 'matern52']:
+            # ARD: one length scale per dimension
+            for i in range(n_dims):                
+                param_configs.append({
+                    'name': f'length_scale_{i}',
+                    'type': 'continuous',
+                    'min': 1e-10,
+                    'max': 1e10,
+                    'scale': 'log',
+                    'default': 1.0
+                })
+        
+        param_configs.append({
+            'name': 'noise_variance',
+            'type': 'continuous',
+            'min': 1e-10,
+            'max': 1e3,
+            'scale': 'log',
+            'default': 1e-6
+        })
+        
+        # Create parameters object
+        param_space = Parameters(param_configs)
+        
+        # Define the objective function: negative log marginal likelihood
+        def eval_func(parameters, **kwargs):
+            """Evaluate GP with given hyperparameters."""
+            results = []
+            
+            for _, row in parameters.iterrows():
+                try:
+                    # Extract hyperparameters
+                    kernel_var = row['kernel_variance']
+                    noise_var = row['noise_variance']
+                    
+                    # Extract length scales
+                    length_scales = []
+                    for i in range(n_dims):
+                        if f'length_scale_{i}' in row:
+                            length_scales.append(row[f'length_scale_{i}'])
+                    length_scales = np.array(length_scales)
+                    
+                    # Create kernel with these parameters
+                    if self.kernel_type == 'rbf':
+                        kernel = GPy.kern.RBF(
+                            input_dim=n_dims,
+                            variance=kernel_var,
+                            lengthscale=length_scales,
+                            ARD=True
+                        )
+                    elif self.kernel_type == 'matern32':
+                        kernel = GPy.kern.Matern32(
+                            input_dim=n_dims,
+                            variance=kernel_var,
+                            lengthscale=length_scales,
+                            ARD=True
+                        )
+                    elif self.kernel_type == 'matern52':
+                        kernel = GPy.kern.Matern52(
+                            input_dim=n_dims,
+                            variance=kernel_var,
+                            lengthscale=length_scales,
+                            ARD=True
+                        )
+                    else:
+                        kernel = GPy.kern.RBF(
+                            input_dim=n_dims,
+                            variance=kernel_var,
+                            lengthscale=length_scales,
+                            ARD=True
+                        )
+                    
+                    # Create GP model with these hyperparameters
+                    model = GPy.models.GPRegression(
+                        X_norm,
+                        y_norm.reshape(-1, 1),
+                        kernel,
+                        noise_var=noise_var
+                    )
+                    
+                    # Get the negative log marginal likelihood
+                    # Lower is better for log likelihood, but we minimize negative
+                    neg_log_likelihood = -model.log_likelihood()
+                    
+                    results.append({'metric': float(neg_log_likelihood)})
+                    
+                except Exception as e:
+                    # If evaluation fails, return a high penalty
+                    if self.de_config['verbose']:
+                        print(f"Error evaluating hyperparameters: {e}")
+                    results.append({'metric': 1e10})
+            
+            return results
+        
+        # Always use refinement at the end only
+        refinement_config = self.refinement_config.copy()
+        
+        # Run DE optimization with refinement at the end
+        de = DifferentialEvolution(
+            eval_func=eval_func,
+            parameters=param_space,
+            pop_size=self.de_config['pop_size'],
+            max_iterations=self.de_config['max_iterations'],
+            max_iter_without_improvement=self.de_config['max_iter_without_improvement'],
+            metric_threshold=self.de_config['metric_threshold'],
+            refinement_mode='on',  # Always use Adam refinement
+            refinement_config=refinement_config,
+            adaptive_boundaries_mode='on'
+        )
+        
+        # Run optimization
+        de.run_optimization()
+        
+        # Extract best hyperparameters
+        best_params = de.best_parameters
+        kernel_var = best_params['kernel_variance']
+        noise_var = best_params['noise_variance']
+        
+        length_scales = []
+        for i in range(n_dims):
+            if f'length_scale_{i}' in best_params:
+                length_scales.append(best_params[f'length_scale_{i}'])
+        length_scales = np.array(length_scales)
+        
+        if self.de_config['verbose']:
+            print(f"[GP-DE] Optimization complete!")
+            print(f"[GP-DE] Best negative log-likelihood: {de.best_metric:.4f}")
+            print(f"[GP-DE] Kernel variance: {kernel_var:.4f}")
+            print(f"[GP-DE] Length scales: {length_scales}")
+            print(f"[GP-DE] Noise variance: {noise_var:.6e}")
+        
+        # Update the model with best hyperparameters
+        self.model.kern.variance = kernel_var
+        self.model.kern.lengthscale = length_scales
+        self.model.Gaussian_noise.variance = noise_var
+                
+    def _predict_model(self, X: np.ndarray) -> np.ndarray:
+        """
+        Make predictions with the GP model.
+        
+        Args:
+            X: Normalized features
             
         Returns:
-            Predictions of shape (n_samples,)
+            Normalized predictions
         """
-        if not self.is_fitted:
-            raise ValueError("Model must be fitted before making predictions")
-            
-        # Convert and normalize
-        X = self._to_numpy(X)
-        X = check_array_shape(X, expected_dim=self.input_dim, name="X")
-        X_norm = self._normalize_inputs(X)
-        
-        # Predict
-        y_pred_norm, _ = self.model.predict(X_norm)
-        
-        # Denormalize and return
-        y_pred = self._denormalize_outputs(y_pred_norm)
+        y_pred, _ = self.model.predict(X)
         return y_pred.ravel()
-    
+        
     def predict_with_uncertainty(self, X: Union[np.ndarray, pd.DataFrame]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Make predictions with uncertainty estimates.
         
         Args:
-            X: Input features of shape (n_samples, n_features)
+            X: Input features
             
         Returns:
-            Tuple of (predictions, uncertainties), each of shape (n_samples,)
+            (predictions, uncertainties)
         """
         if not self.is_fitted:
             raise ValueError("Model must be fitted before making predictions")
             
         # Convert and normalize
         X = self._to_numpy(X)
-        X = check_array_shape(X, expected_dim=self.input_dim, name="X")
-        X_norm = self._normalize_inputs(X)
+        X_norm = (X - self.X_min) / (self.X_max - self.X_min)
         
         # Predict with variance
         y_pred_norm, y_var_norm = self.model.predict(X_norm)
         
-        # Convert variance to standard deviation
-        # Clip negative variances to avoid sqrt warnings (numerical precision issues)
-        y_var_norm = np.maximum(y_var_norm, 0.0)
-        y_std_norm = np.sqrt(y_var_norm)
+        # Convert variance to std
+        y_std_norm = np.sqrt(np.maximum(y_var_norm, 0))
         
         # Denormalize
-        y_pred = self._denormalize_outputs(y_pred_norm)
-        y_std = self._denormalize_uncertainty(y_std_norm)
+        y_pred = y_pred_norm.ravel() * self.y_std + self.y_mean
+        y_std = y_std_norm.ravel() * self.y_std
         
-        return y_pred.ravel(), y_std.ravel()
-    
+        return y_pred, y_std
+        
     def get_kernel_parameters(self) -> Dict[str, Any]:
-        """
-        Get the current kernel hyperparameters.
-        
-        Returns:
-            Dictionary of kernel parameters
-        """
+        """Get current kernel hyperparameters."""
         if self.model is None:
             return {}
             
@@ -258,116 +366,27 @@ class GaussianProcessMetamodel(BaseMetamodel):
                 
         return params
     
-    def set_kernel_parameters(self, **params) -> None:
-        """
-        Set kernel hyperparameters manually.
-        
-        Args:
-            **params: Keyword arguments for kernel parameters
-                     (variance, length_scale, noise_variance)
-        """
-        if self.model is None:
-            raise ValueError("Model must be fitted before setting parameters")
-            
-        if 'variance' in params:
-            self.model.kern.variance = params['variance']
-            
-        if 'length_scale' in params:
-            self.model.kern.lengthscale = params['length_scale']
-            
-        if 'noise_variance' in params:
-            self.model.Gaussian_noise.variance = params['noise_variance']
-    
-    def get_info(self) -> Dict[str, Any]:
-        """
-        Get information about the GP model.
-        
-        Returns:
-            Dictionary containing model information
-        """
-        info = super().get_info()
-        info.update({
-            'kernel_type': self.kernel_type,
-            'optimize_hyperparameters': self.optimize_hyperparameters,
-        })
-        
-        if self.is_fitted:
-            info.update(self.get_kernel_parameters())
-            
+    def get_optimization_info(self) -> Dict[str, Any]:
+        """Get information about the optimization process."""
+        info = self.get_kernel_parameters()
+        if self.optimization_method == 'de':
+            info['optimization_method'] = 'differential_evolution_with_refinement'
+            info['de_settings'] = {
+                'pop_size': self.de_config['pop_size'],
+                'max_iter_without_improvement': self.de_config['max_iter_without_improvement']
+            }
+            info['refinement'] = 'adam_at_end'
+        else:
+            info['optimization_method'] = 'standard_gpy'
+            info['n_restarts'] = self.n_restarts
         return info
     
-    def plot(self, X_test: Optional[np.ndarray] = None, 
-             show_uncertainty: bool = True,
-             confidence_level: float = 0.95) -> None:
-        """
-        Plot the GP model predictions (for 1D or 2D inputs).
+    def set_verbose(self, verbose: bool = True):
+        """Enable or disable verbose output during DE optimization.
         
         Args:
-            X_test: Test points to plot predictions for
-            show_uncertainty: Whether to show confidence intervals
-            confidence_level: Confidence level for intervals
+            verbose: Whether to print optimization progress
         """
-        if not self.is_fitted:
-            raise ValueError("Model must be fitted before plotting")
-            
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            raise ImportError("matplotlib is required for plotting")
-            
-        if self.input_dim == 1:
-            # 1D plot
-            if X_test is None:
-                # Create test points
-                X_range = self.X_train.max() - self.X_train.min()
-                X_test_norm = np.linspace(
-                    self.X_train.min() - 0.1 * X_range,
-                    self.X_train.max() + 0.1 * X_range,
-                    200
-                ).reshape(-1, 1)
-            else:
-                X_test_norm = self._normalize_inputs(X_test)
-                
-            # Get predictions
-            y_pred_norm, y_var_norm = self.model.predict(X_test_norm)
-            y_std_norm = np.sqrt(y_var_norm)
-            
-            # Denormalize for plotting
-            X_plot = self._denormalize_inputs(X_test_norm)
-            y_pred = self._denormalize_outputs(y_pred_norm)
-            y_std = self._denormalize_uncertainty(y_std_norm)
-            
-            # Denormalize training data
-            X_train_plot = self._denormalize_inputs(self.X_train)
-            y_train_plot = self._denormalize_outputs(self.y_train)
-            
-            # Create plot
-            fig, ax = plt.subplots(figsize=(10, 6))
-            
-            # Plot predictions
-            ax.plot(X_plot, y_pred, 'b-', label='GP mean', linewidth=2)
-            
-            if show_uncertainty:
-                # Confidence intervals
-                z_score = 1.96 if confidence_level == 0.95 else 2.58
-                lower = y_pred - z_score * y_std
-                upper = y_pred + z_score * y_std
-                ax.fill_between(X_plot.ravel(), lower.ravel(), upper.ravel(),
-                               alpha=0.3, color='blue', 
-                               label=f'{confidence_level*100:.0f}% confidence')
-            
-            # Plot training data
-            ax.scatter(X_train_plot, y_train_plot, c='red', s=50, 
-                      zorder=5, label='Training data')
-            
-            ax.set_xlabel('X')
-            ax.set_ylabel('y')
-            ax.set_title('Gaussian Process Model')
-            ax.legend()
-            ax.grid(True, alpha=0.3)
-            
-            plt.tight_layout()
-            plt.show()
-            
-        else:
-            print(f"Plotting is only supported for 1D inputs, got {self.input_dim}D")
+        if hasattr(self, 'de_config'):
+            self.de_config['verbose'] = verbose
+            self.verbose_de = verbose

@@ -6,15 +6,22 @@ that can be used to approximate expensive objective functions during optimizatio
 """
 
 from .base import BaseMetamodel
-from .gaussian_process import GaussianProcessMetamodel
-from .evaluator import MetamodelEvaluator, AcquisitionStrategy
 
-__all__ = [
-    'BaseMetamodel',
-    'GaussianProcessMetamodel',
-    'MetamodelEvaluator',
-    'AcquisitionStrategy',
-]
+# Try to import GaussianProcessMetamodel, but don't fail if GPy is not available
+try:
+    from .gaussian_process import GaussianProcessMetamodel
+    # For backward compatibility, alias the main class
+    GaussianProcessDEMetamodel = GaussianProcessMetamodel
+    __all__ = [
+        'BaseMetamodel',
+        'GaussianProcessMetamodel',
+        'GaussianProcessDEMetamodel',  # Backward compatibility alias
+    ]
+except ImportError:
+    # GPy not available, continue without GP support
+    __all__ = [
+        'BaseMetamodel',
+    ]
 
 # Version info
 __version__ = '0.1.0'
