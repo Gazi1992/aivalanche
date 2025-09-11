@@ -1,0 +1,172 @@
+* PSP PMOS Model Example
+* Technology: 65nm
+* Model Version: PSP 103.6
+* Date: 2024-01-18
+
+.model pmos_65nm pmos (
++ level = 1100
++ type = -1
++ version = 103.6
+
+* Geometry and Process Parameters  
++ tox = 1.4e-9
++ epsrox = 3.9
++ toxov = 2.5e-9
++ epsroxov = 3.9
++ xj = 7e-8
++ ndep = 1e17
++ nsubc = 5e16
++ ngate = 0
++ agidl = 1e-12
++ bgidl = 1e9
++ cgidl = 0.5
++ egidl = 0.2
+
+* DC Model Parameters
++ vfb = 0.55
++ vth0 = -0.35
++ stvth0 = 0
++ k1 = 0.45
++ k2 = 0.05
++ lodk2 = 0
++ k3 = 0
++ k3b = 0
++ k4 = 0
++ k5 = 0
++ llodkuo = 0
++ wlodkuo = 0
++ kvth0 = 0
++ lkvth0 = 0
++ wkvth0 = 0
++ pkvth0 = 0
++ llodvth = 0
++ wlodvth = 0
++ stvfb = 0
++ stk1 = 0
++ steta0 = 0
+
+* Mobility Parameters
++ u0 = 0.008
++ ua = 1e-9
++ ub = 1e-19
++ eu = 1.67
++ etamob = 2
++ uc = -0.046
++ ucs = 1
++ la = 0
++ wua = 0
++ pua = 0
++ lub = 0
++ wub = 0
++ pub = 0
++ luc = 0
++ wuc = 0
++ puc = 0
+
+* Saturation Parameters
++ vsat = 7e4
++ lvsat = 0
++ wvsat = 0
++ pvsat = 0
++ vsat1 = 0
++ lvsat1 = 0
++ wvsat1 = 0
++ pvsat1 = 0
++ deltvsat = 0
++ ksativ = 1
++ mexp = 2
++ lmexp = 0
++ wmexp = 0
++ pmexp = 0
+
+* Channel Length Modulation
++ pclm = 0.05
++ pclm1 = 0
++ pclm2 = 0
++ pclm3 = 0
++ lpclm = 0
++ wpclm = 0
++ ppclm = 0
+
+* Output Resistance Parameters
++ a0 = 1
++ a1 = 0
++ a2 = 1
++ a3 = 0
++ a4 = 0
++ a5 = 0
+
+* DIBL Parameters
++ dibl1 = 0.08
++ dibl2 = 0.002
++ dibl3 = 0
++ dibl4 = 0
++ dibl5 = 0.001
++ dibl6 = 0.1
++ dibl7 = 0
+
+* Capacitance Parameters
++ cjg = 1e-3
++ cjsg = 2e-10
++ cjdg = 2e-10
++ cgov = 1e-10
++ cgbov = 1e-11
++ cfg = 0
++ clc = 1e-7
++ cle = 0.6
+
+* Temperature Parameters
++ tnom = 27
++ tbgasub = 0.000473
++ tbgbsub = 636
++ stbgasub = 0
++ stbgbsub = 0
++ kt1 = -0.15
++ kt2 = 0.022
++ at = 3.3e4
++ ute = -1.5
++ utl = 0
++ uta0 = 0
++ ud0 = 0
++ ud1 = 0
+
+* Noise Parameters
++ nfa = 1e20
++ nfb = 5e3
++ nfc = 0
++ efo = 1
++ lintnoi = 0
+
+* Stress Parameters
++ sa = 0
++ sb = 0
++ sd = 0
++ saeff = 0
++ sbeff = 0
+
+* Gate Current Parameters
++ igmod = 0
++ aigbinv = 0.014
++ bigbinv = 0.004
++ cigbinv = 0.004
++ eigbinv = 0.002
++ nigbinv = 1
++ aigbacc = 0.01
++ bigbacc = 0.0025
++ cigbacc = 0.0025
++ nigbacc = 1
+
+* Source/Drain Resistance
++ rsc = 0
++ rdc = 0
++ rscx = 0
++ rdcx = 0
++ rscs = 0
++ rdcs = 0
+
+* NQS Parameters
++ nqs = 0
++ tauNQS = 1e-9
+)
+
+.end

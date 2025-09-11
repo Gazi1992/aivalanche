@@ -1,0 +1,136 @@
+{
+  "model_id": "CAL-NMOS-28NM-001",
+  "name": "Calibrated 28nm NMOS Model v1.2",
+  "base_model": "BSIM4",
+  "version": "1.2.0",
+  "status": "production",
+  "calibration_info": {
+    "request_id": "REQ-2024-Q4-015",
+    "engineer": "John Doe",
+    "start_date": "2025-01-08T09:00:00Z",
+    "completion_date": "2025-01-10T17:30:00Z",
+    "total_time_hours": 18.5,
+    "iterations": 127,
+    "algorithm": "Particle Swarm Optimization + Levenberg-Marquardt"
+  },
+  "reference_data": {
+    "measurement_data": ["REF-MEAS-001", "REF-MEAS-002"],
+    "simulation_data": ["REF-SIM-015"],
+    "total_points": 15420,
+    "data_weight": {
+      "dc": 0.4,
+      "cv": 0.3,
+      "rf": 0.3
+    }
+  },
+  "testbenches_used": [
+    "TB-DC-001",
+    "TB-CV-001",
+    "TB-RF-001",
+    "TB-CORNER-001"
+  ],
+  "optimized_parameters": {
+    "VTH0": 0.482,
+    "U0": 445.3,
+    "VSAT": 8.15e4,
+    "K1": 0.523,
+    "K2": 0.0098,
+    "W0": 2.48e-6,
+    "NLX": 1.72e-7,
+    "DVT0": 2.18,
+    "DVT1": 0.535,
+    "DVT2": -0.0318,
+    "ETA0": 0.0785,
+    "NFACTOR": 1.02,
+    "UA": 9.8e-10,
+    "UB": 1.05e-18,
+    "UC": -4.7e-11,
+    "PCLM": 1.28,
+    "PDIBLC1": 0.385,
+    "PDIBLC2": 0.00842,
+    "DROUT": 0.558,
+    "CGDO": 9.5e-11,
+    "CGSO": 9.5e-11,
+    "CJ": 9.8e-4,
+    "MJ": 0.498,
+    "TOX": 1.38e-9,
+    "XJ": 1.48e-7,
+    "NCH": 1.68e17
+  },
+  "validation_results": {
+    "dc_validation": {
+      "rmse": 0.0215,
+      "max_error": 0.0478,
+      "r_squared": 0.9965,
+      "pass": true
+    },
+    "cv_validation": {
+      "rmse": 0.0342,
+      "max_error": 0.0623,
+      "r_squared": 0.9912,
+      "pass": true
+    },
+    "rf_validation": {
+      "s11_error": 0.0285,
+      "s21_error": 0.0312,
+      "ft_error": 0.0421,
+      "fmax_error": 0.0389,
+      "pass": true
+    },
+    "corner_validation": {
+      "FF": {"vth_shift": -0.042, "ion_ratio": 1.15},
+      "SS": {"vth_shift": 0.038, "ion_ratio": 0.87},
+      "temperature_sensitivity": {
+        "-40C": {"vth": 0.542, "mobility_factor": 1.18},
+        "125C": {"vth": 0.398, "mobility_factor": 0.76}
+      },
+      "pass": true
+    },
+    "overall_score": 0.965
+  },
+  "performance_metrics": {
+    "vth": 0.482,
+    "ion": 8.5e-4,
+    "ioff": 1.15e-9,
+    "ion_ioff_ratio": 7.4e5,
+    "gm_max": 0.0018,
+    "ft": 185e9,
+    "fmax": 220e9,
+    "intrinsic_gain": 42,
+    "subthreshold_slope": 68
+  },
+  "usage_statistics": {
+    "times_downloaded": 45,
+    "active_projects": 12,
+    "last_simulation": "2025-01-11T10:30:00Z",
+    "feedback_score": 4.8,
+    "reported_issues": 0
+  },
+  "documentation": {
+    "calibration_report": "reports/CAL-NMOS-28NM-001_report.pdf",
+    "validation_plots": "reports/CAL-NMOS-28NM-001_plots/",
+    "user_notes": "Optimized for digital applications. Excellent subthreshold behavior.",
+    "known_limitations": "RF accuracy degrades above 30GHz"
+  },
+  "files": {
+    "spice_model": "models/nmos_28nm_v1.2.sp",
+    "verilog_a": "models/nmos_28nm_v1.2.va",
+    "spectre_model": "models/nmos_28nm_v1.2.scs",
+    "parameter_file": "models/nmos_28nm_v1.2_params.txt"
+  },
+  "approval": {
+    "approved_by": "Mike Johnson",
+    "approval_date": "2025-01-11T09:00:00Z",
+    "review_comments": "Excellent agreement with measurements. Approved for production use.",
+    "release_notes": "Version 1.2 improves high-frequency accuracy and corner modeling"
+  },
+  "versioning": {
+    "previous_version": "1.1.0",
+    "changes": [
+      "Improved RF parameter extraction",
+      "Updated temperature coefficients",
+      "Fixed convergence issues at low Vds"
+    ],
+    "backward_compatible": true
+  }
+}

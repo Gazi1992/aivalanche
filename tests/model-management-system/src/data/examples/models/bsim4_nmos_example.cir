@@ -1,0 +1,149 @@
+* BSIM4 NMOS Model Example
+* Technology: 180nm
+* Model Version: 4.8.2
+* Date: 2024-01-15
+
+.model nmos_180nm nmos (
++ level = 54
++ version = 4.8
++ binunit = 1
++ paramchk = 1
++ mobmod = 0
++ capmod = 2
++ igcmod = 1
++ igbmod = 1
++ geomod = 1
++ diomod = 1
++ rdsmod = 0
++ rbodymod = 0
++ rgatemod = 0
++ permod = 1
++ acnqsmod = 0
++ trnqsmod = 0
+
+* Geometry Parameters
++ tox = 4.0e-9
++ toxp = 3.8e-9
++ toxm = 4.0e-9
++ xj = 1.4e-7
++ lint = 1.5e-8
++ ll = 0
++ wint = 1.0e-8
++ wl = 0
++ wln = 1
++ ww = 0
++ wwn = 1
++ wwl = 0
++ lln = 1
++ lw = 0
++ lwn = 1
++ lwl = 0
++ dwg = -2e-8
++ dwb = 5e-9
+
+* DC Parameters
++ vth0 = 0.37
++ k1 = 0.5
++ k2 = 0.01
++ k3 = 80
++ k3b = 2
++ w0 = 2.5e-6
++ dvt0 = 2.2
++ dvt1 = 0.53
++ dvt2 = -0.032
++ dsub = 0.56
++ minv = 0
++ voff = -0.08
++ nfactor = 2
++ eta0 = 0.004
++ etab = -0.001
++ vfb = -1.0
++ u0 = 0.025
++ ua = 1e-9
++ ub = 2.3e-18
++ uc = 5.0e-11
++ vsat = 1.0e5
++ a0 = 1.0
++ ags = 0.4
++ a1 = 0
++ a2 = 1
++ b0 = 0
++ b1 = 0
++ keta = -0.047
++ dwg = -2e-8
++ dwb = 5e-9
++ pclm = 1.3
++ pdiblc1 = 0.39
++ pdiblc2 = 0.0086
++ pdiblcb = -0.1
++ drout = 0.56
++ pvag = 0
++ delta = 0.01
++ pscbe1 = 4.24e8
++ pscbe2 = 1e-5
++ fprout = 0
++ pdits = 0
++ pditsd = 0
++ pditsl = 0
+
+* Capacitance Parameters
++ cgdo = 1e-10
++ cgso = 1e-10
++ cgbo = 1e-12
++ cgdl = 1e-10
++ cgsl = 1e-10
++ ckappas = 0.6
++ ckappad = 0.6
++ cf = 0
++ clc = 1e-7
++ cle = 0.6
++ dlc = 2e-8
++ dwc = 0
++ vfbcv = -1
+
+* Temperature Parameters
++ tnom = 27
++ ute = -1.5
++ kt1 = -0.11
++ kt1l = 0
++ kt2 = 0.022
++ ua1 = 4.31e-9
++ ub1 = -7.61e-18
++ uc1 = -5.6e-11
++ prt = 0
++ at = 33000
+
+* Noise Parameters
++ noia = 1e20
++ noib = 5e4
++ noic = -1.4e-12
++ em = 4.1e7
++ ef = 1
+
+* Junction Parameters
++ jss = 1e-4
++ jsws = 0
++ jswgs = 0
++ njs = 1
++ ijthsfwd = 0.1
++ ijthsrev = 0.1
++ bvs = 10
++ xjbvs = 1
++ pbs = 0.8
++ cjs = 1e-3
++ mjs = 0.5
++ pbsws = 0.8
++ cjsws = 5e-10
++ mjsws = 0.33
++ pbswgs = 0.8
++ cjswgs = 3e-10
++ mjswgs = 0.33
++ tpb = 0
++ tcj = 0
++ tpbsw = 0
++ tcjsw = 0
++ tpbswg = 0
++ tcjswg = 0
+)
+
+.end

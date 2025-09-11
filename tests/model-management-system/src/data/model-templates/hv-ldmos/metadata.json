@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-LDMOS-001",
+  "name": "High Voltage LDMOS Model",
+  "version": "2.3",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "ldmos",
+  "base_model": "LDMOS",
+  "status": "validated",
+  "author": {
+    "name": "Robert Taylor",
+    "email": "robert.t@company.com",
+    "department": "Power Electronics"
+  },
+  "timestamps": {
+    "created": "2024-09-28T10:00:00Z",
+    "modified": "2025-01-10T14:25:00Z"
+  },
+  "tags": ["LDMOS", "high-voltage", "power", "BCD", "automotive"],
+  "description": "Laterally Diffused MOS model for high voltage applications in BCD technology",
+  "technology": {
+    "process": "BCD",
+    "voltage_rating": "60V",
+    "gate_length": "0.5um",
+    "application": "Power Management"
+  },
+  "characteristics": {
+    "vdd_nominal": 60.0,
+    "vth_nominal": 1.2,
+    "temperature_range": [-40, 150],
+    "frequency_range": [0, 1e9]
+  },
+  "validation": {
+    "test_structures": 28,
+    "measurement_points": 11200,
+    "accuracy": {
+      "dc": 0.96,
+      "breakdown": 0.98,
+      "thermal": 0.94
+    },
+    "validated_by": "Power Electronics Team",
+    "validation_date": "2025-01-10"
+  },
+  "usage_notes": [
+    "Optimized for high voltage switching",
+    "Self-heating effects included",
+    "Breakdown voltage modeling",
+    "Suitable for DC-DC converters"
+  ],
+  "references": [
+    "LDMOS Design Guide",
+    "High Voltage Device Modeling"
+  ],
+  "support": {
+    "contact": "power-support@company.com",
+    "documentation": "/docs/ldmos_guide.pdf"
+  }
+}

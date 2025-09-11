@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-BSIMCMG-001",
+  "name": "BSIM-CMG FinFET Model",
+  "version": "110.0",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "finfet",
+  "base_model": "BSIM-CMG",
+  "status": "validated",
+  "author": {
+    "name": "Sarah Chen",
+    "email": "sarah.chen@company.com",
+    "department": "Advanced Technology"
+  },
+  "timestamps": {
+    "created": "2024-11-15T10:00:00Z",
+    "modified": "2025-01-10T09:00:00Z"
+  },
+  "tags": ["14nm", "finfet", "digital", "low-power"],
+  "description": "Advanced FinFET model for 14nm technology with quantum mechanical corrections",
+  "technology": {
+    "node": "14nm",
+    "foundry": "Generic",
+    "process": "FinFET",
+    "variant": "Low Power"
+  },
+  "characteristics": {
+    "vdd_nominal": 0.8,
+    "vth_nominal": 0.35,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 100e9]
+  },
+  "validation": {
+    "test_structures": 60,
+    "measurement_points": 18500,
+    "accuracy": {
+      "dc": 0.98,
+      "ac": 0.97,
+      "transient": 0.96
+    },
+    "validated_by": "Advanced Technology Team",
+    "validation_date": "2025-01-10"
+  },
+  "usage_notes": [
+    "3D transistor structure modeling",
+    "Quantum mechanical corrections included",
+    "Multi-gate effects accurately modeled",
+    "Suitable for digital and analog design"
+  ],
+  "references": [
+    "BSIM-CMG 110.0 Technical Manual",
+    "14nm FinFET Design Guide"
+  ],
+  "support": {
+    "contact": "finfet-support@company.com",
+    "documentation": "/docs/bsimcmg_guide.pdf"
+  }
+}

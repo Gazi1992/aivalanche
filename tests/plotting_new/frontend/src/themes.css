@@ -17,6 +17,16 @@
   --title-font-size: 1.5rem;
   --sidebar-transition: width 0.3s ease-in-out;
   
+  /* Default app margins */
+  --app-margin-left: 10px;
+  --app-margin-right: 10px;
+  --app-margin-top: 10px;
+  --app-margin-bottom: 10px;
+  
+  /* Grid layout defaults */
+  --grid-horizontal-spacing: 20px;
+  --grid-vertical-spacing: 20px;
+  
   /* Plot layout variables */
   --plot-margin-left: 20px;
   --plot-margin-right: 5px;
@@ -56,6 +66,18 @@
   --color-data-3: #63B3ED;
   --color-data-4: #F6E05E;
   --color-data-5: #9F7AEA;
+  
+  /* Chat Assistant specific colors */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8F9FA;
+  --bg-tertiary: #F1F3F5;
+  --text-primary: #2D3748;
+  --text-secondary: #718096;
+  --text-tertiary: #A0AEC0;
+  --color-primary: #FF6B35;
+  --color-primary-dark: #E55A2B;
+  --color-primary-rgb: 255, 107, 53;
+  --color-success: #48BB78;
 }
 
 [data-theme='dark'] {
@@ -81,6 +103,18 @@
   --color-data-3: #d4a82a;
   --color-data-4: #a8e6cf;
   --color-data-5: #9f7aea;
+  
+  /* Chat Assistant specific colors */
+  --bg-primary: #121e33;
+  --bg-secondary: #0b1529;
+  --bg-tertiary: #1a2741;
+  --text-primary: #e5ecf3;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+  --color-primary: #2d9d92;
+  --color-primary-dark: #23776E;
+  --color-primary-rgb: 45, 157, 146;
+  --color-success: #10b981;
   /* Layout variables inherited from :root */
 }
 
@@ -420,6 +454,11 @@ body {
     transform: translateY(-10px);
     opacity: 1;
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .chat-input-container {

@@ -52,11 +52,20 @@ const ChatInterface = ({ expanded, currentConfig, onConfigUpdate }) => {
       const responseData = response.data;
 
       // Handle different response types
-      if (responseData.type === 'config_new' || responseData.type === 'config_update') {
+      if (responseData.type === 'config_new' || responseData.type === 'config_update' || responseData.type === 'config_with_analysis') {
         // Update the visualization with new/updated config
         if (onConfigUpdate && responseData.config) {
           onConfigUpdate(responseData.config);
         }
+      } else if (responseData.type === 'data_analysis') {
+        // Just show the analysis message, no config update
+        // Could enhance this to show data preview in the future
+      } else if (responseData.type === 'transformation_complete') {
+        // Show transformation summary
+        // Could enhance this to show before/after comparison
+      } else if (responseData.type === 'need_data') {
+        // Prompt user to upload data
+        // Could enhance this with a file upload button
       }
 
       // Display the message from the AI

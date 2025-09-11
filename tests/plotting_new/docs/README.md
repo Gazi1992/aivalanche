@@ -97,8 +97,8 @@ If no configuration file path is provided, the application will attempt to load 
 
 The application's behavior and appearance are primarily driven by a JSON configuration file.
 
-*   **Top-Level Settings:** Define `app_title`, `theme` (global theme key), and `margins` for the plot display area (these margins are applied *below* the header).
-*   **`grid_layout`:** Specify hints for the number of `rows` and `cols` for the figure grid, and `horizontal_spacing`/`vertical_spacing` between figures.
+*   **Top-Level Settings:** Define `theme` (global theme key) for the application appearance. Margins and spacing are now handled through the theme system.
+*   **Grid Layout:** The plot grid layout is now controlled interactively through the UI. When multiple figures are present, a column selector allows choosing between 1-4 columns.
 *   **`figures` (Array):** Each object in this array defines a `FigureComponent`.
     *   Common properties: `id`, `title`, `x_label`, `y_label`, `x_scale`, `y_scale`.
     *   Grid properties: `grid_x` (boolean), `grid_y` (boolean), `grid_alpha` (0.0-1.0), `grid_color` (hex string or null to use theme default).

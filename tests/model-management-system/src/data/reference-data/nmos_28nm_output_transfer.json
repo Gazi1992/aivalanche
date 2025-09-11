@@ -1,0 +1,152 @@
+{
+  "data_id": "REF-MEAS-001",
+  "name": "28nm NMOS Output & Transfer Characteristics",
+  "version": "1.2",
+  "data_type": "measurement",
+  "description": "Comprehensive DC characterization of 28nm NMOS transistors including output and transfer characteristics at multiple bias conditions",
+  "device_info": {
+    "device_type": "mosfet",
+    "transistor_type": "nmos", 
+    "technology_node": "28nm",
+    "foundry": "Generic",
+    "process_variant": "Low Power"
+  },
+  "measurement_info": {
+    "equipment": "Keysight B1500A",
+    "operator": "John Doe",
+    "measurement_date": "2024-11-15T10:30:00Z",
+    "lab_conditions": {
+      "humidity": 45,
+      "ambient_temp": 22
+    }
+  },
+  "data_quality": {
+    "validated": true,
+    "completeness": 0.98,
+    "quality_score": 0.95,
+    "measurement_points": 2847,
+    "validation_notes": "Excellent repeatability, minor noise in subthreshold region"
+  },
+  "author": {
+    "name": "Dr. John Smith",
+    "email": "john.smith@company.com",
+    "department": "Device Characterization"
+  },
+  "timestamps": {
+    "created": "2024-11-15T14:00:00Z",
+    "modified": "2024-12-10T09:15:00Z"
+  },
+  "tags": ["28nm", "nmos", "dc-characterization", "output", "transfer"],
+  "data": [
+    {
+      "type": "ids_vds_vgs",
+      "name": "Output Characteristics (VBS=-1V)",
+      "page": "output_vbs_neg1",
+      "testbench_type": "nmos_ids_vds_vgs",
+      "x_name": "vds",
+      "y_name": "ids", 
+      "extra_var_name": "vgs",
+      "x_unit": "V",
+      "y_unit": "A",
+      "extra_var_unit": "V",
+      "operating_conditions": {
+        "temp": 25,
+        "vbs": -1.0
+      },
+      "instance_parameters": {
+        "w": 10e-6,
+        "l": 28e-9,
+        "nf": 1,
+        "sa": 4.2e-7,
+        "sb": 4.2e-7
+      },
+      "curves": [
+        {
+          "x_values": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+          "y_values": [1.01e-16, 7.77e-10, 1.00e-09, 1.22e-09, 1.44e-09, 1.67e-09, 1.89e-09, 2.11e-09, 2.33e-09, 2.55e-09, 2.77e-09, 2.996e-09, 3.218e-09],
+          "extra_var_value": 0.6
+        },
+        {
+          "x_values": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+          "y_values": [1.01e-16, 6.49e-06, 1.04e-05, 1.21e-05, 1.28e-05, 1.34e-05, 1.40e-05, 1.46e-05, 1.52e-05, 1.58e-05, 1.64e-05, 1.698e-05, 1.758e-05],
+          "extra_var_value": 1.1
+        },
+        {
+          "x_values": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+          "y_values": [1.01e-16, 1.85e-05, 3.34e-05, 4.53e-05, 5.39e-05, 5.96e-05, 6.27e-05, 6.44e-05, 6.59e-05, 6.72e-05, 6.86e-05, 7.00e-05, 7.14e-05],
+          "extra_var_value": 1.35
+        }
+      ]
+    },
+    {
+      "type": "ids_vds_vgs", 
+      "name": "Output Characteristics (VBS=0V)",
+      "page": "output_vbs_0",
+      "testbench_type": "nmos_ids_vds_vgs",
+      "x_name": "vds",
+      "y_name": "ids",
+      "extra_var_name": "vgs", 
+      "x_unit": "V",
+      "y_unit": "A",
+      "extra_var_unit": "V",
+      "operating_conditions": {
+        "temp": 25,
+        "vbs": 0.0
+      },
+      "instance_parameters": {
+        "w": 10e-6,
+        "l": 28e-9,
+        "nf": 1,
+        "sa": 4.2e-7,
+        "sb": 4.2e-7
+      },
+      "curves": [
+        {
+          "x_values": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+          "y_values": [0, 6.12e-07, 7.30e-07, 8.36e-07, 9.41e-07, 1.05e-06, 1.15e-06, 1.26e-06, 1.36e-06, 1.47e-06, 1.57e-06, 1.678e-06, 1.783e-06],
+          "extra_var_value": 0.6
+        },
+        {
+          "x_values": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+          "y_values": [0.0, 1.84e-05, 3.34e-05, 4.53e-05, 5.39e-05, 5.96e-05, 6.27e-05, 6.44e-05, 6.59e-05, 6.72e-05, 6.86e-05, 7.00e-05, 7.14e-05],
+          "extra_var_value": 1.35
+        }
+      ]
+    },
+    {
+      "type": "ids_vgs_vbs",
+      "name": "Transfer Characteristics (Linear Region)",
+      "page": "transfer_linear",
+      "testbench_type": "nmos_ids_vgs_vbs",
+      "x_name": "vgs",
+      "y_name": "ids",
+      "extra_var_name": "vbs",
+      "x_unit": "V", 
+      "y_unit": "A",
+      "extra_var_unit": "V",
+      "operating_conditions": {
+        "temp": 25,
+        "vds": 0.05
+      },
+      "instance_parameters": {
+        "w": 10e-6,
+        "l": 28e-9,
+        "nf": 1,
+        "sa": 4.2e-7,
+        "sb": 4.2e-7
+      },
+      "curves": [
+        {
+          "x_values": [-0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+          "y_values": [1.01e-16, 1.01e-16, 1.01e-16, 1.01e-16, 1.01e-16, 1.02e-16, 1.24e-16, 9.19e-16, 2.88e-14, 9.81e-13, 3.25e-11, 1.01e-09, 2.61e-08, 4.08e-07, 2.21e-06, 4.76e-06, 7.23e-06, 9.54e-06],
+          "extra_var_value": -1.0
+        },
+        {
+          "x_values": [-0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2],
+          "y_values": [1.01e-16, 1.01e-16, 1.01e-16, 1.01e-16, 1.01e-16, 1.28e-16, 1.08e-15, 3.43e-14, 1.16e-12, 3.80e-11, 1.17e-09, 2.97e-08, 4.55e-07, 2.41e-06, 5.13e-06, 7.74e-06, 1.02e-05, 1.25e-05],
+          "extra_var_value": -0.5
+        }
+      ]
+    }
+  ]
+}

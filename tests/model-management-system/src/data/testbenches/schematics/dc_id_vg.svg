@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Title -->
+  <text x="200" y="20" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">DC Id-Vg Transfer Characteristics</text>
+  
+  <!-- MOSFET Symbol -->
+  <g id="mosfet" transform="translate(200, 150)">
+    <!-- Gate -->
+    <line x1="-50" y1="0" x2="-20" y2="0" stroke="black" stroke-width="2"/>
+    <line x1="-20" y1="-30" x2="-20" y2="30" stroke="black" stroke-width="2"/>
+    
+    <!-- Channel -->
+    <line x1="-10" y1="-30" x2="-10" y2="-10" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="-5" x2="-10" y2="5" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="10" x2="-10" y2="30" stroke="black" stroke-width="2"/>
+    
+    <!-- Source/Drain -->
+    <line x1="-10" y1="-20" x2="20" y2="-20" stroke="black" stroke-width="2"/>
+    <line x1="20" y1="-20" x2="20" y2="-50" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="20" x2="20" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="20" y1="20" x2="20" y2="50" stroke="black" stroke-width="2"/>
+    
+    <!-- Bulk -->
+    <line x1="-10" y1="0" x2="5" y2="0" stroke="black" stroke-width="2"/>
+    <line x1="5" y1="0" x2="5" y2="40" stroke="black" stroke-width="2"/>
+    <line x1="5" y1="40" x2="40" y2="40" stroke="black" stroke-width="2"/>
+    
+    <!-- Arrow for NMOS -->
+    <polygon points="5,0 10,5 10,-5" fill="black" transform="translate(-12, 0)"/>
+  </g>
+  
+  <!-- VDS Source (Fixed) -->
+  <g id="vds" transform="translate(220, 80)">
+    <circle cx="0" cy="0" r="20" stroke="black" stroke-width="2" fill="none"/>
+    <line x1="0" y1="-10" x2="0" y2="10" stroke="black" stroke-width="2"/>
+    <line x1="-5" y1="-5" x2="5" y2="-5" stroke="black" stroke-width="2"/>
+    <line x1="-5" y1="5" x2="5" y2="5" stroke="black" stroke-width="2"/>
+    <text x="30" y="5" font-family="Arial" font-size="12">VDS=0.05V</text>
+  </g>
+  
+  <!-- VGS Source (Swept) -->
+  <g id="vgs" transform="translate(100, 150)">
+    <circle cx="0" cy="0" r="20" stroke="red" stroke-width="2" fill="none"/>
+    <line x1="0" y1="-10" x2="0" y2="10" stroke="red" stroke-width="2"/>
+    <line x1="-5" y1="-5" x2="5" y2="-5" stroke="red" stroke-width="2"/>
+    <line x1="-5" y1="5" x2="5" y2="5" stroke="black" stroke-width="2"/>
+    <text x="-40" y="5" font-family="Arial" font-size="12" fill="red">VGS</text>
+    <!-- Sweep arrow -->
+    <path d="M -30,-25 Q -20,-35 -10,-25" stroke="red" stroke-width="1.5" fill="none" marker-end="url(#arrowhead)"/>
+  </g>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="red"/>
+    </marker>
+  </defs>
+  
+  <!-- VBS Source -->
+  <g id="vbs" transform="translate(280, 190)">
+    <circle cx="0" cy="0" r="20" stroke="black" stroke-width="2" fill="none"/>
+    <line x1="0" y1="-10" x2="0" y2="10" stroke="black" stroke-width="2"/>
+    <line x1="-5" y1="-5" x2="5" y2="-5" stroke="black" stroke-width="2"/>
+    <line x1="-5" y1="5" x2="5" y2="5" stroke="black" stroke-width="2"/>
+    <text x="30" y="5" font-family="Arial" font-size="12">VBS=0V</text>
+  </g>
+  
+  <!-- Connections -->
+  <line x1="150" y1="150" x2="120" y2="150" stroke="black" stroke-width="1"/>
+  <line x1="220" y1="100" x2="220" y2="130" stroke="black" stroke-width="1"/>
+  <line x1="240" y1="190" x2="260" y2="190" stroke="black" stroke-width="1"/>
+  
+  <!-- Ground -->
+  <g id="ground" transform="translate(220, 220)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="-15" y1="20" x2="15" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="25" x2="10" y2="25" stroke="black" stroke-width="1"/>
+    <line x1="-5" y1="30" x2="5" y2="30" stroke="black" stroke-width="1"/>
+  </g>
+  
+  <!-- Source connection to ground -->
+  <line x1="220" y1="200" x2="220" y2="220" stroke="black" stroke-width="1"/>
+  
+  <!-- Ground connections for voltage sources -->
+  <g transform="translate(100, 190)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="black" stroke-width="1"/>
+    <line x1="0" y1="20" x2="0" y2="30" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="30" x2="10" y2="30" stroke="black" stroke-width="2"/>
+  </g>
+  
+  <g transform="translate(280, 230)">
+    <line x1="0" y1="0" x2="0" y2="10" stroke="black" stroke-width="1"/>
+    <line x1="-10" y1="10" x2="10" y2="10" stroke="black" stroke-width="2"/>
+  </g>
+  
+  <!-- Connection from VGS to ground -->
+  <line x1="100" y1="170" x2="100" y2="190" stroke="black" stroke-width="1"/>
+  
+  <!-- Connection from VBS to ground -->
+  <line x1="280" y1="210" x2="280" y2="230" stroke="black" stroke-width="1"/>
+  
+  <!-- Terminal Labels -->
+  <text x="220" y="70" text-anchor="middle" font-family="Arial" font-size="10">D</text>
+  <text x="140" y="145" text-anchor="middle" font-family="Arial" font-size="10">G</text>
+  <text x="225" y="215" text-anchor="middle" font-family="Arial" font-size="10">S</text>
+  <text x="250" y="185" text-anchor="middle" font-family="Arial" font-size="10">B</text>
+  
+  <!-- Current measurement indicator -->
+  <g transform="translate(220, 45)">
+    <circle cx="0" cy="0" r="15" stroke="blue" stroke-width="2" fill="none"/>
+    <text x="0" y="5" text-anchor="middle" font-family="Arial" font-size="12" fill="blue">IDS</text>
+  </g>
+  
+  <!-- Ammeter connection -->
+  <line x1="220" y1="60" x2="220" y2="80" stroke="black" stroke-width="1"/>
+  <line x1="220" y1="30" x2="220" y2="10" stroke="black" stroke-width="1"/>
+  <line x1="220" y1="10" x2="320" y2="10" stroke="black" stroke-width="1"/>
+  <line x1="320" y1="10" x2="320" y2="260" stroke="black" stroke-width="1"/>
+  <line x1="320" y1="260" x2="220" y2="260" stroke="black" stroke-width="1"/>
+  <line x1="220" y1="260" x2="220" y2="240" stroke="black" stroke-width="1"/>
+  
+  <!-- Measurement note -->
+  <text x="200" y="280" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">VGS swept, VDS fixed at linear region</text>
+</svg>

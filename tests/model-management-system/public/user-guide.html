@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Management System - User Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background-color: #f9fafb;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Left Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .nav-section {
+            padding: 16px 0;
+        }
+        
+        .nav-section-title {
+            padding: 8px 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+        }
+        
+        .nav-item {
+            display: block;
+            padding: 10px 20px;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .nav-item:hover {
+            background-color: #f3f4f6;
+            color: #7c3aed;
+            padding-left: 24px;
+        }
+        
+        .nav-item.active {
+            background-color: #ede9fe;
+            color: #7c3aed;
+            font-weight: 500;
+            border-left: 3px solid #7c3aed;
+        }
+        
+        .nav-subsection {
+            margin-left: 20px;
+            display: none;
+        }
+        
+        .nav-subsection.expanded {
+            display: block;
+        }
+        
+        .nav-subitem {
+            display: block;
+            padding: 6px 20px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.8125rem;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-subitem:hover {
+            color: #a855f7;
+            padding-left: 24px;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background: #f9fafb;
+        }
+        
+        .content-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 24px 40px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .content-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .breadcrumb span {
+            color: #d1d5db;
+        }
+        
+        .content-body {
+            padding: 32px 40px;
+            max-width: 1200px;
+        }
+        
+        .content-section {
+            background: white;
+            border-radius: 8px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .content-section h2 {
+            color: #7c3aed;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        
+        .content-section h3 {
+            color: #4b5563;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 16px;
+        }
+        
+        .content-section h4 {
+            color: #6b7280;
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .content-section p {
+            margin-bottom: 16px;
+            line-height: 1.7;
+            color: #4b5563;
+        }
+        
+        .content-section ul, .content-section ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: #4b5563;
+        }
+        
+        .content-section li {
+            margin-bottom: 8px;
+        }
+        
+        /* Cards and Feature Grids */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+        
+        .feature-card {
+            padding: 24px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-color: #a855f7;
+        }
+        
+        .feature-card h4 {
+            color: #7c3aed;
+            margin-bottom: 12px;
+            font-size: 1.125rem;
+        }
+        
+        .feature-card p {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        /* Alert Boxes */
+        .tip-box, .warning-box, .success-box, .info-box {
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .tip-box {
+            background: #eff6ff;
+            border-left-color: #3b82f6;
+            color: #1e40af;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+            color: #92400e;
+        }
+        
+        .success-box {
+            background: #d1fae5;
+            border-left-color: #10b981;
+            color: #065f46;
+        }
+        
+        .info-box {
+            background: #ede9fe;
+            border-left-color: #7c3aed;
+            color: #5b21b6;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #4b5563;
+            font-size: 0.875rem;
+        }
+        
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Code Blocks */
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 24px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        
+        /* Buttons Demo */
+        .button-demo {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 4px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: white;
+            transition: opacity 0.3s ease;
+        }
+        
+        .button-demo:hover {
+            opacity: 0.85;
+        }
+        
+        .btn-primary { background: #7c3aed; }
+        .btn-success { background: #10b981; }
+        .btn-danger { background: #ef4444; }
+        .btn-info { background: #3b82f6; }
+        .btn-warning { background: #f59e0b; }
+        
+        /* Step Lists */
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 24px;
+            padding-left: 48px;
+            position: relative;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        /* Keyboard shortcuts */
+        kbd {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #1f2937;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 100;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.open {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .content-body {
+                padding: 20px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+        
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>User Guide</h2>
+                <p>Model Management System</p>
+            </div>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">Getting Started</div>
+                <a href="#overview" class="nav-item active" onclick="showSection('overview', this)">Overview</a>
+                <a href="#quickstart" class="nav-item" onclick="showSection('quickstart', this)">Quick Start</a>
+                <a href="#requirements" class="nav-item" onclick="showSection('requirements', this)">Requirements</a>
+                
+                <div class="nav-section-title">Core Features</div>
+                <a href="#dashboard" class="nav-item" onclick="showSection('dashboard', this)">Dashboard</a>
+                <a href="#libraries" class="nav-item" onclick="showSection('libraries', this)">Libraries</a>
+                <a href="#mymodels" class="nav-item" onclick="showSection('mymodels', this)">My Models</a>
+                <a href="#calibration" class="nav-item" onclick="showSection('calibration', this)">Calibration</a>
+                
+                <div class="nav-section-title">Advanced</div>
+                <a href="#workflow" class="nav-item" onclick="showSection('workflow', this)">Workflows</a>
+                <a href="#reports" class="nav-item" onclick="showSection('reports', this)">Reports</a>
+                <a href="#optimization" class="nav-item" onclick="showSection('optimization', this)">Optimization</a>
+                
+                <div class="nav-section-title">Reference</div>
+                <a href="#tips" class="nav-item" onclick="showSection('tips', this)">Tips & Tricks</a>
+                <a href="#shortcuts" class="nav-item" onclick="showSection('shortcuts', this)">Shortcuts</a>
+                <a href="#troubleshooting" class="nav-item" onclick="showSection('troubleshooting', this)">Troubleshooting</a>
+                <a href="#faq" class="nav-item" onclick="showSection('faq', this)">FAQ</a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1 id="section-title">Overview</h1>
+                <div class="breadcrumb">
+                    <span>User Guide</span>
+                    <span>›</span>
+                    <span id="breadcrumb-current">Overview</span>
+                </div>
+            </div>
+            
+            <div class="content-body">
+                <!-- Overview Section -->
+                <section id="overview" class="content-section active">
+                    <h2>System Overview</h2>
+                    <p>The Model Management System is a comprehensive platform designed for managing, calibrating, and deploying electronic component models. It provides engineers with powerful tools to work with compact and behavioral models, enabling efficient calibration against reference data and generation of production-ready outputs.</p>
+                    
+                    <div class="info-box">
+                        <strong>Welcome!</strong> This guide will help you understand and use all features of the Model Management System effectively.
+                    </div>
+                    
+                    <h3>Key Capabilities</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4>📚 Model Library</h4>
+                            <p>Comprehensive library of model templates including BSIM4, PSP, EKV for MOSFETs, and various BJT and passive component models.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>📊 Data Management</h4>
+                            <p>Import, visualize, and validate measurement data from multiple sources with automatic quality assessment.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>🎯 Calibration Engine</h4>
+                            <p>Advanced optimization algorithms including Differential Evolution, Nelder-Mead, and Adam optimizers.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>📈 Real-time Visualization</h4>
+                            <p>Interactive plots with Plotly.js for comprehensive data analysis and model validation.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>🔄 Workflow Automation</h4>
+                            <p>Create custom workflows for batch processing and automated calibration pipelines.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>📝 Documentation</h4>
+                            <p>Automatic report generation with customizable templates for various output formats.</p>
+                        </div>
+                    </div>
+                    
+                    <h3>Technology Stack</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Technology</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Frontend Framework</td>
+                                <td>React 19 with TypeScript</td>
+                                <td>Core application framework</td>
+                            </tr>
+                            <tr>
+                                <td>Styling</td>
+                                <td>Tailwind CSS</td>
+                                <td>Utility-first CSS framework</td>
+                            </tr>
+                            <tr>
+                                <td>Routing</td>
+                                <td>React Router v7</td>
+                                <td>Client-side navigation</td>
+                            </tr>
+                            <tr>
+                                <td>Visualization</td>
+                                <td>Plotly.js & Recharts</td>
+                                <td>Interactive data plotting</td>
+                            </tr>
+                            <tr>
+                                <td>File Operations</td>
+                                <td>JSZip & FileSaver</td>
+                                <td>Export and archive functionality</td>
+                            </tr>
+                            <tr>
+                                <td>Icons</td>
+                                <td>Lucide React</td>
+                                <td>Consistent icon library</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                
+                <!-- Quick Start Section -->
+                <section id="quickstart" class="content-section">
+                    <h2>Quick Start Guide</h2>
+                    <p>Get up and running with the Model Management System in just a few minutes.</p>
+                    
+                    <h3>Initial Setup</h3>
+                    <ol class="step-list">
+                        <li>
+                            <strong>Login to the System</strong>
+                            <p>Access the application URL and login with your credentials. Your role determines available features:</p>
+                            <ul>
+                                <li><strong>Admin:</strong> Full system access and user management</li>
+                                <li><strong>Engineer:</strong> Create and calibrate models</li>
+                                <li><strong>Viewer:</strong> Read-only access to view models and reports</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Navigate to Dashboard</strong>
+                            <p>Review system statistics and recent activities to understand current state.</p>
+                        </li>
+                        <li>
+                            <strong>Import Reference Data</strong>
+                            <p>Go to Libraries → Reference Data and upload your measurement files (JSON, CSV supported).</p>
+                        </li>
+                        <li>
+                            <strong>Select Model Template</strong>
+                            <p>Browse Libraries → Model Templates and choose appropriate model for your device.</p>
+                        </li>
+                        <li>
+                            <strong>Create Calibration Task</strong>
+                            <p>Navigate to My Models and click "New Calibration Task" to start.</p>
+                        </li>
+                    </ol>
+                    
+                    <div class="success-box">
+                        <strong>Quick Tip:</strong> Use the sample data provided in the system to familiarize yourself with the calibration process before working with actual data.
+                    </div>
+                    
+                    <h3>Basic Workflow</h3>
+                    <div class="code-block">
+1. Import Data → 2. Select Model → 3. Configure Parameters → 4. Run Calibration → 5. Validate Results → 6. Export Model
+                    </div>
+                </section>
+                
+                <!-- Requirements Section -->
+                <section id="requirements" class="content-section">
+                    <h2>System Requirements</h2>
+                    
+                    <h3>Browser Requirements</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Browser</th>
+                                <th>Minimum Version</th>
+                                <th>Recommended</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Google Chrome</td>
+                                <td>90+</td>
+                                <td>Latest stable</td>
+                            </tr>
+                            <tr>
+                                <td>Mozilla Firefox</td>
+                                <td>88+</td>
+                                <td>Latest stable</td>
+                            </tr>
+                            <tr>
+                                <td>Microsoft Edge</td>
+                                <td>90+</td>
+                                <td>Latest stable</td>
+                            </tr>
+                            <tr>
+                                <td>Safari</td>
+                                <td>14+</td>
+                                <td>Latest stable</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h3>Hardware Requirements</h3>
+                    <ul>
+                        <li><strong>Processor:</strong> Dual-core 2GHz or better</li>
+                        <li><strong>Memory:</strong> 4GB RAM minimum, 8GB recommended</li>
+                        <li><strong>Display:</strong> 1280x720 minimum, 1920x1080 recommended</li>
+                        <li><strong>Network:</strong> Stable broadband connection</li>
+                        <li><strong>Storage:</strong> 500MB free space for downloads and exports</li>
+                    </ul>
+                    
+                    <div class="warning-box">
+                        <strong>Note:</strong> Heavy calibration tasks may require more resources. Consider using a workstation for large-scale optimization jobs.
+                    </div>
+                </section>
+                
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="content-section">
+                    <h2>Dashboard</h2>
+                    <p>The dashboard is your central hub for monitoring and managing modeling activities.</p>
+                    
+                    <h3>Key Metrics</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4>📊 Total Models</h4>
+                            <p>Total number of calibrated models in your workspace</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>⚡ Active Tasks</h4>
+                            <p>Currently running calibration processes</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>✅ Completed Tasks</h4>
+                            <p>Successfully finished calibrations</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>🎯 Accuracy Rate</h4>
+                            <p>Average calibration accuracy across all models</p>
+                        </div>
+                    </div>
+                    
+                    <h3>Activity Timeline</h3>
+                    <p>The activity timeline shows recent events in chronological order:</p>
+                    <ul>
+                        <li>New model creations</li>
+                        <li>Calibration completions</li>
+                        <li>Data imports</li>
+                        <li>Report generations</li>
+                        <li>System notifications</li>
+                    </ul>
+                    
+                    <h3>Performance Charts</h3>
+                    <p>Interactive charts display trends over time:</p>
+                    <ul>
+                        <li><strong>Calibration Success Rate:</strong> Percentage of successful vs failed calibrations</li>
+                        <li><strong>Processing Time:</strong> Average time for calibration tasks</li>
+                        <li><strong>Model Accuracy:</strong> Trend of model accuracy improvements</li>
+                        <li><strong>Resource Usage:</strong> System resource utilization patterns</li>
+                    </ul>
+                </section>
+                
+                <!-- Libraries Section -->
+                <section id="libraries" class="content-section">
+                    <h2>Libraries</h2>
+                    <p>Centralized repository for all modeling resources including templates, data, and testbenches.</p>
+                    
+                    <h3>Model Templates</h3>
+                    <p>Pre-configured model structures for various component types.</p>
+                    
+                    <h4>MOSFET Models</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Version</th>
+                                <th>Parameters</th>
+                                <th>Use Case</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>BSIM4</td>
+                                <td>4.8.2</td>
+                                <td>400+</td>
+                                <td>Industry standard for digital/analog</td>
+                            </tr>
+                            <tr>
+                                <td>PSP</td>
+                                <td>103.4</td>
+                                <td>200+</td>
+                                <td>Surface potential based</td>
+                            </tr>
+                            <tr>
+                                <td>EKV</td>
+                                <td>3.0</td>
+                                <td>50+</td>
+                                <td>All-region continuous model</td>
+                            </tr>
+                            <tr>
+                                <td>BSIM-CMG</td>
+                                <td>110.0</td>
+                                <td>300+</td>
+                                <td>Multi-gate transistors</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h3>Reference Data Management</h3>
+                    <div class="info-box">
+                        <strong>Supported Formats:</strong> JSON, CSV, S2P (Touchstone), MDIF, and custom formats via adapters.
+                    </div>
+                    
+                    <h4>Data Import Process</h4>
+                    <ol class="step-list">
+                        <li>
+                            <strong>Click Upload Button</strong>
+                            <p>Navigate to Reference Data section and click the upload button.</p>
+                        </li>
+                        <li>
+                            <strong>Select Files</strong>
+                            <p>Choose one or multiple data files from your computer.</p>
+                        </li>
+                        <li>
+                            <strong>Configure Metadata</strong>
+                            <p>Fill in device information, measurement conditions, and tags.</p>
+                        </li>
+                        <li>
+                            <strong>Validate Data</strong>
+                            <p>System automatically checks data integrity and quality.</p>
+                        </li>
+                        <li>
+                            <strong>Save to Library</strong>
+                            <p>Data is stored and indexed for use in calibration.</p>
+                        </li>
+                    </ol>
+                    
+                    <h3>Testbench Library</h3>
+                    <p>Collection of circuit configurations for model validation:</p>
+                    <ul>
+                        <li><strong>DC Sweep:</strong> Id-Vg, Id-Vd characteristics</li>
+                        <li><strong>AC Analysis:</strong> Small-signal parameters</li>
+                        <li><strong>Transient:</strong> Ring oscillator, inverter chains</li>
+                        <li><strong>RF:</strong> S-parameter extraction setups</li>
+                        <li><strong>Custom:</strong> User-defined test circuits</li>
+                    </ul>
+                </section>
+                
+                <!-- My Models Section -->
+                <section id="mymodels" class="content-section">
+                    <h2>My Models</h2>
+                    <p>Personal workspace for managing calibrated models and active tasks.</p>
+                    
+                    <h3>Task Management Interface</h3>
+                    <p>The main table displays all your calibration tasks with the following information:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Task ID</td>
+                                <td>Unique identifier</td>
+                                <td>Click to view details</td>
+                            </tr>
+                            <tr>
+                                <td>Model</td>
+                                <td>Template name and type</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>Status</td>
+                                <td>Current task state</td>
+                                <td>Color-coded badges</td>
+                            </tr>
+                            <tr>
+                                <td>Progress</td>
+                                <td>Completion percentage</td>
+                                <td>Live updates</td>
+                            </tr>
+                            <tr>
+                                <td>Accuracy</td>
+                                <td>Final calibration accuracy</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>Actions</td>
+                                <td>Available operations</td>
+                                <td>Open, Download, Share, Delete</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h3>Task Status Indicators</h3>
+                    <div style="margin: 20px 0;">
+                        <span class="button-demo btn-info">Pending</span>
+                        <span class="button-demo btn-primary">In Progress</span>
+                        <span class="button-demo btn-success">Completed</span>
+                        <span class="button-demo btn-danger">Failed</span>
+                        <span class="button-demo btn-warning">Paused</span>
+                    </div>
+                    
+                    <h3>Model Details Panel</h3>
+                    <p>Clicking on a model opens a detailed side panel with:</p>
+                    <ul>
+                        <li><strong>Model Information:</strong> Template details, version, category</li>
+                        <li><strong>Reference Data:</strong> Dataset used for calibration</li>
+                        <li><strong>Calibration Results:</strong> Final metrics and convergence data</li>
+                        <li><strong>Parameter Values:</strong> Optimized parameters with statistics</li>
+                        <li><strong>Action Buttons:</strong> Open calibration interface, download, share, delete</li>
+                    </ul>
+                    
+                    <div class="tip-box">
+                        <strong>Pro Tip:</strong> Use the search and filter options to quickly find specific models. You can filter by status, model type, or date range.
+                    </div>
+                </section>
+                
+                <!-- Calibration Section -->
+                <section id="calibration" class="content-section">
+                    <h2>Calibration Interface</h2>
+                    <p>Comprehensive environment for model parameter optimization with real-time visualization.</p>
+                    
+                    <h3>Interface Layout</h3>
+                    <p>The calibration interface is organized into five main tabs:</p>
+                    
+                    <h4>1. Model Tab</h4>
+                    <div class="feature-card">
+                        <h4>Parameter Configuration</h4>
+                        <ul>
+                            <li>Complete list of model parameters</li>
+                            <li>Toggle switches for optimization selection</li>
+                            <li>Initial value configuration</li>
+                            <li>Min/max bounds setting</li>
+                            <li>Parameter grouping and search</li>
+                        </ul>
+                    </div>
+                    
+                    <h4>2. Reference Data Tab</h4>
+                    <div class="feature-card">
+                        <h4>Data Selection and Visualization</h4>
+                        <ul>
+                            <li>Interactive plots of measurement data</li>
+                            <li>Multi-page data selection</li>
+                            <li>Data quality indicators</li>
+                            <li>Statistical summaries</li>
+                            <li>Zoom and pan controls</li>
+                        </ul>
+                    </div>
+                    
+                    <h4>3. Simulations Tab</h4>
+                    <div class="feature-card">
+                        <h4>Real-time Simulation</h4>
+                        <ul>
+                            <li>Quick simulation with current parameters</li>
+                            <li>Overlay plots with reference data</li>
+                            <li>Error distribution visualization</li>
+                            <li>Export simulation results</li>
+                        </ul>
+                    </div>
+                    
+                    <h4>4. Calibration Tab</h4>
+                    <div class="feature-card">
+                        <h4>Optimization Control</h4>
+                        <ul>
+                            <li>Algorithm selection (DE, Nelder-Mead, Adam)</li>
+                            <li>Hyperparameter configuration</li>
+                            <li>Real-time progress monitoring</li>
+                            <li>Convergence plots</li>
+                            <li>Parameter evolution tracking</li>
+                        </ul>
+                    </div>
+                    
+                    <h4>5. Documentation Tab</h4>
+                    <div class="feature-card">
+                        <h4>Report Generation</h4>
+                        <ul>
+                            <li>Automatic documentation creation</li>
+                            <li>Customizable templates</li>
+                            <li>Multiple export formats</li>
+                            <li>Version control integration</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Optimization Algorithms</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Type</th>
+                                <th>Best For</th>
+                                <th>Typical Iterations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Differential Evolution</td>
+                                <td>Global</td>
+                                <td>Complex search spaces</td>
+                                <td>100-500</td>
+                            </tr>
+                            <tr>
+                                <td>Nelder-Mead</td>
+                                <td>Local</td>
+                                <td>Fine-tuning</td>
+                                <td>50-200</td>
+                            </tr>
+                            <tr>
+                                <td>Adam</td>
+                                <td>Gradient</td>
+                                <td>Large parameter sets</td>
+                                <td>200-1000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                
+                <!-- Workflow Section -->
+                <section id="workflow" class="content-section">
+                    <h2>Workflow Management</h2>
+                    <p>Create automated pipelines for batch processing and complex calibration scenarios.</p>
+                    
+                    <h3>Workflow Builder</h3>
+                    <p>Visual interface for designing multi-step processes:</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4>Drag & Drop Interface</h4>
+                            <p>Intuitive visual workflow creation with node-based editor</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>Conditional Logic</h4>
+                            <p>Add decision points based on calibration results</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>Parallel Processing</h4>
+                            <p>Run multiple calibrations simultaneously</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>Error Handling</h4>
+                            <p>Define fallback actions for failed steps</p>
+                        </div>
+                    </div>
+                    
+                    <h3>Pre-built Templates</h3>
+                    <ul>
+                        <li><strong>Basic Calibration:</strong> Simple linear workflow</li>
+                        <li><strong>Multi-Corner:</strong> Process, voltage, temperature variations</li>
+                        <li><strong>Validation Suite:</strong> Comprehensive testing pipeline</li>
+                        <li><strong>Production Release:</strong> Full QA and documentation</li>
+                    </ul>
+                </section>
+                
+                <!-- Reports Section -->
+                <section id="reports" class="content-section">
+                    <h2>Reports & Documentation</h2>
+                    <p>Generate professional documentation for calibrated models.</p>
+                    
+                    <h3>Report Types</h3>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4>📋 Calibration Report</h4>
+                            <p>Complete record of calibration process, parameters, and results</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>✅ Validation Report</h4>
+                            <p>Model accuracy assessment with statistical analysis</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>📦 Release Notes</h4>
+                            <p>Production-ready documentation with usage guidelines</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>📊 Comparison Report</h4>
+                            <p>Side-by-side analysis of multiple model versions</p>
+                        </div>
+                    </div>
+                    
+                    <h3>Export Formats</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Format</th>
+                                <th>Best For</th>
+                                <th>Features</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PDF</td>
+                                <td>Formal documentation</td>
+                                <td>Print-ready, embedded plots, bookmarks</td>
+                            </tr>
+                            <tr>
+                                <td>HTML</td>
+                                <td>Web sharing</td>
+                                <td>Interactive plots, responsive design</td>
+                            </tr>
+                            <tr>
+                                <td>Markdown</td>
+                                <td>Version control</td>
+                                <td>Plain text, Git-friendly</td>
+                            </tr>
+                            <tr>
+                                <td>LaTeX</td>
+                                <td>Academic papers</td>
+                                <td>Publication-ready formatting</td>
+                            </tr>
+                            <tr>
+                                <td>DOCX</td>
+                                <td>Corporate reports</td>
+                                <td>Editable, template-based</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                
+                <!-- Optimization Section -->
+                <section id="optimization" class="content-section">
+                    <h2>Optimization Strategies</h2>
+                    <p>Best practices for efficient and accurate model calibration.</p>
+                    
+                    <h3>Parameter Selection Strategy</h3>
+                    <ol class="step-list">
+                        <li>
+                            <strong>Identify Key Parameters</strong>
+                            <p>Start with the most sensitive parameters that significantly affect model behavior.</p>
+                        </li>
+                        <li>
+                            <strong>Set Physical Bounds</strong>
+                            <p>Use realistic physical limits to constrain the search space.</p>
+                        </li>
+                        <li>
+                            <strong>Group Related Parameters</strong>
+                            <p>Optimize related parameters together for better convergence.</p>
+                        </li>
+                        <li>
+                            <strong>Stage Optimization</strong>
+                            <p>Use multiple stages: global search → local refinement.</p>
+                        </li>
+                    </ol>
+                    
+                    <h3>Algorithm Selection Guide</h3>
+                    
+                    <div class="info-box">
+                        <strong>Recommended Approach:</strong> Start with Differential Evolution for global search, then refine with Nelder-Mead for local optimization.
+                    </div>
+                    
+                    <h4>When to Use Each Algorithm</h4>
+                    <ul>
+                        <li><strong>Differential Evolution:</strong>
+                            <ul>
+                                <li>Unknown parameter space</li>
+                                <li>Multiple local minima expected</li>
+                                <li>Initial calibration</li>
+                            </ul>
+                        </li>
+                        <li><strong>Nelder-Mead:</strong>
+                            <ul>
+                                <li>Good initial guess available</li>
+                                <li>Fine-tuning existing model</li>
+                                <li>Small parameter set (< 20)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Adam:</strong>
+                            <ul>
+                                <li>Large parameter sets (> 100)</li>
+                                <li>Differentiable objective function</li>
+                                <li>Neural network-based models</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                
+                <!-- Tips Section -->
+                <section id="tips" class="content-section">
+                    <h2>Tips & Best Practices</h2>
+                    
+                    <h3>Data Preparation</h3>
+                    <ul>
+                        <li>Remove obvious outliers before calibration</li>
+                        <li>Ensure sufficient coverage of operating regions</li>
+                        <li>Weight critical regions more heavily in the cost function</li>
+                        <li>Use multiple datasets for robust calibration</li>
+                        <li>Validate data quality before starting optimization</li>
+                    </ul>
+                    
+                    <h3>Performance Optimization</h3>
+                    <ul>
+                        <li>Start with coarse grid, then refine</li>
+                        <li>Use parallel processing for independent tasks</li>
+                        <li>Cache intermediate results</li>
+                        <li>Monitor memory usage for large datasets</li>
+                        <li>Use data decimation for initial exploration</li>
+                    </ul>
+                    
+                    <h3>Common Pitfalls to Avoid</h3>
+                    <div class="warning-box">
+                        <ul>
+                            <li>Don't optimize all parameters at once</li>
+                            <li>Avoid using default bounds without verification</li>
+                            <li>Don't ignore warning messages from validators</li>
+                            <li>Never skip the validation step</li>
+                            <li>Don't use production data for testing</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Model Validation Checklist</h3>
+                    <ul style="list-style-type: none;">
+                        <li>☐ Check DC characteristics match</li>
+                        <li>☐ Verify AC response accuracy</li>
+                        <li>☐ Validate across temperature range</li>
+                        <li>☐ Test corner cases</li>
+                        <li>☐ Compare with previous versions</li>
+                        <li>☐ Review parameter physical validity</li>
+                        <li>☐ Generate comprehensive report</li>
+                    </ul>
+                </section>
+                
+                <!-- Shortcuts Section -->
+                <section id="shortcuts" class="content-section">
+                    <h2>Keyboard Shortcuts</h2>
+                    <p>Speed up your workflow with these keyboard shortcuts.</p>
+                    
+                    <h3>Global Shortcuts</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Shortcut</th>
+                                <th>Action</th>
+                                <th>Context</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>N</kbd></td>
+                                <td>New calibration task</td>
+                                <td>Any page</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>O</kbd></td>
+                                <td>Open file/import</td>
+                                <td>Libraries</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>S</kbd></td>
+                                <td>Save current work</td>
+                                <td>Calibration</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
+                                <td>Undo</td>
+                                <td>Editors</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td>
+                                <td>Redo</td>
+                                <td>Editors</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>F</kbd></td>
+                                <td>Search/Filter</td>
+                                <td>Tables</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Esc</kbd></td>
+                                <td>Close modal/dialog</td>
+                                <td>Modals</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>F5</kbd></td>
+                                <td>Refresh data</td>
+                                <td>Any page</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>F11</kbd></td>
+                                <td>Toggle fullscreen</td>
+                                <td>Any page</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h3>Calibration Interface</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Shortcut</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><kbd>Tab</kbd></td>
+                                <td>Next tab</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Shift</kbd> + <kbd>Tab</kbd></td>
+                                <td>Previous tab</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Space</kbd></td>
+                                <td>Start/Pause calibration</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>R</kbd></td>
+                                <td>Run simulation</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>E</kbd></td>
+                                <td>Export results</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                
+                <!-- Troubleshooting Section -->
+                <section id="troubleshooting" class="content-section">
+                    <h2>Troubleshooting Guide</h2>
+                    <p>Solutions to common issues and error messages.</p>
+                    
+                    <h3>Common Issues</h3>
+                    
+                    <div class="warning-box">
+                        <h4>Import Errors</h4>
+                        <p><strong>Problem:</strong> "Invalid file format" when importing</p>
+                        <p><strong>Solutions:</strong></p>
+                        <ul>
+                            <li>Verify file format matches expected structure</li>
+                            <li>Check for UTF-8 encoding</li>
+                            <li>Validate JSON syntax</li>
+                            <li>Ensure all required fields present</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <h4>Calibration Failures</h4>
+                        <p><strong>Problem:</strong> Optimization doesn't converge</p>
+                        <p><strong>Solutions:</strong></p>
+                        <ul>
+                            <li>Check initial parameter values</li>
+                            <li>Review parameter bounds</li>
+                            <li>Increase iterations</li>
+                            <li>Try different algorithm</li>
+                            <li>Reduce parameter count</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <h4>Performance Issues</h4>
+                        <p><strong>Problem:</strong> Application runs slowly</p>
+                        <p><strong>Solutions:</strong></p>
+                        <ul>
+                            <li>Clear browser cache</li>
+                            <li>Close unnecessary tabs</li>
+                            <li>Disable extensions</li>
+                            <li>Update browser</li>
+                            <li>Check network speed</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Error Messages</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Error</th>
+                                <th>Cause</th>
+                                <th>Solution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Authentication Failed</td>
+                                <td>Invalid credentials</td>
+                                <td>Check username/password</td>
+                            </tr>
+                            <tr>
+                                <td>Session Expired</td>
+                                <td>Timeout</td>
+                                <td>Re-login</td>
+                            </tr>
+                            <tr>
+                                <td>Insufficient Memory</td>
+                                <td>Large dataset</td>
+                                <td>Reduce data size</td>
+                            </tr>
+                            <tr>
+                                <td>Network Error</td>
+                                <td>Connection issue</td>
+                                <td>Check internet</td>
+                            </tr>
+                            <tr>
+                                <td>Permission Denied</td>
+                                <td>Access rights</td>
+                                <td>Contact admin</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+                
+                <!-- FAQ Section -->
+                <section id="faq" class="content-section">
+                    <h2>Frequently Asked Questions</h2>
+                    
+                    <h3>General Questions</h3>
+                    
+                    <h4>Q: How long does a typical calibration take?</h4>
+                    <p>A: Calibration time varies based on model complexity, parameter count, and algorithm choice. Simple models may take 5-10 minutes, while complex models with many parameters can take several hours.</p>
+                    
+                    <h4>Q: Can I run multiple calibrations simultaneously?</h4>
+                    <p>A: Yes, the system supports parallel processing. You can run multiple calibration tasks at the same time, limited only by available system resources.</p>
+                    
+                    <h4>Q: What file formats are supported for data import?</h4>
+                    <p>A: The system supports JSON, CSV, S-parameter (S2P), MDIF, and can be extended with custom adapters for proprietary formats.</p>
+                    
+                    <h4>Q: How do I share models with team members?</h4>
+                    <p>A: Use the Share button in My Models to generate a shareable link or export the model package for distribution.</p>
+                    
+                    <h3>Technical Questions</h3>
+                    
+                    <h4>Q: What's the difference between global and local optimization?</h4>
+                    <p>A: Global optimization (like Differential Evolution) searches the entire parameter space for the best solution, while local optimization (like Nelder-Mead) refines a solution in a specific region. Global is better for initial calibration, local for fine-tuning.</p>
+                    
+                    <h4>Q: How do I choose the right optimizer?</h4>
+                    <p>A: Start with Differential Evolution for unknown parameter spaces, use Nelder-Mead for refinement when you have a good initial guess, and consider Adam for very large parameter sets.</p>
+                    
+                    <h4>Q: Can I customize the cost function?</h4>
+                    <p>A: Yes, advanced users can define custom cost functions through the API or configuration files. Contact support for documentation.</p>
+                    
+                    <h3>Troubleshooting Questions</h3>
+                    
+                    <h4>Q: Why does my calibration keep failing?</h4>
+                    <p>A: Common causes include: poor initial values, incorrect parameter bounds, insufficient data quality, or too many free parameters. Try reducing complexity and checking data quality first.</p>
+                    
+                    <h4>Q: The application is running slowly. What can I do?</h4>
+                    <p>A: Clear browser cache, close unnecessary tabs, ensure you're using a supported browser version, and check your internet connection. For large datasets, consider data decimation.</p>
+                    
+                    <div class="success-box">
+                        <strong>Need More Help?</strong> Contact support with your question and include relevant error messages, screenshots, and steps to reproduce the issue.
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Mobile Menu Toggle (hidden by default) -->
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <script>
+        // Section navigation
+        function showSection(sectionId, navElement) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Update navigation active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            navElement.classList.add('active');
+            
+            // Update header
+            const sectionTitle = navElement.textContent;
+            document.getElementById('section-title').textContent = sectionTitle;
+            document.getElementById('breadcrumb-current').textContent = sectionTitle;
+            
+            // Scroll to top of content
+            document.querySelector('.main-content').scrollTop = 0;
+            
+            // Close mobile sidebar if open
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        }
+        
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Handle responsive behavior
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Show menu toggle on mobile
+            if (window.innerWidth <= 768) {
+                document.querySelector('.menu-toggle').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

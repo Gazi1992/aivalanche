@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import ThemeToggle from '../ThemeToggle.jsx';
-import ChatInterface from '../ChatInterface.jsx';
+import ChatAssistant from '../Chat/ChatAssistant.jsx';
 import { Logo } from '../icons';
 import './Sidebar.css';
 
@@ -13,7 +13,10 @@ const Sidebar = ({
   onDragStart,
   appTitle,
   currentConfig,
-  onConfigUpdate
+  onConfigUpdate,
+  onClearPlots,
+  onLoadDemo,
+  isLoadingConfig
 }) => {
   const sidebarRef = useRef(null);
 
@@ -34,10 +37,12 @@ const Sidebar = ({
       </div>
 
       <div className="sidebar-content">
-        <ChatInterface 
-          expanded={sidebarExpanded} 
-          currentConfig={currentConfig}
+        <ChatAssistant 
           onConfigUpdate={onConfigUpdate}
+          onDataLoad={(data) => console.log('Data loaded:', data)}
+          onClearPlots={onClearPlots}
+          onLoadDemo={onLoadDemo}
+          isLoadingConfig={isLoadingConfig}
         />
       </div>
 

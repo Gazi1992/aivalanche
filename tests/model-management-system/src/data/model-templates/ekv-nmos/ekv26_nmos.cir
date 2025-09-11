@@ -1,0 +1,27 @@
+* EKV 2.6 NMOS Model
+* Technology: 180nm
+* Model Version: 2.6
+* Date: 2025-01-11
+
+.subckt nmos_ekv d g s b l=180n w=1u
+
+* Include model library
+.include "libs/ekv_core.lib"
+
+* EKV transistor instance
+M1 d g s b ekv_nmos_model L='l' W='w'
+
+* Model card
+.model ekv_nmos_model nmos (
++ level = 44
++ vto = 0.5
++ kp = 150e-6
++ gamma = 0.6
++ phi = 0.7
++ theta = 0.1
++ eta = 0.01
++ cox = 1.5e-3
++ xj = 2e-7
+)
+
+.ends nmos_ekv

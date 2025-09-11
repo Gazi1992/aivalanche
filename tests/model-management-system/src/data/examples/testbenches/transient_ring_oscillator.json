@@ -1,0 +1,191 @@
+{
+  "testbench_id": "TB_TRAN_001",
+  "name": "Ring Oscillator Transient Analysis",
+  "description": "5-stage ring oscillator testbench for measuring propagation delay and oscillation frequency",
+  "type": "transient",
+  "category": "Transient",
+  "version": "1.0",
+  
+  "circuit": {
+    "netlist": [
+      "* 5-Stage Ring Oscillator Testbench",
+      ".param vdd=1.8",
+      ".param wp=2u",
+      ".param wn=1u",
+      ".param lmin=0.18u",
+      ".param cload=10f",
+      "",
+      "* Supply",
+      "Vdd vdd 0 DC {vdd}",
+      "",
+      "* Stage 1",
+      "Mp1 out1 in1 vdd vdd pmos_model W={wp} L={lmin}",
+      "Mn1 out1 in1 0 0 nmos_model W={wn} L={lmin}",
+      "C1 out1 0 {cload}",
+      "",
+      "* Stage 2",
+      "Mp2 out2 out1 vdd vdd pmos_model W={wp} L={lmin}",
+      "Mn2 out2 out1 0 0 nmos_model W={wn} L={lmin}",
+      "C2 out2 0 {cload}",
+      "",
+      "* Stage 3",
+      "Mp3 out3 out2 vdd vdd pmos_model W={wp} L={lmin}",
+      "Mn3 out3 out2 0 0 nmos_model W={wn} L={lmin}",
+      "C3 out3 0 {cload}",
+      "",
+      "* Stage 4",
+      "Mp4 out4 out3 vdd vdd pmos_model W={wp} L={lmin}",
+      "Mn4 out4 out3 0 0 nmos_model W={wn} L={lmin}",
+      "C4 out4 0 {cload}",
+      "",
+      "* Stage 5",
+      "Mp5 in1 out4 vdd vdd pmos_model W={wp} L={lmin}",
+      "Mn5 in1 out4 0 0 nmos_model W={wn} L={lmin}",
+      "C5 in1 0 {cload}",
+      "",
+      "* Initial Condition",
+      ".ic v(in1)=0 v(out1)={vdd}",
+      "",
+      "* Transient Analysis",
+      ".tran 1p 10n",
+      "",
+      "* Output",
+      ".print tran v(in1) v(out1) v(out2) v(out3) v(out4)",
+      ".end"
+    ],
+    "parameters": {
+      "vdd": {
+        "default": 1.8,
+        "unit": "V",
+        "description": "Supply voltage"
+      },
+      "wp": {
+        "default": 2e-6,
+        "unit": "m",
+        "description": "PMOS width"
+      },
+      "wn": {
+        "default": 1e-6,
+        "unit": "m",
+        "description": "NMOS width"
+      },
+      "lmin": {
+        "default": 0.18e-6,
+        "unit": "m",
+        "description": "Minimum channel length"
+      },
+      "cload": {
+        "default": 10e-15,
+        "unit": "F",
+        "description": "Load capacitance per stage"
+      }
+    }
+  },
+  
+  "simulation_settings": {
+    "analysis_type": "Transient",
+    "time_range": {
+      "start": 0,
+      "stop": 10e-9,
+      "step": 1e-12
+    },
+    "initial_conditions": {
+      "in1": 0,
+      "out1": 1.8
+    },
+    "temperature": 27,
+    "convergence": {
+      "method": "gear",
+      "reltol": 1e-4,
+      "abstol": 1e-14,
+      "vntol": 1e-6,
+      "trtol": 7
+    }
+  },
+  
+  "measurements": [
+    "measure tran period trig v(in1) val=0.9 rise=2 targ v(in1) val=0.9 rise=3",
+    "measure tran frequency param='1/period'",
+    "measure tran tpd_rise trig v(in1) val=0.9 rise=1 targ v(out1) val=0.9 fall=1",
+    "measure tran tpd_fall trig v(in1) val=0.9 fall=1 targ v(out1) val=0.9 rise=2",
+    "measure tran tpd param='(tpd_rise+tpd_fall)/2'",
+    "measure tran tpd_stage param='tpd/5'",
+    "measure tran vswing pp v(in1)",
+    "measure tran idd_avg avg i(Vdd)"
+  ],
+  
+  "outputs": {
+    "frequency": {
+      "unit": "Hz",
+      "description": "Oscillation frequency"
+    },
+    "period": {
+      "unit": "s",
+      "description": "Oscillation period"
+    },
+    "tpd": {
+      "unit": "s",
+      "description": "Average propagation delay"
+    },
+    "tpd_stage": {
+      "unit": "s",
+      "description": "Propagation delay per stage"
+    },
+    "power": {
+      "unit": "W",
+      "description": "Average power consumption"
+    },
+    "vswing": {
+      "unit": "V",
+      "description": "Output voltage swing"
+    }
+  },
+  
+  "compatible_devices": ["NMOS", "PMOS", "CMOS"],
+  "compatible_models": ["BSIM4", "PSP", "EKV"],
+  
+  "validation": {
+    "validated": true,
+    "validation_date": "2024-01-14",
+    "validated_by": "Digital Team"
+  },
+  
+  "examples": [
+    {
+      "name": "3-Stage Ring Oscillator",
+      "description": "Simplified 3-stage version",
+      "netlist": [
+        ".param vdd=1.8",
+        "Vdd vdd 0 DC 1.8",
+        "* Stage 1",
+        "Mp1 out1 in1 vdd vdd pmos W=2u L=0.18u",
+        "Mn1 out1 in1 0 0 nmos W=1u L=0.18u",
+        "* Stage 2",
+        "Mp2 out2 out1 vdd vdd pmos W=2u L=0.18u",
+        "Mn2 out2 out1 0 0 nmos W=1u L=0.18u",
+        "* Stage 3",
+        "Mp3 in1 out2 vdd vdd pmos W=2u L=0.18u",
+        "Mn3 in1 out2 0 0 nmos W=1u L=0.18u",
+        ".ic v(in1)=0",
+        ".tran 1p 5n",
+        ".end"
+      ]
+    }
+  ],
+  
+  "tags": ["transient", "ring-oscillator", "propagation-delay", "digital", "timing", "validated"],
+  
+  "author": {
+    "name": "Digital Design Team",
+    "email": "digital@example.com",
+    "department": "Digital Engineering"
+  },
+  
+  "schematic": "ring_oscillator_schematic.png",
+  "documentation_url": "https://docs.example.com/testbenches/ring-oscillator",
+  
+  "timestamps": {
+    "created": "2024-01-14T11:00:00Z",
+    "modified": "2024-01-20T09:30:00Z"
+  }
+}

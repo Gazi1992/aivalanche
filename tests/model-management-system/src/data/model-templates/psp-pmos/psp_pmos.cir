@@ -1,0 +1,40 @@
+* PSP PMOS Model Entry Point
+* Technology: 40nm
+* Model Version: 103.8
+* Date: 2025-01-11
+
+.subckt pmos_40nm d g s b l=40n w=2u mult=1
+
+* Include model library files
+.include "libs/psp103_core.lib"
+.include "libs/psp_juncap.lib"
+
+* Instance parameters
+.param L_eff = 'L'
+.param W_eff = 'W * mult'
+
+* Main transistor instance
+M1 d g s b pmos_model L='L_eff' W='W_eff' MULT='mult'
+
+* Junction capacitances (JUNCAP2 model)
+Djd d b pjunc area='W_eff*0.5u' perim='2*(W_eff+0.5u)'
+Djs s b pjunc area='W_eff*0.5u' perim='2*(W_eff+0.5u)'
+
+* Temperature
+.temp 27
+
+* Model card reference
+.model pmos_model pmos (
++ level = 103
++ version = 103.8
++ tr = 27
++ mobmod = 1
++ capmod = 1
++ gidlmod = 1
++ gislmod = 1
++ swjuncap = 2
+)
+
+.ends pmos_40nm
+
+* End of file

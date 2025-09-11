@@ -91,67 +91,11 @@ class SchemaRegistry:
     """Registry of schemas for different parts of the configuration."""
 
     GENERAL_SCHEMA: Dict[str, ConfigField] = {
-        "app_title": ConfigField(
-            field_type=str,
-            default="Visualization Tool",
-            description="Title of the application window"
-        ),
-        "left_margin": ConfigField(
-            field_type=(int, float),
-            default=10,
-            validator=is_non_negative,
-            description="Left margin in pixels"
-        ),
-        "right_margin": ConfigField(
-            field_type=(int, float),
-            default=10,
-            validator=is_non_negative,
-            description="Right margin in pixels"
-        ),
-        "top_margin": ConfigField(
-            field_type=(int, float),
-            default=10,
-            validator=is_non_negative,
-            description="Top margin in pixels"
-        ),
-        "bottom_margin": ConfigField(
-            field_type=(int, float),
-            default=10,
-            validator=is_non_negative,
-            description="Bottom margin in pixels"
-        ),
         "theme": ConfigField(
             field_type=str,
             default=SCHEMA_DEFAULT_THEME,
             possible_values=VALID_THEME_CONFIG_KEYS,
             description=f"Application theme. Available: {', '.join(VALID_THEME_CONFIG_KEYS)}"
-        ),
-    }
-
-    GRID_LAYOUT_SCHEMA: Dict[str, ConfigField] = {
-        "rows": ConfigField(
-            field_type=(int, type(None)),
-            default=None,
-            validator=is_positive, # Validator needs to handle None if passed (current one returns False for None)
-            description="Number of rows in the grid (calculated automatically if omitted)"
-        ),
-        "cols": ConfigField(
-            field_type=(int, type(None)),
-            default=None,
-            validator=is_positive,
-            description="Number of columns in the grid (calculated automatically if omitted)"
-        ),
-        "horizontal_spacing": ConfigField(
-            field_type=(int, float),
-            default=10,
-            validator=is_non_negative,
-            description="Horizontal spacing between plots in pixels"
-        ),
-        "vertical_spacing": ConfigField(
-            field_type=(int, float),
-            default=10,
-            validator=is_non_negative,
-            description="Vertical spacing between plots in pixels"
         ),
     }
 
@@ -606,31 +550,8 @@ class SchemaRegistry:
             validator=is_non_negative,
             description="Width of the bar border in pixels (0 for no border)."
         ),
-        "show_fit": ConfigField(
-            field_type=bool,
-            default=False,
-            description="Whether to overlay a fitted normal distribution line on the histogram."
-        ),
-        "fit_color": ConfigField(
-            field_type=(str, type(None)),
-            default="#000000",
-            validator=is_valid_hex_color,
-            description="Color of the fitted distribution line."
-        ),
-        "fitting_type": ConfigField(
-            field_type=str,
-            default="normal",
-            possible_values=[
-                "normal",
-                "linear",
-                "quadratic",
-                "cubic_spline",
-                "hermite_cubic_spline",
-                "pchip",
-                "best"
-            ],
-            description="Algorithm used for the fit curve. 'best' tries all supported types and chooses the one with the lowest error. Default 'pchip' produces a Hermite cubic spline fit."
-        ),
+        # Fit options removed from config but kept in backend for future use
+        # "show_fit", "fit_color", "fitting_type" can be added programmatically when needed
         "legend_name": ConfigField(
             field_type=(str, type(None)),
             default=None,
@@ -863,10 +784,6 @@ class SchemaRegistry:
     @classmethod
     def get_general_schema(cls) -> Dict[str, ConfigField]:
         return cls.GENERAL_SCHEMA
-
-    @classmethod
-    def get_grid_layout_schema(cls) -> Dict[str, ConfigField]:
-        return cls.GRID_LAYOUT_SCHEMA
 
     @classmethod
     def get_base_figure_schema(cls) -> Dict[str, ConfigField]:

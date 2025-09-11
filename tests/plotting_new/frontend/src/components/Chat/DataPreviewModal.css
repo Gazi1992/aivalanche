@@ -1,0 +1,453 @@
+.data-preview-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.data-preview-modal {
+  background: var(--card-background-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-color);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-button:hover {
+  background: var(--hover-background);
+  color: var(--text-color);
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 24px;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 12px 20px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.95rem;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: var(--text-color);
+  background: var(--hover-background);
+}
+
+.tab.active {
+  color: var(--primary-color);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary-color);
+}
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.tab-content {
+  animation: fadeIn 0.2s ease;
+}
+
+/* Overview Tab */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--background-color);
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.patterns-section,
+.suggestions-section {
+  margin-top: 24px;
+}
+
+.patterns-section h3,
+.suggestions-section h3,
+.insight-group h3 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  color: var(--text-color);
+}
+
+.patterns-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.patterns-section li {
+  padding: 8px 0;
+  color: var(--text-secondary);
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--background-color);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.plot-type {
+  font-weight: 600;
+  color: var(--primary-color);
+  text-transform: capitalize;
+  min-width: 120px;
+}
+
+.plot-reason {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Columns Tab */
+.columns-table {
+  overflow-x: auto;
+}
+
+.columns-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.columns-table th {
+  background: var(--background-color);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.columns-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.column-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.type-badge.type-numeric-continuous,
+.type-badge.type-numeric-discrete {
+  background: rgba(59, 130, 246, 0.1);
+  color: rgb(59, 130, 246);
+}
+
+.type-badge.type-categorical {
+  background: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+}
+
+.type-badge.type-temporal {
+  background: rgba(245, 158, 11, 0.1);
+  color: rgb(245, 158, 11);
+}
+
+.type-badge.type-text {
+  background: rgba(139, 92, 246, 0.1);
+  color: rgb(139, 92, 246);
+}
+
+.column-details {
+  font-size: 0.85rem;
+}
+
+.detail-text {
+  color: var(--text-secondary);
+}
+
+/* Quality Tab */
+.quality-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quality-issue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.quality-issue-item.severity-high {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.quality-issue-item.severity-medium {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.quality-issue-item.severity-low {
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.issue-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.issue-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.issue-category {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.issue-message {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.no-issues {
+  text-align: center;
+  padding: 40px;
+}
+
+.success-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.no-issues p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+/* Insights Tab */
+.insights-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.insight-group {
+  background: var(--background-color);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.correlation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.correlation-item:last-child {
+  border-bottom: none;
+}
+
+.correlation-pair {
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.correlation-value {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  background: var(--hover-background);
+}
+
+.correlation-value.strong {
+  background: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+}
+
+/* Sample Data Tab */
+.sample-data-table {
+  overflow-x: auto;
+}
+
+.sample-data-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.sample-data-table th {
+  background: var(--background-color);
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+}
+
+.sample-data-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.null-value {
+  color: var(--text-disabled);
+  font-style: italic;
+}
+
+.sample-note {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 16px;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar styling */
+.modal-content::-webkit-scrollbar,
+.sample-data-table::-webkit-scrollbar,
+.columns-table::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.sample-data-table::-webkit-scrollbar-track,
+.columns-table::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.sample-data-table::-webkit-scrollbar-thumb,
+.columns-table::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.sample-data-table::-webkit-scrollbar-thumb:hover,
+.columns-table::-webkit-scrollbar-thumb:hover {
+  background: var(--text-disabled);
+}

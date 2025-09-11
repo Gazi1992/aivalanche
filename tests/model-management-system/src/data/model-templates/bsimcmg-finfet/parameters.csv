@@ -1,0 +1,11 @@
+name,subckt,default,min,max,unit,description
+TFIN,finfet_model,7e-9,5e-9,10e-9,m,Fin thickness
+FPITCH,finfet_model,42e-9,30e-9,60e-9,m,Fin pitch
+NFIN,instance,2,1,20,-,Number of fins
+L,instance,14e-9,14e-9,100e-9,m,Gate length
+PHIG,finfet_model,4.6,4.4,4.8,eV,Gate work function
+VTH0,finfet_model,0.35,0.2,0.5,V,Threshold voltage
+K1,finfet_model,0.4,0.2,0.6,V^0.5,Body effect coefficient
+K2,finfet_model,0.01,-0.05,0.05,-,Second body effect
+QM0,finfet_model,0.001,0,0.01,-,Quantum effect parameter
+ETAQM,finfet_model,0.54,0.4,0.7,-,Quantum effect exponent

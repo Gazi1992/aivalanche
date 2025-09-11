@@ -1,366 +1,181 @@
-2025-08-05 16:22:51,021 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-08-05 16:22:51,021 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-08-05 16:22:51,022 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-08-05 16:22:51,022 [WARNING] backend.core.config_loader: General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,022 [WARNING] backend.core.config_loader: General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,023 [WARNING] backend.core.config_loader: General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,023 [WARNING] backend.core.config_loader: General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader: General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader: Configuration validation completed with 8 errors/warnings.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:22:51,024 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-08-05 16:22:51,024 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-08-05 16:22:51,155 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data.csv' (ext=.csv)
-2025-08-05 16:22:51,182 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
-2025-08-05 16:22:51,230 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-08-05 16:22:51,231 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data_1.csv' (ext=.csv)
-2025-08-05 16:22:51,259 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
-2025-08-05 16:22:51,295 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-08-05 16:22:51,295 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:22:51,295 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:51,295 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:22:51,295 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure1: 'Temperature (°C)'
-2025-08-05 16:22:51,295 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (°C)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:51,353 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
-2025-08-05 16:22:51,358 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
-2025-08-05 16:22:51,365 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-08-05 16:22:51,365 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-08-05 16:22:51,365 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-08-05 16:22:51,368 [DEBUG] backend.core.data_handler: Loading dataset 'histogram_data.csv' (ext=.csv)
-2025-08-05 16:22:51,387 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
-2025-08-05 16:22:53,173 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-08-05 16:22:53,175 [DEBUG] backend.core.data_handler: Loading dataset 'female_histogram_data.csv' (ext=.csv)
-2025-08-05 16:22:53,208 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
-2025-08-05 16:22:55,632 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-08-05 16:22:55,632 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:22:55,633 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:55,633 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:22:55,633 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure5: 'Frequency'
-2025-08-05 16:22:55,633 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:55,665 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
-2025-08-05 16:22:55,672 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
-2025-08-05 16:22:55,675 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-08-05 16:22:55,675 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-08-05 16:22:55,675 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-08-05 16:22:55,675 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-08-05 16:22:55,677 [DEBUG] backend.core.data_handler: Loading dataset 'mosfet_characteristic_dense.csv' (ext=.csv)
-2025-08-05 16:22:55,694 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
-2025-08-05 16:22:55,712 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-08-05 16:22:55,712 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:22:55,712 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:55,712 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:22:55,712 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure10: 'I_D (A)'
-2025-08-05 16:22:55,712 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:55,748 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
-2025-08-05 16:22:55,756 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
-2025-08-05 16:22:55,760 [DEBUG] backend.core.data_handler: Loading dataset 'scatter_matrix_data.csv' (ext=.csv)
-2025-08-05 16:22:55,780 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:22:58,246 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-08-05 16:22:58,246 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:22:58,246 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:58,246 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:22:58,246 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:58,284 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:22:59,329 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-08-05 16:22:59,330 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:22:59,330 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:59,330 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:22:59,330 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:22:59,351 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
-2025-08-05 16:22:59,351 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3
-2025-08-05 16:26:39,804 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-08-05 16:26:39,804 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-08-05 16:26:39,804 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-08-05 16:26:39,804 [WARNING] backend.core.config_loader: General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,804 [WARNING] backend.core.config_loader: General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,804 [WARNING] backend.core.config_loader: General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,804 [WARNING] backend.core.config_loader: General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,805 [WARNING] backend.core.config_loader: General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,805 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:26:39,805 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:26:39,806 [WARNING] backend.core.config_loader: Configuration validation completed with 8 errors/warnings.
-2025-08-05 16:26:39,806 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,806 [WARNING] backend.core.config_loader:   - General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,807 [WARNING] backend.core.config_loader:   - General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,807 [WARNING] backend.core.config_loader:   - General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,807 [WARNING] backend.core.config_loader:   - General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:39,807 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:26:39,807 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:26:39,807 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-08-05 16:26:39,807 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-08-05 16:26:39,809 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
-2025-08-05 16:26:39,809 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-08-05 16:26:39,809 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
-2025-08-05 16:26:39,811 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-08-05 16:26:39,811 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:26:39,811 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:39,811 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:26:39,811 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure1: 'Temperature (°C)'
-2025-08-05 16:26:39,812 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (°C)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:39,825 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
-2025-08-05 16:26:39,825 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
-2025-08-05 16:26:39,828 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-08-05 16:26:39,828 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-08-05 16:26:39,828 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-08-05 16:26:39,828 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
-2025-08-05 16:26:40,417 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-08-05 16:26:40,417 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
-2025-08-05 16:26:41,509 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-08-05 16:26:41,509 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:26:41,509 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:41,509 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:26:41,509 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure5: 'Frequency'
-2025-08-05 16:26:41,509 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:41,533 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
-2025-08-05 16:26:41,539 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
-2025-08-05 16:26:41,541 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-08-05 16:26:41,541 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-08-05 16:26:41,541 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-08-05 16:26:41,541 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-08-05 16:26:41,542 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
-2025-08-05 16:26:41,551 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-08-05 16:26:41,551 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:26:41,551 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:41,553 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:26:41,553 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure10: 'I_D (A)'
-2025-08-05 16:26:41,553 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:41,580 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
-2025-08-05 16:26:41,583 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
-2025-08-05 16:26:41,586 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:26:42,536 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-08-05 16:26:42,536 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:26:42,536 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:42,536 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:26:42,536 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:42,553 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:26:43,221 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-08-05 16:26:43,222 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:26:43,222 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:43,222 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:26:43,222 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:43,240 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
-2025-08-05 16:26:43,240 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3
-2025-08-05 16:26:43,270 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-08-05 16:26:43,270 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-08-05 16:26:43,272 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader: Configuration validation completed with 8 errors/warnings.
-2025-08-05 16:26:43,272 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,273 [WARNING] backend.core.config_loader:   - General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,273 [WARNING] backend.core.config_loader:   - General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,273 [WARNING] backend.core.config_loader:   - General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,273 [WARNING] backend.core.config_loader:   - General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:26:43,273 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:26:43,273 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:26:43,273 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-08-05 16:26:43,273 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-08-05 16:26:43,278 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
-2025-08-05 16:26:43,280 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-08-05 16:26:43,281 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
-2025-08-05 16:26:43,292 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-08-05 16:26:43,292 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:26:43,292 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:43,292 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:26:43,293 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure1: 'Temperature (°C)'
-2025-08-05 16:26:43,293 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (°C)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:43,331 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
-2025-08-05 16:26:43,339 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
-2025-08-05 16:26:43,342 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-08-05 16:26:43,342 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-08-05 16:26:43,342 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-08-05 16:26:43,343 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
-2025-08-05 16:26:44,495 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-08-05 16:26:44,497 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
-2025-08-05 16:26:45,573 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-08-05 16:26:45,573 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:26:45,573 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:45,573 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:26:45,573 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure5: 'Frequency'
-2025-08-05 16:26:45,576 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:45,601 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
-2025-08-05 16:26:45,615 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
-2025-08-05 16:26:45,619 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-08-05 16:26:45,619 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-08-05 16:26:45,619 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-08-05 16:26:45,619 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-08-05 16:26:45,622 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
-2025-08-05 16:26:45,629 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-08-05 16:26:45,629 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:26:45,629 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:45,629 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:26:45,629 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure10: 'I_D (A)'
-2025-08-05 16:26:45,629 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:45,671 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
-2025-08-05 16:26:45,676 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
-2025-08-05 16:26:45,679 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:26:46,728 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-08-05 16:26:46,728 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:26:46,728 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:46,728 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:26:46,728 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:46,772 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:26:47,516 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-08-05 16:26:47,516 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:26:47,516 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:47,516 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:26:47,516 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:26:47,533 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
-2025-08-05 16:26:47,533 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3
-2025-08-05 16:27:07,321 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-08-05 16:27:07,321 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-08-05 16:27:07,321 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-08-05 16:27:07,321 [WARNING] backend.core.config_loader: General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,321 [WARNING] backend.core.config_loader: General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,321 [WARNING] backend.core.config_loader: General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,321 [WARNING] backend.core.config_loader: General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,321 [WARNING] backend.core.config_loader: General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader: Configuration validation completed with 8 errors/warnings.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:27:07,323 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-08-05 16:27:07,323 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-08-05 16:27:07,323 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
-2025-08-05 16:27:07,323 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-08-05 16:27:07,326 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
-2025-08-05 16:27:07,329 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-08-05 16:27:07,329 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:27:07,329 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:07,330 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:27:07,330 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure1: 'Temperature (°C)'
-2025-08-05 16:27:07,330 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (°C)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:07,438 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
-2025-08-05 16:27:07,454 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
-2025-08-05 16:27:07,454 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-08-05 16:27:07,454 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-08-05 16:27:07,454 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-08-05 16:27:07,454 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
-2025-08-05 16:27:08,383 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-08-05 16:27:08,383 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
-2025-08-05 16:27:08,743 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-08-05 16:27:08,743 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:27:08,743 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:08,743 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:27:08,743 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure5: 'Frequency'
-2025-08-05 16:27:08,743 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:08,753 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
-2025-08-05 16:27:08,755 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
-2025-08-05 16:27:08,757 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-08-05 16:27:08,757 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-08-05 16:27:08,757 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-08-05 16:27:08,757 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-08-05 16:27:08,757 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
-2025-08-05 16:27:08,761 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-08-05 16:27:08,761 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:27:08,761 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:08,761 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:27:08,761 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure10: 'I_D (A)'
-2025-08-05 16:27:08,761 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:08,770 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
-2025-08-05 16:27:08,772 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
-2025-08-05 16:27:08,774 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:27:09,144 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-08-05 16:27:09,144 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:27:09,144 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:09,144 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:27:09,144 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:09,152 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:27:09,424 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-08-05 16:27:09,424 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:27:09,424 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:09,424 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:27:09,424 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:09,432 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
-2025-08-05 16:27:09,432 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3
-2025-08-05 16:27:09,445 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\sample_config.json
-2025-08-05 16:27:09,445 [INFO] backend.core.config_loader: Applying configuration defaults...
-2025-08-05 16:27:09,446 [INFO] backend.core.config_loader: Starting configuration validation...
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader: Configuration validation completed with 8 errors/warnings.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[1]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[2]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[3]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[4]: Unrecognized field 'grid_alpha' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
-2025-08-05 16:27:09,446 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
-2025-08-05 16:27:09,446 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
-2025-08-05 16:27:09,448 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
-2025-08-05 16:27:09,449 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
-2025-08-05 16:27:09,449 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
-2025-08-05 16:27:09,450 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
-2025-08-05 16:27:09,450 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:27:09,450 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:09,451 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
-2025-08-05 16:27:09,451 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure1: 'Temperature (°C)'
-2025-08-05 16:27:09,451 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (°C)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:09,457 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
-2025-08-05 16:27:09,462 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
-2025-08-05 16:27:09,462 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
-2025-08-05 16:27:09,462 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
-2025-08-05 16:27:09,462 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
-2025-08-05 16:27:09,466 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
-2025-08-05 16:27:09,822 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
-2025-08-05 16:27:09,822 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
-2025-08-05 16:27:10,162 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
-2025-08-05 16:27:10,162 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:27:10,162 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,162 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
-2025-08-05 16:27:10,162 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure5: 'Frequency'
-2025-08-05 16:27:10,162 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,171 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
-2025-08-05 16:27:10,173 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
-2025-08-05 16:27:10,173 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
-2025-08-05 16:27:10,173 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
-2025-08-05 16:27:10,173 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
-2025-08-05 16:27:10,173 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
-2025-08-05 16:27:10,176 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
-2025-08-05 16:27:10,176 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
-2025-08-05 16:27:10,179 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:27:10,179 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,179 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
-2025-08-05 16:27:10,179 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure10: 'I_D (A)'
-2025-08-05 16:27:10,179 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,188 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
-2025-08-05 16:27:10,188 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
-2025-08-05 16:27:10,191 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:27:10,596 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
-2025-08-05 16:27:10,596 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:27:10,596 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,596 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
-2025-08-05 16:27:10,596 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,607 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
-2025-08-05 16:27:10,880 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
-2025-08-05 16:27:10,880 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:27:10,880 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,880 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
-2025-08-05 16:27:10,880 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
-2025-08-05 16:27:10,888 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
-2025-08-05 16:27:10,888 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3
+2025-08-24 20:28:18,634 [INFO] backend.core.ai.ai_service: Enhanced AI service initialized
+2025-08-24 20:40:21,283 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\OneDrive\Documents\aivalanche\code\aivalanche\tests\plotting_new\data\configs\default_config.json
+2025-08-24 20:40:21,283 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-08-24 20:40:21,283 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-08-24 20:40:21,283 [WARNING] backend.core.config_loader: General config -> figures[0]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader: General config -> figures[1]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader: General config -> figures[2]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader: General config -> figures[3]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader: General config -> figures[4]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader: General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader: Configuration validation completed with 8 errors/warnings.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader:   - General config -> figures[0]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader:   - General config -> figures[1]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader:   - General config -> figures[2]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader:   - General config -> figures[3]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader:   - General config -> figures[4]: Unrecognized field 'grid_alpha' found.
+2025-08-24 20:40:21,284 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'color_map' found.
+2025-08-24 20:40:21,285 [WARNING] backend.core.config_loader:   - General config -> figures[9] -> items[0] (type: line): Unrecognized field 'show_colorbar' found.
+2025-08-24 20:40:21,285 [WARNING] backend.core.config_loader:   - General config -> figures[11] -> items[0] (type: scatter_matrix): Field 'color' must be of type str, got NoneType
+2025-08-24 20:40:21,285 [WARNING] backend.core.dashboard_builder: Config validation reported issues – proceeding anyway.
+2025-08-24 20:40:21,327 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data.csv' (ext=.csv)
+2025-08-24 20:40:21,330 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data.csv with 11 rows
+2025-08-24 20:40:21,358 [DEBUG] backend.core.dashboard_builder: Added single 'line' trace with solid color
+2025-08-24 20:40:21,359 [DEBUG] backend.core.data_handler: Loading dataset 'temperature_data_1.csv' (ext=.csv)
+2025-08-24 20:40:21,361 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset temperature_data_1.csv with 11 rows
+2025-08-24 20:40:21,386 [DEBUG] backend.core.dashboard_builder: Added single 'scatter' trace with continuous color from column 'Noise'
+2025-08-24 20:40:21,386 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure1: min=None, max=None, reversed=False
+2025-08-24 20:40:21,386 [DEBUG] backend.core.dashboard_builder: X-axis config for figure1: {'type': 'linear', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Time (s)'}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:21,386 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure1: min=None, max=None, reversed=False
+2025-08-24 20:40:21,386 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure1: 'Temperature (°C)'
+2025-08-24 20:40:21,386 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure1: {'type': 'log', 'showgrid': True, 'gridcolor': 'rgba(255, 0, 0, 0.3)', 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(255, 0, 0, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(255, 0, 0, 1)', 'title': {'font': {'size': 14}, 'text': 'Temperature (°C)'}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:21,457 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure1
+2025-08-24 20:40:21,463 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure1
+2025-08-24 20:40:21,470 [INFO] backend.core.dashboard_builder: Skipping figure figure2 due to visibility=false
+2025-08-24 20:40:21,470 [INFO] backend.core.dashboard_builder: Skipping figure figure3 due to visibility=false
+2025-08-24 20:40:21,470 [INFO] backend.core.dashboard_builder: Skipping figure figure4 due to visibility=false
+2025-08-24 20:40:21,472 [DEBUG] backend.core.data_handler: Loading dataset 'histogram_data.csv' (ext=.csv)
+2025-08-24 20:40:21,475 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset histogram_data.csv with 67 rows
+2025-08-24 20:40:23,289 [DEBUG] backend.core.dashboard_builder: Histogram trace male_hist added bins=15
+2025-08-24 20:40:23,289 [DEBUG] backend.core.data_handler: Loading dataset 'female_histogram_data.csv' (ext=.csv)
+2025-08-24 20:40:23,294 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset female_histogram_data.csv with 56 rows
+2025-08-24 20:40:24,425 [DEBUG] backend.core.dashboard_builder: Histogram trace female_hist added bins=15
+2025-08-24 20:40:24,425 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure5: min=None, max=None, reversed=False
+2025-08-24 20:40:24,425 [DEBUG] backend.core.dashboard_builder: X-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Value'}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:24,425 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure5: min=None, max=None, reversed=False
+2025-08-24 20:40:24,425 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure5: 'Frequency'
+2025-08-24 20:40:24,425 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure5: {'type': 'linear', 'showgrid': False, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:24,446 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure5
+2025-08-24 20:40:24,451 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure5
+2025-08-24 20:40:24,452 [INFO] backend.core.dashboard_builder: Skipping figure figure6 due to visibility=false
+2025-08-24 20:40:24,452 [INFO] backend.core.dashboard_builder: Skipping figure figure7 due to visibility=false
+2025-08-24 20:40:24,452 [INFO] backend.core.dashboard_builder: Skipping figure figure8 due to visibility=false
+2025-08-24 20:40:24,453 [INFO] backend.core.dashboard_builder: Skipping figure figure9 due to visibility=false
+2025-08-24 20:40:24,453 [DEBUG] backend.core.data_handler: Loading dataset 'mosfet_characteristic_dense.csv' (ext=.csv)
+2025-08-24 20:40:24,456 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
+2025-08-24 20:40:24,462 [DEBUG] backend.core.dashboard_builder: Added 3 'line' traces grouped by column 'vgs'
+2025-08-24 20:40:24,462 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure10: min=None, max=None, reversed=False
+2025-08-24 20:40:24,462 [DEBUG] backend.core.dashboard_builder: X-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'V_DS (V)'}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:24,462 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure10: min=None, max=None, reversed=False
+2025-08-24 20:40:24,462 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure10: 'I_D (A)'
+2025-08-24 20:40:24,462 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure10: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'I_D (A)'}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:24,497 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure10
+2025-08-24 20:40:24,502 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure10
+2025-08-24 20:40:24,506 [DEBUG] backend.core.data_handler: Loading dataset 'scatter_matrix_data.csv' (ext=.csv)
+2025-08-24 20:40:24,509 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
+2025-08-24 20:40:25,604 [DEBUG] backend.core.dashboard_builder: Parallel-coordinates trace pc_1 added with 4 dimensions
+2025-08-24 20:40:25,605 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure11: min=None, max=None, reversed=False
+2025-08-24 20:40:25,605 [DEBUG] backend.core.dashboard_builder: X-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:25,605 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure11: min=None, max=None, reversed=False
+2025-08-24 20:40:25,605 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure11: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:25,629 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset scatter_matrix_data.csv with 51 rows
+2025-08-24 20:40:26,487 [DEBUG] backend.core.dashboard_builder: Scatter matrix figure pc_1 built with 4 columns
+2025-08-24 20:40:26,488 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure12: min=None, max=None, reversed=False
+2025-08-24 20:40:26,488 [DEBUG] backend.core.dashboard_builder: X-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:26,489 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure12: min=None, max=None, reversed=False
+2025-08-24 20:40:26,489 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure12: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:26,537 [WARNING] backend.core.utils.layout_utils: Provided grid (2x2) is too small for 5 items. Calculating balanced dimensions.
+2025-08-24 20:40:26,537 [INFO] backend.core.utils.layout_utils: Calculated grid dimensions: 2x3
+2025-08-24 20:40:26,573 [DEBUG] backend.api.server: Dashboard response size=81549 bytes
+2025-08-24 20:40:26,576 [DEBUG] backend.api.server: Dashboard snippet: {"grid": {"rows": 2, "cols": 3, "h_gap": 20, "v_gap": 20}, "figures": [{"id": "figure1", "title": "", "figure": {"data": [{"line": {"color": "#FF5733", "width": 2}, "marker": {"color": "#FF5733", "size": 0}, "mode": "lines", "name": "Sensor 1", "showlegend": false, "x": {"dtype": "i1", "bdata": "AAECAwQFBgcICQo="}, "y": {"dtype": "f8", "bdata": "AAAAAACANkDNzMzMzMw2QDMzMzMzMzdAAAAAAAAAOEAAAAAAAIA4QJqZmZmZGTlAzczMzMzMOUAzMzMzMzM6QAAAAAAAgDpAzczMzMzMOkAAAAAAAAA7QA=="}, "type": "scatter"}, {"marker
+2025-08-24 20:40:33,876 [INFO] root: Processing file upload: Average Temperature 1900-2023.csv (type: csv)
+2025-08-24 20:40:33,880 [INFO] root: Successfully parsed file with shape: (124, 2)
+2025-08-24 20:40:33,885 [INFO] root: Starting data analysis...
+2025-08-24 20:40:33,885 [INFO] backend.core.data.data_analyzer: Analyzing dataframe with shape (124, 2)
+2025-08-24 20:40:33,931 [INFO] root: Analysis complete. Found 1 plot suggestions
+2025-08-24 20:40:33,931 [INFO] root: Cached data for Average Temperature 1900-2023.csv
+2025-08-24 20:40:49,708 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\AppData\Local\Temp\tmpcvl_70iz.json
+2025-08-24 20:40:49,709 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-08-24 20:40:49,709 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-08-24 20:40:49,709 [INFO] backend.core.config_loader: Configuration validation successful.
+2025-08-24 20:40:49,710 [DEBUG] backend.core.data_handler: Loading dataset 'Average Temperature 1900-2023.csv' (ext=.csv)
+2025-08-24 20:40:49,721 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset Average Temperature 1900-2023.csv with 124 rows
+2025-08-24 20:40:50,475 [DEBUG] backend.core.dashboard_builder: Histogram trace plot_1 added bins=30
+2025-08-24 20:40:50,475 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:40:50,475 [DEBUG] backend.core.dashboard_builder: X-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:50,476 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:40:50,476 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure_1: 'Frequency'
+2025-08-24 20:40:50,476 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-08-24 20:40:50,493 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure_1
+2025-08-24 20:40:50,496 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure_1
+2025-08-24 20:40:50,497 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 1x1
+2025-08-24 20:40:50,498 [INFO] root: Built dashboard with 1 figures
+2025-08-24 20:41:37,854 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\AppData\Local\Temp\tmpacfkgr1c.json
+2025-08-24 20:41:37,854 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-08-24 20:41:37,854 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-08-24 20:41:37,854 [INFO] backend.core.config_loader: Configuration validation successful.
+2025-08-24 20:41:37,858 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset Average Temperature 1900-2023.csv with 124 rows
+2025-08-24 20:41:38,565 [DEBUG] backend.core.dashboard_builder: Histogram trace plot_1 added bins=30
+2025-08-24 20:41:38,565 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:41:38,565 [DEBUG] backend.core.dashboard_builder: X-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:41:38,565 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:41:38,565 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure_1: 'Frequency'
+2025-08-24 20:41:38,565 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-08-24 20:41:38,581 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure_1
+2025-08-24 20:41:38,584 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure_1
+2025-08-24 20:41:38,586 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 1x1
+2025-08-24 20:41:38,586 [INFO] root: Built dashboard with 1 figures
+2025-08-24 20:41:59,924 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\AppData\Local\Temp\tmpzg688_yz.json
+2025-08-24 20:41:59,925 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-08-24 20:41:59,925 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-08-24 20:41:59,925 [INFO] backend.core.config_loader: Configuration validation successful.
+2025-08-24 20:41:59,926 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset Average Temperature 1900-2023.csv with 124 rows
+2025-08-24 20:42:00,814 [DEBUG] backend.core.dashboard_builder: Histogram trace plot_1 added bins=30
+2025-08-24 20:42:00,814 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:42:00,814 [DEBUG] backend.core.dashboard_builder: X-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:42:00,814 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:42:00,814 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure_1: 'Frequency'
+2025-08-24 20:42:00,814 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-08-24 20:42:00,830 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure_1
+2025-08-24 20:42:00,834 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure_1
+2025-08-24 20:42:00,837 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 1x1
+2025-08-24 20:42:00,838 [INFO] root: Built dashboard with 1 figures
+2025-08-24 20:44:42,259 [INFO] root: Processing file upload: mosfet_characteristic_dense.csv (type: csv)
+2025-08-24 20:44:42,262 [INFO] root: Successfully parsed file with shape: (33, 3)
+2025-08-24 20:44:42,262 [INFO] root: Starting data analysis...
+2025-08-24 20:44:42,262 [INFO] backend.core.data.data_analyzer: Analyzing dataframe with shape (33, 3)
+2025-08-24 20:44:42,322 [INFO] root: Analysis complete. Found 2 plot suggestions
+2025-08-24 20:44:42,322 [INFO] root: Cached data for mosfet_characteristic_dense.csv
+2025-08-24 20:44:59,056 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\AppData\Local\Temp\tmp1e81bz14.json
+2025-08-24 20:44:59,057 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-08-24 20:44:59,057 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-08-24 20:44:59,057 [INFO] backend.core.config_loader: Configuration validation successful.
+2025-08-24 20:44:59,059 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
+2025-08-24 20:44:59,870 [DEBUG] backend.core.dashboard_builder: Histogram trace plot_1 added bins=30
+2025-08-24 20:44:59,870 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:44:59,870 [DEBUG] backend.core.dashboard_builder: X-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:44:59,870 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:44:59,870 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure_1: 'Frequency'
+2025-08-24 20:44:59,870 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-08-24 20:44:59,886 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure_1
+2025-08-24 20:44:59,889 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure_1
+2025-08-24 20:44:59,891 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure_2: min=None, max=None, reversed=False
+2025-08-24 20:44:59,892 [DEBUG] backend.core.dashboard_builder: X-axis config for figure_2: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:44:59,892 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure_2: min=None, max=None, reversed=False
+2025-08-24 20:44:59,892 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure_2: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:44:59,905 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure_2
+2025-08-24 20:44:59,908 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure_2
+2025-08-24 20:44:59,910 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x1
+2025-08-24 20:44:59,911 [INFO] root: Built dashboard with 2 figures
+2025-08-24 20:45:23,605 [INFO] backend.core.config_loader: Loading configuration from: C:\Users\gazme\AppData\Local\Temp\tmpqjsi5iu8.json
+2025-08-24 20:45:23,605 [INFO] backend.core.config_loader: Applying configuration defaults...
+2025-08-24 20:45:23,605 [INFO] backend.core.config_loader: Starting configuration validation...
+2025-08-24 20:45:23,605 [INFO] backend.core.config_loader: Configuration validation successful.
+2025-08-24 20:45:23,607 [DEBUG] backend.core.dashboard_builder: Successfully stored dataset mosfet_characteristic_dense.csv with 33 rows
+2025-08-24 20:45:24,450 [DEBUG] backend.core.dashboard_builder: Histogram trace plot_1 added bins=30
+2025-08-24 20:45:24,451 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:45:24,451 [DEBUG] backend.core.dashboard_builder: X-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:45:24,451 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure_1: min=None, max=None, reversed=False
+2025-08-24 20:45:24,451 [DEBUG] backend.core.dashboard_builder: Y-axis label for figure_1: 'Frequency'
+2025-08-24 20:45:24,451 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure_1: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}, 'text': 'Frequency'}, 'tickfont': {'size': 12}}
+2025-08-24 20:45:24,465 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure_1
+2025-08-24 20:45:24,469 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure_1
+2025-08-24 20:45:24,471 [DEBUG] backend.core.dashboard_builder: X-axis settings for figure_2: min=None, max=None, reversed=False
+2025-08-24 20:45:24,471 [DEBUG] backend.core.dashboard_builder: X-axis config for figure_2: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:45:24,471 [DEBUG] backend.core.dashboard_builder: Y-axis settings for figure_2: min=None, max=None, reversed=False
+2025-08-24 20:45:24,471 [DEBUG] backend.core.dashboard_builder: Y-axis config for figure_2: {'type': 'linear', 'showgrid': True, 'zeroline': True, 'zerolinewidth': 1.5, 'zerolinecolor': 'rgba(128, 128, 128, 0.3)', 'showline': True, 'linewidth': 1, 'mirror': True, 'linecolor': 'rgba(128, 128, 128, 1)', 'title': {'font': {'size': 14}}, 'tickfont': {'size': 12}}
+2025-08-24 20:45:24,485 [DEBUG] backend.core.dashboard_builder: Applied x-axis config to all x-axes for 2D plot figure_2
+2025-08-24 20:45:24,488 [DEBUG] backend.core.dashboard_builder: Applied y-axis config to all y-axes for 2D plot figure_2
+2025-08-24 20:45:24,489 [INFO] backend.core.utils.layout_utils: Using grid dimensions from configuration: 2x1
+2025-08-24 20:45:24,489 [INFO] root: Built dashboard with 2 figures

@@ -1,16 +1,5 @@
 {
-  "app_title": "Sample Data Dashboard (Vertical)",
   "theme": "light",
-  "left_margin": 15,
-  "right_margin": 15,
-  "top_margin": 20,
-  "bottom_margin": 20,
-  "grid_layout": {
-    "rows": null,
-    "cols": 1,
-    "horizontal_spacing": 20,
-    "vertical_spacing": 25
-  },
   "figures": [
     {
       "id": "fig_basic_line",

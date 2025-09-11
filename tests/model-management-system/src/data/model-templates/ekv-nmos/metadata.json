@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-EKV-001",
+  "name": "EKV 2.6 Model",
+  "version": "2.6",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "nmos",
+  "base_model": "EKV",
+  "status": "production",
+  "author": {
+    "name": "Alex Kumar",
+    "email": "alex.k@company.com",
+    "department": "Analog Design"
+  },
+  "timestamps": {
+    "created": "2024-08-20T10:00:00Z",
+    "modified": "2025-01-07T11:00:00Z"
+  },
+  "tags": ["180nm", "analog", "low-power", "weak-inversion"],
+  "description": "EKV model optimized for analog design with excellent weak inversion modeling",
+  "technology": {
+    "node": "180nm",
+    "foundry": "Generic",
+    "process": "CMOS",
+    "variant": "Analog"
+  },
+  "characteristics": {
+    "vdd_nominal": 1.8,
+    "vth_nominal": 0.5,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 10e9]
+  },
+  "validation": {
+    "test_structures": 20,
+    "measurement_points": 5600,
+    "accuracy": {
+      "dc": 0.97,
+      "ac": 0.95,
+      "weak_inversion": 0.98
+    },
+    "validated_by": "Analog Design Team",
+    "validation_date": "2025-01-07"
+  },
+  "usage_notes": [
+    "Excellent weak inversion modeling",
+    "Continuous from weak to strong inversion",
+    "Charge-based formulation",
+    "Ideal for low-power analog design"
+  ],
+  "references": [
+    "EKV 2.6 Model Manual",
+    "Analog Design Handbook"
+  ],
+  "support": {
+    "contact": "analog-support@company.com",
+    "documentation": "/docs/ekv_guide.pdf"
+  }
+}

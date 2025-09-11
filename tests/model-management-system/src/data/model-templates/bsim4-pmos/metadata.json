@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-BSIM4-002",
+  "name": "BSIM4 PMOS Model",
+  "version": "4.8.1",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "pmos",
+  "base_model": "BSIM4",
+  "status": "production",
+  "author": {
+    "name": "David Kim",
+    "email": "david.k@company.com",
+    "department": "Device Modeling"
+  },
+  "timestamps": {
+    "created": "2024-08-12T10:00:00Z",
+    "modified": "2025-01-09T12:10:00Z"
+  },
+  "tags": ["28nm", "PMOS", "BSIM4", "digital", "analog"],
+  "description": "Industry-standard BSIM4 PMOS model for 28nm technology with comprehensive parameter set",
+  "technology": {
+    "node": "28nm",
+    "foundry": "Generic",
+    "process": "CMOS",
+    "variant": "Low Power"
+  },
+  "characteristics": {
+    "vdd_nominal": 1.2,
+    "vth_nominal": -0.48,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 50e9]
+  },
+  "validation": {
+    "test_structures": 45,
+    "measurement_points": 18200,
+    "accuracy": {
+      "dc": 0.98,
+      "ac": 0.95,
+      "transient": 0.96
+    },
+    "validated_by": "Device Modeling Team",
+    "validation_date": "2025-01-09"
+  },
+  "usage_notes": [
+    "Companion model to BSIM4 NMOS",
+    "Matched parameter extraction",
+    "Suitable for CMOS circuit design",
+    "Excellent threshold voltage modeling"
+  ],
+  "references": [
+    "BSIM4.8.1 Technical Manual",
+    "28nm PMOS Characterization Report"
+  ],
+  "support": {
+    "contact": "modeling-support@company.com",
+    "documentation": "/docs/bsim4_pmos_guide.pdf"
+  }
+}

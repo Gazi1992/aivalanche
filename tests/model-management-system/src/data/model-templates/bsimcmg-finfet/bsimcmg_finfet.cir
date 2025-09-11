@@ -1,0 +1,24 @@
+* BSIM-CMG FinFET Model
+* Technology: 14nm FinFET
+* Model Version: 110.0
+* Date: 2025-01-11
+
+.subckt finfet_14nm d g s b nfin=2 l=14n
+
+* Include model libraries
+.include "libs/bsimcmg_core.lib"
+.include "libs/quantum_correction.lib"
+
+* FinFET instance
+M1 d g s b finfet_model NFIN='nfin' L='l'
+
+* Model card
+.model finfet_model nmos (
++ level = 72
++ version = 110.0
++ bulkmod = 1
++ igcmod = 1
++ gidlmod = 1
+)
+
+.ends finfet_14nm

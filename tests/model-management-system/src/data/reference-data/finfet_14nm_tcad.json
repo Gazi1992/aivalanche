@@ -1,0 +1,115 @@
+{
+  "data_id": "REF-SIM-001",
+  "name": "14nm FinFET TCAD Simulation",
+  "version": "1.5",
+  "data_type": "simulation", 
+  "description": "Physics-based TCAD simulation of 14nm FinFET devices with quantum mechanical corrections and ballistic transport effects",
+  "device_info": {
+    "device_type": "mosfet",
+    "transistor_type": "finfet",
+    "technology_node": "14nm",
+    "foundry": "Generic",
+    "process_variant": "Low Power Plus"
+  },
+  "simulation_info": {
+    "simulator": "Sentaurus Device",
+    "version": "2023.12",
+    "operator": "Dr. Alex Kim", 
+    "simulation_date": "2024-09-10T08:30:00Z",
+    "mesh_points": 125000,
+    "convergence_criteria": "1e-6",
+    "physics_models": ["Quantum", "Ballistic", "Bandgap_Narrowing"]
+  },
+  "data_quality": {
+    "validated": true,
+    "completeness": 1.0,
+    "quality_score": 0.98,
+    "simulation_points": 3240,
+    "validation_notes": "Excellent convergence, validated against experimental data"
+  },
+  "author": {
+    "name": "Dr. Alex Kim",
+    "email": "alex.kim@company.com",
+    "department": "Advanced Device Modeling"
+  },
+  "timestamps": {
+    "created": "2024-09-10T14:00:00Z", 
+    "modified": "2024-11-25T16:45:00Z"
+  },
+  "tags": ["14nm", "finfet", "tcad", "quantum", "ballistic"],
+  "data": [
+    {
+      "type": "ids_vgs_temp",
+      "name": "Transfer Characteristics vs Temperature",
+      "page": "transfer_temp",
+      "testbench_type": "finfet_ids_vgs_temp",
+      "x_name": "vgs",
+      "y_name": "ids",
+      "extra_var_name": "temperature",
+      "x_unit": "V",
+      "y_unit": "A", 
+      "extra_var_unit": "°C",
+      "operating_conditions": {
+        "vds": 0.8,
+        "vbs": 0.0
+      },
+      "instance_parameters": {
+        "nfin": 3,
+        "lfin": 14e-9,
+        "hfin": 42e-9,
+        "tfin": 7e-9
+      },
+      "curves": [
+        {
+          "x_values": [-0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+          "y_values": [1.2e-16, 3.4e-15, 9.8e-14, 2.7e-12, 7.3e-11, 1.9e-09, 4.8e-08, 1.2e-06, 2.8e-05, 6.7e-04, 1.5e-02, 3.2e-01, 6.8e-00],
+          "extra_var_value": 25
+        },
+        {
+          "x_values": [-0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+          "y_values": [8.9e-17, 2.6e-15, 7.8e-14, 2.3e-12, 6.8e-11, 2.0e-09, 5.9e-08, 1.7e-06, 5.0e-05, 1.5e-03, 4.3e-02, 1.3e+00, 3.7e+01],
+          "extra_var_value": 85
+        },
+        {
+          "x_values": [-0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], 
+          "y_values": [2.1e-16, 5.8e-15, 1.6e-13, 4.3e-12, 1.2e-10, 3.1e-09, 8.2e-08, 2.2e-06, 5.8e-05, 1.5e-03, 4.1e-02, 1.1e+00, 2.9e+01],
+          "extra_var_value": -40
+        }
+      ]
+    },
+    {
+      "type": "gm_vgs_vds", 
+      "name": "Transconductance Characteristics",
+      "page": "output_fin_count",
+      "testbench_type": "finfet_gm_vgs_vds",
+      "x_name": "vgs",
+      "y_name": "gm",
+      "extra_var_name": "vds",
+      "x_unit": "V",
+      "y_unit": "S",
+      "extra_var_unit": "V",
+      "operating_conditions": {
+        "temp": 25,
+        "vbs": 0.0
+      },
+      "instance_parameters": {
+        "nfin": 3,
+        "lfin": 14e-9,
+        "hfin": 42e-9,
+        "tfin": 7e-9
+      },
+      "curves": [
+        {
+          "x_values": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+          "y_values": [2.1e-13, 5.8e-12, 1.6e-10, 4.3e-09, 1.2e-07, 3.1e-06, 8.2e-05, 2.2e-03, 5.8e-02, 1.5e+00, 4.1e+01],
+          "extra_var_value": 0.4
+        },
+        {
+          "x_values": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+          "y_values": [3.4e-13, 9.2e-12, 2.5e-10, 6.7e-09, 1.8e-07, 4.8e-06, 1.3e-04, 3.4e-03, 9.2e-02, 2.5e+00, 6.7e+01],
+          "extra_var_value": 0.8
+        }
+      ]
+    }
+  ]
+}

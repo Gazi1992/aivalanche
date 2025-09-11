@@ -1,0 +1,133 @@
+name,subckt,default,min,max,unit,description
+VTH0,nmos_model,0.482,0.3,0.7,V,Long channel threshold voltage at Vbs=0
+U0,nmos_model,445.3,200,600,cm²/Vs,Low-field mobility at Tnom
+VSAT,nmos_model,8.15e4,5e4,1.2e5,m/s,Saturation velocity at Tnom
+K1,nmos_model,0.523,0.3,0.8,V^0.5,First-order body effect coefficient
+K2,nmos_model,0.0098,-0.1,0.1,-,Second-order body effect coefficient
+K3,nmos_model,80,30,100,-,Narrow width coefficient
+K3B,nmos_model,0,-5,5,V^-1,Body effect coefficient of K3
+W0,nmos_model,2.5e-6,1e-6,5e-6,m,Narrow width parameter
+TOX,nmos_model,1.38e-9,1e-9,2e-9,m,Gate oxide thickness
+TOXM,nmos_model,1.38e-9,1e-9,2e-9,m,Gate oxide thickness for CV model
+XJ,nmos_model,1.48e-7,1e-7,2e-7,m,Junction depth
+NCH,nmos_model,1.68e17,1e17,3e17,cm^-3,Channel doping concentration
+NSUB,nmos_model,6e16,1e16,1e17,cm^-3,Substrate doping concentration
+XT,nmos_model,1.55e-7,1e-7,2e-7,m,Doping depth
+VOFF,nmos_model,-0.08,-0.2,0,V,Offset voltage in subthreshold region
+NFACTOR,nmos_model,1.02,0.8,1.5,-,Subthreshold swing factor
+CDSC,nmos_model,2.4e-4,0,1e-3,F/m²,Drain-source coupling capacitance
+CDSCB,nmos_model,0,-1e-4,1e-4,F/Vm²,Body-bias sensitivity of CDSC
+CDSCD,nmos_model,0,-1e-4,1e-4,F/Vm²,Drain-bias sensitivity of CDSC
+CIT,nmos_model,0,-1e-3,1e-3,F/m²,Interface trap capacitance
+UA,nmos_model,9.8e-10,5e-10,2e-9,m/V,First-order mobility degradation
+UB,nmos_model,1.05e-18,5e-19,2e-18,m²/V²,Second-order mobility degradation
+UC,nmos_model,-4.65e-11,-1e-10,0,V^-1,Body-effect mobility degradation
+EU,nmos_model,1.67,1,2,-,Mobility exponent
+VSAT,nmos_model,8.15e4,5e4,1.2e5,m/s,Saturation velocity at Tnom
+A0,nmos_model,1,0.5,2,-,Bulk charge effect coefficient
+AGS,nmos_model,0.44,0.1,1,V^-1,Gate-bias coefficient of Abulk
+B0,nmos_model,0,-1,1,m,Bulk charge effect width parameter
+B1,nmos_model,0,-1,1,m,Bulk charge effect bias parameter
+KETA,nmos_model,-0.047,-0.2,0,V^-1,Body-bias coefficient of bulk charge
+A1,nmos_model,0,-0.5,0.5,V^-1,First non-saturation parameter
+A2,nmos_model,1,0.5,1.5,-,Second non-saturation parameter
+DVT0,nmos_model,2.18,1,3,-,First coefficient of short-channel effect
+DVT1,nmos_model,0.535,0.3,0.8,-,Second coefficient of short-channel effect
+DVT2,nmos_model,-0.032,-0.1,0,V^-1,Body-bias coefficient of short-channel
+DVT0W,nmos_model,0,-1,1,-,First coefficient of narrow width effect
+DVT1W,nmos_model,5.3e6,1e6,1e7,m^-1,Second coefficient of narrow width effect
+DVT2W,nmos_model,-0.032,-0.1,0,V^-1,Body-bias coefficient of narrow width
+DROUT,nmos_model,0.56,0.1,1,-,L dependence coefficient of DIBL
+DSUB,nmos_model,0.56,0.1,1,-,Subthreshold DIBL coefficient
+ETA0,nmos_model,0.08,0,0.2,-,Subthreshold region DIBL coefficient
+ETAB,nmos_model,-0.07,-0.2,0,V^-1,Body-bias coefficient for DIBL
+PCLM,nmos_model,1.28,0.5,2,-,Channel length modulation parameter
+PDIBLC1,nmos_model,0.385,0.1,0.5,-,First parameter of DIBL effect
+PDIBLC2,nmos_model,8.6e-3,1e-3,0.02,-,Second parameter of DIBL effect
+PDIBLCB,nmos_model,0,-0.1,0.1,V^-1,Body effect coefficient of DIBL
+PSCBE1,nmos_model,4.24e8,1e8,1e9,V/m,First substrate current body-effect
+PSCBE2,nmos_model,1e-5,1e-6,1e-4,m/V,Second substrate current body-effect
+PVAG,nmos_model,0,-1,1,-,Gate voltage dependence of Rout
+DELTA,nmos_model,0.01,0,0.1,V,Effective Vds parameter
+NLX,nmos_model,1.74e-7,1e-7,3e-7,m,Lateral non-uniform doping parameter
+ALPHA0,nmos_model,0,-1e-3,1e-3,m/V,First substrate current parameter
+ALPHA1,nmos_model,0,-1,1,V^-1,Second substrate current parameter
+BETA0,nmos_model,30,10,50,V,Third substrate current parameter
+CGDO,nmos_model,9.5e-11,5e-11,2e-10,F/m,Gate-drain overlap capacitance
+CGSO,nmos_model,9.5e-11,5e-11,2e-10,F/m,Gate-source overlap capacitance
+CGBO,nmos_model,0,0,1e-10,F/m,Gate-bulk overlap capacitance
+CJ,nmos_model,9.8e-4,5e-4,2e-3,F/m²,Junction capacitance
+MJ,nmos_model,0.498,0.3,0.6,-,Junction capacitance grading coefficient
+PB,nmos_model,0.79,0.6,1,V,Junction built-in potential
+CJSW,nmos_model,2.7e-10,1e-10,5e-10,F/m,Sidewall junction capacitance
+MJSW,nmos_model,0.33,0.2,0.5,-,Sidewall grading coefficient
+PBSW,nmos_model,0.79,0.6,1,V,Sidewall built-in potential
+CJSWG,nmos_model,3.5e-10,1e-10,5e-10,F/m,Gate sidewall junction capacitance
+MJSWG,nmos_model,0.33,0.2,0.5,-,Gate sidewall grading coefficient
+PBSWG,nmos_model,0.79,0.6,1,V,Gate sidewall built-in potential
+CF,nmos_model,0,0,1e-10,F/m,Fringing field capacitance
+CLCMOD,nmos_model,1,0,3,-,Capacitance model selector
+ACDE,nmos_model,1,0.5,1.5,m/V,Exponential coefficient for charge
+MOIN,nmos_model,15,10,20,-,Coefficient for gate-bias dependent Rout
+NOFF,nmos_model,1,0.5,2,-,CV parameter in Vgsteff
+VOFFCV,nmos_model,0,-0.5,0.5,V,CV parameter for weak to strong inversion
+KT1,nmos_model,-0.11,-0.5,0,V,Temperature coefficient of Vth
+KT1L,nmos_model,0,-1e-8,1e-8,Vm,Temperature coefficient of Vth length
+KT2,nmos_model,0.022,-0.1,0.1,-,Body-bias coefficient of Vth temperature
+UA1,nmos_model,4.31e-9,1e-9,1e-8,m/V,Temperature coefficient of UA
+UB1,nmos_model,-7.61e-18,-2e-17,0,m²/V²,Temperature coefficient of UB
+UC1,nmos_model,-5.6e-11,-2e-10,0,m/V²,Temperature coefficient of UC
+AT,nmos_model,3.3e4,1e4,1e5,m/s,Temperature coefficient of saturation velocity
+PRT,nmos_model,0,-500,500,Ω·m,Temperature coefficient of Rdsw
+NJ,nmos_model,1,0.5,2,-,Emission coefficient of junction
+XTI,nmos_model,3,2,4,-,Junction current temperature exponent
+TPB,nmos_model,1.5e-3,1e-3,3e-3,V/K,Temperature coefficient of PB
+TPBSW,nmos_model,1.5e-3,1e-3,3e-3,V/K,Temperature coefficient of PBSW
+TPBSWG,nmos_model,1.5e-3,1e-3,3e-3,V/K,Temperature coefficient of PBSWG
+TCJ,nmos_model,1e-3,5e-4,2e-3,K^-1,Temperature coefficient of CJ
+TCJSW,nmos_model,1e-3,5e-4,2e-3,K^-1,Temperature coefficient of CJSW
+TCJSWG,nmos_model,1e-3,5e-4,2e-3,K^-1,Temperature coefficient of CJSWG
+RDSW,nmos_model,105,50,200,Ω·μm,Source-drain resistance per width
+PRWB,nmos_model,0,-1,1,V^-0.5,Body effect coefficient of RDSW
+PRWG,nmos_model,1,0,2,V^-1,Gate-bias effect coefficient of RDSW
+RSH,nmos_model,7,5,10,Ω/sq,Source-drain sheet resistance
+LINT,nmos_model,1.15e-8,0,2e-8,m,Length offset for channel length
+LL,nmos_model,0,-1e-15,1e-15,m^LLN,Length dependence of length offset
+LLN,nmos_model,1,0.5,2,-,Power of length dependence for length offset
+LW,nmos_model,0,-1e-15,1e-15,m^LWN,Width dependence of length offset
+LWN,nmos_model,1,0.5,2,-,Power of width dependence for length offset
+LWL,nmos_model,0,-1e-20,1e-20,m^(LLN+LWN),Length and width cross-term
+WINT,nmos_model,5e-9,0,1e-8,m,Width offset for channel width
+WL,nmos_model,0,-1e-15,1e-15,m^WLN,Length dependence of width offset
+WLN,nmos_model,1,0.5,2,-,Power of length dependence for width offset
+WW,nmos_model,0,-1e-15,1e-15,m^WWN,Width dependence of width offset
+WWN,nmos_model,1,0.5,2,-,Power of width dependence for width offset
+WWL,nmos_model,0,-1e-20,1e-20,m^(WLN+WWN),Length and width cross-term for width
+DWC,nmos_model,5e-9,0,1e-8,m,Delta W for C-V model
+DLC,nmos_model,1.15e-8,0,2e-8,m,Delta L for C-V model
+XL,nmos_model,0,-1e-8,1e-8,m,Length offset for I-V model
+XW,nmos_model,0,-1e-8,1e-8,m,Width offset for I-V model
+NGATE,nmos_model,1e20,1e19,1e21,cm^-3,Poly-gate doping concentration
+AGIDL,nmos_model,0,0,1e-8,A/V³,GIDL constant
+BGIDL,nmos_model,2.3e9,1e9,5e9,V/m,GIDL exponential coefficient
+CGIDL,nmos_model,0.5,0,1,V³,GIDL Vds enhancement coefficient
+EGIDL,nmos_model,0.8,0.5,1.5,V,Activation energy of GIDL
+AIGBACC,nmos_model,0.0136,0.01,0.02,A·s^0.5/V²m,IGBACC constant
+BIGBACC,nmos_model,1.71e-3,1e-3,3e-3,A·s^0.5/Vm²,IGBACC exponential coefficient
+CIGBACC,nmos_model,0.075,0.05,0.1,V^-1,IGBACC Vgs enhancement coefficient
+NIGBACC,nmos_model,1,0.5,2,-,IGBACC slope factor
+AIGBINV,nmos_model,0.0111,0.005,0.02,A·s³/V⁴m,IGBINV constant
+BIGBINV,nmos_model,9.49e-4,5e-4,2e-3,A·s³/V³m²,IGBINV exponential coefficient
+CIGBINV,nmos_model,6e-3,1e-3,0.01,V,IGBINV Vgs enhancement coefficient
+EIGBINV,nmos_model,1.1,0.8,1.5,V,IGBINV activation energy
+NIGBINV,nmos_model,3,2,4,-,IGBINV slope factor
+AIGC,nmos_model,0.0136,0.01,0.02,A·s^0.5/V²m,IGCS and IGCD constant
+BIGC,nmos_model,1.71e-3,1e-3,3e-3,A·s^0.5/Vm²,IGCS and IGCD exponential coefficient
+CIGC,nmos_model,0.075,0.05,0.1,V^-1,IGCS and IGCD Vgs enhancement coefficient
+AIGSD,nmos_model,0.0136,0.01,0.02,A·s^0.5/V²m,IGSD constant
+BIGSD,nmos_model,1.71e-3,1e-3,3e-3,A·s^0.5/Vm²,IGSD exponential coefficient
+CIGSD,nmos_model,0.075,0.05,0.1,V^-1,IGSD Vgs enhancement coefficient
+NIGC,nmos_model,1,0.5,2,-,IGCS IGCD and IGSD slope factor
+DLCIG,nmos_model,0,0,1e-8,m,Delta L for IG model
+POXEDGE,nmos_model,1,0.5,2,-,Factor for gate oxide thickness
+PIGCD,nmos_model,1,0.5,2,-,Vds dependence of IGCD

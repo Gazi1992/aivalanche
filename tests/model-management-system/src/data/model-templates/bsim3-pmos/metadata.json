@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-BSIM3-002",
+  "name": "BSIM3 PMOS Model",
+  "version": "3.2.4",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "pmos",
+  "base_model": "BSIM3",
+  "status": "production",
+  "author": {
+    "name": "Jennifer Lee",
+    "email": "jennifer.l@company.com",
+    "department": "Digital Design"
+  },
+  "timestamps": {
+    "created": "2024-05-10T10:00:00Z",
+    "modified": "2025-01-06T13:45:00Z"
+  },
+  "tags": ["90nm", "PMOS", "BSIM3", "digital", "legacy"],
+  "description": "Legacy BSIM3 PMOS model for 90nm technology node with proven reliability",
+  "technology": {
+    "node": "90nm",
+    "foundry": "Generic",
+    "process": "CMOS",
+    "variant": "Standard Performance"
+  },
+  "characteristics": {
+    "vdd_nominal": 1.2,
+    "vth_nominal": -0.4,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 20e9]
+  },
+  "validation": {
+    "test_structures": 35,
+    "measurement_points": 12600,
+    "accuracy": {
+      "dc": 0.97,
+      "ac": 0.94,
+      "transient": 0.95
+    },
+    "validated_by": "Digital Design Team",
+    "validation_date": "2025-01-06"
+  },
+  "usage_notes": [
+    "Legacy model for existing designs",
+    "Well-characterized and stable",
+    "Suitable for digital logic circuits",
+    "Good for migration projects"
+  ],
+  "references": [
+    "BSIM3 User Manual v3.2.4",
+    "90nm Design Guide"
+  ],
+  "support": {
+    "contact": "digital-support@company.com",
+    "documentation": "/docs/bsim3_guide.pdf"
+  }
+}

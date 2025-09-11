@@ -1,0 +1,70 @@
+{
+  "model_id": "CAL-PMOS-40NM-001",
+  "name": "Calibrated 40nm PMOS Model v1.0",
+  "description": "PSP model for 40nm PMOS transistors with enhanced accuracy for analog applications",
+  "base_model": "PSP",
+  "model_template_id": "MOD-PSP-001",
+  "version": "1.0.0",
+  "status": "completed",
+  "category": "transistor",
+  "subcategory": "pmos",
+  "technology": {
+    "node": "40nm",
+    "foundry": "GlobalFoundries",
+    "process": "CMOS",
+    "variant": "General Purpose"
+  },
+  "author": {
+    "name": "John Doe",
+    "email": "john.doe@company.com",
+    "organization": "Model Team"
+  },
+  "calibration_info": {
+    "task_id": "TASK-002",
+    "request_id": "REQ-2024-Q4-018",
+    "engineer": "John Doe",
+    "start_date": "2025-01-06T09:00:00Z",
+    "completion_date": "2025-01-08T15:00:00Z",
+    "total_time_hours": 14,
+    "iterations": 89,
+    "algorithm": "Genetic Algorithm + Simplex",
+    "accuracy": 94.2,
+    "rms_error": 0.058
+  },
+  "reference_data": {
+    "data_id": "REF-MEAS-002",
+    "name": "40nm PMOS Capacitance Measurements",
+    "measurement_data": ["REF-MEAS-003", "REF-MEAS-004"],
+    "simulation_data": ["REF-SIM-022"],
+    "total_points": 8750,
+    "temperature_range": [-25, 100],
+    "voltage_range": [0, 1.8],
+    "data_weight": {
+      "dc": 0.35,
+      "cv": 0.45,
+      "rf": 0.2
+    }
+  },
+  "validation": {
+    "test_structures": 35,
+    "corner_validation": ["SS", "TT", "FF"],
+    "temperature_validation": [0, 27, 85],
+    "metrics": {
+      "dc_accuracy": 0.96,
+      "ac_accuracy": 0.94,
+      "transient_accuracy": 0.93,
+      "mismatch_accuracy": 0.92
+    }
+  },
+  "files": {
+    "parameters": "parameters.txt",
+    "model_card": "model_card.sp",
+    "validation_report": "validation_report.pdf",
+    "corner_files": ["corner_ss.sp", "corner_tt.sp", "corner_ff.sp"]
+  },
+  "timestamps": {
+    "created": "2025-01-08T15:00:00Z",
+    "modified": "2025-01-09T10:30:00Z",
+    "validated": "2025-01-09T14:00:00Z"
+  }
+}

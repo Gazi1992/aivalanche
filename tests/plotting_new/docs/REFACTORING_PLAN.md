@@ -88,7 +88,6 @@ Power user features in collapsible panel:
 
 ```json
 {
-    "app_title": "Data Analysis Dashboard",
     "data_sources": [
         {
             "id": "raw_data",

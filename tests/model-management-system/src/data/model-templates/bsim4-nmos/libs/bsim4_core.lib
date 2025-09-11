@@ -1,0 +1,59 @@
+* BSIM4 Core Model Library
+* Version 4.8.1
+* Core parameter definitions
+
+.lib bsim4_core
+
+* Process parameters
+.param TOX = 1.38e-9
+.param XJ = 1.48e-7
+.param NCH = 1.68e17
+
+* Threshold voltage parameters
+.param VTH0 = 0.482
+.param K1 = 0.523
+.param K2 = 0.0098
+.param K3 = 1e-3
+.param K3B = 5
+.param W0 = 2.5e-6
+.param NLX = 1.74e-7
+
+* Mobility parameters
+.param U0 = 445.3
+.param UA = 9.8e-10
+.param UB = 1.05e-18
+.param UC = -4.65e-11
+.param VSAT = 8.15e4
+
+* Subthreshold parameters
+.param NFACTOR = 1.02
+.param KETA = -0.047
+.param A0 = 1.0
+.param AGS = 0.4
+
+* DIBL parameters
+.param DVT0 = 2.18
+.param DVT1 = 0.535
+.param DVT2 = -0.032
+.param PCLM = 1.28
+.param PDIBLC1 = 0.385
+.param PDIBLC2 = 0.00258
+.param DROUT = 0.558
+
+* Channel length modulation
+.param PSCBE1 = 4.24e8
+.param PSCBE2 = 1e-5
+.param PVAG = 0
+
+* Width effect parameters
+.param WR = 1
+.param DWG = 0
+.param DWB = 0
+
+* Temperature coefficients
+.param TCJ = 9.3e-4
+.param TPB = 1.96e-3
+.param TCJSW = 5.73e-4
+.param TPBSW = 1.76e-3
+
+.endl bsim4_core

@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-SOI-001",
+  "name": "SOI NMOS Model",
+  "version": "1.8",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "nmos",
+  "base_model": "BSIM-SOI",
+  "status": "in-review",
+  "author": {
+    "name": "Dr. Yuki Tanaka",
+    "email": "yuki.t@company.com",
+    "department": "Advanced Technology"
+  },
+  "timestamps": {
+    "created": "2024-11-20T10:00:00Z",
+    "modified": "2025-01-11T16:45:00Z"
+  },
+  "tags": ["22nm", "SOI", "FD-SOI", "low-power", "advanced"],
+  "description": "Fully Depleted SOI NMOS model for ultra-low power applications with body biasing",
+  "technology": {
+    "node": "22nm",
+    "substrate": "FD-SOI",
+    "tsi": "7nm",
+    "tbox": "25nm"
+  },
+  "characteristics": {
+    "vdd_nominal": 0.8,
+    "vth_nominal": 0.4,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 80e9]
+  },
+  "validation": {
+    "test_structures": 32,
+    "measurement_points": 9800,
+    "accuracy": {
+      "dc": 0.96,
+      "ac": 0.94,
+      "body_bias": 0.97
+    },
+    "validated_by": "Advanced Technology Team",
+    "validation_date": "2025-01-11"
+  },
+  "usage_notes": [
+    "Includes body biasing effects",
+    "Ultra-low leakage current",
+    "Excellent subthreshold slope",
+    "Ideal for IoT applications"
+  ],
+  "references": [
+    "FD-SOI Technology Guide",
+    "Body Biasing Design Manual"
+  ],
+  "support": {
+    "contact": "soi-support@company.com",
+    "documentation": "/docs/soi_modeling.pdf"
+  }
+}

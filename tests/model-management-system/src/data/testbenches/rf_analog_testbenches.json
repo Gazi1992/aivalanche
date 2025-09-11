@@ -1,0 +1,336 @@
+{
+  "library_name": "RF/Analog Circuit Testbenches",
+  "version": "1.0.0",
+  "description": "Collection of testbenches for RF and analog circuit characterization",
+  "organization": "Model Library Team",
+  "created": "2024-03-15T10:00:00Z",
+  "modified": "2024-12-10T14:30:00Z",
+  "license": "MIT",
+  
+  "testbenches": [
+    {
+      "testbench_id": "noise_analysis",
+      "name": "Noise Analysis",
+      "type": "noise",
+      "description": "Noise characterization for amplifiers and active devices",
+      "validated": true,
+      "tags": ["noise", "rf", "analog", "amplifier"],
+      "schematic": "schematics/noise_analysis.svg",
+      "circuit": {
+        "netlist": [
+          "VDD supply 0 DC {{vdd}}",
+          "VIN input 0 DC {{vin_dc}} AC 1",
+          "RS input gate {{rs}}",
+          "RL supply drain {{rl}}",
+          "CL drain 0 {{cl}}",
+          "XDUT drain gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}"
+        ],
+        "parameters": {
+          "vdd": { "default": 1.8, "unit": "V", "description": "Supply voltage" },
+          "vin_dc": { "default": 0.6, "unit": "V", "description": "Input DC bias" },
+          "rs": { "default": 50, "unit": "Ohm", "description": "Source resistance" },
+          "rl": { "default": "1k", "unit": "Ohm", "description": "Load resistance" },
+          "cl": { "default": "10f", "unit": "F", "description": "Load capacitance" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure noise nf_1ghz FIND NF AT=1e9",
+        ".measure noise nfmin_1ghz FIND NFMIN AT=1e9",
+        ".measure noise rn_1ghz FIND RN AT=1e9",
+        ".measure noise gamma_opt_1ghz FIND GAMMA_OPT AT=1e9"
+      ],
+      "compatible_devices": ["nmos", "pmos", "bjt"],
+      "outputs": {
+        "nf_1ghz": { "unit": "dB", "description": "Noise figure at 1GHz" },
+        "nfmin_1ghz": { "unit": "dB", "description": "Minimum noise figure at 1GHz" },
+        "rn_1ghz": { "unit": "Ohm", "description": "Noise resistance at 1GHz" },
+        "gamma_opt_1ghz": { "unit": "", "description": "Optimum source reflection coefficient at 1GHz" }
+      },
+      "examples": [
+        {
+          "name": "LNA noise characterization",
+          "description": "Extract noise parameters for low-noise amplifier design",
+          "netlist": [
+            "* Noise Analysis Example",
+            ".include 'model.lib'",
+            "",
+            "* Testbench circuit",
+            "VDD supply 0 DC 1.2",
+            "VIN input 0 DC 0.6 AC 1",
+            "RS input gate 50",
+            "RL supply drain 1k",
+            "CL drain 0 10f",
+            "XDUT drain gate source bulk nmos_rf W=10u L=45n NF=4",
+            "",
+            "* Analysis",
+            ".op",
+            ".ac DEC 10 1MEG 100GHZ",
+            ".noise V(drain) VIN 10",
+            ".probe noise NF NFMIN",
+            "",
+            "* Measurements",
+            ".measure noise nf_1ghz FIND NF AT=1e9",
+            ".measure noise nfmin_1ghz FIND NFMIN AT=1e9",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    },
+    
+    {
+      "testbench_id": "s_parameters",
+      "name": "S-Parameter Extraction",
+      "type": "sp_analysis",
+      "description": "Two-port S-parameter characterization",
+      "validated": true,
+      "tags": ["s-parameters", "rf", "two-port", "matching"],
+      "schematic": "schematics/s_parameters.png",
+      "circuit": {
+        "netlist": [
+          "PORT1 gate 0 PORT=1 Z0={{z0}}",
+          "PORT2 drain 0 PORT=2 Z0={{z0}}",
+          "VDD supply 0 DC {{vdd}}",
+          "VGS gate_dc 0 DC {{vgs_bias}}",
+          "LG gate_dc gate {{lg}}",
+          "LD drain_int drain {{ld}}",
+          "XDUT drain_int gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}",
+          "VSS source 0 DC 0",
+          "VBS bulk 0 DC {{vbs}}"
+        ],
+        "parameters": {
+          "z0": { "default": 50, "unit": "Ohm", "description": "Port impedance" },
+          "vdd": { "default": 1.8, "unit": "V", "description": "Supply voltage" },
+          "vgs_bias": { "default": 0.6, "unit": "V", "description": "Gate bias voltage" },
+          "vbs": { "default": 0, "unit": "V", "description": "Body bias voltage" },
+          "lg": { "default": "0.1n", "unit": "H", "description": "Gate inductance" },
+          "ld": { "default": "0.1n", "unit": "H", "description": "Drain inductance" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure sp s11_mag_1ghz FIND MAG(S11) AT=1e9",
+        ".measure sp s21_mag_1ghz FIND MAG(S21) AT=1e9",
+        ".measure sp s11_phase_1ghz FIND PHASE(S11) AT=1e9",
+        ".measure sp s21_phase_1ghz FIND PHASE(S21) AT=1e9",
+        ".measure sp k_factor_1ghz FIND K AT=1e9",
+        ".measure sp msg_1ghz FIND MSG AT=1e9",
+        ".measure sp mag_1ghz FIND MAG AT=1e9"
+      ],
+      "compatible_devices": ["nmos", "pmos", "bjt", "hemt"],
+      "outputs": {
+        "s11_mag_1ghz": { "unit": "", "description": "S11 magnitude at 1GHz" },
+        "s21_mag_1ghz": { "unit": "", "description": "S21 magnitude at 1GHz" },
+        "s11_phase_1ghz": { "unit": "deg", "description": "S11 phase at 1GHz" },
+        "s21_phase_1ghz": { "unit": "deg", "description": "S21 phase at 1GHz" },
+        "k_factor_1ghz": { "unit": "", "description": "Stability factor at 1GHz" },
+        "msg_1ghz": { "unit": "dB", "description": "Maximum stable gain at 1GHz" },
+        "mag_1ghz": { "unit": "dB", "description": "Maximum available gain at 1GHz" }
+      },
+      "examples": [
+        {
+          "name": "RF transistor S-parameter extraction",
+          "description": "Extract S-parameters for matching network design",
+          "netlist": [
+            "* S-Parameter Extraction Example",
+            ".include 'model.lib'",
+            "",
+            "* Two-port network",
+            "PORT1 gate 0 PORT=1 Z0=50",
+            "PORT2 drain 0 PORT=2 Z0=50",
+            "VDD supply 0 DC 1.8",
+            "VGS gate_dc 0 DC 0.6",
+            "LG gate_dc gate 0.1n",
+            "LD drain_int drain 0.1n",
+            "XDUT drain_int gate source bulk nmos_rf W=20u L=45n NF=4",
+            "VSS source 0 DC 0",
+            "VBS bulk 0 DC 0",
+            "",
+            "* Analysis",
+            ".op",
+            ".sp DEC 20 100MEG 40GHZ",
+            ".probe sp S11 S12 S21 S22",
+            "",
+            "* Measurements",
+            ".measure sp s11_mag_1ghz FIND MAG(S11) AT=1e9",
+            ".measure sp s21_mag_1ghz FIND MAG(S21) AT=1e9",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    },
+
+    {
+      "testbench_id": "harmonic_distortion",
+      "name": "Harmonic Distortion Analysis",
+      "type": "hb_analysis",
+      "description": "THD and harmonic characterization",
+      "validated": true,
+      "tags": ["distortion", "thd", "harmonics", "linearity"],
+      "schematic": "schematics/harmonic_distortion.png",
+      "circuit": {
+        "netlist": [
+          "VDD supply 0 DC {{vdd}}",
+          "VIN input 0 SIN({{vdc}} {{vac}} {{freq}})",
+          "CIN input gate {{cin}}",
+          "RB gate gate_dc {{rb}}",
+          "VGS gate_dc 0 DC {{vgs_bias}}",
+          "RL supply drain {{rl}}",
+          "CL drain 0 {{cl}}",
+          "XDUT drain gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}",
+          "VSS source 0 DC 0"
+        ],
+        "parameters": {
+          "vdd": { "default": 1.8, "unit": "V", "description": "Supply voltage" },
+          "vdc": { "default": 0, "unit": "V", "description": "Input DC offset" },
+          "vac": { "default": 0.1, "unit": "V", "description": "Input amplitude" },
+          "freq": { "default": "1k", "unit": "Hz", "description": "Input frequency" },
+          "vgs_bias": { "default": 0.6, "unit": "V", "description": "Gate bias voltage" },
+          "cin": { "default": "1u", "unit": "F", "description": "Input coupling capacitor" },
+          "rb": { "default": "10k", "unit": "Ohm", "description": "Bias resistor" },
+          "rl": { "default": "1k", "unit": "Ohm", "description": "Load resistance" },
+          "cl": { "default": "10p", "unit": "F", "description": "Load capacitance" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure tran thd THD V(drain)",
+        ".measure tran hd2 FIND V(drain)[2] AT={{freq}}",
+        ".measure tran hd3 FIND V(drain)[3] AT={{freq}}",
+        ".measure tran gain PARAM='20*LOG10(V(drain)[1]/V(input)[1])'",
+        ".measure tran p1db WHEN V(drain)[1]=0.891*V(drain)_linear"
+      ],
+      "compatible_devices": ["nmos", "pmos", "bjt"],
+      "outputs": {
+        "thd": { "unit": "%", "description": "Total harmonic distortion" },
+        "hd2": { "unit": "dBc", "description": "Second harmonic distortion" },
+        "hd3": { "unit": "dBc", "description": "Third harmonic distortion" },
+        "gain": { "unit": "dB", "description": "Small signal gain" },
+        "p1db": { "unit": "dBm", "description": "1dB compression point" }
+      },
+      "examples": [
+        {
+          "name": "Amplifier linearity characterization",
+          "description": "Measure THD and harmonic content",
+          "netlist": [
+            "* Harmonic Distortion Analysis Example",
+            ".include 'model.lib'",
+            "",
+            "* Testbench circuit",
+            "VDD supply 0 DC 1.8",
+            "VIN input 0 SIN(0 0.1 1k)",
+            "CIN input gate 1u",
+            "RB gate gate_dc 10k",
+            "VGS gate_dc 0 DC 0.6",
+            "RL supply drain 1k",
+            "CL drain 0 10p",
+            "XDUT drain gate source bulk nmos_model W=10u L=45n NF=1",
+            "VSS source 0 DC 0",
+            "",
+            "* Analysis",
+            ".tran 0.1u 10m",
+            ".four 1k V(drain)",
+            "",
+            "* Measurements",
+            ".measure tran thd THD V(drain)",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    },
+
+    {
+      "testbench_id": "phase_noise",
+      "name": "Phase Noise Analysis",
+      "type": "pnoise",
+      "description": "Oscillator phase noise characterization",
+      "validated": true,
+      "tags": ["phase-noise", "oscillator", "vco", "rf"],
+      "schematic": "schematics/phase_noise.png",
+      "circuit": {
+        "netlist": [
+          "VDD supply 0 DC {{vdd}}",
+          "VTUNE tune 0 DC {{vtune}}",
+          "L1 supply tank {{l_tank}}",
+          "C1 tank 0 {{c_tank}}",
+          "CVAR tank tune {{c_var}}",
+          "XOSC1 tank tank_bar source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}",
+          "XOSC2 tank_bar tank source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}",
+          "IBIAS source 0 DC {{ibias}}"
+        ],
+        "parameters": {
+          "vdd": { "default": 1.8, "unit": "V", "description": "Supply voltage" },
+          "vtune": { "default": 0.9, "unit": "V", "description": "Tuning voltage" },
+          "l_tank": { "default": "1n", "unit": "H", "description": "Tank inductance" },
+          "c_tank": { "default": "10p", "unit": "F", "description": "Tank capacitance" },
+          "c_var": { "default": "2p", "unit": "F", "description": "Varactor capacitance" },
+          "ibias": { "default": "1m", "unit": "A", "description": "Bias current" },
+          "w": { "default": 20e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 2, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure pnoise pn_1khz FIND L(f) AT=1e3",
+        ".measure pnoise pn_10khz FIND L(f) AT=1e4",
+        ".measure pnoise pn_100khz FIND L(f) AT=1e5",
+        ".measure pnoise pn_1mhz FIND L(f) AT=1e6",
+        ".measure pnoise fosc PARAM='1/(2*PI*SQRT(l_tank*c_tank))'"
+      ],
+      "compatible_devices": ["nmos", "pmos"],
+      "outputs": {
+        "pn_1khz": { "unit": "dBc/Hz", "description": "Phase noise at 1kHz offset" },
+        "pn_10khz": { "unit": "dBc/Hz", "description": "Phase noise at 10kHz offset" },
+        "pn_100khz": { "unit": "dBc/Hz", "description": "Phase noise at 100kHz offset" },
+        "pn_1mhz": { "unit": "dBc/Hz", "description": "Phase noise at 1MHz offset" },
+        "fosc": { "unit": "Hz", "description": "Oscillation frequency" }
+      },
+      "examples": [
+        {
+          "name": "VCO phase noise measurement",
+          "description": "Characterize LC-VCO phase noise performance",
+          "netlist": [
+            "* Phase Noise Analysis Example",
+            ".include 'model.lib'",
+            "",
+            "* LC-VCO circuit",
+            "VDD supply 0 DC 1.8",
+            "VTUNE tune 0 DC 0.9",
+            "L1 supply tank 1n",
+            "C1 tank 0 10p",
+            "CVAR tank tune 2p",
+            "XOSC1 tank tank_bar source bulk nmos_rf W=20u L=45n NF=2",
+            "XOSC2 tank_bar tank source bulk nmos_rf W=20u L=45n NF=2",
+            "IBIAS source 0 DC 1m",
+            "",
+            "* Analysis",
+            ".pss FUND=5G",
+            ".pnoise V(tank) DEC 10 1 10MEG",
+            "",
+            "* Measurements",
+            ".measure pnoise pn_1khz FIND L(f) AT=1e3",
+            ".measure pnoise pn_10khz FIND L(f) AT=1e4",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    }
+  ],
+  
+  "usage_notes": {
+    "dut_connection": "The DUT (Device Under Test) must be connected as a subcircuit XDUT",
+    "model_inclusion": "Model files must be included using .include or .lib statements",
+    "parameter_substitution": "Parameters in double braces {{param}} are replaced at runtime",
+    "output_processing": "Output data should be processed according to outputs specification"
+  }
+}

@@ -8,12 +8,6 @@ The configuration is a single JSON object with the following top-level keys:
 
 **1. Top-Level Keys:**
 
-*   `"app_title"`:
-    *   **Purpose:** Sets the main window title text.
-    *   **Type:** String
-    *   **Required:** No
-    *   **Default:** "Visualization Tool" (applied by the application)
-
 *   `"theme"`:
     *   **Purpose:** Selects the visual theme for the entire application (window, plots, controls). Changing the theme via the UI resets figure-specific style overrides (like custom grid colors) back to the new theme's defaults.
     *   **Type:** String
@@ -23,55 +17,14 @@ The configuration is a single JSON object with the following top-level keys:
         *   `"light"` (Light theme)
         *   `"dark"` (Dark theme)
 
-*   `"left_margin"`, `"right_margin"`, `"top_margin"`, `"bottom_margin"`:
-    *   **Purpose:** Defines padding (in pixels) around the main content area within the window.
-    *   **Type:** Number (Integer or Float)
-    *   **Required:** No
-    *   **Default:** 10 (applied by the application)
-    *   **Constraints:** Must be non-negative (>= 0).
-
-*   `"grid_layout"`:
-    *   **Purpose:** Contains optional settings for arranging the plot figures in a grid.
-    *   **Type:** Object
-    *   **Required:** No (If omitted, default spacing is used, and grid dimensions are calculated automatically).
-
 *   `"figures"`:
     *   **Purpose:** Contains the definitions for all the plot figures to be displayed.
     *   **Type:** Array (of Figure Objects)
     *   **Required:** Yes (Must contain at least one Figure Object to display anything).
 
-**2. `"grid_layout"` Object Keys:**
+**2. Figure Object Keys (within `"figures"` Array):**
 
-*   `"rows"`:
-    *   **Purpose:** Hint for the desired number of rows in the figure grid.
-    *   **Type:** Integer or `null`
-    *   **Required:** No
-    *   **Default:** `null` (Application calculates automatically)
-    *   **Constraints:** Must be positive (> 0) if specified as an integer.
-
-*   `"cols"`:
-    *   **Purpose:** Hint for the desired number of columns in the figure grid.
-    *   **Type:** Integer or `null`
-    *   **Required:** No
-    *   **Default:** `null` (Application calculates automatically)
-    *   **Constraints:** Must be positive (> 0) if specified as an integer.
-    *   **Note:** If both `rows` and `cols` are `null`, a balanced grid is calculated. If only one is specified, the other is calculated. If both are specified, they are used only if the total cells (`rows * cols`) are sufficient for the number of figures defined.
-
-*   `"horizontal_spacing"`:
-    *   **Purpose:** Space in pixels *between* adjacent figure frames horizontally.
-    *   **Type:** Number (Integer or Float)
-    *   **Required:** No
-    *   **Default:** 10 (applied by the application)
-    *   **Constraints:** Must be non-negative (>= 0).
-
-*   `"vertical_spacing"`:
-    *   **Purpose:** Space in pixels *between* adjacent figure frames vertically.
-    *   **Type:** Number (Integer or Float)
-    *   **Required:** No
-    *   **Default:** 10 (applied by the application)
-    *   **Constraints:** Must be non-negative (>= 0).
-
-**3. Figure Object Keys (within `"figures"` Array):**
+**Note:** Grid layout is now controlled interactively through the UI. When multiple figures are present, a column selector allows choosing between 1-4 columns. Margins and spacing are handled through the theme system.
 
 *   `"id"`:
     *   **Purpose:** A unique identifier string for this figure.
@@ -340,12 +293,6 @@ The configuration is a single JSON object with the following top-level keys:
     *   `"bar_width_fraction": (Float 0 < f ≤ 1, Default: 1.0) Fraction of bin width occupied by bar – smaller values add spacing.
     *   `"bar_border_color": (String - Hex Color or `null`, Default: `null` – falls back to `hist_color`) Bar outline color.
     *   `"bar_border_width": (Number ≥ 0, Default: 0) Outline width in pixels; 0 = no border.
-    *   `"show_fit": (Boolean, Default: `false`) Overlay a fitted distribution/curve.
-    *   `"fitting_type": (String, Default: "normal") Algorithm when `show_fit` is true.
-        *   Allowed: "normal", "linear", "quadratic", "cubic_spline", "hermite_cubic_spline", "pchip", "best".
-        *   "normal" fits a normal distribution curve to the histogram data.
-        *   "best" tries all supported algorithms and selects lowest error (slowest).
-    *   `"fit_color": (String - Hex Color, Default: "#000000") Color of fitted curve.
 
 *   **Styling & Behaviour for `type: "bar":**
     *   `"x_column": (Required) Categories or X positions.

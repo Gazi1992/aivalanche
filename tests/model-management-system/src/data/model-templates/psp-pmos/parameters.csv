@@ -1,0 +1,119 @@
+name,subckt,default,min,max,unit,description
+VFB,pmos_model,-1.05,-1.5,-0.8,V,Flatband voltage
+PHIB,pmos_model,1.13,1.0,1.3,V,Surface potential at strong inversion
+K1,pmos_model,0.65,0.5,0.8,V^0.5,Body effect coefficient
+K2,pmos_model,-0.08,-0.2,0.05,-,Second-order body effect
+MUE,pmos_model,165,100,250,cm²/Vs,Mobility at Tref
+THEMU,pmos_model,-1.5,-2.0,-1.0,-,Temperature coefficient of mobility
+MU0,pmos_model,0.04,0.02,0.06,m²/Vs,Low-field mobility
+CS,pmos_model,0.7,0.5,1.0,-,Coulomb scattering coefficient
+XCOR,pmos_model,0.4,0.2,0.6,-,Velocity overshoot coefficient
+FETA,pmos_model,1.0,0.5,1.5,-,Velocity saturation parameter
+RS,pmos_model,150,100,300,Ω·μm,Source resistance
+RD,pmos_model,150,100,300,Ω·μm,Drain resistance
+RSB,pmos_model,0,-50,50,Ω·μm,Body-bias dependent source resistance
+RDB,pmos_model,0,-50,50,Ω·μm,Body-bias dependent drain resistance
+RSG,pmos_model,0,-50,50,Ω·μm,Gate-bias dependent source resistance
+RDG,pmos_model,0,-50,50,Ω·μm,Gate-bias dependent drain resistance
+VSAT,pmos_model,7.5e4,5e4,1e5,m/s,Saturation velocity
+XISAT,pmos_model,0.3,0.1,0.5,-,VSAT temperature coefficient
+THESAT,pmos_model,0.9,0.5,1.5,-,Velocity saturation temperature parameter
+THESATB,pmos_model,0.0,-0.5,0.5,V^-1,Body effect of velocity saturation
+THESATG,pmos_model,0.0,-0.5,0.5,V^-1,Gate effect of velocity saturation
+A1,pmos_model,0.0,-0.5,0.5,V^-1,CLM parameter
+A2,pmos_model,1.0,0.5,1.5,-,CLM parameter
+A3,pmos_model,1.0,0.5,1.5,-,CLM parameter
+A4,pmos_model,0.0,-0.5,0.5,V,CLM parameter
+STA2,pmos_model,0.0,-1e-3,1e-3,V^-1,DIBL parameter for VT
+DIB0,pmos_model,1.0,0.5,2.0,-,DIBL coefficient
+DIB1,pmos_model,0.7,0.3,1.0,-,DIBL coefficient
+DIB2,pmos_model,2e-3,0,5e-3,-,DIBL coefficient
+BETN,pmos_model,2.5,1.5,3.5,-,Reverse short channel effect
+STBET,pmos_model,0.0,-1e-3,1e-3,V^-1,Body effect of BETN
+LP,pmos_model,1.1e-8,5e-9,2e-8,m,Effective channel length offset
+NEFF,pmos_model,5e17,1e17,1e18,cm^-3,Effective channel doping
+WEFF,pmos_model,1e-7,5e-8,2e-7,m,Effective channel width
+VTHD,pmos_model,0.1,0,0.3,V,Threshold voltage decrease
+VTHS,pmos_model,0.1,0,0.3,V,Threshold voltage shift
+DELTL,pmos_model,0,-1e-8,1e-8,m,Channel length offset
+DELTW,pmos_model,0,-1e-8,1e-8,m,Channel width offset
+CTH0,pmos_model,0,0,1e-3,F/m²,Capacitance threshold parameter
+CTL,pmos_model,5e-9,0,1e-8,m,Channel length for CTH0
+CTW,pmos_model,5e-9,0,1e-8,m,Channel width for CTH0
+CFL,pmos_model,1e-8,0,2e-8,m,Length parameter for fringing
+CFW,pmos_model,1e-8,0,2e-8,m,Width parameter for fringing
+CGOV,pmos_model,1.2e-10,5e-11,2e-10,F/m,Gate overlap capacitance
+CGBOV,pmos_model,1.1e-10,5e-11,2e-10,F/m,Gate-bulk overlap capacitance
+CF,pmos_model,1e-11,0,5e-11,F/m,Fringing field capacitance
+CFB,pmos_model,1e-4,0,2e-4,F/m²,Fringing field to bulk
+TOXOV,pmos_model,2.5e-9,2e-9,3e-9,m,Oxide thickness for overlap
+NOV,pmos_model,5e25,1e25,1e26,m^-3,Doping of overlap region
+TOXOVD,pmos_model,2.5e-9,2e-9,3e-9,m,Oxide thickness for overlap drain
+NOVD,pmos_model,5e25,1e25,1e26,m^-3,Doping of overlap drain region
+CT,pmos_model,9e-4,5e-4,1.5e-3,F/m²,Junction capacitance per area
+CTG,pmos_model,5e-4,2e-4,8e-4,F/m,Gate-edge junction capacitance
+CTB,pmos_model,1e-3,5e-4,1.5e-3,F/m²,STI-edge junction capacitance
+CJBR,pmos_model,1e-3,5e-4,1.5e-3,F/m²,Bottom junction capacitance
+CJGATE,pmos_model,5e-4,2e-4,8e-4,F/m,Gate-edge junction capacitance
+CJSTI,pmos_model,5e-11,2e-11,1e-10,F/m,STI-edge junction capacitance
+PB,pmos_model,0.85,0.7,1.0,V,Built-in potential
+PBSW,pmos_model,0.85,0.7,1.0,V,Sidewall built-in potential
+PBSWG,pmos_model,0.85,0.7,1.0,V,Gate-edge built-in potential
+MJ,pmos_model,0.5,0.3,0.7,-,Junction grading coefficient
+MJSW,pmos_model,0.33,0.2,0.5,-,Sidewall grading coefficient
+MJSWG,pmos_model,0.33,0.2,0.5,-,Gate-edge grading coefficient
+FBBTR,pmos_model,1e9,5e8,2e9,V/m,Reverse bias parameter
+STFBBT,pmos_model,-2e-3,-5e-3,0,V^-1,Temperature coefficient of FBBTR
+VBIRBOT,pmos_model,1.2,1.0,1.5,V,Built-in voltage at bottom
+VBIRGAT,pmos_model,1.2,1.0,1.5,V,Built-in voltage at gate edge
+VBIRSTI,pmos_model,1.2,1.0,1.5,V,Built-in voltage at STI edge
+PBOT,pmos_model,0.5,0.3,0.7,-,Grading coefficient at bottom
+PGAT,pmos_model,0.5,0.3,0.7,-,Grading coefficient at gate edge
+PSTI,pmos_model,0.5,0.3,0.7,-,Grading coefficient at STI edge
+PHIGBOT,pmos_model,1.16,1.0,1.3,V,Barrier height at bottom
+PHIGGAT,pmos_model,1.16,1.0,1.3,V,Barrier height at gate edge
+PHIGSTI,pmos_model,1.16,1.0,1.3,V,Barrier height at STI edge
+IDSATRBOT,pmos_model,1e-12,1e-13,1e-11,A/μm²,Saturation current at bottom
+IDSATRGAT,pmos_model,1e-12,1e-13,1e-11,A/μm,Saturation current at gate edge
+IDSATRSTI,pmos_model,1e-18,1e-19,1e-17,A/μm,Saturation current at STI edge
+CSRHBOT,pmos_model,1e2,1e1,1e3,A/(Vμm²),Recombination current at bottom
+CSRHGAT,pmos_model,1e-4,1e-5,1e-3,A/(Vμm),Recombination current at gate edge
+CSRHSTI,pmos_model,1e-10,1e-11,1e-9,A/(Vμm),Recombination current at STI edge
+XJUNGAT,pmos_model,1e-7,5e-8,2e-7,m,Junction depth at gate edge
+XJUNSTI,pmos_model,1e-7,5e-8,2e-7,m,Junction depth at STI edge
+CGIDL,pmos_model,5e-3,0,0.01,V³,GIDL coefficient
+FGIDL,pmos_model,3e9,1e9,5e9,V/m,Field dependence of GIDL
+AGIDL,pmos_model,1e-14,1e-15,1e-13,A/V³,Pre-exponential GIDL coefficient
+BGIDL,pmos_model,5e8,1e8,1e9,V/m,Exponential GIDL coefficient
+STGIDL,pmos_model,0,-1e-3,1e-3,V/K,Temperature coefficient of GIDL
+CGBOVL,pmos_model,0.5,0,1,V³,Gate-bulk overlap for GIDL
+CGISL,pmos_model,5e-3,0,0.01,V³,GISL coefficient
+FGISL,pmos_model,3e9,1e9,5e9,V/m,Field dependence of GISL
+AGISL,pmos_model,1e-14,1e-15,1e-13,A/V³,Pre-exponential GISL coefficient
+BGISL,pmos_model,5e8,1e8,1e9,V/m,Exponential GISL coefficient
+STGISL,pmos_model,0,-1e-3,1e-3,V/K,Temperature coefficient of GISL
+IGINV,pmos_model,0,0,1e-3,A/m²,Gate current in inversion
+IGACC,pmos_model,0,0,1e-3,A/m²,Gate current in accumulation
+AIGS,pmos_model,1e-14,1e-15,1e-13,A/V³,Gate-source current coefficient
+AIGD,pmos_model,1e-14,1e-15,1e-13,A/V³,Gate-drain current coefficient
+BIGS,pmos_model,5e8,1e8,1e9,V/m,Gate-source current exp coefficient
+BIGD,pmos_model,5e8,1e8,1e9,V/m,Gate-drain current exp coefficient
+CIGS,pmos_model,0.5,0,1,V³,Gate-source current voltage coefficient
+CIGD,pmos_model,0.5,0,1,V³,Gate-drain current voltage coefficient
+DLCIG,pmos_model,1e-8,0,2e-8,m,Length offset for gate current
+AX,pmos_model,10,5,15,-,Linear degradation coefficient
+BX,pmos_model,0,-0.5,0.5,V^-1,Saturation degradation coefficient
+TA,pmos_model,0,-0.1,0.1,K^-1,Temperature coefficient of A
+TB,pmos_model,0,-0.1,0.1,K^-1,Temperature coefficient of B
+ALPHAGIDL,pmos_model,0,-0.1,0.1,K^-1,Temperature coefficient of GIDL
+BETAGIDL,pmos_model,0,-0.1,0.1,K^-1,Temperature coefficient of BGIDL
+AGIDLW,pmos_model,0,-1e-14,1e-14,A/(V³m),Width dependence of GIDL
+BGIDLW,pmos_model,0,-1e8,1e8,(V/m)/m,Width dependence of BGIDL
+CGIDLW,pmos_model,0,-0.01,0.01,V³/m,Width dependence of CGIDL
+THESATL,pmos_model,0,-0.5,0.5,m^-1,Length dependence of THESAT
+THESATW,pmos_model,0,-0.5,0.5,m^-1,Width dependence of THESAT
+LOV,pmos_model,1e-8,0,2e-8,m,Overlap length
+NOVO,pmos_model,5e25,1e25,1e26,m^-3,Overlap doping concentration
+CJO,pmos_model,1e-3,5e-4,2e-3,F/m²,Zero-bias junction capacitance
+CJSWO,pmos_model,5e-10,2e-10,1e-9,F/m,Zero-bias sidewall capacitance
+CJSWGO,pmos_model,5e-10,2e-10,1e-9,F/m,Zero-bias gate-edge capacitance

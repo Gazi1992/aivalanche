@@ -24,7 +24,7 @@ import logging
 _root_logger = logging.getLogger()
 # On each fresh start, overwrite the log file (mode="w") so we get a clean snapshot.
 if not any(isinstance(h, logging.FileHandler) for h in _root_logger.handlers):
-    file_handler = logging.FileHandler("backend_debug.log", mode="w", encoding="utf-8")
+    file_handler = logging.FileHandler("logs/backend_debug.log", mode="w", encoding="utf-8")
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     )
@@ -50,7 +50,8 @@ from backend.api.schemas import (
 
 # Local modules
 from backend.core.data_handler import load_dataset, available_datasets
-from backend.core.gemini_service import GeminiService
+from backend.core.ai.ai_service import AIService
+from backend.core.data.data_analyzer import DataAnalyzer
 
 
 # ----------------------------------------------------------------------------
@@ -64,13 +65,11 @@ from backend.core.data_handler import DATA_DIR
 from dotenv import load_dotenv
 load_dotenv()
 
-# Initialize Gemini service
+# Initialize AI service
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
-    logging.warning("GEMINI_API_KEY not found in environment variables. AI features will be disabled.")
-    gemini_service = None
-else:
-    gemini_service = GeminiService(GEMINI_API_KEY)
+    logging.warning("GEMINI_API_KEY not found in environment variables. AI features will be limited.")
+ai_service = AIService(GEMINI_API_KEY)
 
 
 # ----------------------------------------------------------------------------
@@ -108,7 +107,7 @@ def get_config():
     """
     # For simplicity, we'll hardcode the default config file.
     # This could be made dynamic (e.g., from a query parameter) if needed.
-    config_name = "sample_config.json"
+    config_name = "default_config.json"
     config_path = (DATA_DIR / "configs" / config_name).resolve()
 
     if not config_path.exists():
@@ -128,7 +127,7 @@ def get_config():
                     if isinstance(layout, dict):
                         layout.pop("template", None)
 
-            payload_path = Path("frontend_payload.json")
+            payload_path = Path("logs/frontend_payload.json")
 
             json_text = json.dumps(sanitized, ensure_ascii=False, indent=2)
 
@@ -281,6 +280,48 @@ def bar_plot_endpoint(req: BarPlotRequest) -> dict:
 
 
 
+@app.post("/api/build-dashboard", summary="Build dashboard from provided config")
+async def build_dashboard_from_config(config: dict):
+    """Build and return dashboard from a dynamically provided config."""
+    import tempfile
+    import json
+    from pathlib import Path
+    from datetime import datetime
+    
+    try:
+        # Save config to a temporary file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
+            json.dump(config, tmp)
+            temp_config_path = Path(tmp.name)
+        
+        # Save a copy to .temp for debugging
+        temp_dir = Path(".temp")
+        temp_dir.mkdir(exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        config_temp_path = temp_dir / f"generated_config_{timestamp}.json"
+        with open(config_temp_path, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=2, ensure_ascii=False)
+        logging.info(f"Saved config to {config_temp_path}")
+        
+        # Build dashboard from the temp config
+        dashboard_json = build_dashboard(temp_config_path)
+        
+        # Clean up temp file
+        temp_config_path.unlink()
+        
+        # Log for debugging
+        logging.info(f"Built dashboard with {len(dashboard_json.get('figures', []))} figures")
+        
+        return JSONResponse(content=dashboard_json, media_type="application/json; charset=utf-8")
+        
+    except Exception as e:
+        logging.error(f"Error building dashboard from config: {e}")
+        # Clean up temp file if it exists
+        if 'temp_config_path' in locals() and temp_config_path.exists():
+            temp_config_path.unlink()
+        raise HTTPException(500, detail=str(e))
+
+
 @app.get("/dashboard/{config_name}", summary="Render full dashboard from config")
 def dashboard(config_name: str):
     """Return figures generated from *config_name* (looked up in data/configs)."""
@@ -312,7 +353,7 @@ def dashboard(config_name: str):
                 if isinstance(layout, dict):
                     layout.pop("template", None)
 
-        payload_path = Path("frontend_payload.json")
+        payload_path = Path("logs/frontend_payload.json")
         # Pretty-print overall structure but flatten just the large x/y arrays
         json_text = json.dumps(sanitized, ensure_ascii=False, indent=2)
 
@@ -372,16 +413,26 @@ class ImproveConfigRequest(BaseModel):
     current_config: dict
     improvement_request: str
 
+class DataUploadRequest(BaseModel):
+    filename: str
+    content: str
+    file_type: str
+    message: Optional[str] = None
+
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """Handle chat messages with Gemini AI"""
-    if not gemini_service:
-        return {
-            "type": "error",
-            "message": "AI service is not configured. Please set GEMINI_API_KEY environment variable."
-        }
+    """Handle chat messages with enhanced AI service"""
     try:
-        response = gemini_service.chat_response(request.message, request.current_config)
+        context = {
+            "current_config": request.current_config
+        }
+        response = ai_service.process_message(request.message, context)
+        
+        # If response includes processed data, store it temporarily
+        if "data_summary" in response:
+            # Store in a temporary location for the dashboard to access
+            pass  # TODO: Implement data storage
+            
         return response
     except Exception as e:
         logging.error(f"Error in chat endpoint: {e}")
@@ -392,11 +443,18 @@ async def chat(request: ChatRequest):
 
 @app.post("/api/generate-config")
 async def generate_config(request: GenerateConfigRequest):
-    """Generate a visualization configuration using Gemini AI"""
+    """Generate a visualization configuration using AI"""
     try:
-        config = gemini_service.generate_plot_config(request.prompt)
+        # Use the new AI service to process the request
+        response = ai_service.process_message(request.prompt)
+        
+        if response.get("type") == "error":
+            raise HTTPException(status_code=500, detail=response.get("message"))
+            
+        config = response.get("config")
         if config is None:
             raise HTTPException(status_code=500, detail="Failed to generate configuration")
+            
         return {"success": True, "config": config}
     except Exception as e:
         logging.error(f"Error in generate_config: {e}")
@@ -404,14 +462,150 @@ async def generate_config(request: GenerateConfigRequest):
 
 @app.post("/api/improve-config")
 async def improve_config(request: ImproveConfigRequest):
-    """Improve an existing configuration using Gemini AI"""
+    """Improve an existing configuration using AI"""
     try:
-        config = gemini_service.improve_config(request.current_config, request.improvement_request)
+        # Process as a modification request
+        context = {"current_config": request.current_config}
+        response = ai_service.process_message(request.improvement_request, context)
+        
+        if response.get("type") == "error":
+            raise HTTPException(status_code=500, detail=response.get("message"))
+            
+        config = response.get("config")
         if config is None:
             raise HTTPException(status_code=500, detail="Failed to improve configuration")
+            
         return {"success": True, "config": config}
     except Exception as e:
         logging.error(f"Error in improve_config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/upload-data")
+async def upload_data(request: DataUploadRequest):
+    """Handle data file upload and analysis"""
+    import pandas as pd
+    from io import StringIO
+    import tempfile
+    import os
+    import traceback
+    
+    try:
+        logging.info(f"Processing file upload: {request.filename} (type: {request.file_type})")
+        
+        # Parse the file content based on file type
+        if request.file_type == 'csv':
+            df = pd.read_csv(StringIO(request.content))
+        elif request.file_type in ['xlsx', 'xls']:
+            # For Excel files, we need to save temporarily
+            # Excel files need binary content, so we'll handle base64 if needed
+            import base64
+            with tempfile.NamedTemporaryFile(suffix=f'.{request.file_type}', delete=False) as tmp:
+                # Check if content is base64 encoded
+                try:
+                    content_bytes = base64.b64decode(request.content)
+                except:
+                    content_bytes = request.content.encode('latin-1')
+                tmp.write(content_bytes)
+                tmp_path = tmp.name
+            df = pd.read_excel(tmp_path)
+            os.unlink(tmp_path)
+        elif request.file_type == 'json':
+            df = pd.read_json(StringIO(request.content))
+        elif request.file_type == 'parquet':
+            # Handle parquet files
+            import base64
+            with tempfile.NamedTemporaryFile(suffix='.parquet', delete=False) as tmp:
+                content_bytes = base64.b64decode(request.content)
+                tmp.write(content_bytes)
+                tmp_path = tmp.name
+            df = pd.read_parquet(tmp_path)
+            os.unlink(tmp_path)
+        else:
+            raise ValueError(f"Unsupported file type: {request.file_type}")
+        
+        logging.info(f"Successfully parsed file with shape: {df.shape}")
+        
+        # Create .temp directory if it doesn't exist
+        temp_dir = Path(".temp")
+        temp_dir.mkdir(exist_ok=True)
+        
+        # Save the dataframe temporarily for analysis
+        temp_file_path = temp_dir / f"{request.filename}"
+        df.to_csv(temp_file_path, index=False)
+        
+        # Analyze the data
+        logging.info("Starting data analysis...")
+        analyzer = DataAnalyzer()
+        analysis = analyzer.analyze_dataframe(df, str(temp_file_path))
+        logging.info(f"Analysis complete. Found {len(analysis.get('suggested_plots', []))} plot suggestions")
+        
+        # Convert numpy types to Python native types for JSON serialization
+        import numpy as np
+        import pandas as pd
+        from enum import Enum
+        
+        def convert_numpy_types(obj):
+            # Check for numpy arrays first (before pd.isna which fails on arrays)
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, (np.integer, np.int_)):
+                return int(obj)
+            elif isinstance(obj, (np.floating, np.float_)):
+                return float(obj)
+            elif isinstance(obj, Enum):
+                return obj.value  # Convert Enum to its value
+            elif isinstance(obj, (pd.NA.__class__, type(None))):
+                return None
+            elif isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            elif isinstance(obj, tuple):
+                return tuple(convert_numpy_types(item) for item in obj)
+            # Try to check for NaN on scalar values only
+            try:
+                if pd.isna(obj):
+                    return None
+            except (ValueError, TypeError):
+                pass
+            return obj
+        
+        analysis = convert_numpy_types(analysis)
+        
+        # Store the data in cache for later visualization requests
+        if hasattr(ai_service, 'data_cache'):
+            ai_service.data_cache[request.filename] = {
+                "df": df,
+                "analysis": analysis,
+                "file_path": str(temp_file_path)
+            }
+            logging.info(f"Cached data for {request.filename}")
+        
+        # Build response message with insights
+        insights = []
+        if analysis.get('suggested_plots'):
+            plot_types = [p.get('plot_type', 'visualization') for p in analysis['suggested_plots'][:3]]
+            insights.append(f"Suggested visualizations: {', '.join(plot_types)}")
+        
+        if analysis.get('quality_issues'):
+            insights.append(f"Found {len(analysis['quality_issues'])} data quality issues")
+        
+        summary_msg = f"Successfully loaded {request.filename} with {len(df)} rows and {len(df.columns)} columns."
+        if insights:
+            summary_msg += " " + ". ".join(insights) + "."
+        
+        return {
+            "type": "data_analysis",
+            "message": summary_msg,
+            "analysis": analysis,
+            "config": None  # No auto-generation - user must request visualization explicitly
+        }
+        
+    except Exception as e:
+        logging.error(f"Error in upload_data: {e}")
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

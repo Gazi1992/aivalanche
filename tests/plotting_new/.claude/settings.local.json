@@ -14,7 +14,17 @@
       "Bash(cat:*)",
       "Bash(npm install:*)",
       "Bash(touch:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(pip install:*)",
+      "Bash(python test:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git rm:*)",
+      "Bash(cp:*)",
+      "Bash(timeout 5 python:*)",
+      "Bash(python:*)",
+      "Bash(dir dataconfigs*.json)",
+      "Bash(true)"
     ],
     "deny": []
   }

@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-MISMATCH-001",
+  "name": "Statistical Mismatch NMOS",
+  "version": "1.1",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "nmos",
+  "base_model": "BSIM4",
+  "status": "validated",
+  "author": {
+    "name": "Dr. Chen Wu",
+    "email": "chen.w@company.com",
+    "department": "Statistical Modeling"
+  },
+  "timestamps": {
+    "created": "2024-10-05T10:00:00Z",
+    "modified": "2025-01-11T09:20:00Z"
+  },
+  "tags": ["28nm", "mismatch", "statistical", "monte-carlo", "variability"],
+  "description": "NMOS model with detailed statistical mismatch parameters for Monte Carlo simulation",
+  "technology": {
+    "node": "28nm",
+    "foundry": "Generic",
+    "process": "CMOS",
+    "variant": "Statistical"
+  },
+  "characteristics": {
+    "vdd_nominal": 1.0,
+    "vth_nominal": 0.45,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 40e9]
+  },
+  "validation": {
+    "test_structures": 500,
+    "measurement_points": 45000,
+    "accuracy": {
+      "dc": 0.95,
+      "mismatch": 0.98,
+      "statistical": 0.97
+    },
+    "validated_by": "Statistical Modeling Team",
+    "validation_date": "2025-01-11"
+  },
+  "usage_notes": [
+    "Includes comprehensive mismatch modeling",
+    "Validated for Monte Carlo simulation",
+    "Critical for analog circuit design",
+    "Accurate current mirror modeling"
+  ],
+  "references": [
+    "Statistical Device Modeling Guide",
+    "Monte Carlo Simulation Manual"
+  ],
+  "support": {
+    "contact": "statistical-support@company.com",
+    "documentation": "/docs/mismatch_modeling.pdf"
+  }
+}

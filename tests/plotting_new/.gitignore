@@ -12,9 +12,16 @@ ENV/
 *.log
 backend_debug.log
 frontend_payload.json
+logs/*.log
+logs/*.json
+!logs/README.md
 
 # Cache
 .figure_cache/
+
+# Temporary files
+.temp/
+temp_*
 
 # IDE
 .vscode/

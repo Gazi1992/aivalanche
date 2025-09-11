@@ -1,0 +1,127 @@
+.column-selector-container {
+  width: 100%;
+  background: linear-gradient(to bottom, var(--card-background-color), rgba(255,255,255,0.02));
+  border-bottom: 1px solid var(--border-color);
+  padding: 8px 20px; /* Padding for content alignment */
+  margin: 0 0 15px 0; /* Add bottom margin for spacing to plots */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.column-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.column-selector-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-color);
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.column-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.column-selector-label {
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.column-buttons {
+  display: flex;
+  gap: 6px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.column-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.column-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: var(--border-color);
+}
+
+.column-btn.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color);
+}
+
+.column-btn.active:hover {
+  background: var(--primary-hover-color);
+}
+
+.column-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
+}
+
+.column-btn:active {
+  transform: scale(0.95);
+}
+
+/* Add visual grid indicators */
+.column-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.column-btn:hover::after {
+  opacity: 1;
+}
+
+.column-btn[title*="1 column"]::after {
+  content: '1×N';
+}
+
+.column-btn[title*="2 columns"]::after {
+  content: '2×N';
+}
+
+.column-btn[title*="3 columns"]::after {
+  content: '3×N';
+}
+
+.column-btn[title*="4 columns"]::after {
+  content: '4×N';
+}

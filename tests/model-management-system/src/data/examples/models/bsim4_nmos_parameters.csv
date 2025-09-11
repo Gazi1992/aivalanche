@@ -1,0 +1,29 @@
+Parameter,Value,Unit,Category,Description
+tox,4.0e-9,m,Geometry,Gate oxide thickness
+toxp,3.8e-9,m,Geometry,Physical gate oxide thickness
+xj,1.4e-7,m,Geometry,Junction depth
+lint,1.5e-8,m,Geometry,Length offset for channel length
+wint,1.0e-8,m,Geometry,Width offset for channel width
+vth0,0.37,V,DC,Threshold voltage at zero substrate bias
+k1,0.5,V^0.5,DC,First-order body effect coefficient
+k2,0.01,-,DC,Second-order body effect coefficient
+u0,0.025,m^2/Vs,DC,Low-field mobility
+vsat,1.0e5,m/s,DC,Saturation velocity
+nfactor,2,-,DC,Subthreshold swing factor
+eta0,0.004,-,DC,DIBL coefficient subthreshold region
+pclm,1.3,-,DC,Channel length modulation parameter
+pdiblc1,0.39,-,DC,First DIBL effect coefficient
+pdiblc2,0.0086,-,DC,Second DIBL effect coefficient
+cgdo,1e-10,F/m,Capacitance,Gate-drain overlap capacitance
+cgso,1e-10,F/m,Capacitance,Gate-source overlap capacitance
+cgbo,1e-12,F/m,Capacitance,Gate-bulk overlap capacitance
+tnom,27,C,Temperature,Nominal temperature
+ute,-1.5,-,Temperature,Mobility temperature exponent
+kt1,-0.11,V,Temperature,Threshold voltage temperature coefficient
+noia,1e20,1/cm^3,Noise,Flicker noise parameter A
+noib,5e4,1/cm,Noise,Flicker noise parameter B
+em,4.1e7,V/m,Noise,Flicker noise frequency exponent
+jss,1e-4,A/m^2,Junction,Source/drain junction saturation current density
+pbs,0.8,V,Junction,Source/drain junction built-in potential
+cjs,1e-3,F/m^2,Junction,Source/drain junction capacitance
+mjs,0.5,-,Junction,Source/drain junction grading coefficient

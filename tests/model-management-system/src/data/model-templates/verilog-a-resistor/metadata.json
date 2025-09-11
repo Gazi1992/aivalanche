@@ -1,0 +1,57 @@
+{
+  "model_id": "MOD-RES-001",
+  "name": "Precision Resistor Model",
+  "version": "1.5",
+  "type": "behavioral",
+  "category": "passive",
+  "base_model": "Verilog-A",
+  "status": "production",
+  "author": {
+    "name": "Maria Santos",
+    "email": "maria.s@company.com",
+    "department": "Passive Components"
+  },
+  "timestamps": {
+    "created": "2024-04-18T10:00:00Z",
+    "modified": "2025-01-03T15:30:00Z"
+  },
+  "tags": ["resistor", "precision", "verilog-a", "passive", "temperature"],
+  "description": "High-precision resistor model with temperature coefficients and noise modeling",
+  "technology": {
+    "type": "Thin Film",
+    "material": "SiCr",
+    "sheet_resistance": "1000 Ohm/sq",
+    "tolerance": "0.1%"
+  },
+  "characteristics": {
+    "resistance_range": [100, 1e6],
+    "tcr": 25e-6,
+    "temperature_range": [-40, 125],
+    "voltage_coefficient": 5e-6
+  },
+  "validation": {
+    "test_structures": 30,
+    "measurement_points": 7500,
+    "accuracy": {
+      "dc": 0.999,
+      "temperature": 0.995,
+      "noise": 0.92
+    },
+    "validated_by": "Passive Components Team",
+    "validation_date": "2025-01-03"
+  },
+  "usage_notes": [
+    "Excellent temperature stability",
+    "Low voltage coefficient",
+    "Includes 1/f noise modeling",
+    "Suitable for precision circuits"
+  ],
+  "references": [
+    "Precision Resistor Design Guide",
+    "Temperature Coefficient Modeling"
+  ],
+  "support": {
+    "contact": "passive-support@company.com",
+    "documentation": "/docs/precision_resistor.pdf"
+  }
+}

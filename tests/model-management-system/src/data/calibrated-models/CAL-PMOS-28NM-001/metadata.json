@@ -1,0 +1,72 @@
+{
+  "model_id": "CAL-PMOS-28NM-001",
+  "name": "Calibrated 28nm PMOS Model v1.5",
+  "description": "BSIM4 PMOS model for 28nm technology with excellent matching characteristics",
+  "base_model": "BSIM4",
+  "model_template_id": "MOD-BSIM4-002",
+  "version": "1.5.0",
+  "status": "failed",
+  "category": "transistor",
+  "subcategory": "pmos",
+  "technology": {
+    "node": "28nm",
+    "foundry": "Samsung",
+    "process": "CMOS",
+    "variant": "High-K Metal Gate"
+  },
+  "author": {
+    "name": "John Doe",
+    "email": "john.doe@company.com",
+    "organization": "Model Team"
+  },
+  "calibration_info": {
+    "task_id": "TASK-005",
+    "request_id": "REQ-2025-Q1-001",
+    "engineer": "John Doe",
+    "start_date": "2025-01-09T10:00:00Z",
+    "completion_date": "2025-01-09T15:00:00Z",
+    "total_time_hours": 5,
+    "iterations": 500,
+    "algorithm": "Particle Swarm Optimization",
+    "accuracy": 68.5,
+    "rms_error": 0.315,
+    "progress": 100,
+    "error_message": "Convergence not achieved after 500 iterations. RMS error exceeds acceptable threshold."
+  },
+  "reference_data": {
+    "data_id": "REF-MEAS-011",
+    "name": "28nm PMOS High-Temperature Measurements",
+    "measurement_data": ["REF-MEAS-011", "REF-MEAS-012"],
+    "simulation_data": ["REF-SIM-041"],
+    "total_points": 12500,
+    "temperature_range": [25, 150],
+    "voltage_range": [0, 1.0],
+    "data_weight": {
+      "dc": 0.5,
+      "cv": 0.35,
+      "rf": 0.15
+    }
+  },
+  "validation": {
+    "test_structures": 40,
+    "corner_validation": ["SS", "TT", "FF"],
+    "temperature_validation": [27, 85, 125],
+    "metrics": {
+      "dc_accuracy": 0.72,
+      "ac_accuracy": 0.68,
+      "transient_accuracy": 0.65,
+      "mismatch_accuracy": 0.70
+    }
+  },
+  "files": {
+    "parameters": "parameters_failed.txt",
+    "model_card": null,
+    "validation_report": "failure_report.pdf",
+    "corner_files": []
+  },
+  "timestamps": {
+    "created": "2025-01-09T10:00:00Z",
+    "modified": "2025-01-09T15:00:00Z",
+    "validated": null
+  }
+}

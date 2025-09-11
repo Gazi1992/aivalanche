@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-TFET-001",
+  "name": "Tunnel FET Model",
+  "version": "0.9",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "tfet",
+  "base_model": "TFET",
+  "status": "draft",
+  "author": {
+    "name": "Dr. Priya Sharma",
+    "email": "priya.s@company.com",
+    "department": "Emerging Devices"
+  },
+  "timestamps": {
+    "created": "2024-12-01T10:00:00Z",
+    "modified": "2025-01-12T10:15:00Z"
+  },
+  "tags": ["TFET", "tunnel-FET", "ultra-low-power", "emerging", "steep-slope"],
+  "description": "Experimental Tunnel Field Effect Transistor model for ultra-low power applications",
+  "technology": {
+    "type": "TFET",
+    "material": "III-V",
+    "channel": "InGaAs",
+    "gate_stack": "High-k"
+  },
+  "characteristics": {
+    "vdd_nominal": 0.5,
+    "subthreshold_slope": 30e-3,
+    "temperature_range": [-40, 85],
+    "frequency_range": [0, 10e9]
+  },
+  "validation": {
+    "test_structures": 12,
+    "measurement_points": 2400,
+    "accuracy": {
+      "dc": 0.88,
+      "subthreshold": 0.95,
+      "ambipolar": 0.85
+    },
+    "validated_by": "Emerging Devices Team",
+    "validation_date": "2025-01-12"
+  },
+  "usage_notes": [
+    "Experimental device under development",
+    "Ultra-steep subthreshold slope",
+    "Band-to-band tunneling mechanism",
+    "Potential for ultra-low power circuits"
+  ],
+  "references": [
+    "Tunnel FET Physics and Modeling",
+    "Emerging Device Research Papers"
+  ],
+  "support": {
+    "contact": "emerging-devices@company.com",
+    "documentation": "/docs/tfet_preliminary.pdf"
+  }
+}

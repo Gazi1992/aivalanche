@@ -1,0 +1,79 @@
+* BSIM4 Parameter Library
+* Version 4.8.1
+* Additional model parameters
+
+.lib bsim4_params
+
+* Gate capacitance parameters
+.param CGDO = 9.5e-11
+.param CGSO = 9.5e-11
+.param CGBO = 2.56e-11
+.param CJ = 9.8e-4
+.param MJ = 0.498
+.param CJSW = 2.4e-10
+.param MJSW = 0.33
+.param CJSWG = 3.3e-10
+.param MJSWG = 0.33
+.param PB = 0.982
+
+* Quantum effects
+.param TOXQM = 1.38e-9
+.param TOXREF = 1.38e-9
+.param CAPMOD = 2
+.param XPART = 0
+
+* Noise parameters
+.param NOIA = 1e20
+.param NOIB = 5e4
+.param NOIC = -1.4e-12
+.param EF = 1.1
+.param EM = 4.1e7
+
+* Flicker noise
+.param NTNOI = 1
+.param TNOIA = 1.5e6
+.param TNOIB = 3.5e6
+
+* Layout dependent parameters
+.param DL = 2e-9
+.param DW = 1e-9
+.param DWC = DW
+.param DLC = DL
+.param XL = 0
+.param XW = 0
+
+* Source/Drain resistance
+.param RDSW = 200
+.param RDSWMIN = 0
+.param RSH = 7
+.param RSHG = 0.4
+
+* Stress effect parameters
+.param SA = 0.5e-6
+.param SB = 1e-6
+.param SD = 1e-6
+.param SAREF = 1e-6
+.param SBREF = 1e-6
+
+* Self-heating parameters
+.param SH = 0
+.param RTH0 = 0.1
+.param CTH0 = 1e-5
+
+* Impact ionization
+.param ALPHA0 = 0
+.param ALPHA1 = 0
+.param BETA0 = 30
+
+* Gate current parameters
+.param AIGBACC = 0.0136
+.param BIGBACC = 0.00171
+.param CIGBACC = 0.075
+.param NIGBACC = 1
+.param AIGBINV = 0.0111
+.param BIGBINV = 0.000949
+.param CIGBINV = 0.006
+.param EIGBINV = 1.1
+.param NIGBINV = 3
+
+.endl bsim4_params

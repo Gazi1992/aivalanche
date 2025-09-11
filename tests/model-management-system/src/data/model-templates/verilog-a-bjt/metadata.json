@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-BJT-001",
+  "name": "Verilog-A BJT Model",
+  "version": "2.0",
+  "type": "behavioral",
+  "category": "transistor",
+  "subcategory": "bjt",
+  "base_model": "Verilog-A",
+  "status": "production",
+  "author": {
+    "name": "Tom Martinez",
+    "email": "tom.m@company.com",
+    "department": "Analog Design"
+  },
+  "timestamps": {
+    "created": "2024-03-20T10:00:00Z",
+    "modified": "2025-01-09T14:15:00Z"
+  },
+  "tags": ["BJT", "verilog-a", "behavioral", "analog", "amplifier"],
+  "description": "Behavioral BJT model implemented in Verilog-A for analog circuit simulation",
+  "technology": {
+    "type": "BJT",
+    "process": "SiGe BiCMOS",
+    "ft_max": "120GHz",
+    "breakdown_voltage": "6V"
+  },
+  "characteristics": {
+    "vdd_nominal": 3.3,
+    "beta_nominal": 150,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 50e9]
+  },
+  "validation": {
+    "test_structures": 18,
+    "measurement_points": 4200,
+    "accuracy": {
+      "dc": 0.97,
+      "ac": 0.95,
+      "transient": 0.96
+    },
+    "validated_by": "Analog Design Team",
+    "validation_date": "2025-01-09"
+  },
+  "usage_notes": [
+    "Behavioral model for system-level simulation",
+    "Fast simulation with good accuracy",
+    "Temperature and process variations included",
+    "Suitable for amplifier and buffer design"
+  ],
+  "references": [
+    "Verilog-A Language Reference",
+    "BJT Modeling Guidelines"
+  ],
+  "support": {
+    "contact": "analog-support@company.com",
+    "documentation": "/docs/verilog_a_bjt.pdf"
+  }
+}

@@ -1,0 +1,35 @@
+* Schottky Diode Model
+* Technology: SiC
+* Model Version: 2.1
+* Date: 2025-01-11
+
+.subckt schottky_sic anode cathode area=1e-6 temp=27
+
+* Include model library
+.include "libs/diode_core.lib"
+
+* Main diode instance
+D1 anode cathode schottky_model area='area' temp='temp'
+
+* Series resistance
+Rs anode anode_int 'RS*area'
+
+* Model card
+.model schottky_model d (
++ level = 3
++ is = 1e-12
++ n = 1.05
++ bv = 650
++ ibv = 1e-3
++ rs = 0.01
++ cjo = 1e-10
++ vj = 0.9
++ m = 0.5
++ eg = 3.3
++ xti = 2
++ tnom = 27
+)
+
+.ends schottky_sic
+
+* End of file

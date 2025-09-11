@@ -1,0 +1,70 @@
+{
+  "model_id": "CAL-NMOS-28NM-001",
+  "name": "Calibrated 28nm NMOS Model v1.2",
+  "description": "High-accuracy BSIM4 model for 28nm NMOS transistors, calibrated against extensive silicon measurements",
+  "base_model": "BSIM4",
+  "model_template_id": "MOD-BSIM4-001",
+  "version": "1.2.0",
+  "status": "completed",
+  "category": "transistor",
+  "subcategory": "nmos",
+  "technology": {
+    "node": "28nm",
+    "foundry": "TSMC",
+    "process": "CMOS",
+    "variant": "LP"
+  },
+  "author": {
+    "name": "John Doe",
+    "email": "john.doe@company.com",
+    "organization": "Model Team"
+  },
+  "calibration_info": {
+    "task_id": "TASK-001",
+    "request_id": "REQ-2024-Q4-015",
+    "engineer": "John Doe",
+    "start_date": "2025-01-08T09:00:00Z",
+    "completion_date": "2025-01-10T17:30:00Z",
+    "total_time_hours": 18.5,
+    "iterations": 127,
+    "algorithm": "Particle Swarm Optimization + Levenberg-Marquardt",
+    "accuracy": 95.8,
+    "rms_error": 0.042
+  },
+  "reference_data": {
+    "data_id": "REF-MEAS-001",
+    "name": "28nm NMOS Transfer/Output Measurements",
+    "measurement_data": ["REF-MEAS-001", "REF-MEAS-002"],
+    "simulation_data": ["REF-SIM-015"],
+    "total_points": 15420,
+    "temperature_range": [-40, 125],
+    "voltage_range": [0, 1.2],
+    "data_weight": {
+      "dc": 0.4,
+      "cv": 0.3,
+      "rf": 0.3
+    }
+  },
+  "validation": {
+    "test_structures": 50,
+    "corner_validation": ["SS", "TT", "FF", "SF", "FS"],
+    "temperature_validation": [-40, 0, 27, 85, 125],
+    "metrics": {
+      "dc_accuracy": 0.98,
+      "ac_accuracy": 0.95,
+      "transient_accuracy": 0.96,
+      "mismatch_accuracy": 0.94
+    }
+  },
+  "files": {
+    "parameters": "parameters.txt",
+    "model_card": "model_card.sp",
+    "validation_report": "validation_report.pdf",
+    "corner_files": ["corner_ss.sp", "corner_tt.sp", "corner_ff.sp"]
+  },
+  "timestamps": {
+    "created": "2025-01-10T17:30:00Z",
+    "modified": "2025-01-10T17:30:00Z",
+    "validated": "2025-01-11T10:00:00Z"
+  }
+}

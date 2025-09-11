@@ -1,0 +1,58 @@
+{
+  "model_id": "MOD-PSP-002",
+  "name": "PSP NMOS Model",
+  "version": "103.1",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "nmos",
+  "base_model": "PSP",
+  "status": "production",
+  "author": {
+    "name": "Andreas Mueller",
+    "email": "andreas.m@company.com",
+    "department": "Advanced Modeling"
+  },
+  "timestamps": {
+    "created": "2024-07-22T10:00:00Z",
+    "modified": "2025-01-04T11:55:00Z"
+  },
+  "tags": ["45nm", "PSP", "NMOS", "surface-potential", "advanced"],
+  "description": "Surface-potential based PSP NMOS model for 45nm technology with excellent scalability",
+  "technology": {
+    "node": "45nm",
+    "foundry": "Generic",
+    "process": "CMOS",
+    "variant": "High Performance"
+  },
+  "characteristics": {
+    "vdd_nominal": 1.1,
+    "vth_nominal": 0.35,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 60e9]
+  },
+  "validation": {
+    "test_structures": 40,
+    "measurement_points": 16800,
+    "accuracy": {
+      "dc": 0.98,
+      "ac": 0.96,
+      "transient": 0.97
+    },
+    "validated_by": "Advanced Modeling Team",
+    "validation_date": "2025-01-04"
+  },
+  "usage_notes": [
+    "Surface-potential based formulation",
+    "Excellent geometry scaling",
+    "Smooth transitions between regions",
+    "Ideal for mixed-signal design"
+  ],
+  "references": [
+    "PSP 103.1 Model Manual",
+    "Surface Potential Modeling Theory"
+  ],
+  "support": {
+    "contact": "advanced-modeling@company.com",
+    "documentation": "/docs/psp_nmos_guide.pdf"
+  }
+}

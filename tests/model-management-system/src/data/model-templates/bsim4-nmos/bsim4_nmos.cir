@@ -1,0 +1,57 @@
+* BSIM4 NMOS Model Entry Point
+* Technology: 28nm
+* Model Version: 4.8.1
+* Date: 2025-01-11
+
+.subckt nmos_28nm d g s b l=30n w=1u nf=1
+
+* Include model library files
+.include "libs/bsim4_core.lib"
+.include "libs/bsim4_params.lib"
+
+* Instance parameters
+.param L_eff = 'L - 2*DL'
+.param W_eff = 'W - 2*DW'
+.param AD_eff = 'W_eff * 0.5u'
+.param AS_eff = 'W_eff * 0.5u'
+.param PD_eff = '2*(W_eff + 0.5u)'
+.param PS_eff = '2*(W_eff + 0.5u)'
+
+* Main transistor instance
+M1 d g s b nmos_model L='L_eff' W='W_eff' AD='AD_eff' AS='AS_eff' PD='PD_eff' PS='PS_eff' NF='nf'
+
+* Parasitic capacitances
+Cgd_overlap g d 'CGDO*W_eff'
+Cgs_overlap g s 'CGSO*W_eff'
+Cgb_overlap g b 'CGBO*L_eff'
+
+* Junction capacitances
+Cjd d b junc_cap area='AD_eff' perim='PD_eff'
+Cjs s b junc_cap area='AS_eff' perim='PS_eff'
+
+* Temperature coefficient
+.temp 27
+
+* Model card reference
+.model nmos_model nmos (
++ level = 54
++ version = 4.8.1
++ binunit = 1
++ paramchk = 1
++ mobmod = 0
++ capmod = 2
++ igcmod = 1
++ igbmod = 1
++ geomod = 1
++ diomod = 1
++ rdsmod = 0
++ rbodymod = 1
++ rgatemod = 1
++ permod = 1
++ acnqsmod = 0
++ trnqsmod = 0
+)
+
+.ends nmos_28nm
+
+* End of file

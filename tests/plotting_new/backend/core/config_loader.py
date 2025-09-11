@@ -61,8 +61,6 @@ class ConfigLoader:
         self._validate_section(config_section, schema, context)
         self._check_unrecognized_fields_for_section(config_section, schema, context)
 
-        if "grid_layout" in config_section and isinstance(config_section.get("grid_layout"), dict):
-            self._recursive_validate(config_section["grid_layout"], SchemaRegistry.get_grid_layout_schema(), f"{context} -> grid_layout")
 
         if "figures" in config_section and isinstance(config_section.get("figures"), list):
             for i, figure in enumerate(config_section["figures"]):
@@ -131,7 +129,7 @@ class ConfigLoader:
         allowed_fields = set(schema.keys())
         # Extend allowed fields for sections that have nested structures defined elsewhere
         if context == "General config":
-            allowed_fields.update(["figures", "grid_layout"])
+            allowed_fields.update(["figures"])
         elif "figures[" in context and "items" not in context:
             allowed_fields.add("items")
 
@@ -151,10 +149,6 @@ class ConfigLoader:
         logger.info("Applying configuration defaults...")
         self._apply_defaults_to_section(self.config, SchemaRegistry.get_general_schema())
 
-        if "grid_layout" not in self.config:
-            self.config["grid_layout"] = {}
-        if isinstance(self.config.get("grid_layout"), dict):
-            self._apply_defaults_to_section(self.config["grid_layout"], SchemaRegistry.get_grid_layout_schema())
 
         if "figures" in self.config and isinstance(self.config["figures"], list):
             for figure in self.config["figures"]:
@@ -178,17 +172,15 @@ class ConfigLoader:
         """Get list of validation errors and warnings."""
         return self.validation_errors
 
-    def get_app_title(self) -> str:
-        """Get the application title from the configuration."""
-        return self.config.get('app_title', 'Visualization Tool')
 
     def get_margins(self) -> Dict[str, int]:
-        """Get the margin settings from the configuration. Assumes defaults applied."""
+        """Get default margin settings."""
+        # Default margins now handled by themes
         return {
-            'left': self.config.get('left_margin', 10),
-            'right': self.config.get('right_margin', 10),
-            'top': self.config.get('top_margin', 10),
-            'bottom': self.config.get('bottom_margin', 10)
+            'left': 10,
+            'right': 10,
+            'top': 10,
+            'bottom': 10
         }
 
     def get_theme(self) -> str:
@@ -210,12 +202,12 @@ class ConfigLoader:
             self.config['theme'] = new_theme
 
     def get_grid_layout(self) -> Dict[str, Any]:
-        """Get the grid layout configuration."""
-        grid_layout = self.config.get('grid_layout', {})
-        if not isinstance(grid_layout, dict): # Should be a dict after apply_defaults if it was missing
-            logger.warning("Grid layout configuration is not a dictionary. Returning empty layout.")
-            return {}
-        return grid_layout
+        """Get default grid layout configuration."""
+        # Return default spacing values for backward compatibility
+        return {
+            'h_gap': 20,
+            'v_gap': 20
+        }
 
     def get_figures(self) -> List[Dict]:
         """Get the list of figures from the configuration."""

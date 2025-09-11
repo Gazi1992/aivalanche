@@ -1,0 +1,52 @@
+{
+  "model_info": {
+    "name": "BSIM4 NMOS 180nm",
+    "type": "BSIM4",
+    "version": "4.8.2",
+    "technology": "180nm",
+    "device_type": "NMOS",
+    "description": "BSIM4 compact model for 180nm NMOS transistor"
+  },
+  "validation": {
+    "validated": true,
+    "validation_date": "2024-01-15",
+    "validated_by": "Model Team",
+    "validation_notes": "Validated against silicon measurements"
+  },
+  "parameters": {
+    "total_count": 45,
+    "categories": ["Geometry", "DC", "Capacitance", "Temperature", "Noise", "Junction"],
+    "critical_parameters": ["vth0", "u0", "vsat", "tox", "lint", "wint"]
+  },
+  "usage": {
+    "voltage_range": {
+      "vdd_min": 0,
+      "vdd_max": 1.8,
+      "unit": "V"
+    },
+    "temperature_range": {
+      "min": -40,
+      "max": 125,
+      "unit": "C"
+    },
+    "geometry_range": {
+      "L_min": 0.18e-6,
+      "L_max": 10e-6,
+      "W_min": 0.22e-6,
+      "W_max": 100e-6,
+      "unit": "m"
+    }
+  },
+  "files": {
+    "model_card": "bsim4_nmos_example.cir",
+    "parameters": "bsim4_nmos_parameters.csv",
+    "documentation": "bsim4_nmos_docs.pdf"
+  },
+  "author": {
+    "name": "John Smith",
+    "email": "john.smith@example.com",
+    "department": "Device Modeling",
+    "date_created": "2024-01-15"
+  },
+  "tags": ["BSIM4", "NMOS", "180nm", "validated", "production"]
+}

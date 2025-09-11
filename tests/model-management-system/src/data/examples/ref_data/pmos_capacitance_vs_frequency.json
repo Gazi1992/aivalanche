@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "name": "PMOS Gate Capacitance vs Frequency",
+    "description": "Gate-to-source and gate-to-drain capacitance measurements for PMOS transistor across frequency range",
+    "data_type": "measurement",
+    "device_type": "PMOS",
+    "measurement_type": "AC Analysis",
+    "temperature": 25,
+    "date_created": "2024-01-20",
+    "author": "RF Design Team",
+    "version": "1.0"
+  },
+  "test_conditions": {
+    "temperature": 25,
+    "vgs": -0.9,
+    "vds": -1.2,
+    "frequency_range": {
+      "start": 1e3,
+      "stop": 1e10,
+      "points_per_decade": 10
+    },
+    "device_dimensions": {
+      "W": 20e-6,
+      "L": 0.13e-6,
+      "fingers": 4
+    }
+  },
+  "data": {
+    "frequency": [1e3, 2.15e3, 4.64e3, 1e4, 2.15e4, 4.64e4, 1e5, 2.15e5, 4.64e5, 1e6, 2.15e6, 4.64e6, 1e7, 2.15e7, 4.64e7, 1e8, 2.15e8, 4.64e8, 1e9, 2.15e9, 4.64e9, 1e10],
+    "cgs": [4.2e-15, 4.2e-15, 4.2e-15, 4.2e-15, 4.2e-15, 4.19e-15, 4.19e-15, 4.18e-15, 4.17e-15, 4.15e-15, 4.12e-15, 4.08e-15, 4.01e-15, 3.92e-15, 3.78e-15, 3.58e-15, 3.32e-15, 2.98e-15, 2.55e-15, 2.08e-15, 1.62e-15, 1.21e-15],
+    "cgd": [1.8e-15, 1.8e-15, 1.8e-15, 1.8e-15, 1.8e-15, 1.79e-15, 1.79e-15, 1.78e-15, 1.77e-15, 1.75e-15, 1.72e-15, 1.68e-15, 1.61e-15, 1.52e-15, 1.38e-15, 1.18e-15, 0.95e-15, 0.72e-15, 0.51e-15, 0.35e-15, 0.23e-15, 0.15e-15],
+    "cgb": [0.3e-15, 0.3e-15, 0.3e-15, 0.3e-15, 0.3e-15, 0.3e-15, 0.29e-15, 0.29e-15, 0.28e-15, 0.27e-15, 0.25e-15, 0.22e-15, 0.18e-15, 0.14e-15, 0.10e-15, 0.07e-15, 0.05e-15, 0.03e-15, 0.02e-15, 0.01e-15, 0.008e-15, 0.005e-15]
+  },
+  "units": {
+    "frequency": "Hz",
+    "capacitance": "F",
+    "voltage": "V",
+    "temperature": "C",
+    "W": "m",
+    "L": "m"
+  },
+  "notes": "Capacitance measured using small-signal AC analysis with 10mV amplitude"
+}

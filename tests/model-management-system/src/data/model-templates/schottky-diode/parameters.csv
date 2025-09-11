@@ -1,0 +1,15 @@
+name,subckt,default,min,max,unit,description
+IS,schottky_model,1e-12,1e-15,1e-9,A,Saturation current
+N,schottky_model,1.05,1.0,1.2,-,Ideality factor
+RS,schottky_model,0.01,0.001,0.1,Ω,Series resistance
+BV,schottky_model,650,600,700,V,Breakdown voltage
+IBV,schottky_model,1e-3,1e-4,1e-2,A,Breakdown current
+CJO,schottky_model,1e-10,1e-11,1e-9,F,Zero-bias junction capacitance
+VJ,schottky_model,0.9,0.7,1.2,V,Junction potential
+M,schottky_model,0.5,0.3,0.7,-,Grading coefficient
+EG,schottky_model,3.3,3.2,3.4,eV,Energy gap
+XTI,schottky_model,2,1.5,3,-,Temperature exponent
+TT,schottky_model,0,0,1e-9,s,Transit time
+FC,schottky_model,0.5,0,1,-,Forward-bias capacitance coefficient
+TNOM,schottky_model,27,25,27,°C,Nominal temperature
+AREA,instance,1e-6,1e-8,1e-4,m²,Device area

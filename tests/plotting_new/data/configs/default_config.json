@@ -1,16 +1,5 @@
 {
-  "app_title": "PyQtGraph Visualization Tool",
-  "left_margin": 50,
-  "right_margin": 50,
-  "top_margin": 50,
-  "bottom_margin": 50,
   "theme": "light",
-  "grid_layout": {
-    "rows": 2,
-    "cols": 2,
-    "horizontal_spacing": 25,
-    "vertical_spacing": 25
-  },
   "figures": [
     {
       "id": "figure1",
@@ -156,8 +145,6 @@
           "bar_width_fraction": 1,
           "bar_border_color": "#333333",
           "bar_border_width": 1,
-          "show_fit": true,
-          "fit_color": "#ff0000",
           "legend_name": "Male Histogram"
         },
         {
@@ -170,8 +157,6 @@
           "bar_width_fraction": 1,
           "bar_border_color": "#333333",
           "bar_border_width": 1,
-          "show_fit": true,
-          "fit_color": "#c71585",
           "legend_name": "Female Histogram"
         }
       ]

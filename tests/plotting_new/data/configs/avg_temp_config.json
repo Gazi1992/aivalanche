@@ -1,16 +1,5 @@
 {
-  "app_title": "Average Temperature Analysis",
   "theme": "light",
-  "left_margin": 15,
-  "right_margin": 15,
-  "top_margin": 15,
-  "bottom_margin": 15,
-  "grid_layout": {
-    "rows": 1,
-    "cols": 1,
-    "horizontal_spacing": 10,
-    "vertical_spacing": 10
-  },
   "figures": [
     {
       "id": "avg_temp_figure_1",

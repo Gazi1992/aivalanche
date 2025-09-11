@@ -1,0 +1,61 @@
+{
+  "model_id": "MOD-BSIM4-001",
+  "name": "BSIM4 NMOS Model",
+  "version": "4.8.1",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "nmos",
+  "base_model": "BSIM4",
+  "status": "production",
+  "author": {
+    "name": "John Doe",
+    "email": "john.doe@company.com",
+    "department": "Device Modeling"
+  },
+  "timestamps": {
+    "created": "2024-06-15T10:00:00Z",
+    "modified": "2025-01-11T14:30:00Z",
+    "validated": "2025-01-10T16:00:00Z"
+  },
+  "tags": ["28nm", "digital", "low-power", "validated"],
+  "description": "Industry-standard BSIM4 model for 28nm NMOS transistors with extensive parameter set for accurate simulation across all regions of operation",
+  "technology": {
+    "node": "28nm",
+    "foundry": "Generic",
+    "process": "CMOS",
+    "variant": "Low Power"
+  },
+  "characteristics": {
+    "vdd_nominal": 1.2,
+    "vth_nominal": 0.48,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 50e9]
+  },
+  "validation": {
+    "test_structures": 50,
+    "measurement_points": 15420,
+    "accuracy": {
+      "dc": 0.98,
+      "ac": 0.95,
+      "transient": 0.96
+    },
+    "validated_by": "Device Modeling Team",
+    "validation_date": "2025-01-10"
+  },
+  "usage_notes": [
+    "Suitable for digital and analog circuit simulation",
+    "Includes quantum mechanical corrections",
+    "Self-heating effects included for accurate power analysis",
+    "Validated against silicon measurements"
+  ],
+  "references": [
+    "BSIM4.8.1 Technical Manual",
+    "28nm Technology Design Guide",
+    "Model Validation Report v1.2"
+  ],
+  "support": {
+    "contact": "modeling-support@company.com",
+    "documentation": "/docs/bsim4_guide.pdf",
+    "examples": "/examples/bsim4_tests/"
+  }
+}

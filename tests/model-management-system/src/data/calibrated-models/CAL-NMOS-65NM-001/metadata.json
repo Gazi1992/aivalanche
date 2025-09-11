@@ -1,0 +1,71 @@
+{
+  "model_id": "CAL-NMOS-65NM-001",
+  "name": "Calibrated 65nm NMOS Model v3.0",
+  "description": "EKV model optimized for low-power analog/mixed-signal applications in 65nm technology",
+  "base_model": "EKV",
+  "model_template_id": "MOD-EKV-001",
+  "version": "3.0.0",
+  "status": "pending",
+  "category": "transistor",
+  "subcategory": "nmos",
+  "technology": {
+    "node": "65nm",
+    "foundry": "TSMC",
+    "process": "CMOS",
+    "variant": "Low Power"
+  },
+  "author": {
+    "name": "John Doe",
+    "email": "john.doe@company.com",
+    "organization": "Model Team"
+  },
+  "calibration_info": {
+    "task_id": "TASK-004",
+    "request_id": "REQ-2025-Q1-005",
+    "engineer": "John Doe",
+    "start_date": null,
+    "completion_date": null,
+    "total_time_hours": 0,
+    "iterations": 0,
+    "algorithm": "Levenberg-Marquardt",
+    "accuracy": null,
+    "rms_error": null,
+    "progress": 0
+  },
+  "reference_data": {
+    "data_id": "REF-MEAS-008",
+    "name": "65nm NMOS Low-Power Characterization",
+    "measurement_data": ["REF-MEAS-008", "REF-MEAS-009"],
+    "simulation_data": [],
+    "total_points": 5200,
+    "temperature_range": [0, 85],
+    "voltage_range": [0, 1.2],
+    "data_weight": {
+      "dc": 0.6,
+      "cv": 0.3,
+      "rf": 0.1
+    }
+  },
+  "validation": {
+    "test_structures": 20,
+    "corner_validation": ["SS", "TT", "FF"],
+    "temperature_validation": [27, 85],
+    "metrics": {
+      "dc_accuracy": null,
+      "ac_accuracy": null,
+      "transient_accuracy": null,
+      "mismatch_accuracy": null
+    }
+  },
+  "files": {
+    "parameters": null,
+    "model_card": null,
+    "validation_report": null,
+    "corner_files": []
+  },
+  "timestamps": {
+    "created": "2025-01-12T10:00:00Z",
+    "modified": "2025-01-12T10:00:00Z",
+    "validated": null
+  }
+}

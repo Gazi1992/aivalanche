@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Title -->
+  <text x="200" y="20" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Transient Switching Analysis</text>
+  
+  <!-- NMOS Symbol -->
+  <g id="nmos" transform="translate(200, 180)">
+    <!-- Gate -->
+    <line x1="-50" y1="0" x2="-20" y2="0" stroke="black" stroke-width="2"/>
+    <line x1="-20" y1="-30" x2="-20" y2="30" stroke="black" stroke-width="2"/>
+    
+    <!-- Channel -->
+    <line x1="-10" y1="-30" x2="-10" y2="-10" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="-5" x2="-10" y2="5" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="10" x2="-10" y2="30" stroke="black" stroke-width="2"/>
+    
+    <!-- Source/Drain -->
+    <line x1="-10" y1="-20" x2="20" y2="-20" stroke="black" stroke-width="2"/>
+    <line x1="20" y1="-20" x2="20" y2="-50" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="20" x2="20" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="20" y1="20" x2="20" y2="50" stroke="black" stroke-width="2"/>
+    
+    <!-- Bulk -->
+    <line x1="-10" y1="0" x2="5" y2="0" stroke="black" stroke-width="2"/>
+    <line x1="5" y1="0" x2="5" y2="40" stroke="black" stroke-width="2"/>
+    
+    <!-- Arrow for NMOS -->
+    <polygon points="5,0 10,5 10,-5" fill="black" transform="translate(-12, 0)"/>
+  </g>
+  
+  <!-- PMOS Symbol (for inverter) -->
+  <g id="pmos" transform="translate(200, 90)">
+    <!-- Gate with bubble -->
+    <circle cx="-25" cy="0" r="5" stroke="black" stroke-width="2" fill="white"/>
+    <line x1="-50" y1="0" x2="-30" y2="0" stroke="black" stroke-width="2"/>
+    <line x1="-20" y1="-30" x2="-20" y2="30" stroke="black" stroke-width="2"/>
+    
+    <!-- Channel -->
+    <line x1="-10" y1="-30" x2="-10" y2="-10" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="-5" x2="-10" y2="5" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="10" x2="-10" y2="30" stroke="black" stroke-width="2"/>
+    
+    <!-- Source/Drain -->
+    <line x1="-10" y1="-20" x2="20" y2="-20" stroke="black" stroke-width="2"/>
+    <line x1="20" y1="-20" x2="20" y2="-30" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="20" x2="20" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="20" y1="20" x2="20" y2="30" stroke="black" stroke-width="2"/>
+    
+    <!-- Bulk -->
+    <line x1="-10" y1="0" x2="5" y2="0" stroke="black" stroke-width="2"/>
+    <line x1="5" y1="0" x2="5" y2="-30" stroke="black" stroke-width="2"/>
+    
+    <!-- Arrow for PMOS (opposite direction) -->
+    <polygon points="-15,0 -10,5 -10,-5" fill="black" transform="translate(2, 0)"/>
+  </g>
+  
+  <!-- VDD Supply -->
+  <g id="vdd" transform="translate(220, 40)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="black" stroke-width="2"/>
+    <text x="30" y="10" font-family="Arial" font-size="12">VDD</text>
+  </g>
+  
+  <!-- Input Pulse Source -->
+  <g id="vin" transform="translate(80, 135)">
+    <rect x="-25" y="-15" width="50" height="30" stroke="red" stroke-width="2" fill="none"/>
+    <!-- Pulse symbol -->
+    <line x1="-15" y1="5" x2="-10" y2="5" stroke="red" stroke-width="2"/>
+    <line x1="-10" y1="5" x2="-10" y2="-5" stroke="red" stroke-width="2"/>
+    <line x1="-10" y1="-5" x2="0" y2="-5" stroke="red" stroke-width="2"/>
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="red" stroke-width="2"/>
+    <line x1="0" y1="5" x2="10" y2="5" stroke="red" stroke-width="2"/>
+    <line x1="10" y1="5" x2="10" y2="-5" stroke="red" stroke-width="2"/>
+    <line x1="10" y1="-5" x2="15" y2="-5" stroke="red" stroke-width="2"/>
+    <text x="-10" y="-25" font-family="Arial" font-size="12" fill="red">VIN</text>
+  </g>
+  
+  <!-- Load Capacitor -->
+  <g id="load_cap" transform="translate(280, 135)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="black" stroke-width="1"/>
+    <line x1="-10" y1="20" x2="10" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="25" x2="10" y2="25" stroke="black" stroke-width="2"/>
+    <text x="15" y="25" font-family="Arial" font-size="10">CL</text>
+    <line x1="0" y1="30" x2="0" y2="50" stroke="black" stroke-width="1"/>
+  </g>
+  
+  <!-- Connections -->
+  <!-- VDD to PMOS source -->
+  <line x1="220" y1="40" x2="220" y2="60" stroke="black" stroke-width="2"/>
+  
+  <!-- PMOS drain to NMOS drain (output node) -->
+  <line x1="220" y1="120" x2="220" y2="160" stroke="black" stroke-width="2"/>
+  
+  <!-- Output node to load capacitor -->
+  <line x1="220" y1="135" x2="280" y2="135" stroke="black" stroke-width="2"/>
+  <circle cx="220" cy="135" r="3" fill="black"/>
+  
+  <!-- Input to both gates -->
+  <line x1="105" y1="135" x2="130" y2="135" stroke="red" stroke-width="2"/>
+  <line x1="130" y1="135" x2="130" y2="90" stroke="red" stroke-width="2"/>
+  <line x1="130" y1="90" x2="150" y2="90" stroke="red" stroke-width="2"/>
+  <line x1="130" y1="135" x2="130" y2="180" stroke="red" stroke-width="2"/>
+  <line x1="130" y1="180" x2="150" y2="180" stroke="red" stroke-width="2"/>
+  <circle cx="130" cy="135" r="3" fill="red"/>
+  
+  <!-- Ground -->
+  <g id="ground" transform="translate(220, 250)">
+    <line x1="0" y1="0" x2="0" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="-15" y1="20" x2="15" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="25" x2="10" y2="25" stroke="black" stroke-width="1"/>
+    <line x1="-5" y1="30" x2="5" y2="30" stroke="black" stroke-width="1"/>
+  </g>
+  
+  <!-- NMOS source to ground -->
+  <line x1="220" y1="230" x2="220" y2="250" stroke="black" stroke-width="2"/>
+  
+  <!-- Ground for load cap -->
+  <g transform="translate(280, 185)">
+    <line x1="0" y1="0" x2="0" y2="10" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="10" x2="10" y2="10" stroke="black" stroke-width="2"/>
+  </g>
+  
+  <!-- Ground for VIN -->
+  <g transform="translate(80, 165)">
+    <line x1="0" y1="0" x2="0" y2="10" stroke="black" stroke-width="1"/>
+    <line x1="0" y1="10" x2="0" y2="20" stroke="black" stroke-width="2"/>
+    <line x1="-10" y1="20" x2="10" y2="20" stroke="black" stroke-width="2"/>
+  </g>
+  <line x1="80" y1="150" x2="80" y2="165" stroke="black" stroke-width="1"/>
+  
+  <!-- Bulk connections -->
+  <line x1="205" y1="60" x2="205" y2="40" stroke="black" stroke-width="1"/>
+  <line x1="205" y1="220" x2="205" y2="250" stroke="black" stroke-width="1"/>
+  
+  <!-- Labels -->
+  <text x="110" y="130" text-anchor="middle" font-family="Arial" font-size="10" fill="red">IN</text>
+  <text x="250" y="130" text-anchor="middle" font-family="Arial" font-size="10">OUT</text>
+  
+  <!-- Timing diagram -->
+  <g transform="translate(320, 80)">
+    <text x="0" y="-5" font-family="Arial" font-size="10" fill="gray">Timing</text>
+    <!-- Input pulse -->
+    <line x1="0" y1="20" x2="10" y2="20" stroke="red" stroke-width="1"/>
+    <line x1="10" y1="20" x2="10" y2="10" stroke="red" stroke-width="1"/>
+    <line x1="10" y1="10" x2="30" y2="10" stroke="red" stroke-width="1"/>
+    <line x1="30" y1="10" x2="30" y2="20" stroke="red" stroke-width="1"/>
+    <line x1="30" y1="20" x2="50" y2="20" stroke="red" stroke-width="1"/>
+    <text x="25" y="5" font-family="Arial" font-size="8" fill="red">IN</text>
+    
+    <!-- Output response -->
+    <line x1="0" y1="40" x2="12" y2="40" stroke="blue" stroke-width="1"/>
+    <path d="M 12,40 Q 15,35 18,30" stroke="blue" stroke-width="1" fill="none"/>
+    <line x1="18" y1="30" x2="28" y2="30" stroke="blue" stroke-width="1"/>
+    <path d="M 28,30 Q 31,35 34,40" stroke="blue" stroke-width="1" fill="none"/>
+    <line x1="34" y1="40" x2="50" y2="40" stroke="blue" stroke-width="1"/>
+    <text x="25" y="50" font-family="Arial" font-size="8" fill="blue">OUT</text>
+    
+    <!-- Rise/Fall time indicators -->
+    <line x1="12" y1="38" x2="18" y2="38" stroke="gray" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <line x1="12" y1="32" x2="18" y2="32" stroke="gray" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <text x="5" y="60" font-family="Arial" font-size="7" fill="gray">tr, tf</text>
+  </g>
+  
+  <!-- Measurement note -->
+  <text x="200" y="280" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">CMOS Inverter: Rise/Fall Times, Propagation Delay</text>
+</svg>

@@ -1,0 +1,380 @@
+{
+  "library_name": "Standard MOSFET Testbenches",
+  "version": "1.0.0",
+  "description": "Collection of standard testbenches for MOSFET characterization",
+  "organization": "Model Library Team",
+  "created": "2024-03-15T10:00:00Z",
+  "modified": "2024-12-10T14:30:00Z",
+  "license": "MIT",
+  
+  "testbenches": [
+    {
+      "testbench_id": "dc_id_vd",
+      "name": "DC Output Characteristics",
+      "type": "dc_sweep",
+      "description": "Id-Vd curves at multiple Vgs values",
+      "validated": true,
+      "tags": ["mosfet", "dc", "output", "id-vd"],
+      "schematic": "schematics/dc_id_vd.svg",
+      "circuit": {
+        "netlist": [
+          "VDS drain 0 DC {{vds}}",
+          "VGS gate 0 DC {{vgs}}",
+          "VBS bulk 0 DC {{vbs}}",
+          "VSS source 0 DC 0",
+          "XDUT drain gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}"
+        ],
+        "parameters": {
+          "vds": { "default": 0, "unit": "V", "description": "Drain-source voltage" },
+          "vgs": { "default": 0.6, "unit": "V", "description": "Gate-source voltage" },
+          "vbs": { "default": 0, "unit": "V", "description": "Body-source voltage" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure dc id_max MAX I(VDS)",
+        ".measure dc id_sat FIND I(VDS) AT=1.8",
+        ".measure dc ron DERIV I(VDS) AT=0.1"
+      ],
+      "compatible_devices": ["nmos", "pmos"],
+      "outputs": {
+        "id_max": { "unit": "A", "description": "Maximum drain current" },
+        "id_sat": { "unit": "A", "description": "Saturation current at Vds=1.8V" },
+        "ron": { "unit": "Ohm", "description": "On-resistance in linear region" }
+      },
+      "examples": [
+        {
+          "name": "Basic Id-Vd sweep",
+          "description": "Simple output characteristic with 5 Vgs values",
+          "netlist": [
+            "* Id-Vd Output Characteristics Example",
+            ".include 'model.lib'",
+            "",
+            "* Testbench circuit",
+            "VDS drain 0 DC 0",
+            "VGS gate 0 DC 0.6",
+            "VBS bulk 0 DC 0",
+            "VSS source 0 DC 0",
+            "XDUT drain gate source bulk nmos_model W=10u L=45n NF=1",
+            "",
+            "* Analysis",
+            ".dc VDS 0 1.8 0.01 VGS 0.3 1.5 0.3",
+            ".probe dc I(VDS)",
+            "",
+            "* Measurements",
+            ".measure dc id_max MAX I(VDS)",
+            ".measure dc id_sat FIND I(VDS) AT=1.8",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    },
+    
+    {
+      "testbench_id": "dc_id_vg",
+      "name": "DC Transfer Characteristics",
+      "type": "dc_sweep",
+      "description": "Id-Vg curves at multiple Vds values",
+      "validated": true,
+      "tags": ["mosfet", "dc", "transfer", "id-vg", "threshold"],
+      "schematic": "schematics/dc_id_vg.svg",
+      "circuit": {
+        "netlist": [
+          "VGS gate 0 DC {{vgs}}",
+          "VDS drain 0 DC {{vds}}",
+          "VBS bulk 0 DC {{vbs}}",
+          "VSS source 0 DC 0",
+          "XDUT drain gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}"
+        ],
+        "parameters": {
+          "vgs": { "default": 0, "unit": "V", "description": "Gate-source voltage" },
+          "vds": { "default": 0.05, "unit": "V", "description": "Drain-source voltage" },
+          "vbs": { "default": 0, "unit": "V", "description": "Body-source voltage" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure dc vth_lin FIND V(gate) WHEN I(VDS)=1e-7",
+        ".measure dc ss_lin DERIV(LOG10(I(VDS))) WRT V(gate) AT V(gate)=0.3",
+        ".measure dc gm_max MAX DERIV(I(VDS))",
+        ".measure dc ioff FIND I(VDS) AT=0",
+        ".measure dc ion FIND I(VDS) AT=vdd"
+      ],
+      "compatible_devices": ["nmos", "pmos"],
+      "outputs": {
+        "vth_lin": { "unit": "V", "description": "Linear threshold voltage" },
+        "ss_lin": { "unit": "mV/dec", "description": "Subthreshold slope" },
+        "gm_max": { "unit": "S", "description": "Maximum transconductance" },
+        "ioff": { "unit": "A", "description": "Off-state current" },
+        "ion": { "unit": "A", "description": "On-state current" }
+      },
+      "examples": [
+        {
+          "name": "Transfer curve with threshold extraction",
+          "description": "Id-Vg sweep at linear and saturation Vds",
+          "netlist": [
+            "* Id-Vg Transfer Characteristics Example",
+            ".include 'model.lib'",
+            "",
+            "* Testbench circuit",
+            "VGS gate 0 DC 0",
+            "VDS drain 0 DC 0.05",
+            "VBS bulk 0 DC 0",
+            "VSS source 0 DC 0",
+            "XDUT drain gate source bulk nmos_model W=10u L=45n NF=1",
+            "",
+            "* Analysis",
+            ".dc VGS -0.2 1.8 0.01",
+            ".probe dc I(VDS)",
+            "",
+            "* Measurements",
+            ".measure dc vth_lin FIND V(gate) WHEN I(VDS)=1e-7",
+            ".measure dc ss_lin DERIV(LOG10(I(VDS))) WRT V(gate) AT V(gate)=0.3",
+            "",
+            ".alter",
+            "VDS drain 0 DC 1.8",
+            ".dc VGS -0.2 1.8 0.01",
+            ".measure dc vth_sat FIND V(gate) WHEN I(VDS)=1e-7",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    },
+
+    {
+      "testbench_id": "ac_small_signal",
+      "name": "AC Small Signal Analysis",
+      "type": "ac_analysis",
+      "description": "Small signal parameters extraction",
+      "validated": true,
+      "tags": ["mosfet", "ac", "small-signal", "gm", "capacitance"],
+      "schematic": "schematics/ac_small_signal.svg",
+      "circuit": {
+        "netlist": [
+          "VDD drain 0 DC {{vdd}}",
+          "VGS gate_dc 0 DC {{vgs_bias}}",
+          "VAC gate_dc gate AC 1",
+          "VBS bulk 0 DC {{vbs}}",
+          "VSS source 0 DC 0",
+          "XDUT drain gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}"
+        ],
+        "parameters": {
+          "vdd": { "default": 1.8, "unit": "V", "description": "Drain voltage" },
+          "vgs_bias": { "default": 0.6, "unit": "V", "description": "Gate bias voltage" },
+          "vbs": { "default": 0, "unit": "V", "description": "Body-source voltage" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure ac gm_val FIND IMG(I(VDD)) AT=1e3",
+        ".measure ac gds_val FIND REAL(I(VDD)) AT=1e3",
+        ".measure ac cgg_val FIND IMG(I(VAC)) AT=1e6",
+        ".measure ac cgd_val FIND IMG(I(VDD)) AT=1e6",
+        ".measure ac ft WHEN IMG(I(VDD))=0 CROSS=1",
+        ".measure ac fmax WHEN MAG(I(VDD))=1 CROSS=1"
+      ],
+      "compatible_devices": ["nmos", "pmos"],
+      "outputs": {
+        "gm_val": { "unit": "S", "description": "Transconductance" },
+        "gds_val": { "unit": "S", "description": "Output conductance" },
+        "cgg_val": { "unit": "F", "description": "Gate capacitance" },
+        "cgd_val": { "unit": "F", "description": "Gate-drain capacitance" },
+        "ft": { "unit": "Hz", "description": "Transit frequency" },
+        "fmax": { "unit": "Hz", "description": "Maximum frequency of oscillation" }
+      },
+      "examples": [
+        {
+          "name": "Small signal parameter extraction",
+          "description": "Extract gm, gds, and capacitances at operating point",
+          "netlist": [
+            "* AC Small Signal Analysis Example",
+            ".include 'model.lib'",
+            "",
+            "* Testbench circuit",
+            "VDD drain 0 DC 0.9",
+            "VGS gate_dc 0 DC 0.6",
+            "VAC gate_dc gate AC 1",
+            "VBS bulk 0 DC 0",
+            "VSS source 0 DC 0",
+            "XDUT drain gate source bulk nmos_model W=10u L=45n NF=1",
+            "",
+            "* Analysis",
+            ".op",
+            ".ac DEC 10 1 1e12",
+            ".probe ac gm=IMG(I(VDD)) gds=REAL(I(VDD))",
+            ".probe ac cgg=IMG(I(VAC)) cgd=IMG(I(VDD))",
+            "",
+            "* Measurements",
+            ".measure ac gm_val FIND IMG(I(VDD)) AT=1e3",
+            ".measure ac ft WHEN IMG(I(VDD))=0 CROSS=1",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    },
+
+    {
+      "testbench_id": "transient_switching",
+      "name": "Transient Switching Analysis",
+      "type": "transient",
+      "description": "Rise/fall time and propagation delay",
+      "validated": true,
+      "tags": ["mosfet", "transient", "switching", "delay", "rise-time"],
+      "schematic": "schematics/transient_switching.svg",
+      "circuit": {
+        "netlist": [
+          "VDD supply 0 DC {{vdd}}",
+          "VIN gate 0 PULSE(0 {{vdd}} 0 {{trise}} {{tfall}} {{pw}} {{period}})",
+          "VBS bulk 0 DC 0",
+          "VSS source 0 DC 0",
+          "CL drain 0 {{cload}}",
+          "RL supply drain {{rload}}",
+          "XDUT drain gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}"
+        ],
+        "parameters": {
+          "vdd": { "default": 1.8, "unit": "V", "description": "Supply voltage" },
+          "trise": { "default": "10p", "unit": "s", "description": "Input rise time" },
+          "tfall": { "default": "10p", "unit": "s", "description": "Input fall time" },
+          "pw": { "default": "1n", "unit": "s", "description": "Pulse width" },
+          "period": { "default": "2n", "unit": "s", "description": "Period" },
+          "cload": { "default": "10f", "unit": "F", "description": "Load capacitance" },
+          "rload": { "default": "10k", "unit": "Ohm", "description": "Load resistance" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure tran trise TRIG V(drain) VAL='0.1*vdd' RISE=1 TARG V(drain) VAL='0.9*vdd' RISE=1",
+        ".measure tran tfall TRIG V(drain) VAL='0.9*vdd' FALL=1 TARG V(drain) VAL='0.1*vdd' FALL=1",
+        ".measure tran tpd_lh TRIG V(gate) VAL='0.5*vdd' RISE=1 TARG V(drain) VAL='0.5*vdd' FALL=1",
+        ".measure tran tpd_hl TRIG V(gate) VAL='0.5*vdd' FALL=1 TARG V(drain) VAL='0.5*vdd' RISE=1",
+        ".measure tran pwr_avg AVG P(VDD) FROM=0 TO=period"
+      ],
+      "compatible_devices": ["nmos", "pmos"],
+      "outputs": {
+        "trise": { "unit": "s", "description": "Rise time (10% to 90%)" },
+        "tfall": { "unit": "s", "description": "Fall time (90% to 10%)" },
+        "tpd_lh": { "unit": "s", "description": "Propagation delay low-to-high" },
+        "tpd_hl": { "unit": "s", "description": "Propagation delay high-to-low" },
+        "pwr_avg": { "unit": "W", "description": "Average power consumption" }
+      },
+      "examples": [
+        {
+          "name": "Inverter switching characterization",
+          "description": "Measure rise/fall times and propagation delays",
+          "netlist": [
+            "* Transient Switching Analysis Example",
+            ".include 'model.lib'",
+            "",
+            "* Testbench circuit",
+            "VDD supply 0 DC 1.8",
+            "VIN gate 0 PULSE(0 1.8 0 10p 10p 1n 2n)",
+            "VBS bulk 0 DC 0",
+            "VSS source 0 DC 0",
+            "CL drain 0 10f",
+            "RL supply drain 10k",
+            "XDUT drain gate source bulk nmos_model W=10u L=45n NF=1",
+            "",
+            "* Analysis",
+            ".tran 0.1p 10n",
+            ".probe tran V(gate) V(drain)",
+            "",
+            "* Measurements",
+            ".measure tran trise TRIG V(drain) VAL=0.18 RISE=1 TARG V(drain) VAL=1.62 RISE=1",
+            ".measure tran tfall TRIG V(drain) VAL=1.62 FALL=1 TARG V(drain) VAL=0.18 FALL=1",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    },
+
+    {
+      "testbench_id": "cv_characterization",
+      "name": "C-V Characterization",
+      "type": "ac_analysis",
+      "description": "Capacitance vs voltage characterization",
+      "validated": true,
+      "tags": ["mosfet", "capacitance", "cv", "ac"],
+      "schematic": "schematics/cv_characterization.svg",
+      "circuit": {
+        "netlist": [
+          "VGS gate_dc 0 DC {{vgs}}",
+          "VAC gate_dc gate AC 1 1MEG",
+          "VDS drain 0 DC {{vds}}",
+          "VBS bulk 0 DC {{vbs}}",
+          "VSS source 0 DC 0",
+          "XDUT drain gate source bulk {{model_subckt}} W={{w}} L={{l}} NF={{nf}}"
+        ],
+        "parameters": {
+          "vgs": { "default": 0, "unit": "V", "description": "Gate-source voltage" },
+          "vds": { "default": 0, "unit": "V", "description": "Drain-source voltage" },
+          "vbs": { "default": 0, "unit": "V", "description": "Body-source voltage" },
+          "w": { "default": 10e-6, "unit": "m", "description": "Device width" },
+          "l": { "default": 45e-9, "unit": "m", "description": "Device length" },
+          "nf": { "default": 1, "unit": "", "description": "Number of fingers" }
+        }
+      },
+      "measurements": [
+        ".measure ac cgg_max MAX IMG(I(VAC))/(2*3.14159*1MEG)",
+        ".measure ac cgg_min MIN IMG(I(VAC))/(2*3.14159*1MEG)",
+        ".measure ac cgd_max MAX IMG(I(VDS))/(2*3.14159*1MEG)",
+        ".measure ac cox FIND IMG(I(VAC))/(2*3.14159*1MEG) AT V(gate)=vdd"
+      ],
+      "compatible_devices": ["nmos", "pmos"],
+      "outputs": {
+        "cgg_max": { "unit": "F", "description": "Maximum gate capacitance" },
+        "cgg_min": { "unit": "F", "description": "Minimum gate capacitance" },
+        "cgd_max": { "unit": "F", "description": "Maximum gate-drain capacitance" },
+        "cox": { "unit": "F", "description": "Oxide capacitance" }
+      },
+      "examples": [
+        {
+          "name": "Gate capacitance vs voltage",
+          "description": "Extract Cgg, Cgd, Cgs vs Vgs",
+          "netlist": [
+            "* C-V Characterization Example",
+            ".include 'model.lib'",
+            "",
+            "* Testbench circuit",
+            "VGS gate_dc 0 DC 0",
+            "VAC gate_dc gate AC 1 1MEG",
+            "VDS drain 0 DC 0.9",
+            "VBS bulk 0 DC 0",
+            "VSS source 0 DC 0",
+            "XDUT drain gate source bulk nmos_model W=10u L=45n NF=1",
+            "",
+            "* Analysis",
+            ".ac LIN 1 1MEG 1MEG",
+            ".dc VGS -1 2 0.01",
+            ".probe ac cgg=IMG(I(VAC))/(2*3.14159*1MEG)",
+            ".probe ac cgd=IMG(I(VDS))/(2*3.14159*1MEG)",
+            "",
+            "* Measurements",
+            ".measure ac cgg_max MAX IMG(I(VAC))/(2*3.14159*1MEG)",
+            ".measure ac cgg_min MIN IMG(I(VAC))/(2*3.14159*1MEG)",
+            "",
+            ".end"
+          ]
+        }
+      ]
+    }
+  ],
+  
+  "usage_notes": {
+    "dut_connection": "The DUT (Device Under Test) must be connected as a subcircuit XDUT",
+    "model_inclusion": "Model files must be included using .include or .lib statements",
+    "parameter_substitution": "Parameters in double braces {{param}} are replaced at runtime",
+    "output_processing": "Output data should be processed according to output_format specification"
+  }
+}

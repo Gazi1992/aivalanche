@@ -1,0 +1,167 @@
+{
+  "testbench_id": "TB_AC_001",
+  "name": "AC Frequency Response Analysis",
+  "description": "Testbench for measuring small-signal frequency response and capacitances",
+  "type": "ac_analysis",
+  "category": "AC",
+  "version": "1.0",
+  
+  "circuit": {
+    "netlist": [
+      "* AC Analysis Testbench for Frequency Response",
+      ".param vdd=1.8",
+      ".param vbias=0.9",
+      ".param w_val=20u",
+      ".param l_val=0.13u",
+      ".param rl=1k",
+      ".param cl=1p",
+      "",
+      "* DUT (Device Under Test)",
+      "M1 drain gate source bulk nmos_model W={w_val} L={l_val}",
+      "",
+      "* Biasing",
+      "Vdd drain 0 DC {vdd}",
+      "Vbias gate 0 DC {vbias} AC 1",
+      "Vss source 0 DC 0",
+      "Vbulk bulk 0 DC 0",
+      "",
+      "* Load",
+      "Rload drain out {rl}",
+      "Cload out 0 {cl}",
+      "",
+      "* AC Analysis",
+      ".ac dec 10 1 10G",
+      "",
+      "* Output",
+      ".print ac vdb(out) vp(out)",
+      ".print ac i(Vbias)",
+      ".end"
+    ],
+    "parameters": {
+      "vdd": {
+        "default": 1.8,
+        "unit": "V",
+        "description": "Supply voltage"
+      },
+      "vbias": {
+        "default": 0.9,
+        "unit": "V",
+        "description": "DC bias voltage"
+      },
+      "w_val": {
+        "default": 20e-6,
+        "unit": "m",
+        "description": "Transistor width"
+      },
+      "l_val": {
+        "default": 0.13e-6,
+        "unit": "m",
+        "description": "Transistor length"
+      },
+      "rl": {
+        "default": 1000,
+        "unit": "Ohm",
+        "description": "Load resistance"
+      },
+      "cl": {
+        "default": 1e-12,
+        "unit": "F",
+        "description": "Load capacitance"
+      }
+    }
+  },
+  
+  "simulation_settings": {
+    "analysis_type": "AC",
+    "frequency_range": {
+      "start": 1,
+      "stop": 1e10,
+      "points_per_decade": 10
+    },
+    "ac_magnitude": 1,
+    "temperature": 27,
+    "convergence": {
+      "reltol": 1e-3,
+      "abstol": 1e-12,
+      "vntol": 1e-6
+    }
+  },
+  
+  "measurements": [
+    "measure ac gain_dc find vdb(out) at=1",
+    "measure ac gain_3db when vdb(out)=gain_dc-3",
+    "measure ac bw param=gain_3db",
+    "measure ac phase_margin find vp(out) when vdb(out)=0",
+    "measure ac cgs imag(i(Vbias))/(2*pi*frequency) at=1e6",
+    "measure ac ft when vdb(out)=0"
+  ],
+  
+  "outputs": {
+    "gain": {
+      "unit": "dB",
+      "description": "Voltage gain"
+    },
+    "phase": {
+      "unit": "deg",
+      "description": "Phase response"
+    },
+    "bandwidth": {
+      "unit": "Hz",
+      "description": "3dB bandwidth"
+    },
+    "cgs": {
+      "unit": "F",
+      "description": "Gate-source capacitance"
+    },
+    "cgd": {
+      "unit": "F",
+      "description": "Gate-drain capacitance"
+    },
+    "ft": {
+      "unit": "Hz",
+      "description": "Transit frequency"
+    }
+  },
+  
+  "compatible_devices": ["NMOS", "PMOS", "BJT"],
+  "compatible_models": ["BSIM4", "PSP", "EKV", "HICUM"],
+  
+  "validation": {
+    "validated": true,
+    "validation_date": "2024-01-12",
+    "validated_by": "RF Team"
+  },
+  
+  "examples": [
+    {
+      "name": "Common Source Amplifier",
+      "description": "AC analysis of common source amplifier",
+      "netlist": [
+        ".param vdd=1.8 vbias=0.9",
+        "M1 drain gate 0 0 nmos_model W=20u L=0.13u",
+        "Rd drain vdd 1k",
+        "Vdd vdd 0 DC 1.8",
+        "Vgs gate 0 DC 0.9 AC 1",
+        ".ac dec 10 1 10G",
+        ".print ac vdb(drain) vp(drain)",
+        ".end"
+      ]
+    }
+  ],
+  
+  "tags": ["ac-analysis", "frequency-response", "small-signal", "capacitance", "validated"],
+  
+  "author": {
+    "name": "RF Design Team",
+    "email": "rf_team@example.com",
+    "department": "RF Engineering"
+  },
+  
+  "schematic": "ac_analysis_schematic.png",
+  "documentation_url": "https://docs.example.com/testbenches/ac-analysis",
+  
+  "timestamps": {
+    "created": "2024-01-12T09:00:00Z",
+    "modified": "2024-01-18T16:45:00Z"
+  }
+}

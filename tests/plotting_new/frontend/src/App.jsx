@@ -6,6 +6,7 @@ import Plotly from 'plotly.js-dist-min';
 import EditPane from './components/EditPane/EditPane.jsx';
 import TableView from './components/TableView/TableView.jsx';
 import { attachPlotInteractions } from './utils/plotInteractions.js';
+import ColumnSelector from './components/ColumnSelector.jsx';
 
 
 const API_BASE = 'http://localhost:8000';
@@ -26,6 +27,9 @@ function App() {
   const [localFigures, setLocalFigures] = useState(null);
   const [tableViewFig, setTableViewFig] = useState(null);
   const [tableViewOpen, setTableViewOpen] = useState(false);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(false);
+  const [gridColumns, setGridColumns] = useState(2); // Default to 2 columns
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
 
   // Ensure the CSS variables reflect the current theme *before* we read them
   if (typeof document !== 'undefined' && document.body.dataset.theme !== theme) {
@@ -99,18 +103,19 @@ function App() {
     document.addEventListener('mouseup', onMouseUp);
   };
 
-  useEffect(() => {
-    axios.get(`${API_BASE}/config`, {
-      headers: {
-        'Accept': 'application/json; charset=utf-8'
-      }
-    })
-        .then(res => {
-        setConfig(res.data);
-        setLocalFigures(res.data.figures);
-      })
-      .catch(err => console.error("Error fetching config:", err));
-  }, []);
+  // Don't load default config automatically - wait for user/LLM to create one
+  // useEffect(() => {
+  //   axios.get(`${API_BASE}/config`, {
+  //     headers: {
+  //       'Accept': 'application/json; charset=utf-8'
+  //     }
+  //   })
+  //       .then(res => {
+  //       setConfig(res.data);
+  //       setLocalFigures(res.data.figures);
+  //     })
+  //     .catch(err => console.error("Error fetching config:", err));
+  // }, []);
 
   const themedLayout = useMemo(() => {
     const cs = getComputedStyle(document.body);
@@ -272,6 +277,36 @@ function App() {
     }
   }, [config, localFigures, themedLayout]);
 
+  // === Effect to handle window resize ===
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // === Effect to resize plots when grid columns change ===
+  useEffect(() => {
+    if (localFigures && localFigures.length > 1) {
+      // Add a small delay to allow grid layout to update
+      const timer = setTimeout(() => {
+        localFigures.forEach(fig => {
+          if (fig && fig.figure) {
+            const plotId = `plot-${fig.id}`;
+            const graphDiv = document.getElementById(plotId);
+            if (graphDiv) {
+              Plotly.Plots.resize(graphDiv);
+            }
+          }
+        });
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [gridColumns, localFigures]);
+
   // === Effect to render active (zoomed) figure ===
   useEffect(() => {
     if (!activeFig) return;
@@ -320,7 +355,13 @@ function App() {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
-  const handleConfigUpdateFromChat = (newConfig) => {
+  const handleConfigUpdateFromChat = async (newConfig) => {
+    // Handle null config (e.g., from file upload without visualization request)
+    if (newConfig === null) {
+      console.log('Received null config - no visualization update needed');
+      return;
+    }
+    
     // Validate the config has required structure
     if (!newConfig || typeof newConfig !== 'object') {
       console.error('Invalid config received from chat');
@@ -334,13 +375,33 @@ function App() {
       grid_layout: newConfig.grid_layout || { rows: 1, cols: 1 }
     };
 
-    // Update the config and local figures
-    setConfig(validConfig);
-    setLocalFigures(validConfig.figures);
-    
-    // Apply theme if specified in config
-    if (validConfig.theme) {
-      setTheme(validConfig.theme);
+    try {
+      setIsLoadingConfig(true);
+      // Send the config to backend to build the dashboard with actual data
+      const response = await axios.post(`${API_BASE}/api/build-dashboard`, validConfig);
+      const dashboard = response.data;
+      
+      // Update with the built dashboard (includes actual plot data)
+      setConfig(dashboard);
+      setLocalFigures(dashboard.figures);
+      
+      // Apply theme if specified in config
+      if (dashboard.theme) {
+        setTheme(dashboard.theme);
+      }
+      
+      console.log('Dashboard built successfully with', dashboard.figures?.length, 'figures');
+    } catch (error) {
+      console.error('Error building dashboard:', error);
+      // Fallback to just setting the config without building
+      setConfig(validConfig);
+      setLocalFigures(validConfig.figures);
+      
+      if (validConfig.theme) {
+        setTheme(validConfig.theme);
+      }
+    } finally {
+      setIsLoadingConfig(false);
     }
   };
 
@@ -370,15 +431,31 @@ function App() {
     }
   };
 
-  // Show placeholder containers (identical styling) during initial load
-  if (!config) {
-    const placeholderFigures = Array.from({ length: 4 }).map((_, i) => ({ id: i }));
+  const loadDemoPlots = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.get(`${API_BASE}/dashboard/default_config.json`, {
+        headers: {
+          'Accept': 'application/json; charset=utf-8'
+        }
+      });
+      setConfig(response.data);
+      setLocalFigures(response.data.figures);
+    } catch (err) {
+      console.error("Error loading demo plots:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
 
-    const appTitle = "Loading…";
-    const nCols = 2;
-    const nRows = 2;
-    const vGapPx = 20;
-    const hGapPx = 20;
+  const clearPlots = () => {
+    setConfig(null);
+    setLocalFigures(null);
+  };
+
+  // Show welcome screen when no config is loaded or loading
+  if (!config || isLoadingConfig) {
+    const appTitle = "Data Visualization Studio";
 
     const appStyle = {
       display: 'flex',
@@ -394,27 +471,37 @@ function App() {
       overflow: 'auto',
       height: '100vh',
       boxSizing: 'border-box',
-    };
-
-    const gridStyle = {
-      display: 'grid',
-      gridTemplateColumns: `repeat(${nCols}, 1fr)`,
-      gridTemplateRows: `repeat(${nRows}, 1fr)`,
-      gap: `${vGapPx}px ${hGapPx}px`,
-      height: 'calc(100vh - calc(var(--main-padding) * 2))',
-    };
-
-    const plotContainerStyle = {
-      backgroundColor: 'var(--card-background-color)',
-      padding: 'var(--container-padding)',
-      borderRadius: 'var(--container-border-radius)',
-      borderWidth: '1px',
-      borderStyle: 'solid',
-      borderColor: 'var(--border-color)',
-      boxShadow: `4px 4px 8px var(--shadow-color)`,
       display: 'flex',
-      flexDirection: 'column',
-      boxSizing: 'border-box',
+      alignItems: 'center',
+      justifyContent: 'center',
+    };
+
+    const welcomeStyle = {
+      textAlign: 'center',
+      padding: '60px',
+      maxWidth: '600px',
+    };
+
+    const welcomeTitleStyle = {
+      fontSize: '2.5rem',
+      marginBottom: '20px',
+      color: 'var(--text-color)',
+    };
+
+    const welcomeSubtitleStyle = {
+      fontSize: '1.2rem',
+      color: 'var(--text-secondary)',
+      lineHeight: '1.6',
+      marginBottom: '40px',
+    };
+
+    const welcomeInstructionsStyle = {
+      fontSize: '1rem',
+      color: 'var(--text-secondary)',
+      backgroundColor: 'var(--card-background-color)',
+      padding: '20px',
+      borderRadius: '8px',
+      border: '1px solid var(--border-color)',
     };
 
     return (
@@ -426,9 +513,12 @@ function App() {
           sidebarExpanded={sidebarExpanded}
           sidebarHidden={sidebarHidden}
           onDragStart={handleMouseDown}
-          appTitle="Loading…"
+          appTitle="Data Visualization Studio"
           currentConfig={config}
           onConfigUpdate={handleConfigUpdateFromChat}
+          onClearPlots={clearPlots}
+          onLoadDemo={loadDemoPlots}
+          isLoadingConfig={isLoadingConfig}
         />
         
         {sidebarHidden && (
@@ -461,26 +551,106 @@ function App() {
           </button>
         )}
         
-        <main style={mainStyle}>
-          <div style={gridStyle}>
-            {placeholderFigures.map(fig => (
-              <div key={fig.id} className="plot-container" style={plotContainerStyle}>
-                <div className="skeleton" style={{ flexGrow: 1, borderRadius: '4px' }} />
+        {isLoadingConfig && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}>
+            <div style={{
+              backgroundColor: 'var(--card-background-color)',
+              padding: '30px',
+              borderRadius: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '20px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+            }}>
+              <div className="loading-spinner" style={{
+                width: '50px',
+                height: '50px',
+                border: '4px solid var(--border-color)',
+                borderTop: '4px solid var(--primary-color)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <div style={{
+                fontSize: '1.1rem',
+                color: 'var(--text-color)',
+                fontWeight: '500'
+              }}>
+                Loading visualization...
               </div>
-            ))}
+            </div>
+          </div>
+        )}
+        
+        <main style={mainStyle}>
+          <div style={welcomeStyle}>
+            <h1 style={welcomeTitleStyle}>📊 Welcome to Data Visualization Studio</h1>
+            <p style={welcomeSubtitleStyle}>
+              Start by uploading your data and chatting with the AI assistant to create stunning visualizations.
+            </p>
+            <div style={welcomeInstructionsStyle}>
+              <p style={{marginBottom: '10px'}}>
+                <strong>Getting Started:</strong>
+              </p>
+              <ol style={{textAlign: 'left', margin: '0', paddingLeft: '20px'}}>
+                <li>Upload a data file using the 📎 button in the chat</li>
+                <li>Ask the AI to create visualizations</li>
+                <li>Customize and refine your plots interactively</li>
+              </ol>
+            </div>
+            <div style={{marginTop: '30px'}}>
+              <button
+                onClick={loadDemoPlots}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '1rem',
+                  backgroundColor: 'var(--primary-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                }}
+              >
+                📊 Show Demo Plots
+              </button>
+              <p style={{marginTop: '10px', fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                or explore sample visualizations with demo data
+              </p>
+            </div>
           </div>
         </main>
       </div>
     );
   }
 
-  const appTitle = config.app_title || "Data Visualization";
-  const { grid } = config;
   const figures = localFigures || config.figures;
-  const nRows = grid.rows || 1;
-  const nCols = grid.cols || 2;
-  const vGapPx = grid.v_gap || 20;
-  const hGapPx = grid.h_gap || 20;
+  // Calculate grid dimensions based on number of figures and selected columns
+  const figureCount = figures ? figures.length : 0;
+  const nCols = Math.min(gridColumns, figureCount); // Don't use more columns than figures
+  const nRows = Math.ceil(figureCount / nCols) || 1;
+  const vGapPx = 20; // Use default spacing
+  const hGapPx = 20; // Use default spacing
 
   const appStyle = {
     display: 'flex',
@@ -491,12 +661,34 @@ function App() {
   };
 
 
+  // Calculate min height to fit 2 rows in viewport
+  // The grid container takes full height minus the column selector
+  // Column selector total height = content (approx 36px) + bottom margin (15px) = 51px
+  const columnSelectorTotalHeight = 51;
+  const gridContainerBottomPadding = 20; // Bottom padding we added
+  const gridOwnPaddingBottom = 10; // Grid's paddingBottom
+  
+  // Available height for the actual grid content
+  const availableHeight = windowHeight - columnSelectorTotalHeight - gridContainerBottomPadding - gridOwnPaddingBottom;
+  
+  // Height for each plot when we want exactly 2 rows
+  const minPlotHeight = Math.max(300, Math.floor((availableHeight - vGapPx) / 2));
+
+  // For exactly 2 rows, use calc to fill available space
+  const gridRowHeight = nRows <= 2 
+    ? `calc((100% - ${vGapPx}px) / 2)` // For 2 or fewer rows, split available height
+    : `${minPlotHeight}px`; // For more rows, use fixed height
+    
   const gridStyle = {
     display: 'grid',
     gridTemplateColumns: `repeat(${nCols}, 1fr)`,
-    gridTemplateRows: `repeat(${nRows}, 1fr)`,
+    gridAutoRows: nRows <= 2 ? gridRowHeight : `minmax(${minPlotHeight}px, 1fr)`,
     gap: `${vGapPx}px ${hGapPx}px`,
-    height: 'calc(100vh - calc(var(--main-padding) * 2))', // Account for main container padding
+    width: '100%',
+    maxWidth: '100%',
+    height: nRows <= 2 ? '100%' : 'auto', // Fill container height for 2 rows
+    overflow: 'visible', // Allow shadows to be visible
+    paddingBottom: '10px' // Small padding for bottom shadows
   };
 
   const plotContainerStyle = {
@@ -506,7 +698,7 @@ function App() {
       borderWidth: '1px',
       borderStyle: 'solid',
       borderColor: 'var(--border-color)',
-      boxShadow: `4px 4px 8px var(--shadow-color)`,
+      boxShadow: `0 2px 8px rgba(0, 0, 0, 0.1)`, // More subtle shadow
       transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
       display: 'flex',
       flexDirection: 'column',
@@ -515,10 +707,12 @@ function App() {
 
   const mainStyle = {
     flex: 1,
-    padding: 'var(--main-padding)',
-    overflow: 'auto',
+    padding: 0, // Remove padding from main
+    overflow: 'hidden', // Main container doesn't scroll
     height: '100vh',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column'
   };
 
   // Styles for overlay zoom view
@@ -565,9 +759,12 @@ function App() {
         sidebarExpanded={sidebarExpanded}
         sidebarHidden={sidebarHidden}
         onDragStart={handleMouseDown}
-        appTitle={appTitle}
+        appTitle="Data Visualization Studio"
         currentConfig={config}
         onConfigUpdate={handleConfigUpdateFromChat}
+        onClearPlots={clearPlots}
+        onLoadDemo={loadDemoPlots}
+        isLoadingConfig={isLoadingConfig}
       />
 
       {sidebarHidden && (
@@ -601,7 +798,21 @@ function App() {
       )}
 
       <main style={mainStyle}>
-        <div style={gridStyle}>
+        <ColumnSelector 
+          columns={gridColumns}
+          onColumnChange={setGridColumns}
+          figureCount={figureCount}
+        />
+        <div className="grid-container" style={{ 
+          flex: 1, 
+          overflowY: nRows > 2 ? 'auto' : 'hidden', // Only scroll if more than 2 rows
+          overflowX: 'hidden',
+          padding: '0 20px 20px 20px', // Add padding on sides and bottom
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={gridStyle}>
           {figures.map(fig => {
             // Create dynamic container style with figure background and border
             const figureContainerStyle = {
@@ -640,8 +851,9 @@ function App() {
             </div>
             );
           })}
+          </div>
         </div>
-        </main>
+      </main>
 
       {/* Edit Pane */}
       <EditPane

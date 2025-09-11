@@ -1,0 +1,71 @@
+{
+  "model_id": "CAL-FINFET-14NM-001",
+  "name": "Calibrated 14nm FinFET Model v2.1",
+  "description": "BSIMCMG model for 14nm FinFET devices with multi-gate effects accurately captured",
+  "base_model": "BSIMCMG",
+  "model_template_id": "MOD-BSIMCMG-001",
+  "version": "2.1.0",
+  "status": "in-progress",
+  "category": "transistor",
+  "subcategory": "finfet",
+  "technology": {
+    "node": "14nm",
+    "foundry": "Intel",
+    "process": "FinFET",
+    "variant": "High Performance"
+  },
+  "author": {
+    "name": "John Doe",
+    "email": "john.doe@company.com",
+    "organization": "Model Team"
+  },
+  "calibration_info": {
+    "task_id": "TASK-003",
+    "request_id": "REQ-2025-Q1-002",
+    "engineer": "John Doe",
+    "start_date": "2025-01-11T14:00:00Z",
+    "completion_date": null,
+    "total_time_hours": 8.5,
+    "iterations": 67,
+    "algorithm": "Differential Evolution",
+    "accuracy": 72.3,
+    "rms_error": 0.125,
+    "progress": 65
+  },
+  "reference_data": {
+    "data_id": "REF-SIM-028",
+    "name": "14nm FinFET TCAD Simulations",
+    "measurement_data": [],
+    "simulation_data": ["REF-SIM-028", "REF-SIM-029", "REF-SIM-030"],
+    "total_points": 25800,
+    "temperature_range": [-40, 125],
+    "voltage_range": [0, 0.8],
+    "data_weight": {
+      "dc": 0.5,
+      "cv": 0.3,
+      "rf": 0.2
+    }
+  },
+  "validation": {
+    "test_structures": 45,
+    "corner_validation": ["SS", "TT", "FF", "SF", "FS"],
+    "temperature_validation": [-40, 27, 125],
+    "metrics": {
+      "dc_accuracy": 0.88,
+      "ac_accuracy": 0.85,
+      "transient_accuracy": 0.83,
+      "mismatch_accuracy": 0.80
+    }
+  },
+  "files": {
+    "parameters": "parameters.txt",
+    "model_card": "model_card.sp",
+    "validation_report": null,
+    "corner_files": []
+  },
+  "timestamps": {
+    "created": "2025-01-11T14:00:00Z",
+    "modified": "2025-01-12T09:15:00Z",
+    "validated": null
+  }
+}

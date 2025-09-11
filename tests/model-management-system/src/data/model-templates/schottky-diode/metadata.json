@@ -1,0 +1,57 @@
+{
+  "model_id": "MOD-DIODE-001",
+  "name": "Schottky Diode Model",
+  "version": "2.1",
+  "type": "compact",
+  "category": "diode",
+  "base_model": "DIODE",
+  "status": "production",
+  "author": {
+    "name": "Mike Johnson",
+    "email": "mike.j@company.com",
+    "department": "Power Electronics"
+  },
+  "timestamps": {
+    "created": "2024-09-10T10:00:00Z",
+    "modified": "2025-01-05T14:30:00Z"
+  },
+  "tags": ["power", "schottky", "SiC", "650V"],
+  "description": "High-performance Schottky diode model for power electronics applications",
+  "technology": {
+    "material": "SiC",
+    "type": "Schottky",
+    "voltage_rating": "650V",
+    "current_rating": "20A"
+  },
+  "characteristics": {
+    "forward_voltage": 1.2,
+    "reverse_recovery_time": 0,
+    "breakdown_voltage": 650,
+    "temperature_range": [-55, 175]
+  },
+  "validation": {
+    "test_structures": 15,
+    "measurement_points": 3250,
+    "accuracy": {
+      "dc": 0.98,
+      "switching": 0.95,
+      "thermal": 0.94
+    },
+    "validated_by": "Power Electronics Team",
+    "validation_date": "2025-01-05"
+  },
+  "usage_notes": [
+    "Optimized for power electronics",
+    "Zero reverse recovery time",
+    "Temperature dependent model",
+    "Includes breakdown characteristics"
+  ],
+  "references": [
+    "SiC Schottky Diode Design Manual",
+    "Power Electronics Application Note"
+  ],
+  "support": {
+    "contact": "power-support@company.com",
+    "documentation": "/docs/schottky_guide.pdf"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "model_id": "MOD-PSP-001",
+  "name": "PSP PMOS Model",
+  "version": "103.8",
+  "type": "compact",
+  "category": "transistor",
+  "subcategory": "pmos",
+  "base_model": "PSP",
+  "status": "production",
+  "author": {
+    "name": "Jane Smith",
+    "email": "jane.smith@company.com",
+    "department": "Device Modeling"
+  },
+  "timestamps": {
+    "created": "2024-07-20T10:00:00Z",
+    "modified": "2025-01-09T14:30:00Z",
+    "validated": "2025-01-08T16:00:00Z"
+  },
+  "tags": ["40nm", "analog", "low-noise", "RF"],
+  "description": "PSP model for 40nm PMOS devices optimized for analog and RF applications",
+  "technology": {
+    "node": "40nm",
+    "foundry": "Generic",
+    "process": "CMOS",
+    "variant": "Analog/RF"
+  },
+  "characteristics": {
+    "vdd_nominal": 1.1,
+    "vth_nominal": -0.45,
+    "temperature_range": [-40, 125],
+    "frequency_range": [0, 30e9]
+  },
+  "validation": {
+    "test_structures": 35,
+    "measurement_points": 12580,
+    "accuracy": {
+      "dc": 0.97,
+      "ac": 0.96,
+      "transient": 0.95
+    },
+    "validated_by": "Analog Design Team",
+    "validation_date": "2025-01-08"
+  },
+  "usage_notes": [
+    "Optimized for analog and RF circuit design",
+    "Surface potential based formulation",
+    "Includes JUNCAP2 junction model",
+    "Excellent weak inversion modeling"
+  ],
+  "references": [
+    "PSP 103.8 Model Manual",
+    "40nm Analog Design Guide"
+  ],
+  "support": {
+    "contact": "analog-support@company.com",
+    "documentation": "/docs/psp_guide.pdf"
+  }
+}
