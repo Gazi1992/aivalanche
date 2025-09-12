@@ -35,9 +35,6 @@ if not any(isinstance(h, logging.FileHandler) for h in _root_logger.handlers):
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-# Removed plot_factory and dashboard_builder imports - using Python executor instead
-
-# Removed old schema imports - using Python executor instead
 
 # Local modules
 from backend.core.data_handler import load_dataset, available_datasets
@@ -67,7 +64,6 @@ ai_service = AIService(GEMINI_API_KEY)
 # Pydantic models (request/response schemas)
 # ----------------------------------------------------------------------------
 
-# Removed old Pydantic models - using Python executor instead
 
 
 # ----------------------------------------------------------------------------
@@ -181,7 +177,6 @@ def preview_dataset(name: str) -> dict:
         raise HTTPException(500, detail=str(exc)) from exc
 
 
-# Removed old config-based endpoints - using Python executor instead
 
 
 # ---------------------------------------------------------------------------
@@ -240,8 +235,8 @@ async def chat(request: ChatRequest):
         
         # If response includes processed data, store it temporarily
         if "data_summary" in response:
-            # Store in a temporary location for the dashboard to access
-            pass  # TODO: Implement data storage
+            # Data summary is included in the response for client use
+            pass
             
         return response
     except Exception as e:
