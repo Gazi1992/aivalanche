@@ -5,7 +5,8 @@ import LegendSubsection from './LegendSubsection';
 import GridSubsection from './GridSubsection';
 import TextSubsection from './TextSubsection';
 import DataSubsection from './DataSubsection';
-import { PaletteIcon } from '../icons';
+import { PaletteIcon, ResetIcon } from '../icons';
+import PlotButton from '../PlotButton';
 import { 
   sectionStyle, 
   sectionHeaderStyle, 
@@ -19,6 +20,7 @@ const AppearanceSection = ({
   hasAxes,
   hasLegend,
   hasData,
+  metadata,
   titleState,
   xAxisState,
   yAxisState,
@@ -29,21 +31,39 @@ const AppearanceSection = ({
   dataState,
   onTextBlur,
   updateLegendItem,
-  updateTraceProperty
+  updateTraceProperty,
+  onResetAppearance
 }) => {
   return (
     <div style={sectionStyle}>
-      <div 
-        style={sectionHeaderStyle}
-        onClick={() => setAppearanceExpanded(!appearanceExpanded)}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--background-color)'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-      >
-        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-color)' }}>
-          <PaletteIcon size={20} />
-          Appearance
-        </span>
-        <span style={chevronStyle(appearanceExpanded)}>›</span>
+      <div style={{ position: 'relative' }}>
+        <div 
+          style={sectionHeaderStyle}
+          onClick={() => setAppearanceExpanded(!appearanceExpanded)}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--background-color)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', color: 'var(--text-color)' }}>
+            <PaletteIcon size={20} />
+            Appearance
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {appearanceExpanded && onResetAppearance && (
+              <div style={{ marginRight: '8px' }}>
+                <PlotButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onResetAppearance();
+                  }}
+                  title="Reset to Original"
+                  icon={ResetIcon}
+                  className="reset-button"
+                />
+              </div>
+            )}
+            <span style={chevronStyle(appearanceExpanded)}>›</span>
+          </div>
+        </div>
       </div>
       
       {appearanceExpanded && (
@@ -73,6 +93,7 @@ const AppearanceSection = ({
                 setXAxisMax={xAxisState.setMaxValue}
                 xAxisInverted={xAxisState.inverted}
                 setXAxisInverted={xAxisState.setInverted}
+                metadata={metadata}
                 yAxisScale={yAxisState.scale}
                 setYAxisScale={yAxisState.setScale}
                 yAxisMin={yAxisState.minValue}

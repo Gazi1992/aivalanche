@@ -1,7 +1,8 @@
 .chat-assistant {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100% - 8px);
+  margin-top: 8px;
   background: var(--bg-primary);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

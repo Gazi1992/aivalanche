@@ -2,6 +2,33 @@
 
 This document provides guidance for the AI system on how to interpret user requests and generate appropriate visualizations.
 
+## Metadata Architecture
+
+The application uses a fixed metadata structure where all visual properties are always defined with defaults. The metadata is the single source of truth for all plot rendering. Key components:
+
+- **metadataStructure.js**: Defines the complete fixed structure with all properties and defaults
+- **figureManager.js**: Manages figures with embedded metadata and generates Plotly layouts from metadata
+- **Python Executor**: Can only update specific metadata values, never change the structure
+
+### Metadata Structure Overview
+```javascript
+{
+  appearance: {
+    title: { visible, text, alignment, fontSize, color, bold, italic },
+    axes: {
+      x: { label, ticks, range, scale, grid },
+      y: { label, ticks, range, scale, grid }
+    },
+    legend: { visible, position, fontSize, color, backgroundColor },
+    background: { figure, plot },
+    margins: { left, right, top, bottom }
+  },
+  data: { traces, selectedTraceIndex },
+  capabilities: { hasAxes, hasLegend },
+  customization: { userModified, pythonModified }
+}
+```
+
 ## User Intent Mapping
 
 ### When user says "show me the data"
@@ -61,94 +88,37 @@ Is it time series data?
         └─ Want pairwise → Scatter matrix
 ```
 
-## Configuration Examples
+## Python Script Integration
 
-### Example 1: Time Series Request
-User: "Show me temperature over time"
-```json
-{
-  "theme": "light",
-  "figures": [{
-    "id": "figure_1",
-    "visibility": true,
-    "x_label": "Time",
-    "y_label": "Temperature",
-    "items": [{
-      "id": "line_1",
-      "type": "line",
-      "source": "temperature_data.csv",
-      "x_column": "timestamp",
-      "y_column": "temperature",
-      "legend_name": "Temperature",
-      "line_style": "solid"
-    }]
-  }]
-}
+When generating Python scripts that create visualizations:
+
+1. **Import plotly**: Scripts should use `import plotly.graph_objects as go`
+2. **Create figures**: Use standard Plotly API to create figures
+3. **Set metadata**: Use `fig.update_layout()` to set visual properties that will be extracted into metadata
+4. **Register plots**: Call `register_plot(fig)` to make the plot available to the frontend
+
+### Example Python Script with Metadata
+```python
+import plotly.graph_objects as go
+
+# Create figure
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=[1,2,3], y=[4,5,6], name="Data"))
+
+# Set metadata through layout
+fig.update_layout(
+    title=dict(text="My Plot", x=0.5, xanchor="center"),
+    xaxis_title="X Label",
+    yaxis_title="Y Label",
+    showlegend=True,
+    legend=dict(x=0.02, y=0.98, bgcolor="rgba(255,255,255,0.8)")
+)
+
+# Register the plot
+register_plot(fig)
 ```
 
-### Example 2: Correlation Request
-User: "Show me how voltage relates to current"
-```json
-{
-  "theme": "light",
-  "figures": [{
-    "id": "figure_1",
-    "visibility": true,
-    "x_label": "Voltage (V)",
-    "y_label": "Current (A)",
-    "items": [{
-      "id": "scatter_1",
-      "type": "scatter",
-      "source": "electrical_data.csv",
-      "x_column": "voltage",
-      "y_column": "current",
-      "legend_name": "V-I Characteristic",
-      "marker_style": "circle"
-    }]
-  }]
-}
-```
-
-### Example 3: Distribution Request
-User: "Show me the distribution of values"
-```json
-{
-  "theme": "light",
-  "figures": [{
-    "id": "figure_1",
-    "visibility": true,
-    "x_label": "Value",
-    "y_label": "Frequency",
-    "items": [{
-      "id": "hist_1",
-      "type": "histogram",
-      "source": "data.csv",
-      "column": "value",
-      "bins": 30,
-      "legend_name": "Distribution"
-    }]
-  }]
-}
-```
-
-### Example 4: Multi-dimensional Request
-User: "Compare all parameters"
-```json
-{
-  "theme": "light",
-  "figures": [{
-    "id": "figure_1",
-    "visibility": true,
-    "items": [{
-      "id": "pcp_1",
-      "type": "parallel_coordinates",
-      "source": "parameters.csv",
-      "columns": ["param1", "param2", "param3", "param4"],
-      "legend_name": "All Parameters"
-    }]
-  }]
-}
-```
+The layout properties are automatically extracted and mapped to the fixed metadata structure. Properties not specified in the Python script retain their default values from the metadata structure.
 
 ## Response Templates
 
@@ -189,3 +159,17 @@ User: "Compare all parameters"
    - Use color to distinguish series
    - Consider colorblind-friendly palettes
    - Limit to 5-7 distinct colors
+
+## Theme System Integration
+
+The application uses CSS variables for theming, with all plot margins and spacing values coming from `themes.css`:
+
+- `--plot-margin-left`: Default 80px
+- `--plot-margin-right`: Default 50px  
+- `--plot-margin-top`: Default 60px
+- `--plot-margin-bottom`: Default 60px
+- `--plot-margin-pad`: Default 10px
+- `--plot-h-gap`: Horizontal gap between plots
+- `--plot-v-gap`: Vertical gap between plots
+
+These values are automatically applied when generating layouts from metadata, ensuring consistent spacing across all themes.

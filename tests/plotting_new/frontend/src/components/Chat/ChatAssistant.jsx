@@ -104,9 +104,25 @@ const ChatAssistant = ({ onConfigUpdate, onDataLoad, onClearPlots, onLoadDemo, i
         }
       }
       
-      // Handle config updates
-      if (data.config && (data.type === 'config_new' || data.type === 'config_update' || data.type === 'config_with_analysis')) {
-        onConfigUpdate(data.config);
+      // Handle Python execution responses
+      if (data.type === 'python_execution') {
+        onConfigUpdate(data);  // Pass the entire response to handle Python execution
+        
+        botMessage.suggestions = [
+          { text: "Modify plots", action: "modify" },
+          { text: "Add more data", action: "upload" },
+          { text: "Clear plots", action: "clear" }
+        ];
+        
+        // Add execution output if available
+        if (data.execution_output) {
+          botMessage.executionOutput = data.execution_output;
+        }
+      }
+      
+      // Handle traditional config updates (fallback)
+      else if (data.config && (data.type === 'config_new' || data.type === 'config_update' || data.type === 'config_with_analysis')) {
+        onConfigUpdate(data);  // Pass the entire response object
         
         botMessage.suggestions = [
           { text: "Change theme", action: "theme" },

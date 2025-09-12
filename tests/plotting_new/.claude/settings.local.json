@@ -1,31 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run build:*)",
-      "Bash(mkdir:*)",
-      "Bash(mv:*)",
-      "Bash(find:*)",
-      "Bash(rm:*)",
-      "Bash(del \"C:\\Users\\gazme\\OneDrive\\Documents\\aivalanche\\code\\aivalanche\\tests\\plotting_new\\frontend\\src\\components\\icons\\AppearanceIcon.jsx\")",
-      "Bash(grep:*)",
-      "Bash(del:*)",
-      "Bash(ren:*)",
-      "Bash(wc:*)",
-      "Bash(cat:*)",
-      "Bash(npm install:*)",
-      "Bash(touch:*)",
-      "Bash(npx eslint:*)",
-      "Bash(pip install:*)",
-      "Bash(python test:*)",
-      "Bash(git add:*)",
-      "Bash(git push:*)",
-      "Bash(git rm:*)",
-      "Bash(cp:*)",
-      "Bash(timeout 5 python:*)",
+      "Bash(dir:*)",
+      "Bash(curl:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run dev:*)",
       "Bash(python:*)",
-      "Bash(dir dataconfigs*.json)",
-      "Bash(true)"
+      "Read(//c/Users/gazme/OneDrive/Desktop/**)",
+      "Bash(git add:*)"
     ],
-    "deny": []
+    "deny": [],
+    "ask": []
   }
 }

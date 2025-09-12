@@ -22,3 +22,4 @@ export { default as AlignRightIcon } from './AlignRightIcon';
 export { default as TableIcon } from './TableIcon';
 export { default as DownloadIcon } from './DownloadIcon';
 export { default as UserIcon } from './UserIcon';
+export { default as ResetIcon } from './ResetIcon';

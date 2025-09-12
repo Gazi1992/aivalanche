@@ -181,28 +181,7 @@
   font-size: 16px;
 }
 
-/* Table button styling to match other buttons */
-.table-btn {
-  opacity: 0;
-  background-color: var(--card-background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.plot-container:hover .table-btn {
-  opacity: 1;
-}
-
-.table-btn:hover {
-  background-color: var(--hover-background-color);
-  border-color: var(--hover-border-color);
-}
+/* Table button styles are now handled by PlotButton component */
 
 /* Add custom properties for the table view */
 :root {

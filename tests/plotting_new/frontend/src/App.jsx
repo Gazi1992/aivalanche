@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Sidebar from './components/Sidebar/Sidebar.jsx';
-import { ExpandIcon, EditIcon, ChatAssistantIcon, TableIcon } from './components/icons';
+import { ExpandIcon, EditIcon, ChatAssistantIcon, TableIcon, DownloadIcon } from './components/icons';
+import PlotButton from './components/PlotButton.jsx';
 import axios from 'axios';
 import Plotly from 'plotly.js-dist-min';
 import EditPane from './components/EditPane/EditPane.jsx';
 import TableView from './components/TableView/TableView.jsx';
 import { attachPlotInteractions } from './utils/plotInteractions.js';
 import ColumnSelector from './components/ColumnSelector.jsx';
+import { 
+  createManagedFigure, 
+  generateLayoutFromMetadata, 
+  generateDataFromMetadata,
+  updateFigureMetadata, 
+  syncFigureWithDOM 
+} from './utils/figureManager.js';
 
 
 const API_BASE = 'http://localhost:8000';
@@ -172,54 +180,6 @@ function App() {
     };
   }, [theme]);
 
-  const getPlotlyLayout = (figData, themeLayout) => {
-    const figLayout = figData.layout || {};
-    
-    // Check if this is a parallel coordinates plot
-    const isParallelCoords = figData.data && figData.data.some(trace => trace.type === 'parcoords');
-    
-    // Create a new layout object, starting with the theme settings,
-    // then overriding with figure-specific settings (figure takes precedence).
-    const newLayout = { ...themeLayout, ...figLayout };
-
-    // For parallel coordinates plots, preserve custom margins if they exist
-    if (isParallelCoords && figLayout.margin) {
-      newLayout.margin = { ...themeLayout.margin, ...figLayout.margin };
-    }
-
-    // The previous spread only handles top-level keys. We need to dive into
-    // all axis objects and apply the theme to them, which is crucial for
-    // matrix plots with many axes (xaxis, xaxis2, yaxis, yaxis2, etc.).
-    for (const key in figLayout) {
-        if (key.startsWith('xaxis')) {
-            // Merge theme axis settings with the specific axis settings from the figure.
-            // The figure's settings take precedence.
-            newLayout[key] = { ...themeLayout.xaxis, ...figLayout[key] };
-        }
-        if (key.startsWith('yaxis')) {
-            newLayout[key] = { ...themeLayout.yaxis, ...figLayout[key] };
-        }
-    }
-
-    // Ensure the title is also properly merged.
-    newLayout.title = { ...themeLayout.title, ...figLayout.title };
-    
-    // Ensure legend settings are properly merged (figure settings take precedence)
-    if (figLayout.legend) {
-      newLayout.legend = { ...themeLayout.legend, ...figLayout.legend };
-    }
-
-    // Ensure background colors from figure take precedence
-    // Note: paper_bgcolor is handled by EditPane setting both paper_bgcolor and figureBackgroundColor
-    if (figLayout.paper_bgcolor !== undefined) {
-      newLayout.paper_bgcolor = figLayout.paper_bgcolor;
-    }
-    if (figLayout.plot_bgcolor !== undefined) {
-      newLayout.plot_bgcolor = figLayout.plot_bgcolor;
-    }
-
-    return newLayout;
-  };
 
   useEffect(() => {
     if (config && localFigures) {
@@ -232,13 +192,16 @@ function App() {
       ];
 
       localFigures.forEach(fig => {
-        if (fig && fig.figure) {
+        if (fig) {
           const plotId = `plot-${fig.id}`;
           const plotDiv = document.getElementById(plotId);
           if (!plotDiv) return;
 
-          const layout = getPlotlyLayout(fig.figure, themedLayout);
-          const data = fig.figure.data.map((trace, index) => ({
+          // Use metadata-driven layout generation
+          const layout = generateLayoutFromMetadata(fig, themedLayout);
+          
+          // Use metadata-driven data generation
+          const data = generateDataFromMetadata(fig).map((trace, index) => ({
             ...trace,
             marker: { 
               ...trace.marker,
@@ -274,6 +237,19 @@ function App() {
           attachPlotInteractions(plotDiv);
         }
       });
+      
+      // Trigger resize after initial plot rendering to ensure proper height
+      setTimeout(() => {
+        localFigures.forEach(fig => {
+          if (fig && fig.figure) {
+            const plotId = `plot-${fig.id}`;
+            const graphDiv = document.getElementById(plotId);
+            if (graphDiv) {
+              Plotly.Plots.resize(graphDiv);
+            }
+          }
+        });
+      }, 100);
     }
   }, [config, localFigures, themedLayout]);
 
@@ -322,8 +298,8 @@ function App() {
     const overlayDiv = document.getElementById('overlay-plot');
     if (!overlayDiv) return;
 
-    const layout = getPlotlyLayout(activeFig.figure, themedLayout);
-    const data = activeFig.figure.data.map((trace, index) => ({
+    const layout = generateLayoutFromMetadata(activeFig, themedLayout);
+    const data = generateDataFromMetadata(activeFig).map((trace, index) => ({
       ...trace,
       marker: {
         ...trace.marker,
@@ -355,53 +331,94 @@ function App() {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
-  const handleConfigUpdateFromChat = async (newConfig) => {
+  const handleConfigUpdateFromChat = async (response) => {
     // Handle null config (e.g., from file upload without visualization request)
-    if (newConfig === null) {
-      console.log('Received null config - no visualization update needed');
+    if (response === null) {
+      console.log('Received null response - no visualization update needed');
       return;
     }
     
-    // Validate the config has required structure
-    if (!newConfig || typeof newConfig !== 'object') {
-      console.error('Invalid config received from chat');
+    // Handle Python execution responses
+    if (response && response.type === 'python_execution') {
+      console.log('Received Python execution response');
+      const dashboard = response.dashboard;
+      
+      if (dashboard && dashboard.figures) {
+        try {
+          setIsLoadingConfig(true);
+          
+          // Process figures using the new managed figure system
+          const processedFigures = dashboard.figures.map(fig => {
+            // Create managed figure with embedded metadata
+            return createManagedFigure(fig.figure, fig.metadata);
+          });
+          
+          // Update with the dashboard from Python execution
+          const processedDashboard = { ...dashboard, figures: processedFigures };
+          setConfig(processedDashboard);
+          setLocalFigures(processedFigures);
+          
+          // Apply theme if specified
+          if (dashboard.theme) {
+            setTheme(dashboard.theme);
+          }
+          
+          console.log('Python-generated dashboard loaded with', dashboard.figures?.length, 'figures');
+          console.log('Execution output:', response.execution_output);
+        } finally {
+          setIsLoadingConfig(false);
+        }
+      } else {
+        console.error('Python execution response missing dashboard data');
+      }
       return;
     }
-
-    // Ensure config has required properties with defaults
-    const validConfig = {
-      ...newConfig,
-      figures: newConfig.figures || [],
-      grid_layout: newConfig.grid_layout || { rows: 1, cols: 1 }
-    };
-
-    try {
-      setIsLoadingConfig(true);
-      // Send the config to backend to build the dashboard with actual data
-      const response = await axios.post(`${API_BASE}/api/build-dashboard`, validConfig);
-      const dashboard = response.data;
+    
+    // Handle traditional config responses (fallback)
+    if (response && response.config) {
+      const newConfig = response.config;
       
-      // Update with the built dashboard (includes actual plot data)
-      setConfig(dashboard);
-      setLocalFigures(dashboard.figures);
-      
-      // Apply theme if specified in config
-      if (dashboard.theme) {
-        setTheme(dashboard.theme);
+      // Validate the config has required structure
+      if (!newConfig || typeof newConfig !== 'object') {
+        console.error('Invalid config received from chat');
+        return;
       }
-      
-      console.log('Dashboard built successfully with', dashboard.figures?.length, 'figures');
-    } catch (error) {
-      console.error('Error building dashboard:', error);
-      // Fallback to just setting the config without building
-      setConfig(validConfig);
-      setLocalFigures(validConfig.figures);
-      
-      if (validConfig.theme) {
-        setTheme(validConfig.theme);
+
+      // Ensure config has required properties with defaults
+      const validConfig = {
+        ...newConfig,
+        figures: newConfig.figures || [],
+        grid_layout: newConfig.grid_layout || { rows: 1, cols: 1 }
+      };
+
+      try {
+        setIsLoadingConfig(true);
+        // Send the config to backend to build the dashboard with actual data
+        const buildResponse = await axios.post(`${API_BASE}/api/build-dashboard`, validConfig);
+        const dashboard = buildResponse.data;
+        
+        // Update with the built dashboard (includes actual plot data)
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        
+        // Apply theme if specified in config
+        if (dashboard.theme) {
+          setTheme(dashboard.theme);
+        }
+        
+        console.log('Dashboard built successfully with', dashboard.figures?.length, 'figures');
+      } catch (error) {
+        console.error('Error building dashboard:', error);
+        // Fallback to just setting the config without building
+        setConfig(validConfig);
+        setLocalFigures(validConfig.figures);
+        
+        if (validConfig.theme) {
+          setTheme(validConfig.theme);
+        }
+      } finally {
+        setIsLoadingConfig(false);
       }
-    } finally {
-      setIsLoadingConfig(false);
     }
   };
 
@@ -434,13 +451,31 @@ function App() {
   const loadDemoPlots = async () => {
     try {
       setIsLoadingConfig(true);
-      const response = await axios.get(`${API_BASE}/dashboard/default_config.json`, {
-        headers: {
-          'Accept': 'application/json; charset=utf-8'
-        }
+      // Use the new Python demo endpoint instead of the old JSON config
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "comprehensive_demo"
       });
-      setConfig(response.data);
-      setLocalFigures(response.data.figures);
+      
+      // Convert the execution result to dashboard format
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            // Create managed figure with embedded metadata
+            return createManagedFigure(plot.figure, plot.metadata);
+          }),
+          app_title: "Demo Visualizations",
+          theme: "light"
+        };
+        
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Python demo loaded with', dashboard.figures.length, 'figures');
+        console.log('Demo output:', result.output);
+      } else {
+        throw new Error("Demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
     } catch (err) {
       console.error("Error loading demo plots:", err);
     } finally {
@@ -647,10 +682,13 @@ function App() {
   const figures = localFigures || config.figures;
   // Calculate grid dimensions based on number of figures and selected columns
   const figureCount = figures ? figures.length : 0;
-  const nCols = Math.min(gridColumns, figureCount); // Don't use more columns than figures
+  // For single plot, always use 1 column to take full width
+  const nCols = figureCount === 1 ? 1 : Math.min(gridColumns, figureCount);
   const nRows = Math.ceil(figureCount / nCols) || 1;
-  const vGapPx = 20; // Use default spacing
-  const hGapPx = 20; // Use default spacing
+  
+  // Get grid spacing from CSS variables
+  const vGapPx = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-vertical-spacing').trim()) || 20;
+  const hGapPx = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-horizontal-spacing').trim()) || 20;
 
   const appStyle = {
     display: 'flex',
@@ -662,21 +700,24 @@ function App() {
 
 
   // Calculate min height to fit 2 rows in viewport
-  // The grid container takes full height minus the column selector
+  // The grid container takes full height minus the column selector (if shown)
   // Column selector total height = content (approx 36px) + bottom margin (15px) = 51px
-  const columnSelectorTotalHeight = 51;
+  const columnSelectorTotalHeight = figureCount > 1 ? 51 : 0; // Only account for selector if shown
+  const gridContainerTopPadding = figureCount === 1 ? 20 : 0; // Top padding for single plot
   const gridContainerBottomPadding = 20; // Bottom padding we added
   const gridOwnPaddingBottom = 10; // Grid's paddingBottom
   
   // Available height for the actual grid content
-  const availableHeight = windowHeight - columnSelectorTotalHeight - gridContainerBottomPadding - gridOwnPaddingBottom;
+  const availableHeight = windowHeight - columnSelectorTotalHeight - gridContainerTopPadding - gridContainerBottomPadding - gridOwnPaddingBottom;
   
   // Height for each plot when we want exactly 2 rows
   const minPlotHeight = Math.max(300, Math.floor((availableHeight - vGapPx) / 2));
 
-  // For exactly 2 rows, use calc to fill available space
-  const gridRowHeight = nRows <= 2 
-    ? `calc((100% - ${vGapPx}px) / 2)` // For 2 or fewer rows, split available height
+  // Calculate grid row height based on number of rows
+  const gridRowHeight = nRows === 1 
+    ? '100%' // Single row takes full height
+    : nRows === 2
+    ? `calc((100% - ${vGapPx}px) / 2)` // For 2 rows, split available height
     : `${minPlotHeight}px`; // For more rows, use fixed height
     
   const gridStyle = {
@@ -686,7 +727,7 @@ function App() {
     gap: `${vGapPx}px ${hGapPx}px`,
     width: '100%',
     maxWidth: '100%',
-    height: nRows <= 2 ? '100%' : 'auto', // Fill container height for 2 rows
+    height: nRows <= 2 ? '100%' : 'auto', // Fill container height for 1-2 rows
     overflow: 'visible', // Allow shadows to be visible
     paddingBottom: '10px' // Small padding for bottom shadows
   };
@@ -807,46 +848,69 @@ function App() {
           flex: 1, 
           overflowY: nRows > 2 ? 'auto' : 'hidden', // Only scroll if more than 2 rows
           overflowX: 'hidden',
-          padding: '0 20px 20px 20px', // Add padding on sides and bottom
+          padding: figureCount === 1 ? '20px' : '0 20px 20px 20px', // Add top padding for single plot
           boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column'
         }}>
           <div style={gridStyle}>
           {figures.map(fig => {
-            // Create dynamic container style with figure background and border
+            // Create dynamic container style with figure background and border from metadata
             const figureContainerStyle = {
               ...plotContainerStyle,
-              ...(fig.figure?.layout?.figureBackgroundColor && { 
-                backgroundColor: fig.figure.layout.figureBackgroundColor 
-              }),
-              ...(fig.figure?.layout?.figureBorderColor && { 
-                borderColor: fig.figure.layout.figureBorderColor 
-              }),
+              // Apply figure background from metadata
+              backgroundColor: fig.metadata?.appearance?.background?.figure?.color || 'transparent',
+              // Apply figure border from metadata
+              borderColor: fig.metadata?.appearance?.background?.figure?.borderColor || 'transparent',
+              borderWidth: (fig.metadata?.appearance?.background?.figure?.borderColor && 
+                           fig.metadata?.appearance?.background?.figure?.borderColor !== 'transparent' &&
+                           fig.metadata?.appearance?.background?.figure?.borderColor !== 'rgba(0,0,0,0)') ? '1px' : '0',
+              borderStyle: 'solid'
             };
             
             return (
             <div key={fig.id} className="plot-container" style={figureContainerStyle}>
               <div className="plot-buttons">
-                <button className="edit-btn" onClick={() => {
-                  setEditingFig(fig);
-                  setEditPaneOpen(true);
-                }} title="Edit plot">
-                  <EditIcon size={16} />
-                </button>
-                <button className="table-btn" onClick={() => {
-                  setTableViewFig(fig);
-                  setTableViewOpen(true);
-                }} title="View data">
-                  <TableIcon size={16} />
-                </button>
+                <PlotButton
+                  onClick={() => {
+                    // Sync figure with current DOM state (captures zoom/pan)
+                    const syncedFigure = syncFigureWithDOM(fig, `plot-${fig.id}`);
+                    setEditingFig(syncedFigure);
+                    setEditPaneOpen(true);
+                  }}
+                  title="Edit plot"
+                  icon={EditIcon}
+                />
+                <PlotButton
+                  onClick={() => {
+                    setTableViewFig(fig);
+                    setTableViewOpen(true);
+                  }}
+                  title="View data"
+                  icon={TableIcon}
+                />
                 {figures.length > 1 && (
-                <button className="zoom-btn" onClick={() => setActiveFig(fig)} title="Expand plot">
-                  <ExpandIcon size={16} />
-                </button>
+                  <PlotButton
+                    onClick={() => setActiveFig(fig)}
+                    title="Expand plot"
+                    icon={ExpandIcon}
+                  />
                 )}
+                <PlotButton
+                  onClick={() => {
+                    const plotId = `plot-${fig.id}`;
+                    Plotly.downloadImage(plotId, {
+                      format: 'png',
+                      width: 1200,
+                      height: 800,
+                      filename: fig.id || 'plot'
+                    });
+                  }}
+                  title="Download as PNG"
+                  icon={DownloadIcon}
+                />
               </div>
-              <div id={`plot-${fig.id}`} style={{ flexGrow:1,minHeight:0 }}></div>
+              <div id={`plot-${fig.id}`} style={{ flex: '1 1 auto', minHeight: 0, width: '100%' }}></div>
               <div className="figure-id-label">{fig.id}</div>
             </div>
             );
@@ -862,11 +926,10 @@ function App() {
           setEditPaneOpen(false);
           setEditingFig(null);
         }}
-        plotData={editingFig?.figure}
-        metadata={editingFig?.metadata}
+        figure={editingFig}
         onUpdate={(updatedFigure) => {
           const updatedFigures = localFigures.map(f => 
-            f.id === editingFig.id ? { ...f, figure: updatedFigure } : f
+            f.id === editingFig.id ? updatedFigure : f
           );
           setLocalFigures(updatedFigures);
         }}

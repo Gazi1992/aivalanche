@@ -15,6 +15,7 @@ from backend.core.data.data_analyzer import DataAnalyzer, DataType, PlotType
 from backend.core.data.data_processor import DataProcessor
 from backend.core.data_handler import load_dataset
 from backend.core.ai.visualization_prompts import VISUALIZATION_SYSTEM_PROMPT, get_plot_config_template
+from backend.core.execution_service import execution_service
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,154 @@ llm_handler = logging.FileHandler('logs/llm_conversations.log', mode='a', encodi
 llm_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
 llm_logger.addHandler(llm_handler)
 llm_logger.setLevel(logging.INFO)
+
+# Python Code Generation System Prompt
+PYTHON_VIZ_SYSTEM_PROMPT = """
+You are an expert data visualization assistant. Your task is to generate Python code that creates Plotly visualizations based on user requests and data analysis.
+
+## CRITICAL RULES FOR CODE GENERATION:
+
+1. **ALWAYS use the available helper functions** like load_data(), register_plot(), quick_plot()
+2. **Data loading** should use load_data('filename.csv') which handles the data directory automatically
+3. **Plot registration** must use register_plot(fig, plot_id='unique_id', metadata={}) for each plot
+4. **Code must be complete and executable** without imports (pd, np, go, px are available)
+5. **Use meaningful plot IDs** that describe the visualization
+
+## AVAILABLE FUNCTIONS AND VARIABLES:
+
+### Data Functions:
+- load_data(path) -> DataFrame: Load data from file (CSV, Excel, JSON supported)
+- datasets: Dict of cached datasets
+- show_stats(df, columns=None): Display statistical summary
+- find_outliers(df, column, method='iqr'): Find outliers in data
+
+### Plotting Functions:
+- register_plot(fig, plot_id=None, metadata=None): Register a plot for display
+- quick_plot(df, x, y, plot_type='scatter', **kwargs): Create quick plots
+- go: Plotly graph objects module
+- px: Plotly express module
+- make_subplots: Create subplot layouts
+
+### Standard Libraries:
+- pd: pandas for data manipulation
+- np: numpy for numerical operations
+
+## PLOT CREATION PATTERNS:
+
+### Basic Scatter Plot:
+```python
+# Load and analyze data
+df = load_data('data.csv')
+print(f"Loaded {len(df)} rows with columns: {list(df.columns)}")
+
+# Create scatter plot
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=df['x_column'], 
+    y=df['y_column'],
+    mode='markers',
+    name='Data Points'
+))
+fig.update_layout(
+    title='Scatter Plot Analysis',
+    xaxis_title='X Variable',
+    yaxis_title='Y Variable'
+)
+
+# Register the plot
+register_plot(fig, plot_id='scatter_analysis', 
+              metadata={'title': 'Scatter Plot', 'description': 'Analysis of X vs Y relationship'})
+```
+
+### Time Series Plot:
+```python
+df = load_data('time_series.csv')
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=df['time'], 
+    y=df['value'],
+    mode='lines',
+    name='Time Series'
+))
+fig.update_layout(
+    title='Time Series Analysis',
+    xaxis_title='Time',
+    yaxis_title='Value'
+)
+
+register_plot(fig, plot_id='time_series', 
+              metadata={'title': 'Time Series', 'description': 'Temporal data analysis'})
+```
+
+### Multiple Plots Dashboard:
+```python
+df = load_data('dataset.csv')
+
+# Plot 1: Distribution
+fig1 = go.Figure()
+fig1.add_trace(go.Histogram(x=df['column1'], nbinsx=30))
+fig1.update_layout(title='Distribution Analysis')
+register_plot(fig1, plot_id='distribution', metadata={'title': 'Distribution'})
+
+# Plot 2: Correlation
+fig2 = go.Figure()
+fig2.add_trace(go.Scatter(x=df['column1'], y=df['column2'], mode='markers'))
+fig2.update_layout(title='Correlation Analysis')
+register_plot(fig2, plot_id='correlation', metadata={'title': 'Correlation'})
+```
+
+### Advanced Analysis:
+```python
+df = load_data('complex_data.csv')
+
+# Statistical summary
+stats = show_stats(df)
+print("Statistical Summary:")
+print(stats)
+
+# Outlier detection
+outliers = find_outliers(df, 'value_column')
+print(f"Found {len(outliers)} outliers")
+
+# Create visualization with outliers highlighted
+fig = go.Figure()
+# Normal points
+normal_data = df[~df.index.isin(outliers.index)]
+fig.add_trace(go.Scatter(
+    x=normal_data['x'], y=normal_data['y'],
+    mode='markers', name='Normal'
+))
+# Outliers
+fig.add_trace(go.Scatter(
+    x=outliers['x'], y=outliers['y'],
+    mode='markers', name='Outliers', 
+    marker=dict(color='red', size=10)
+))
+
+register_plot(fig, plot_id='outlier_analysis')
+```
+
+## IMPORTANT GUIDELINES:
+
+1. **Always load data first** using load_data() function
+2. **Print useful information** about the data (shape, columns, summary stats)
+3. **Create meaningful titles and labels** based on actual column names
+4. **Use register_plot()** for every figure you want to display
+5. **Handle missing data** appropriately (dropna(), fillna())
+6. **Use appropriate plot types** based on data characteristics
+7. **Add informative metadata** to help users understand the visualization
+
+## CODE STRUCTURE:
+
+1. Load data and print basic info
+2. Perform any data analysis or preprocessing
+3. Create visualization(s)
+4. Register each plot with descriptive metadata
+5. Print summary of what was created
+
+Always generate **complete, executable Python code** that will create beautiful, informative visualizations.
+"""
 
 class AIService:
     """Enhanced AI service with data processing capabilities"""
@@ -315,7 +464,7 @@ class AIService:
             }
     
     def _handle_visualization_request(self, message: str, context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Handle visualization request"""
+        """Handle visualization request by generating and executing Python code"""
         try:
             # Check if we have cached data
             if self.data_cache:
@@ -329,27 +478,37 @@ class AIService:
                     analysis = self.data_analyzer.analyze_dataframe(df, file_path)
                     cache_data["analysis"] = analysis
                 
-                # Generate config based on request
-                config = self._generate_config_from_request(message, analysis, df, file_path)
+                # Generate Python code based on request
+                python_code = self._generate_python_code_from_request(message, analysis, df, file_path)
                 
-                # Build a descriptive message based on the config
-                num_plots = len(config.get("figures", []))
-                plot_types = []
-                for fig in config.get("figures", []):
-                    for item in fig.get("items", []):
-                        plot_types.append(item.get("type", "plot"))
-                
-                plot_types_str = ", ".join(set(plot_types))
-                message = f"I've created {num_plots} visualization{'s' if num_plots > 1 else ''}"
-                if plot_types_str:
-                    message += f" ({plot_types_str})"
-                message += " based on your request."
-                
-                return {
-                    "type": "config_new",
-                    "message": message,
-                    "config": config
-                }
+                if python_code:
+                    # Execute the Python code
+                    session_id = "ai_generated"  # Use a consistent session for AI-generated code
+                    result = execution_service.execute_in_session(session_id, python_code)
+                    
+                    if result['success'] and result['plots']:
+                        # Return the execution result with plots
+                        return {
+                            "type": "python_execution",
+                            "message": f"I've created {len(result['plots'])} visualization{'s' if len(result['plots']) > 1 else ''} based on your request.",
+                            "code": python_code,
+                            "execution_result": result,
+                            "session_id": session_id
+                        }
+                    else:
+                        # Execution failed, return error
+                        error_msg = result.get('error', {}).get('message', 'Unknown error')
+                        return {
+                            "type": "error",
+                            "message": f"Error executing visualization code: {error_msg}",
+                            "code": python_code,
+                            "execution_result": result
+                        }
+                else:
+                    return {
+                        "type": "error",
+                        "message": "Could not generate visualization code for your request."
+                    }
             
             # No data loaded, ask for data
             return {
@@ -666,6 +825,183 @@ class AIService:
         
         return config
     
+    def _generate_python_code_from_request(self, message: str, analysis: Dict[str, Any], df: pd.DataFrame, file_path: Optional[str] = None) -> Optional[str]:
+        """Generate Python code based on specific user request"""
+        if not self.model:
+            # Return a fallback code if no Gemini
+            return self._generate_fallback_python_code(analysis, df, file_path)
+        
+        try:
+            # Get the actual source filename
+            source = Path(file_path).name if file_path else "data.csv"
+            
+            # Build detailed prompt for Gemini
+            prompt = f"""{PYTHON_VIZ_SYSTEM_PROMPT}
+            
+            USER REQUEST: {message}
+            
+            DATA INFORMATION:
+            - Source file: {source}
+            - Shape: {df.shape[0]} rows × {df.shape[1]} columns
+            - Columns: {list(df.columns)}
+            - Data types: {df.dtypes.to_dict()}
+            
+            COLUMN DETAILS:
+            """
+            
+            # Add column analysis
+            for col_name, col_info in analysis.get("column_analysis", {}).items():
+                prompt += f"\n- {col_name}: {col_info.get('data_type', 'unknown')}"
+                if col_info.get('unique_count'):
+                    prompt += f", {col_info['unique_count']} unique values"
+                if col_info.get('min') is not None and col_info.get('max') is not None:
+                    prompt += f", range [{col_info['min']:.2f}, {col_info['max']:.2f}]"
+            
+            prompt += f"""
+            
+            ANALYSIS INSIGHTS:
+            - Suggested plots: {[p['plot_type'] for p in analysis.get('suggested_plots', [])[:3]]}
+            - Has time series: {analysis.get('data_patterns', {}).get('has_time_series', False)}
+            - Has correlations: {analysis.get('correlations', {}).get('has_correlations', False)}
+            
+            Based on the user request and data analysis, generate COMPLETE Python code that:
+            1. Loads the data using load_data('{source}')
+            2. Creates appropriate visualizations based on the request
+            3. Uses register_plot() for each figure created
+            4. Includes meaningful plot IDs and metadata
+            5. Prints useful information about the data and analysis
+            
+            Return ONLY the Python code, no explanation text or markdown formatting.
+            """
+            
+            llm_logger.info(f"GENERATING PYTHON CODE with Gemini, prompt length: {len(prompt)}")
+            response = self.model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Clean up the response - remove markdown code blocks if present
+            import re
+            # Remove ```python and ``` markers
+            code_match = re.search(r'```(?:python)?\s*(.*?)\s*```', response_text, re.DOTALL)
+            if code_match:
+                python_code = code_match.group(1).strip()
+            else:
+                python_code = response_text.strip()
+            
+            llm_logger.info(f"GENERATED PYTHON CODE: {python_code[:500]}...")
+            return python_code
+                
+        except Exception as e:
+            logger.error(f"Error generating Python code with Gemini: {e}")
+            llm_logger.error(f"PYTHON CODE GENERATION ERROR: {e}")
+            # Fallback to simple code generation
+            return self._generate_fallback_python_code(analysis, df, file_path)
+    
+    def _generate_fallback_python_code(self, analysis: Dict[str, Any], df: pd.DataFrame, file_path: Optional[str] = None) -> str:
+        """Generate fallback Python code when AI is not available"""
+        source = Path(file_path).name if file_path else "data.csv"
+        suggestions = analysis.get("suggested_plots", [])
+        
+        # Generate basic code based on first suggestion
+        if suggestions:
+            suggestion = suggestions[0]
+            plot_type = suggestion["plot_type"]
+            config = suggestion.get("config", {})
+            
+            if plot_type == "scatter":
+                code = f"""
+# Load and analyze data
+df = load_data('{source}')
+print(f"Loaded {{len(df)}} rows with columns: {{list(df.columns)}}")
+
+# Create scatter plot
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=df['{config.get('x_column', df.columns[0])}'], 
+    y=df['{config.get('y_column', df.columns[1] if len(df.columns) > 1 else df.columns[0])}'],
+    mode='markers',
+    name='Data Points'
+))
+fig.update_layout(
+    title='Scatter Plot Analysis',
+    xaxis_title='{config.get('x_column', 'X')}',
+    yaxis_title='{config.get('y_column', 'Y')}'
+)
+
+register_plot(fig, plot_id='scatter_analysis', 
+              metadata={{'title': 'Scatter Plot', 'description': 'Data analysis visualization'}})
+"""
+            elif plot_type == "histogram":
+                col = config.get("column", df.columns[0])
+                code = f"""
+# Load and analyze data
+df = load_data('{source}')
+print(f"Loaded {{len(df)}} rows with columns: {{list(df.columns)}}")
+
+# Create histogram
+fig = go.Figure()
+fig.add_trace(go.Histogram(x=df['{col}'], nbinsx=30))
+fig.update_layout(
+    title='{col} Distribution',
+    xaxis_title='{col}',
+    yaxis_title='Frequency'
+)
+
+register_plot(fig, plot_id='histogram_analysis', 
+              metadata={{'title': '{col} Distribution', 'description': 'Distribution analysis'}})
+"""
+            else:
+                # Default to simple data overview
+                code = f"""
+# Load and analyze data
+df = load_data('{source}')
+print(f"Loaded {{len(df)}} rows with columns: {{list(df.columns)}}")
+print(f"Data shape: {{df.shape}}")
+print("\\nFirst few rows:")
+print(df.head())
+
+# Simple visualization
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+if len(numeric_cols) >= 2:
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df[numeric_cols[0]], 
+        y=df[numeric_cols[1]],
+        mode='markers',
+        name='Data Points'
+    ))
+    fig.update_layout(
+        title='Data Visualization',
+        xaxis_title=numeric_cols[0],
+        yaxis_title=numeric_cols[1]
+    )
+    register_plot(fig, plot_id='data_overview')
+"""
+        else:
+            # Very basic fallback
+            code = f"""
+# Load and analyze data
+df = load_data('{source}')
+print(f"Loaded {{len(df)}} rows with columns: {{list(df.columns)}}")
+
+# Basic data overview
+print("\\nData Summary:")
+print(df.describe())
+
+# Simple plot if possible
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+if len(numeric_cols) > 0:
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=df[numeric_cols[0]], nbinsx=30))
+    fig.update_layout(
+        title=f'{{numeric_cols[0]}} Distribution',
+        xaxis_title=numeric_cols[0],
+        yaxis_title='Frequency'
+    )
+    register_plot(fig, plot_id='data_overview')
+"""
+        
+        return code.strip()
+
     def _generate_config_from_request(self, message: str, analysis: Dict[str, Any], df: pd.DataFrame, file_path: Optional[str] = None) -> Dict[str, Any]:
         """Generate config based on specific user request"""
         if not self.model:

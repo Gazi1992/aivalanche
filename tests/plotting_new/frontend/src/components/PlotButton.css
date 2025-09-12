@@ -1,0 +1,35 @@
+/* PlotButton base styles */
+.plot-button {
+  opacity: 0;
+  background-color: var(--card-background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  color: var(--text-color);
+}
+
+/* Reset button is always visible */
+.plot-button.reset-button {
+  opacity: 1;
+}
+
+/* PlotButton hover visibility */
+.plot-container:hover .plot-button {
+  opacity: 1;
+}
+
+/* Hover state */
+.plot-button:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--text-color);
+}
+
+/* Active state */
+.plot-button:active {
+  transform: scale(0.95);
+}

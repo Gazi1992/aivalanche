@@ -42,8 +42,12 @@ const AxisSubsection = ({
   setXAxisTicksVisible,
   yAxisTicksVisible,
   setYAxisTicksVisible,
-  onBlur
+  onBlur,
+  metadata = {}
 }) => {
+  // Check if axes are categorical from metadata
+  const xAxisCategorical = metadata.xAxisCategorical || metadata.xAxisType === 'category';
+  const yAxisCategorical = metadata.yAxisCategorical || metadata.yAxisType === 'category';
   const containerStyle = {
     display: 'grid',
     gridTemplateColumns: '60px minmax(0, 1fr) minmax(0, 1fr)',
@@ -169,16 +173,38 @@ const AxisSubsection = ({
             value={xAxisMin}
             onChange={(e) => setXAxisMin(e.target.value)}
             onBlur={onBlur}
-            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
-            placeholder="Auto"
+            style={{ 
+              ...inputStyle, 
+              width: '100%', 
+              boxSizing: 'border-box',
+              ...(xAxisCategorical && { 
+                opacity: 0.5, 
+                cursor: 'not-allowed',
+                backgroundColor: 'var(--disabled-bg-color, #f5f5f5)'
+              })
+            }}
+            placeholder={xAxisCategorical ? "N/A" : "Auto"}
+            disabled={xAxisCategorical}
+            title={xAxisCategorical ? "Min/Max not applicable for categorical axis" : ""}
           />
           <input
             type="text"
             value={yAxisMin}
             onChange={(e) => setYAxisMin(e.target.value)}
             onBlur={onBlur}
-            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
-            placeholder="Auto"
+            style={{ 
+              ...inputStyle, 
+              width: '100%', 
+              boxSizing: 'border-box',
+              ...(yAxisCategorical && { 
+                opacity: 0.5, 
+                cursor: 'not-allowed',
+                backgroundColor: 'var(--disabled-bg-color, #f5f5f5)'
+              })
+            }}
+            placeholder={yAxisCategorical ? "N/A" : "Auto"}
+            disabled={yAxisCategorical}
+            title={yAxisCategorical ? "Min/Max not applicable for categorical axis" : ""}
           />
           
           {/* Max Row */}
@@ -188,16 +214,38 @@ const AxisSubsection = ({
             value={xAxisMax}
             onChange={(e) => setXAxisMax(e.target.value)}
             onBlur={onBlur}
-            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
-            placeholder="Auto"
+            style={{ 
+              ...inputStyle, 
+              width: '100%', 
+              boxSizing: 'border-box',
+              ...(xAxisCategorical && { 
+                opacity: 0.5, 
+                cursor: 'not-allowed',
+                backgroundColor: 'var(--disabled-bg-color, #f5f5f5)'
+              })
+            }}
+            placeholder={xAxisCategorical ? "N/A" : "Auto"}
+            disabled={xAxisCategorical}
+            title={xAxisCategorical ? "Min/Max not applicable for categorical axis" : ""}
           />
           <input
             type="text"
             value={yAxisMax}
             onChange={(e) => setYAxisMax(e.target.value)}
             onBlur={onBlur}
-            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
-            placeholder="Auto"
+            style={{ 
+              ...inputStyle, 
+              width: '100%', 
+              boxSizing: 'border-box',
+              ...(yAxisCategorical && { 
+                opacity: 0.5, 
+                cursor: 'not-allowed',
+                backgroundColor: 'var(--disabled-bg-color, #f5f5f5)'
+              })
+            }}
+            placeholder={yAxisCategorical ? "N/A" : "Auto"}
+            disabled={yAxisCategorical}
+            title={yAxisCategorical ? "Min/Max not applicable for categorical axis" : ""}
           />
           
           {/* Reverse Row */}

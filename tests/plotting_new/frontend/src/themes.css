@@ -28,11 +28,11 @@
   --grid-vertical-spacing: 20px;
   
   /* Plot layout variables */
-  --plot-margin-left: 20px;
-  --plot-margin-right: 5px;
-  --plot-margin-bottom: 15px;
-  --plot-margin-top: 35px;
-  --plot-margin-pad: 0px;
+  --plot-margin-left: 80px;
+  --plot-margin-right: 50px;
+  --plot-margin-bottom: 60px;
+  --plot-margin-top: 60px;
+  --plot-margin-pad: 10px;
   --legend-x: 0.01;
   --legend-y: 0.99;
   --legend-border-width: 1px;
@@ -60,12 +60,19 @@
   --grid-color: #EDF2F7;
   --legend-bg: rgba(255, 255, 255, 0.95);
   --legend-border: rgba(226, 232, 240, 0.8);
+  --legend-text: #444444;
   --shadow-color: rgba(0, 0, 0, 0.08);
   --color-data-1: #FF6B35;
   --color-data-2: #4FD1C7;
   --color-data-3: #63B3ED;
   --color-data-4: #F6E05E;
   --color-data-5: #9F7AEA;
+  
+  /* Plot backgrounds and borders */
+  --figure-background: #ffffff;
+  --figure-border-color: rgba(0, 0, 0, 0);
+  --plot-background: rgba(255, 255, 255, 0);
+  --plot-border-color: rgba(128, 128, 128, 0.2);
   
   /* Chat Assistant specific colors */
   --bg-primary: #FFFFFF;
@@ -78,6 +85,10 @@
   --color-primary-dark: #E55A2B;
   --color-primary-rgb: 255, 107, 53;
   --color-success: #48BB78;
+  
+  /* Python executor styles */
+  --success-color: #10b981;
+  --danger-color: #ef4444;
 }
 
 [data-theme='dark'] {
@@ -97,12 +108,19 @@
   --grid-color: #1e2c48;
   --legend-bg: rgba(18, 30, 51, 0.9);
   --legend-border: rgba(45, 157, 146, 0.3);
+  --legend-text: #e5ecf3;
   --shadow-color: rgba(0, 0, 0, 0.45);
   --color-data-1: #2d9d92;
   --color-data-2: #ff6b6b;
   --color-data-3: #d4a82a;
   --color-data-4: #a8e6cf;
   --color-data-5: #9f7aea;
+  
+  /* Plot backgrounds and borders */
+  --figure-background: #121e33;
+  --figure-border-color: rgba(0, 0, 0, 0);
+  --plot-background: rgba(18, 30, 51, 0);
+  --plot-border-color: #1e2c48;
   
   /* Chat Assistant specific colors */
   --bg-primary: #121e33;
@@ -115,6 +133,10 @@
   --color-primary-dark: #23776E;
   --color-primary-rgb: 45, 157, 146;
   --color-success: #10b981;
+  
+  /* Python executor styles */
+  --success-color: #10b981;
+  --danger-color: #ef4444;
   /* Layout variables inherited from :root */
 }
 
@@ -194,41 +216,7 @@ body {
   z-index: 1000;
 }
 
-/* Adjust zoom and edit buttons to outline style */
-.zoom-btn,
-.edit-btn,
-.table-btn {
-  opacity: 0;
-  background-color: var(--card-background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
-  color: var(--text-color); /* icon inherits this */
-}
-
-.plot-container:hover .zoom-btn,
-.plot-container:hover .edit-btn,
-.plot-container:hover .table-btn {
-  opacity: 1;
-}
-
-.zoom-btn:hover,
-.edit-btn:hover,
-.table-btn:hover {
-  background-color: rgba(255,255,255,0.1); /* subtle contrast on dark */
-}
-
-/* Change background on hover for accessibility */
-.zoom-btn:active,
-.edit-btn:active,
-.table-btn:active {
-    background-color: rgba(0,0,0,0.1);
-} 
+/* Plot button styles are now handled by PlotButton component */ 
 
 /* ------------ Figure ID Label ------------- */
 .figure-id-label {

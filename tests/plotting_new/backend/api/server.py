@@ -31,22 +31,13 @@ if not any(isinstance(h, logging.FileHandler) for h in _root_logger.handlers):
     _root_logger.addHandler(file_handler)
     _root_logger.setLevel(logging.DEBUG)
 
-# Plot factory
-from backend.core.plot_factory import (
-    histogram_plot,
-    bar_plot,
-    scatter_matrix_plot,
-)
-# Dashboard builder
-from backend.core.dashboard_builder import build_dashboard
+# Add parent directory to path for imports
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
-# Schemas
-from backend.api.schemas import (
-    LinePlotRequest,
-    ScatterPlotRequest,
-    HistogramPlotRequest,
-    BarPlotRequest,
-)
+# Removed plot_factory and dashboard_builder imports - using Python executor instead
+
+# Removed old schema imports - using Python executor instead
 
 # Local modules
 from backend.core.data_handler import load_dataset, available_datasets
@@ -76,11 +67,7 @@ ai_service = AIService(GEMINI_API_KEY)
 # Pydantic models (request/response schemas)
 # ----------------------------------------------------------------------------
 
-# (old simple request kept for backward compat)
-class SimpleBarPlotRequest(BaseModel):
-    dataset: str
-    x_column: str
-    y_column: str
+# Removed old Pydantic models - using Python executor instead
 
 
 # ----------------------------------------------------------------------------
@@ -194,208 +181,7 @@ def preview_dataset(name: str) -> dict:
         raise HTTPException(500, detail=str(exc)) from exc
 
 
-# --------------------------- Existing simple bar (compat) -------------------
-
-@app.post("/plot/bar", summary="Bar plot (simple) – kept for backward compat")
-def bar_plot_simple(req: SimpleBarPlotRequest) -> dict:
-    """Construct a Plotly *bar* figure on the server and return its *fig.to_json()* dict."""
-
-    try:
-        df = load_dataset(req.dataset)
-    except FileNotFoundError:
-        raise HTTPException(404, detail="Dataset not found")
-    except Exception as exc:
-        raise HTTPException(500, detail=f"Error loading dataset: {exc}") from exc
-
-    if req.x_column not in df.columns or req.y_column not in df.columns:
-        raise HTTPException(
-            400,
-            detail=f"Columns '{req.x_column}' or '{req.y_column}' not found in dataset. Available columns: {list(df.columns)}",
-        )
-
-    fig = go.Figure(
-        data=[
-            go.Bar(x=df[req.x_column].tolist(), y=df[req.y_column].tolist()),
-        ],
-        layout=go.Layout(title=f"Bar Plot of {req.y_column} vs {req.x_column}"),
-    )
-
-    # Return JSON representation directly so the client can feed into Plotly.newPlot
-    return json.loads(fig.to_json())
-
-
-# ====================== New full-featured plot endpoints =====================
-
-
-@app.post("/plot/line", summary="Line plot")
-def line_plot_endpoint(req: LinePlotRequest) -> dict:
-    df = _safe_load(req.dataset)
-    if req.x_column not in df.columns or req.y_column not in df.columns:
-        raise HTTPException(400, detail="Invalid columns")
-    fig = line_plot(df[req.x_column].tolist(), df[req.y_column].tolist(), name=req.name, color=req.color)
-    return fig
-
-
-@app.post("/plot/scatter", summary="Scatter plot")
-def scatter_plot_endpoint(req: ScatterPlotRequest) -> dict:
-    df = _safe_load(req.dataset)
-    if req.x_column not in df.columns or req.y_column not in df.columns:
-        raise HTTPException(400, detail="Invalid columns")
-    fig = scatter_plot(df[req.x_column].tolist(), df[req.y_column].tolist(), name=req.name, color=req.color)
-    return fig
-
-
-@app.post("/plot/histogram", summary="Histogram plot")
-def histogram_plot_endpoint(req: HistogramPlotRequest) -> dict:
-    df = _safe_load(req.dataset)
-    if req.column not in df.columns:
-        raise HTTPException(400, detail="Invalid column")
-    values = df[req.column].dropna().tolist()
-    fig = histogram_plot(values, bins=req.bins, show_fit=req.show_fit, name=req.name, color=req.color)
-    return fig
-
-
-@app.post("/plot/bar/full", summary="Bar plot (multi / stacked)")
-def bar_plot_endpoint(req: BarPlotRequest) -> dict:
-    df = _safe_load(req.dataset)
-    if req.x_column not in df.columns:
-        raise HTTPException(400, detail="Invalid x column")
-
-    missing = [col for col in req.y_columns if col not in df.columns]
-    if missing:
-        raise HTTPException(400, detail=f"Missing y columns: {missing}")
-
-    x_vals = df[req.x_column].tolist()
-    ys = [df[col].tolist() for col in req.y_columns]
-    fig = bar_plot(x_vals, ys, names=req.names, stacked=req.stacked)
-    return fig
-
-
-# --------------------------- Dashboard from config -------------------------
-
-
-
-
-
-
-
-
-@app.post("/api/build-dashboard", summary="Build dashboard from provided config")
-async def build_dashboard_from_config(config: dict):
-    """Build and return dashboard from a dynamically provided config."""
-    import tempfile
-    import json
-    from pathlib import Path
-    from datetime import datetime
-    
-    try:
-        # Save config to a temporary file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
-            json.dump(config, tmp)
-            temp_config_path = Path(tmp.name)
-        
-        # Save a copy to .temp for debugging
-        temp_dir = Path(".temp")
-        temp_dir.mkdir(exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        config_temp_path = temp_dir / f"generated_config_{timestamp}.json"
-        with open(config_temp_path, 'w', encoding='utf-8') as f:
-            json.dump(config, f, indent=2, ensure_ascii=False)
-        logging.info(f"Saved config to {config_temp_path}")
-        
-        # Build dashboard from the temp config
-        dashboard_json = build_dashboard(temp_config_path)
-        
-        # Clean up temp file
-        temp_config_path.unlink()
-        
-        # Log for debugging
-        logging.info(f"Built dashboard with {len(dashboard_json.get('figures', []))} figures")
-        
-        return JSONResponse(content=dashboard_json, media_type="application/json; charset=utf-8")
-        
-    except Exception as e:
-        logging.error(f"Error building dashboard from config: {e}")
-        # Clean up temp file if it exists
-        if 'temp_config_path' in locals() and temp_config_path.exists():
-            temp_config_path.unlink()
-        raise HTTPException(500, detail=str(e))
-
-
-@app.get("/dashboard/{config_name}", summary="Render full dashboard from config")
-def dashboard(config_name: str):
-    """Return figures generated from *config_name* (looked up in data/configs)."""
-    config_path = (DATA_DIR / "configs" / config_name).resolve()
-    if not config_path.exists():
-        raise HTTPException(404, detail="Config not found")
-
-    dashboard_json = build_dashboard(config_path)
-    import json, logging
-
-    # -------------------------------------------------------------------
-    # Persist full payload for front-end debugging
-    # -------------------------------------------------------------------
-    # The regular backend_debug.log only stores a short snippet of the
-    # dashboard JSON to avoid megabytes of noise.  For in-depth inspection
-    # we now write the complete payload to a dedicated file that can be
-    # opened separately without clogging the main log.  The file is
-    # overwritten on each request so that it always reflects the most
-    # recent response.
-    try:
-        # Deep-copy to avoid mutating the response sent back to the client
-        sanitized = copy.deepcopy(dashboard_json)
-
-        # Remove Plotly's large default template from each figure layout to keep the
-        # logged payload compact and diff-friendly.
-        for fig_entry in sanitized.get("figures", []):
-            if isinstance(fig_entry, dict):
-                layout = fig_entry.get("figure", {}).get("layout", {})
-                if isinstance(layout, dict):
-                    layout.pop("template", None)
-
-        payload_path = Path("logs/frontend_payload.json")
-        # Pretty-print overall structure but flatten just the large x/y arrays
-        json_text = json.dumps(sanitized, ensure_ascii=False, indent=2)
-
-        def _inline_xy_lists(text: str) -> str:
-            """Return *text* with any '"x": [...]' or '"y": [...]' arrays collapsed
-            onto a single line while preserving indentation for everything else."""
-            lines = text.splitlines()
-            out_lines: list[str] = []
-            i = 0
-            while i < len(lines):
-                line = lines[i]
-                stripped = line.lstrip()
-                if stripped.startswith("\"x\": [") or stripped.startswith("\"y\": ["):
-                    indent = line[: len(line) - len(stripped)]
-                    # Begin collecting until we reach the closing ']' (might be '],' or ']')
-                    collected = stripped  # already has opening '['
-                    i += 1
-                    while i < len(lines):
-                        next_line = lines[i]
-                        collected += next_line.strip()
-                        if next_line.strip().endswith("],") or next_line.strip().endswith("]"):
-                            break
-                        i += 1
-                    # Append the compressed array line with original indent
-                    out_lines.append(indent + collected)
-                    i += 1  # move past the closing line
-                else:
-                    out_lines.append(line)
-                    i += 1
-            return "\n".join(out_lines)
-
-        json_text = _inline_xy_lists(json_text)
-
-        with payload_path.open("w", encoding="utf-8") as fp:
-            fp.write(json_text)
-    except Exception as exc:
-        logging.getLogger(__name__).error("Failed to write frontend payload: %s", exc)
-
-    # Keep short diagnostics in the regular debug log
-    logging.getLogger(__name__).debug("Dashboard response size=%d bytes", len(json.dumps(dashboard_json)))
-    logging.getLogger(__name__).debug("Dashboard snippet: %s", json.dumps(dashboard_json)[:500])
-    return JSONResponse(content=dashboard_json, media_type="application/json; charset=utf-8")
+# Removed old config-based endpoints - using Python executor instead
 
 
 # ---------------------------------------------------------------------------
@@ -406,12 +192,6 @@ class ChatRequest(BaseModel):
     message: str
     current_config: Optional[dict] = None
 
-class GenerateConfigRequest(BaseModel):
-    prompt: str
-
-class ImproveConfigRequest(BaseModel):
-    current_config: dict
-    improvement_request: str
 
 class DataUploadRequest(BaseModel):
     filename: str
@@ -428,6 +208,36 @@ async def chat(request: ChatRequest):
         }
         response = ai_service.process_message(request.message, context)
         
+        # Handle Python execution responses
+        if response.get("type") == "python_execution":
+            # Convert the execution result to frontend-compatible format
+            execution_result = response.get("execution_result", {})
+            plots = execution_result.get("plots", [])
+            
+            # Convert plots to dashboard format compatible with frontend
+            dashboard_figures = []
+            for plot in plots:
+                dashboard_figures.append({
+                    "id": plot["id"],
+                    "figure": plot["figure"],
+                    "metadata": plot.get("metadata", {}),
+                    "visibility": True
+                })
+            
+            # Return in a format the frontend expects
+            return {
+                "type": "python_execution",
+                "message": response.get("message", "Visualization created successfully"),
+                "dashboard": {
+                    "figures": dashboard_figures,
+                    "app_title": "Python Generated Dashboard",
+                    "theme": "light"
+                },
+                "session_id": response.get("session_id"),
+                "execution_output": execution_result.get("output", ""),
+                "success": True
+            }
+        
         # If response includes processed data, store it temporarily
         if "data_summary" in response:
             # Store in a temporary location for the dashboard to access
@@ -441,44 +251,6 @@ async def chat(request: ChatRequest):
             "message": f"Sorry, I encountered an error: {str(e)}"
         }
 
-@app.post("/api/generate-config")
-async def generate_config(request: GenerateConfigRequest):
-    """Generate a visualization configuration using AI"""
-    try:
-        # Use the new AI service to process the request
-        response = ai_service.process_message(request.prompt)
-        
-        if response.get("type") == "error":
-            raise HTTPException(status_code=500, detail=response.get("message"))
-            
-        config = response.get("config")
-        if config is None:
-            raise HTTPException(status_code=500, detail="Failed to generate configuration")
-            
-        return {"success": True, "config": config}
-    except Exception as e:
-        logging.error(f"Error in generate_config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/improve-config")
-async def improve_config(request: ImproveConfigRequest):
-    """Improve an existing configuration using AI"""
-    try:
-        # Process as a modification request
-        context = {"current_config": request.current_config}
-        response = ai_service.process_message(request.improvement_request, context)
-        
-        if response.get("type") == "error":
-            raise HTTPException(status_code=500, detail=response.get("message"))
-            
-        config = response.get("config")
-        if config is None:
-            raise HTTPException(status_code=500, detail="Failed to improve configuration")
-            
-        return {"success": True, "config": config}
-    except Exception as e:
-        logging.error(f"Error in improve_config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload-data")
 async def upload_data(request: DataUploadRequest):
@@ -610,12 +382,134 @@ async def upload_data(request: DataUploadRequest):
 
 
 # ---------------------------------------------------------------------------
+# Python Execution Endpoints
+# ---------------------------------------------------------------------------
+
+from backend.core.execution_service import execution_service
+from typing import Dict, Any
+
+class PythonExecuteRequest(BaseModel):
+    code: str
+    session_id: Optional[str] = None
+
+class SessionCreateRequest(BaseModel):
+    session_id: Optional[str] = None
+
+@app.post("/api/python/execute")
+async def execute_python(request: PythonExecuteRequest) -> Dict[str, Any]:
+    """Execute Python code and return results including any generated plots."""
+    try:
+        # Use provided session_id or create a new one
+        session_id = request.session_id
+        if not session_id:
+            session_id = execution_service.create_session()
+            
+        # Execute the code
+        result = execution_service.execute_in_session(session_id, request.code)
+        
+        # Add session_id to response
+        result['session_id'] = session_id
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error executing Python code: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/session/create")
+async def create_session(request: SessionCreateRequest) -> Dict[str, str]:
+    """Create a new Python execution session."""
+    try:
+        session_id = execution_service.create_session(request.session_id)
+        return {"session_id": session_id, "status": "created"}
+    except Exception as e:
+        logging.error(f"Error creating session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/python/session/{session_id}")
+async def delete_session(session_id: str) -> Dict[str, str]:
+    """Delete a Python execution session."""
+    try:
+        success = execution_service.delete_session(session_id)
+        if success:
+            return {"session_id": session_id, "status": "deleted"}
+        else:
+            raise HTTPException(status_code=404, detail="Session not found")
+    except Exception as e:
+        logging.error(f"Error deleting session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/session/{session_id}/variables")
+async def get_session_variables(session_id: str) -> Dict[str, Any]:
+    """Get variables defined in a session."""
+    try:
+        session = execution_service.get_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+            
+        return {
+            "session_id": session_id,
+            "variables": session.get_variables(),
+            "datasets": list(session.datasets.keys()),
+            "plot_count": len(session.plot_registry.figures)
+        }
+    except Exception as e:
+        logging.error(f"Error getting session variables: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/sessions")
+async def list_sessions() -> Dict[str, List[str]]:
+    """List all active sessions."""
+    return {"sessions": execution_service.list_sessions()}
+
+class DemoRequest(BaseModel):
+    session_id: str = "default"
+    script_name: str = "comprehensive_demo"
+
+@app.post("/api/python/demo")
+async def execute_demo_script(request: DemoRequest) -> Dict[str, Any]:
+    """Execute a demo script with status updates."""
+    import re
+    from pathlib import Path
+    
+    try:
+        # Load the demo script
+        demo_path = Path(__file__).parent.parent / 'demo_scripts' / f'{request.script_name}.py'
+        with open(demo_path, 'r') as f:
+            code = f.read()
+        
+        # Execute the code
+        result = execution_service.execute_in_session(request.session_id, code)
+        
+        # Parse status messages from output
+        status_messages = []
+        if result.get('output'):
+            lines = result['output'].split('\n')
+            for line in lines:
+                # Parse status messages in format [STATUS:type] message
+                match = re.match(r'\[STATUS:(\w+)\]\s*(.*)', line)
+                if match:
+                    status_type, message = match.groups()
+                    status_messages.append({
+                        'type': status_type,
+                        'message': message
+                    })
+        
+        # Return enhanced result with status messages
+        return {
+            **result,
+            'status_messages': status_messages
+        }
+        
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Demo script not found")
+    except Exception as e:
+        logging.error(f"Error executing demo script: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
-def _safe_load(name: str):
-    try:
-        return load_dataset(name)
-    except FileNotFoundError:
-        raise HTTPException(404, detail="Dataset not found") 
+ 

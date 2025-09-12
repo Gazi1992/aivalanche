@@ -135,18 +135,20 @@ const StyleDropdown = ({
 const DataSubsection = ({ 
   dataExpanded, 
   setDataExpanded,
-  traces,
-  selectedTraceIndex,
+  traces = [],
+  selectedTraceIndex = 0,
   setSelectedTraceIndex,
-  traceProperties,
+  traceProperties = {},
   updateTraceProperty,
   onBlur
 }) => {
   const [showLineStyleDropdown, setShowLineStyleDropdown] = useState(false);
   const [showSymbolDropdown, setShowSymbolDropdown] = useState(false);
   
-  const currentTrace = traces[selectedTraceIndex];
-  const currentProps = traceProperties[selectedTraceIndex] || {};
+  // Ensure we have valid data
+  const safeSelectedIndex = Math.min(selectedTraceIndex, traces.length - 1);
+  const currentTrace = traces[safeSelectedIndex] || {};
+  const currentProps = traceProperties ? (traceProperties[safeSelectedIndex] || {}) : {};
   
   // Determine trace type
   const isLineTrace = currentTrace?.mode?.includes('lines');
@@ -182,8 +184,8 @@ const DataSubsection = ({
             <div style={rowStyle}>
               <label style={labelStyle}>Trace</label>
               <select
-                value={selectedTraceIndex}
-                onChange={(e) => setSelectedTraceIndex(Number(e.target.value))}
+                value={safeSelectedIndex}
+                onChange={(e) => setSelectedTraceIndex && setSelectedTraceIndex(Number(e.target.value))}
                 style={selectStyle}
               >
                 {traces.map((trace, index) => (
@@ -203,7 +205,7 @@ const DataSubsection = ({
               <input
                 type="text"
                 value={currentProps.name || currentTrace?.name || ''}
-                onChange={(e) => updateTraceProperty(selectedTraceIndex, 'name', e.target.value)}
+                onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'name', e.target.value)}
                 onBlur={onBlur}
                 style={{ ...inputStyle, backgroundColor: '#ECEEF0' }}
                 placeholder="Trace name"
@@ -221,7 +223,7 @@ const DataSubsection = ({
                       <input
                         type="number"
                         value={getLineWidth()}
-                        onChange={(e) => updateTraceProperty(selectedTraceIndex, 'lineWidth', Number(e.target.value))}
+                        onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'lineWidth', Number(e.target.value))}
                         onBlur={onBlur}
                         style={smallInputStyle}
                         min="0"
@@ -237,14 +239,14 @@ const DataSubsection = ({
                       styles={LINE_STYLES}
                       isOpen={showLineStyleDropdown}
                       setIsOpen={setShowLineStyleDropdown}
-                      onSelect={(value) => updateTraceProperty(selectedTraceIndex, 'lineStyle', value)}
+                      onSelect={(value) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'lineStyle', value)}
                       renderPreview={(style) => <LineStylePreview style={style} />}
                     />
                     
                     <ColorPickerIcon
                       icon={FillIcon}
                       color={getLineColor()}
-                      onChange={(e) => updateTraceProperty(selectedTraceIndex, 'color', e.target.value)}
+                      onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'color', e.target.value)}
                       title="Line color"
                     />
                   </div>
@@ -259,7 +261,7 @@ const DataSubsection = ({
                       <input
                         type="number"
                         value={getSymbolSize()}
-                        onChange={(e) => updateTraceProperty(selectedTraceIndex, 'symbolSize', Number(e.target.value))}
+                        onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbolSize', Number(e.target.value))}
                         onBlur={onBlur}
                         style={smallInputStyle}
                         min="0"
@@ -275,21 +277,21 @@ const DataSubsection = ({
                       styles={SYMBOLS}
                       isOpen={showSymbolDropdown}
                       setIsOpen={setShowSymbolDropdown}
-                      onSelect={(value) => updateTraceProperty(selectedTraceIndex, 'symbol', value)}
+                      onSelect={(value) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbol', value)}
                       renderPreview={(symbol) => <SymbolPreview symbol={symbol} />}
                     />
                     
                     <ColorPickerIcon
                       icon={FillIcon}
                       color={getSymbolColor()}
-                      onChange={(e) => updateTraceProperty(selectedTraceIndex, 'symbolColor', e.target.value)}
+                      onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbolColor', e.target.value)}
                       title="Symbol fill color"
                     />
                     
                     <ColorPickerIcon
                       icon={BorderIcon}
                       color={getSymbolBorderColor()}
-                      onChange={(e) => updateTraceProperty(selectedTraceIndex, 'symbolBorderColor', e.target.value)}
+                      onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbolBorderColor', e.target.value)}
                       title="Symbol border color"
                     />
                   </div>
@@ -308,7 +310,7 @@ const DataSubsection = ({
                       <input
                         type="number"
                         value={getSymbolSize()}
-                        onChange={(e) => updateTraceProperty(selectedTraceIndex, 'symbolSize', Number(e.target.value))}
+                        onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbolSize', Number(e.target.value))}
                         onBlur={onBlur}
                         style={smallInputStyle}
                         min="0"
@@ -324,21 +326,21 @@ const DataSubsection = ({
                       styles={SYMBOLS}
                       isOpen={showSymbolDropdown}
                       setIsOpen={setShowSymbolDropdown}
-                      onSelect={(value) => updateTraceProperty(selectedTraceIndex, 'symbol', value)}
+                      onSelect={(value) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbol', value)}
                       renderPreview={(symbol) => <SymbolPreview symbol={symbol} />}
                     />
                     
                     <ColorPickerIcon
                       icon={FillIcon}
                       color={getSymbolColor()}
-                      onChange={(e) => updateTraceProperty(selectedTraceIndex, 'symbolColor', e.target.value)}
+                      onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbolColor', e.target.value)}
                       title="Symbol fill color"
                     />
                     
                     <ColorPickerIcon
                       icon={BorderIcon}
                       color={getSymbolBorderColor()}
-                      onChange={(e) => updateTraceProperty(selectedTraceIndex, 'symbolBorderColor', e.target.value)}
+                      onChange={(e) => updateTraceProperty && updateTraceProperty(safeSelectedIndex, 'symbolBorderColor', e.target.value)}
                       title="Symbol border color"
                     />
                   </div>
