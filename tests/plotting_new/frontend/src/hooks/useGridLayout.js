@@ -5,8 +5,21 @@ import { calculateGridDimensions } from '../utils/plotUtils';
  * Custom hook for managing grid layout calculations
  */
 export const useGridLayout = (figureCount) => {
-  const [gridColumns, setGridColumns] = useState(2);
+  // Calculate default columns based on figure count
+  const getDefaultColumns = (count) => {
+    if (count <= 1) return 1;
+    if (count <= 4) return 2;
+    if (count <= 6) return 3;
+    return 4;
+  };
+  
+  const [gridColumns, setGridColumns] = useState(() => getDefaultColumns(figureCount));
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  
+  // Update columns when figure count changes
+  useEffect(() => {
+    setGridColumns(getDefaultColumns(figureCount));
+  }, [figureCount]);
   
   // Handle window resize
   useEffect(() => {

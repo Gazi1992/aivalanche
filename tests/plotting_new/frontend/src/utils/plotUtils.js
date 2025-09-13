@@ -101,13 +101,10 @@ export const calculateGridDimensions = (figureCount, gridColumns, windowHeight) 
     if (nRows === 1) {
       // Single row uses full available height
       plotHeight = availableHeight;
-    } else if (nRows === 2) {
-      // Two rows: split available height accounting for gap
+    } else {
+      // Two or more rows: split available height for 2 rows as baseline
       const gridGap = 20;
       plotHeight = (availableHeight - gridGap) / 2;
-    } else {
-      // More than 2 rows: fixed height with scrolling
-      plotHeight = 350;
     }
   }
   

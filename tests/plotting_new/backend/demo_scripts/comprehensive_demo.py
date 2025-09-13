@@ -187,7 +187,6 @@ fig_splom.update_layout(
     template='plotly_white',
     dragmode='select',
     hovermode='closest',
-    height=600,
     showlegend=False,
     margin=dict(l=100, r=20, t=60, b=80)  # Increased margins for axis labels
 )
@@ -201,5 +200,146 @@ register_plot(fig_splom, plot_id='scatter_matrix',
                        'description': 'Multi-dimensional feature correlation analysis',
                        'isSplom': True})
 
+# 5. BUBBLE PLOT - Three dimensions of data
+print("[STATUS:info] Creating bubble plot...")
+
+# Generate data for bubble plot
+np.random.seed(42)
+n_bubbles = 50
+
+# Create data with correlations
+gdp_per_capita = np.random.exponential(30000, n_bubbles) + 10000
+life_expectancy = 60 + np.sqrt(gdp_per_capita / 1000) + np.random.normal(0, 3, n_bubbles)
+population = np.random.exponential(20, n_bubbles) * 1e6
+countries = [f"Country_{i}" for i in range(n_bubbles)]
+
+# Create bubble plot
+fig_bubble = go.Figure()
+
+# Add bubble trace
+fig_bubble.add_trace(go.Scatter(
+    x=gdp_per_capita,
+    y=life_expectancy,
+    mode='markers',
+    marker=dict(
+        size=np.sqrt(population / 1e6) * 3,  # Scale population for bubble size
+        color=np.log10(population),  # Color by population (log scale)
+        colorscale='Viridis',
+        showscale=True,
+        colorbar=dict(
+            title='Population<br>(log10)',
+            thickness=20
+        ),
+        line=dict(width=0.5, color='white'),
+        sizemode='diameter',
+        opacity=0.7
+    ),
+    text=[f"{countries[i]}<br>GDP: ${gdp_per_capita[i]:,.0f}<br>Life Exp: {life_expectancy[i]:.1f}<br>Pop: {population[i]/1e6:.1f}M" 
+          for i in range(n_bubbles)],
+    hovertemplate='%{text}<extra></extra>'
+))
+
+fig_bubble.update_layout(
+    title='Economic Indicators by Country (Bubble Plot)',
+    xaxis=dict(
+        title='GDP per Capita (USD)',
+        type='log',
+        gridcolor='lightgray'
+    ),
+    yaxis=dict(
+        title='Life Expectancy (years)',
+        gridcolor='lightgray'
+    ),
+    template='plotly_white',
+    hovermode='closest',
+    showlegend=False
+)
+
+register_plot(fig_bubble, plot_id='bubble_plot',
+              metadata={'title': 'Bubble Plot',
+                       'description': 'Multi-dimensional data visualization with bubble sizes'})
+
+# 6. HISTOGRAM - Distribution visualization
+print("[STATUS:info] Creating histogram...")
+
+# Generate data for histogram
+np.random.seed(42)
+n_samples = 1000
+
+# Create mixed distribution (bimodal)
+dist1 = np.random.normal(100, 15, n_samples // 2)
+dist2 = np.random.normal(130, 20, n_samples // 2)
+combined_data = np.concatenate([dist1, dist2])
+
+# Create histogram
+fig_histogram = go.Figure()
+
+# Add histogram trace
+fig_histogram.add_trace(go.Histogram(
+    x=combined_data,
+    nbinsx=30,
+    name='Measurement Distribution',
+    marker=dict(
+        color='rgba(100, 150, 250, 0.7)',
+        line=dict(
+            color='rgba(50, 100, 200, 1)',
+            width=1
+        )
+    ),
+    opacity=0.75,
+    hovertemplate='Range: %{x}<br>Count: %{y}<extra></extra>'
+))
+
+# Add a normal distribution overlay
+from scipy import stats
+x_range = np.linspace(combined_data.min(), combined_data.max(), 100)
+kde = stats.gaussian_kde(combined_data)
+y_kde = kde(x_range) * len(combined_data) * (combined_data.max() - combined_data.min()) / 30
+
+fig_histogram.add_trace(go.Scatter(
+    x=x_range,
+    y=y_kde,
+    mode='lines',
+    name='KDE',
+    line=dict(color='red', width=2),
+    hovertemplate='Value: %{x:.1f}<br>Density: %{y:.1f}<extra></extra>'
+))
+
+# Add mean line
+mean_val = np.mean(combined_data)
+fig_histogram.add_vline(
+    x=mean_val,
+    line_dash="dash",
+    line_color="green",
+    annotation_text=f"Mean: {mean_val:.1f}"
+)
+
+fig_histogram.update_layout(
+    title='Bimodal Distribution Analysis',
+    xaxis=dict(
+        title='Measurement Value',
+        showgrid=True,
+        gridcolor='lightgray'
+    ),
+    yaxis=dict(
+        title='Frequency',
+        showgrid=True,
+        gridcolor='lightgray'
+    ),
+    template='plotly_white',
+    showlegend=True,
+    legend=dict(
+        yanchor="top",
+        y=0.99,
+        xanchor="right",
+        x=0.99
+    ),
+    bargap=0.05
+)
+
+register_plot(fig_histogram, plot_id='histogram',
+              metadata={'title': 'Histogram with KDE',
+                       'description': 'Distribution analysis with kernel density estimation'})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 4")
+print(f"[STATUS:info] Total plots created: 6")
