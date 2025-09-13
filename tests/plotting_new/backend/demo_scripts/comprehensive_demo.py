@@ -1,6 +1,6 @@
 """
 Comprehensive Demo Script - Showcasing Various Plot Types
-This script demonstrates scatter, bar, histogram, PCP, and scatter matrix plots
+This script demonstrates scatter, bar, heatmap, and scatter matrix plots
 """
 
 import numpy as np
@@ -138,5 +138,63 @@ register_plot(fig_heatmap, plot_id='heatmap_categorical',
                            }
                        }})
 
+# 4. SCATTER MATRIX - Multiple dimensions
+print("[STATUS:info] Creating scatter matrix plot...")
+
+# Generate multivariate data
+np.random.seed(42)
+n_samples = 200
+
+# Create correlated features for interesting patterns
+feature_1 = np.random.randn(n_samples)
+feature_2 = 0.7 * feature_1 + 0.3 * np.random.randn(n_samples)
+feature_3 = -0.5 * feature_1 + 0.5 * np.random.randn(n_samples)
+feature_4 = np.random.randn(n_samples)
+
+# Create categories for coloring
+categories = np.random.choice(['Type A', 'Type B', 'Type C'], n_samples)
+
+# Create DataFrame
+df_scatter_matrix = pd.DataFrame({
+    'Feature 1': feature_1,
+    'Feature 2': feature_2,
+    'Feature 3': feature_3,
+    'Feature 4': feature_4,
+    'Category': categories
+})
+
+# Create scatter matrix
+fig_splom = go.Figure(data=go.Splom(
+    dimensions=[
+        dict(label='Feature 1', values=df_scatter_matrix['Feature 1']),
+        dict(label='Feature 2', values=df_scatter_matrix['Feature 2']),
+        dict(label='Feature 3', values=df_scatter_matrix['Feature 3']),
+        dict(label='Feature 4', values=df_scatter_matrix['Feature 4'])
+    ],
+    text=df_scatter_matrix['Category'],
+    marker=dict(
+        color=pd.Categorical(df_scatter_matrix['Category']).codes,
+        colorscale='Viridis',
+        size=5,
+        line=dict(width=0.5, color='white')
+    ),
+    showupperhalf=False,  # Only show lower triangle
+    diagonal=dict(visible=False)  # Hide diagonal
+))
+
+fig_splom.update_layout(
+    title='Feature Correlation Matrix',
+    template='plotly_white',
+    dragmode='select',
+    hovermode='closest',
+    height=600,
+    showlegend=False
+)
+
+register_plot(fig_splom, plot_id='scatter_matrix',
+              metadata={'title': 'Scatter Matrix',
+                       'description': 'Multi-dimensional feature correlation analysis',
+                       'isSplom': True})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 3")
+print(f"[STATUS:info] Total plots created: 4")

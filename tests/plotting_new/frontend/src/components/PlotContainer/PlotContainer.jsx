@@ -81,6 +81,14 @@ const PlotContainer = ({
 
     const plotDiv = plotDivRef.current;
     
+    // Check if this is a special plot type
+    const plotData = plotDiv._fullData;
+    let isSplom = false;
+    if (plotData && plotData.length > 0) {
+      const firstTrace = plotData[0];
+      isSplom = firstTrace.type === 'splom';
+    }
+    
     // Prevent context menu
     const handleContextMenu = (e) => e.preventDefault();
     plotDiv.addEventListener('contextmenu', handleContextMenu);
@@ -93,40 +101,86 @@ const PlotContainer = ({
       
       const rect = plotDiv.getBoundingClientRect();
       const layout = plotDiv._fullLayout;
-      if (!layout || !layout.xaxis || !layout.yaxis) return;
+      if (!layout) return;
 
-      const xAxis = layout.xaxis;
-      const yAxis = layout.yaxis;
-      
-      if (!xAxis.range || !yAxis.range) return;
-
-      const relX = (event.clientX - rect.left) / rect.width;
-      const relY = 1 - (event.clientY - rect.top) / rect.height;
-      
-      const xCenter = xAxis.range[0] + relX * (xAxis.range[1] - xAxis.range[0]);
-      const yCenter = yAxis.range[0] + relY * (yAxis.range[1] - yAxis.range[0]);
-      
       // Reduced zoom sensitivity for smoother scrolling
       const delta = event.deltaY > 0 ? -0.05 : 0.05;
       const factor = 1 + delta;
       
-      const newXRange = [
-        xCenter - (xCenter - xAxis.range[0]) * factor,
-        xCenter + (xAxis.range[1] - xCenter) * factor
-      ];
-      const newYRange = [
-        yCenter - (yCenter - yAxis.range[0]) * factor,
-        yCenter + (yAxis.range[1] - yCenter) * factor
-      ];
-      
-      // Update only this plot's ranges
-      Plotly.relayout(plotDiv, {
-        'xaxis.range': newXRange,
-        'yaxis.range': newYRange
-      });
+      // For SPLOM, we need to handle multiple axes
+      if (isSplom) {
+        const relX = (event.clientX - rect.left) / rect.width;
+        const relY = 1 - (event.clientY - rect.top) / rect.height;
+        
+        // Find which subplot we're hovering over
+        const update = {};
+        
+        // SPLOM uses xaxis, xaxis2, xaxis3, etc.
+        Object.keys(layout).forEach(key => {
+          if (key.startsWith('xaxis')) {
+            const axis = layout[key];
+            if (axis && axis.domain && axis.range) {
+              // Check if mouse is within this axis domain
+              if (relX >= axis.domain[0] && relX <= axis.domain[1]) {
+                const xCenter = axis.range[0] + 0.5 * (axis.range[1] - axis.range[0]);
+                update[`${key}.range`] = [
+                  xCenter - (xCenter - axis.range[0]) * factor,
+                  xCenter + (axis.range[1] - xCenter) * factor
+                ];
+              }
+            }
+          }
+          if (key.startsWith('yaxis')) {
+            const axis = layout[key];
+            if (axis && axis.domain && axis.range) {
+              // Check if mouse is within this axis domain
+              if (relY >= axis.domain[0] && relY <= axis.domain[1]) {
+                const yCenter = axis.range[0] + 0.5 * (axis.range[1] - axis.range[0]);
+                update[`${key}.range`] = [
+                  yCenter - (yCenter - axis.range[0]) * factor,
+                  yCenter + (axis.range[1] - yCenter) * factor
+                ];
+              }
+            }
+          }
+        });
+        
+        if (Object.keys(update).length > 0) {
+          Plotly.relayout(plotDiv, update);
+        }
+      } else {
+        // Regular plot handling
+        if (!layout.xaxis || !layout.yaxis) return;
+        
+        const xAxis = layout.xaxis;
+        const yAxis = layout.yaxis;
+        
+        if (!xAxis.range || !yAxis.range) return;
 
-      if (onInteraction) {
-        onInteraction({ type: 'zoom', plotId, xRange: newXRange, yRange: newYRange });
+        const relX = (event.clientX - rect.left) / rect.width;
+        const relY = 1 - (event.clientY - rect.top) / rect.height;
+        
+        const xCenter = xAxis.range[0] + relX * (xAxis.range[1] - xAxis.range[0]);
+        const yCenter = yAxis.range[0] + relY * (yAxis.range[1] - yAxis.range[0]);
+        
+        const newXRange = [
+          xCenter - (xCenter - xAxis.range[0]) * factor,
+          xCenter + (xAxis.range[1] - xCenter) * factor
+        ];
+        const newYRange = [
+          yCenter - (yCenter - yAxis.range[0]) * factor,
+          yCenter + (yAxis.range[1] - yCenter) * factor
+        ];
+        
+        // Update only this plot's ranges
+        Plotly.relayout(plotDiv, {
+          'xaxis.range': newXRange,
+          'yaxis.range': newYRange
+        });
+
+        if (onInteraction) {
+          onInteraction({ type: 'zoom', plotId, xRange: newXRange, yRange: newYRange });
+        }
       }
     };
     
@@ -135,7 +189,7 @@ const PlotContainer = ({
 
     // Right-click drag for scaling
     let scaleStartX = 0, scaleStartY = 0;
-    let scaleInitXRange = null, scaleInitYRange = null;
+    let scaleInitRanges = {};
     
     const handleScaleMove = (moveEvt) => {
       if (moveEvt.buttons !== 2) return;
@@ -151,19 +205,33 @@ const PlotContainer = ({
       const fx = clamp(factorX, 0.1, 10);
       const fy = clamp(factorY, 0.1, 10);
 
-      if (scaleInitXRange && scaleInitYRange) {
-        const xCenter = (scaleInitXRange[0] + scaleInitXRange[1]) / 2;
-        const xHalf = (scaleInitXRange[1] - scaleInitXRange[0]) / 2 * fx;
-        const yCenter = (scaleInitYRange[0] + scaleInitYRange[1]) / 2;
-        const yHalf = (scaleInitYRange[1] - scaleInitYRange[0]) / 2 * fy;
-        
-        const newXRange = [xCenter - xHalf, xCenter + xHalf];
-        const newYRange = [yCenter - yHalf, yCenter + yHalf];
-        
-        Plotly.relayout(plotDiv, {
-          'xaxis.range': newXRange,
-          'yaxis.range': newYRange
+      const update = {};
+      
+      if (isSplom) {
+        // For SPLOM, scale all visible axes
+        Object.keys(scaleInitRanges).forEach(axisName => {
+          const initRange = scaleInitRanges[axisName];
+          const center = (initRange[0] + initRange[1]) / 2;
+          const isX = axisName.startsWith('xaxis');
+          const factor = isX ? fx : fy;
+          const half = (initRange[1] - initRange[0]) / 2 * factor;
+          update[`${axisName}.range`] = [center - half, center + half];
         });
+      } else {
+        // Regular plot
+        if (scaleInitRanges.xaxis && scaleInitRanges.yaxis) {
+          const xCenter = (scaleInitRanges.xaxis[0] + scaleInitRanges.xaxis[1]) / 2;
+          const xHalf = (scaleInitRanges.xaxis[1] - scaleInitRanges.xaxis[0]) / 2 * fx;
+          const yCenter = (scaleInitRanges.yaxis[0] + scaleInitRanges.yaxis[1]) / 2;
+          const yHalf = (scaleInitRanges.yaxis[1] - scaleInitRanges.yaxis[0]) / 2 * fy;
+          
+          update['xaxis.range'] = [xCenter - xHalf, xCenter + xHalf];
+          update['yaxis.range'] = [yCenter - yHalf, yCenter + yHalf];
+        }
+      }
+      
+      if (Object.keys(update).length > 0) {
+        Plotly.relayout(plotDiv, update);
       }
     };
 
@@ -177,15 +245,31 @@ const PlotContainer = ({
       downEvt.preventDefault();
       
       const layout = plotDiv._fullLayout;
-      if (!layout || !layout.xaxis || !layout.yaxis) return;
+      if (!layout) return;
       
       scaleStartX = downEvt.clientX;
       scaleStartY = downEvt.clientY;
-      scaleInitXRange = [...layout.xaxis.range];
-      scaleInitYRange = [...layout.yaxis.range];
+      scaleInitRanges = {};
       
-      window.addEventListener('pointermove', handleScaleMove);
-      window.addEventListener('pointerup', handleScaleUp);
+      if (isSplom) {
+        // Store all axis ranges for SPLOM
+        Object.keys(layout).forEach(key => {
+          if ((key.startsWith('xaxis') || key.startsWith('yaxis')) && layout[key].range) {
+            scaleInitRanges[key] = [...layout[key].range];
+          }
+        });
+      } else {
+        // Regular plot
+        if (layout.xaxis && layout.yaxis && layout.xaxis.range && layout.yaxis.range) {
+          scaleInitRanges.xaxis = [...layout.xaxis.range];
+          scaleInitRanges.yaxis = [...layout.yaxis.range];
+        }
+      }
+      
+      if (Object.keys(scaleInitRanges).length > 0) {
+        window.addEventListener('pointermove', handleScaleMove);
+        window.addEventListener('pointerup', handleScaleUp);
+      }
     };
 
     plotDiv.addEventListener('pointerdown', handleScaleDown);
@@ -193,7 +277,7 @@ const PlotContainer = ({
 
     // Middle-click drag for panning
     let panStartX = 0, panStartY = 0;
-    let panInitXRange = null, panInitYRange = null;
+    let panInitRanges = {};
 
     const handlePanMove = (mvEvt) => {
       if ((mvEvt.buttons & 4) === 0) return;
@@ -202,19 +286,39 @@ const PlotContainer = ({
       const dx = mvEvt.clientX - panStartX;
       const dy = mvEvt.clientY - panStartY;
       
-      if (panInitXRange && panInitYRange) {
-        const xScale = (panInitXRange[1] - panInitXRange[0]) / rect.width;
-        const yScale = (panInitYRange[1] - panInitYRange[0]) / rect.height;
-        const xOffset = dx * xScale;
-        const yOffset = -dy * yScale;
-
-        const newXRange = [panInitXRange[0] - xOffset, panInitXRange[1] - xOffset];
-        const newYRange = [panInitYRange[0] - yOffset, panInitYRange[1] - yOffset];
-
-        Plotly.relayout(plotDiv, {
-          'xaxis.range': newXRange,
-          'yaxis.range': newYRange
+      const update = {};
+      
+      if (isSplom) {
+        // For SPLOM, pan all visible axes
+        Object.keys(panInitRanges).forEach(axisName => {
+          const initRange = panInitRanges[axisName];
+          const isX = axisName.startsWith('xaxis');
+          
+          if (isX) {
+            const xScale = (initRange[1] - initRange[0]) / rect.width;
+            const xOffset = dx * xScale;
+            update[`${axisName}.range`] = [initRange[0] - xOffset, initRange[1] - xOffset];
+          } else {
+            const yScale = (initRange[1] - initRange[0]) / rect.height;
+            const yOffset = -dy * yScale;
+            update[`${axisName}.range`] = [initRange[0] - yOffset, initRange[1] - yOffset];
+          }
         });
+      } else {
+        // Regular plot
+        if (panInitRanges.xaxis && panInitRanges.yaxis) {
+          const xScale = (panInitRanges.xaxis[1] - panInitRanges.xaxis[0]) / rect.width;
+          const yScale = (panInitRanges.yaxis[1] - panInitRanges.yaxis[0]) / rect.height;
+          const xOffset = dx * xScale;
+          const yOffset = -dy * yScale;
+
+          update['xaxis.range'] = [panInitRanges.xaxis[0] - xOffset, panInitRanges.xaxis[1] - xOffset];
+          update['yaxis.range'] = [panInitRanges.yaxis[0] - yOffset, panInitRanges.yaxis[1] - yOffset];
+        }
+      }
+      
+      if (Object.keys(update).length > 0) {
+        Plotly.relayout(plotDiv, update);
       }
     };
 
@@ -228,15 +332,31 @@ const PlotContainer = ({
       pdEvt.preventDefault();
       
       const layout = plotDiv._fullLayout;
-      if (!layout || !layout.xaxis || !layout.yaxis) return;
+      if (!layout) return;
       
       panStartX = pdEvt.clientX;
       panStartY = pdEvt.clientY;
-      panInitXRange = [...layout.xaxis.range];
-      panInitYRange = [...layout.yaxis.range];
+      panInitRanges = {};
       
-      window.addEventListener('pointermove', handlePanMove);
-      window.addEventListener('pointerup', handlePanUp);
+      if (isSplom) {
+        // Store all axis ranges for SPLOM
+        Object.keys(layout).forEach(key => {
+          if ((key.startsWith('xaxis') || key.startsWith('yaxis')) && layout[key].range) {
+            panInitRanges[key] = [...layout[key].range];
+          }
+        });
+      } else {
+        // Regular plot
+        if (layout.xaxis && layout.yaxis && layout.xaxis.range && layout.yaxis.range) {
+          panInitRanges.xaxis = [...layout.xaxis.range];
+          panInitRanges.yaxis = [...layout.yaxis.range];
+        }
+      }
+      
+      if (Object.keys(panInitRanges).length > 0) {
+        window.addEventListener('pointermove', handlePanMove);
+        window.addEventListener('pointerup', handlePanUp);
+      }
     };
 
     plotDiv.addEventListener('pointerdown', handlePanDown);
