@@ -341,5 +341,103 @@ register_plot(fig_histogram, plot_id='histogram',
               metadata={'title': 'Histogram with KDE',
                        'description': 'Distribution analysis with kernel density estimation'})
 
+# 7. PARALLEL COORDINATES PLOT - Multi-dimensional comparison
+print("[STATUS:info] Creating parallel coordinates plot...")
+
+# Generate data for parallel coordinates
+np.random.seed(42)
+n_items = 30
+
+# Create data for different product categories
+categories = ['Electronics', 'Clothing', 'Food', 'Books', 'Sports']
+category_labels = np.random.choice(categories, n_items)
+
+# Create correlated features
+price = np.random.uniform(10, 500, n_items)
+quality = 70 + (price / 500) * 20 + np.random.normal(0, 5, n_items)
+satisfaction = quality * 0.8 + np.random.normal(0, 5, n_items)
+sales_volume = 100 - price/5 + quality/2 + np.random.normal(0, 10, n_items)
+return_rate = 100 - quality + np.random.normal(0, 3, n_items)
+
+# Normalize features to 0-1 range for better visualization
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+features = np.column_stack([price, quality, satisfaction, sales_volume, return_rate])
+features_normalized = scaler.fit_transform(features)
+
+# Create color mapping for categories
+color_map = {cat: i for i, cat in enumerate(categories)}
+colors = [color_map[cat] for cat in category_labels]
+
+# Create parallel coordinates plot
+fig_pcp = go.Figure(data=
+    go.Parcoords(
+        line=dict(
+            color=colors,
+            colorscale='Viridis',
+            showscale=True,
+            cmin=0,
+            cmax=len(categories)-1,
+            colorbar=dict(
+                title='Category',
+                tickmode='array',
+                tickvals=list(range(len(categories))),
+                ticktext=categories,
+                thickness=20
+            )
+        ),
+        labelside='bottom',  # Move labels to bottom
+        labelangle=0,  # Keep labels horizontal
+        dimensions=[
+            dict(
+                range=[0, 1],
+                label='Price',
+                values=features_normalized[:, 0],
+                tickvals=[0, 0.25, 0.5, 0.75, 1],
+                ticktext=['Low', '', 'Med', '', 'High']
+            ),
+            dict(
+                range=[0, 1],
+                label='Quality',
+                values=features_normalized[:, 1],
+                tickvals=[0, 0.5, 1],
+                ticktext=['Poor', 'Average', 'Excellent']
+            ),
+            dict(
+                range=[0, 1],
+                label='Satisfaction',
+                values=features_normalized[:, 2],
+                tickvals=[0, 0.5, 1],
+                ticktext=['Low', 'Medium', 'High']
+            ),
+            dict(
+                range=[0, 1],
+                label='Sales Volume',
+                values=features_normalized[:, 3],
+                tickvals=[0, 0.5, 1],
+                ticktext=['Low', 'Medium', 'High']
+            ),
+            dict(
+                range=[0, 1],
+                label='Return Rate',
+                values=features_normalized[:, 4],
+                tickvals=[0, 0.5, 1],
+                ticktext=['Low', 'Medium', 'High']
+            )
+        ]
+    )
+)
+
+fig_pcp.update_layout(
+    title='Product Analysis - Parallel Coordinates',
+    template='plotly_white',
+    height=None,  # Use default height from container
+    margin=dict(l=80, r=80, t=60, b=60)  # Adjusted margins for bottom labels
+)
+
+register_plot(fig_pcp, plot_id='parallel_coordinates',
+              metadata={'title': 'Parallel Coordinates Plot',
+                       'description': 'Multi-dimensional product comparison across categories'})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 6")
+print(f"[STATUS:info] Total plots created: 7")
