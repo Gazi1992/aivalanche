@@ -13,7 +13,7 @@ import { createMetadataStructure, initializeFromFigure, updateMetadataValues } f
  * @param {Object} pythonMetadata - Optional metadata from Python
  * @returns {Object} Managed figure with embedded metadata
  */
-export const createManagedFigure = (plotlyFigure, pythonMetadata = null) => {
+export const createManagedFigure = (plotlyFigure, pythonMetadata = null, figureId = null) => {
   // Initialize metadata from the Plotly figure
   let metadata = initializeFromFigure(plotlyFigure);
   
@@ -37,8 +37,9 @@ export const createManagedFigure = (plotlyFigure, pythonMetadata = null) => {
   }
   
   // Return managed figure with embedded metadata
+  // Use provided figureId first, then plotlyFigure.id, then generate one
   return {
-    id: plotlyFigure.id || `plot-${Date.now()}`,
+    id: figureId || plotlyFigure.id || `plot-${Date.now()}`,
     data: plotlyFigure.data || [],
     layout: plotlyFigure.layout || {},
     metadata: metadata,
@@ -100,18 +101,26 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
     };
   }
   
-  // Apply X axis range
-  if (!m.axes.x.range.autorange && (m.axes.x.range.min !== null || m.axes.x.range.max !== null)) {
-    layout.xaxis.autorange = false;
-    layout.xaxis.range = [m.axes.x.range.min, m.axes.x.range.max];
-  } else if (m.axes.x.range.reversed) {
-    layout.xaxis.autorange = 'reversed';
-  } else {
-    layout.xaxis.autorange = true;
+  // Check if axes are categorical (vs numeric)
+  const isCategoricalX = figure.metadata?.xAxisType === 'category' || 
+                         figure.metadata?.xAxisCategorical === true;
+  const isCategoricalY = figure.metadata?.yAxisType === 'category' || 
+                         figure.metadata?.yAxisCategorical === true;
+  
+  // Apply X axis range (but not for categorical axes)
+  if (!isCategoricalX) {
+    if (!m.axes.x.range.autorange && (m.axes.x.range.min !== null || m.axes.x.range.max !== null)) {
+      layout.xaxis.autorange = false;
+      layout.xaxis.range = [m.axes.x.range.min, m.axes.x.range.max];
+    } else if (m.axes.x.range.reversed) {
+      layout.xaxis.autorange = 'reversed';
+    } else {
+      layout.xaxis.autorange = true;
+    }
   }
   
-  // Apply X axis scale
-  layout.xaxis.type = m.axes.x.scale;
+  // Apply X axis scale (preserve categorical type)
+  layout.xaxis.type = isCategoricalX ? 'category' : m.axes.x.scale;
   
   // Apply X grid
   layout.xaxis.showgrid = m.axes.x.grid.visible;
@@ -151,18 +160,20 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
     };
   }
   
-  // Apply Y axis range
-  if (!m.axes.y.range.autorange && (m.axes.y.range.min !== null || m.axes.y.range.max !== null)) {
-    layout.yaxis.autorange = false;
-    layout.yaxis.range = [m.axes.y.range.min, m.axes.y.range.max];
-  } else if (m.axes.y.range.reversed) {
-    layout.yaxis.autorange = 'reversed';
-  } else {
-    layout.yaxis.autorange = true;
+  // Apply Y axis range (but not for categorical axes)
+  if (!isCategoricalY) {
+    if (!m.axes.y.range.autorange && (m.axes.y.range.min !== null || m.axes.y.range.max !== null)) {
+      layout.yaxis.autorange = false;
+      layout.yaxis.range = [m.axes.y.range.min, m.axes.y.range.max];
+    } else if (m.axes.y.range.reversed) {
+      layout.yaxis.autorange = 'reversed';
+    } else {
+      layout.yaxis.autorange = true;
+    }
   }
   
-  // Apply Y axis scale
-  layout.yaxis.type = m.axes.y.scale;
+  // Apply Y axis scale (preserve categorical type)
+  layout.yaxis.type = isCategoricalY ? 'category' : m.axes.y.scale;
   
   // Apply Y grid
   layout.yaxis.showgrid = m.axes.y.grid.visible;
@@ -293,14 +304,22 @@ export const syncFigureWithDOM = (figure, plotId) => {
   const fullLayout = plotDiv._fullLayout;
   let updates = {};
   
-  // Capture current axis ranges
-  if (fullLayout.xaxis && fullLayout.xaxis.range) {
+  // Check if axes are categorical
+  const isCategoricalX = figure.metadata?.xAxisType === 'category' || 
+                         figure.metadata?.xAxisCategorical === true ||
+                         fullLayout.xaxis?.type === 'category';
+  const isCategoricalY = figure.metadata?.yAxisType === 'category' || 
+                         figure.metadata?.yAxisCategorical === true ||
+                         fullLayout.yaxis?.type === 'category';
+  
+  // Capture current axis ranges (but not for categorical axes)
+  if (!isCategoricalX && fullLayout.xaxis && fullLayout.xaxis.range) {
     updates['appearance.axes.x.range.min'] = fullLayout.xaxis.range[0];
     updates['appearance.axes.x.range.max'] = fullLayout.xaxis.range[1];
     updates['appearance.axes.x.range.autorange'] = false;
   }
   
-  if (fullLayout.yaxis && fullLayout.yaxis.range) {
+  if (!isCategoricalY && fullLayout.yaxis && fullLayout.yaxis.range) {
     updates['appearance.axes.y.range.min'] = fullLayout.yaxis.range[0];
     updates['appearance.axes.y.range.max'] = fullLayout.yaxis.range[1];
     updates['appearance.axes.y.range.autorange'] = false;

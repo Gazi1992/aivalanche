@@ -13,6 +13,10 @@ const ColumnSelector = ({ columns, onColumnChange, figureCount }) => {
     }
   };
 
+  // Determine max columns based on figure count
+  const maxColumns = Math.min(4, figureCount);
+  const columnOptions = Array.from({length: maxColumns}, (_, i) => i + 1);
+  
   return (
     <div className="column-selector-container">
       <div className="column-selector-header">
@@ -20,7 +24,7 @@ const ColumnSelector = ({ columns, onColumnChange, figureCount }) => {
         <div className="column-selector">
           <span className="column-selector-label">Columns:</span>
           <div className="column-buttons">
-            {[1, 2, 3, 4].map(num => (
+            {columnOptions.map(num => (
               <button
                 key={num}
                 className={`column-btn ${columns === num ? 'active' : ''}`}

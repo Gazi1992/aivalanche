@@ -49,45 +49,78 @@ class PlotRegistry:
             metadata = {}
             
         # Auto-detect axis types and plot characteristics
-        x_axis_type = layout.get('xaxis', {}).get('type', 'linear')
-        y_axis_type = layout.get('yaxis', {}).get('type', 'linear')
+        # Note: axis type is 'numeric' or 'category' (not 'linear' which is a scale)
+        x_axis_type = 'numeric'  # Default to numeric
+        y_axis_type = 'numeric'  # Default to numeric
+        
+        # Log what the layout contains for debugging
+        logger.info(f"Plot {plot_id}: Layout xaxis type = {layout.get('xaxis', {}).get('type', 'not set')}")
+        logger.info(f"Plot {plot_id}: Layout yaxis type = {layout.get('yaxis', {}).get('type', 'not set')}")
+        
+        # Check if layout already specifies categorical axes
+        if layout.get('xaxis', {}).get('type') == 'category':
+            x_axis_type = 'category'
+        if layout.get('yaxis', {}).get('type') == 'category':
+            y_axis_type = 'category'
         
         # Check if axes are categorical by examining data
         if fig_dict.get('data') and len(fig_dict['data']) > 0:
             first_trace = fig_dict['data'][0]
             plot_type = first_trace.get('type', 'scatter')
+            logger.info(f"Plot {plot_id}: Detecting axis types for {plot_type} plot")
             
             # Check X axis for categorical data
             if 'x' in first_trace and first_trace['x']:
                 x_data = first_trace['x']
+                logger.info(f"Plot {plot_id}: X data type = {type(x_data)}, is dict = {isinstance(x_data, dict)}, is list = {isinstance(x_data, list)}")
                 
                 # Handle binary encoded numpy arrays (they appear as dicts with 'dtype' and 'bdata')
                 if isinstance(x_data, dict) and 'dtype' in x_data:
                     # This is a binary-encoded numpy array - check the dtype
-                    if x_data['dtype'].startswith('f') or x_data['dtype'].startswith('i'):
+                    dtype = x_data['dtype']
+                    logger.info(f"Plot {plot_id}: X axis dtype = {dtype}")
+                    if dtype.startswith('f') or dtype.startswith('i'):
                         # Float or integer type - it's numeric
-                        x_axis_type = 'linear'
+                        x_axis_type = 'numeric'
+                        logger.info(f"Plot {plot_id}: X axis detected as numeric from dtype")
                     else:
                         # Other types might be categorical
                         x_axis_type = 'category'
+                        logger.info(f"Plot {plot_id}: X axis detected as category from dtype")
                 elif isinstance(x_data, list):
                     # Check if data is categorical
+                    logger.info(f"Plot {plot_id}: X data is a list with {len(x_data)} items")
+                    if len(x_data) > 0:
+                        # Check first few items to understand data type
+                        sample_items = x_data[:5]
+                        logger.info(f"Plot {plot_id}: X data sample: {sample_items}")
+                    
                     if all(isinstance(x, str) for x in x_data):
                         # All values are strings - check if they're numeric strings or categories
+                        logger.info(f"Plot {plot_id}: X data contains all strings")
                         try:
                             # Try to convert to float - if it succeeds, they're numeric strings
                             [float(x) for x in x_data]
                             # Successfully converted - it's numeric data as strings
-                            x_axis_type = 'linear'
+                            x_axis_type = 'numeric'
+                            logger.info(f"Plot {plot_id}: X strings are numeric values")
                         except (ValueError, TypeError):
                             # Can't convert to numbers - it's categorical
                             x_axis_type = 'category'
+                            logger.info(f"Plot {plot_id}: X strings are categorical")
                     else:
                         # Mixed types or all numbers - it's numeric
-                        x_axis_type = 'linear'
+                        x_axis_type = 'numeric'
+                        logger.info(f"Plot {plot_id}: X data is numeric (not all strings)")
                 else:
-                    # Default to linear for unknown formats
-                    x_axis_type = 'linear'
+                    # Default to numeric for unknown formats
+                    x_axis_type = 'numeric'
+                    logger.info(f"Plot {plot_id}: X data defaulting to numeric (unknown format)")
+            else:
+                logger.info(f"Plot {plot_id}: No X data found in trace, keeping default numeric")
+            
+            # Log final X axis type after detection
+            logger.info(f"Plot {plot_id}: Final X axis type after detection = {x_axis_type}")
             
             # Check Y axis (less common to be categorical)
             if 'y' in first_trace and first_trace['y']:
@@ -98,7 +131,7 @@ class PlotRegistry:
                     # This is a binary-encoded numpy array - check the dtype
                     if y_data['dtype'].startswith('f') or y_data['dtype'].startswith('i'):
                         # Float or integer type - it's numeric
-                        y_axis_type = 'linear'
+                        y_axis_type = 'numeric'
                     else:
                         # Other types might be categorical
                         y_axis_type = 'category'
@@ -110,16 +143,21 @@ class PlotRegistry:
                             # Try to convert to float - if it succeeds, they're numeric strings
                             [float(y) for y in y_data]
                             # Successfully converted - it's numeric data as strings
-                            y_axis_type = 'linear'
+                            y_axis_type = 'numeric'
                         except (ValueError, TypeError):
                             # Can't convert to numbers - it's categorical
                             y_axis_type = 'category'
                     else:
                         # Mixed types or all numbers - it's numeric
-                        y_axis_type = 'linear'
+                        y_axis_type = 'numeric'
                 else:
-                    # Default to linear for unknown formats
-                    y_axis_type = 'linear'
+                    # Default to numeric for unknown formats
+                    y_axis_type = 'numeric'
+            else:
+                logger.info(f"Plot {plot_id}: No Y data found in trace, keeping default numeric")
+            
+            # Log final Y axis type after detection
+            logger.info(f"Plot {plot_id}: Final Y axis type after detection = {y_axis_type}")
             
             # Store plot type
             metadata['plot_type'] = plot_type
@@ -141,11 +179,25 @@ class PlotRegistry:
             elif plot_type == 'heatmap':
                 metadata['isHeatmap'] = True
         
-        # Add axis type information to metadata
-        metadata['xAxisType'] = x_axis_type
-        metadata['yAxisType'] = y_axis_type
-        metadata['xAxisCategorical'] = (x_axis_type == 'category')
-        metadata['yAxisCategorical'] = (y_axis_type == 'category')
+        # Log the axis types right before storing them
+        logger.info(f"Plot {plot_id}: About to store axis types - X={x_axis_type}, Y={y_axis_type}")
+        
+        # Add axis type information to metadata only if not already provided
+        if 'xAxisType' not in metadata:
+            metadata['xAxisType'] = x_axis_type
+            metadata['xAxisCategorical'] = (x_axis_type == 'category')
+        else:
+            # Use the provided axis type
+            logger.info(f"Plot {plot_id}: Metadata already has xAxisType={metadata['xAxisType']}")
+            metadata['xAxisCategorical'] = (metadata['xAxisType'] == 'category')
+            
+        if 'yAxisType' not in metadata:
+            metadata['yAxisType'] = y_axis_type
+            metadata['yAxisCategorical'] = (y_axis_type == 'category')
+        else:
+            # Use the provided axis type  
+            logger.info(f"Plot {plot_id}: Metadata already has yAxisType={metadata['yAxisType']}")
+            metadata['yAxisCategorical'] = (metadata['yAxisType'] == 'category')
         
         # Extract figure data for edit pane
         figure_data = {
@@ -162,7 +214,7 @@ class PlotRegistry:
             figure_data['metadata']['trace_types'] = [trace.type for trace in fig.data]
             
         self.figures[plot_id] = figure_data
-        logger.info(f"Registered plot {plot_id} with axis types: X={x_axis_type}, Y={y_axis_type}")
+        logger.info(f"Registered plot {plot_id} with axis types: X={metadata.get('xAxisType', 'unknown')}, Y={metadata.get('yAxisType', 'unknown')}")
         return plot_id
         
     def get(self, plot_id: str) -> Optional[Dict[str, Any]]:
@@ -340,6 +392,7 @@ class ExecutionSession:
                 
             # Get all registered plots
             result['plots'] = self.plot_registry.get_all()
+            logger.info(f"Returning {len(result['plots'])} plots: {[p['id'] for p in result['plots']]}")
             
             result['success'] = True
             
