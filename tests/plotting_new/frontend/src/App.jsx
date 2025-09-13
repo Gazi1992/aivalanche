@@ -341,7 +341,7 @@ function App() {
   };
   
   // Show welcome screen when no config
-  if (!config || isLoadingConfig) {
+  if (!config) {
     return (
       <div style={appStyle}>
         <Sidebar 

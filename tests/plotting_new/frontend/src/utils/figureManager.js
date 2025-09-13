@@ -129,14 +129,16 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
     layout.xaxis.gridwidth = m.axes.x.grid.width;
   }
   
-  // Apply X minor grid
-  if (m.axes.x.minorGrid && m.axes.x.minorGrid.visible) {
-    layout.xaxis.minor = {
-      showgrid: true,
-      gridcolor: m.axes.x.minorGrid.color || 'rgba(128, 128, 128, 0.1)',
-      gridwidth: 1
-    };
-  }
+  // Apply zero line color (use grid color for consistency)
+  layout.xaxis.zerolinecolor = m.axes.x.grid.color || 'rgba(128, 128, 128, 0.2)';
+  layout.xaxis.zerolinewidth = m.axes.x.grid.width || 1;
+  
+  // Apply X minor grid - always set the minor property to control visibility
+  layout.xaxis.minor = {
+    showgrid: m.axes.x.minorGrid ? m.axes.x.minorGrid.visible : false,
+    gridcolor: m.axes.x.grid.color || 'rgba(128, 128, 128, 0.1)',  // Use main grid color
+    gridwidth: 1
+  };
   
   // Apply Y axis from metadata (similar to X)
   layout.yaxis = layout.yaxis || {};
@@ -182,14 +184,16 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
     layout.yaxis.gridwidth = m.axes.y.grid.width;
   }
   
-  // Apply Y minor grid
-  if (m.axes.y.minorGrid && m.axes.y.minorGrid.visible) {
-    layout.yaxis.minor = {
-      showgrid: true,
-      gridcolor: m.axes.y.minorGrid.color || 'rgba(128, 128, 128, 0.1)',
-      gridwidth: 1
-    };
-  }
+  // Apply zero line color (use grid color for consistency)
+  layout.yaxis.zerolinecolor = m.axes.y.grid.color || 'rgba(128, 128, 128, 0.2)';
+  layout.yaxis.zerolinewidth = m.axes.y.grid.width || 1;
+  
+  // Apply Y minor grid - always set the minor property to control visibility
+  layout.yaxis.minor = {
+    showgrid: m.axes.y.minorGrid ? m.axes.y.minorGrid.visible : false,
+    gridcolor: m.axes.y.grid.color || 'rgba(128, 128, 128, 0.1)',  // Use main grid color
+    gridwidth: 1
+  };
   
   // Apply legend from metadata
   layout.showlegend = m.legend.visible;
