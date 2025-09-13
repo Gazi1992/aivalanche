@@ -38,9 +38,9 @@ const PlotGridContainer = ({
   });
 
   const handleEditClick = (fig) => {
-    // With single plot, syncFigureWithDOM should work correctly
-    const syncedFigure = syncFigureWithDOM(fig, `plot-${fig.id}`);
-    onEditFigure(syncedFigure);
+    // Don't sync with DOM on edit click - use the figure's stored metadata
+    // This avoids cross-contamination issues when multiple plots are present
+    onEditFigure(fig);
   };
 
   const handleDownloadClick = (fig) => {

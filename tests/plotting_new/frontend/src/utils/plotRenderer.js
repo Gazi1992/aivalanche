@@ -89,6 +89,31 @@ export const renderPlot = (figure, plotId, themedLayout) => {
   // Attach unified plot interactions
   attachPlotInteractions(plotDiv);
   
+  // Force a reset of the plot to ensure correct range is set
+  // This prevents cross-contamination between multiple plots
+  setTimeout(() => {
+    if (window.Plotly && plotDiv._fullLayout) {
+      try {
+        // Method 1: Try using Plotly.relayout with autorange
+        console.log(`Attempting to reset plot ${plotId}`);
+        
+        // Build the reset update - this is what the home button does
+        const resetUpdate = {
+          'xaxis.autorange': true,
+          'yaxis.autorange': true
+        };
+        
+        // Apply the reset
+        window.Plotly.relayout(plotDiv, resetUpdate).then(() => {
+          console.log(`Successfully reset plot ${plotId} to autorange`);
+        });
+        
+      } catch (error) {
+        console.error('Error resetting plot:', error);
+      }
+    }
+  }, 300);
+  
   return true;
 };
 

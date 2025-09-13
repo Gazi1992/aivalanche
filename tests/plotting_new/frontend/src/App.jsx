@@ -302,8 +302,14 @@ function App() {
   
   // Update figure after edit
   const handleUpdateFigure = (updatedFigure) => {
+    console.log('Updating figure:', {
+      updatedFigureId: updatedFigure.id,
+      editingFigId: editingFig?.id,
+      allFigureIds: localFigures.map(f => f.id)
+    });
+    
     const updatedFigures = localFigures.map(f => 
-      f.id === editingFig.id ? updatedFigure : f
+      f.id === updatedFigure.id ? updatedFigure : f
     );
     setLocalFigures(updatedFigures);
   };
