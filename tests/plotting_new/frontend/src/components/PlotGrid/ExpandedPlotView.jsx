@@ -1,27 +1,16 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import PlotButton from '../PlotButton';
+import PlotContainer from '../PlotContainer/PlotContainer.jsx';
 import { EditIcon, TableIcon, DownloadIcon, ShrinkIcon } from '../icons';
-import { syncFigureWithDOM } from '../../utils/figureManager';
 import { downloadPlotAsImage } from '../../utils/plotUtils';
-import { renderPlot } from '../../utils/plotRenderer';
 import './ExpandedPlotView.css';
 
 const ExpandedPlotView = ({ activeFig, onClose, onEditFigure, onViewTable, themedLayout }) => {
   if (!activeFig) return null;
 
-  useEffect(() => {
-    if (activeFig) {
-      // Render the plot in expanded view
-      const plotId = `expanded-plot-${activeFig.id}`;
-      setTimeout(() => {
-        renderPlot(activeFig, plotId, themedLayout);
-      }, 50);
-    }
-  }, [activeFig, themedLayout]);
-
   const handleEditClick = () => {
-    const syncedFigure = syncFigureWithDOM(activeFig, `expanded-plot-${activeFig.id}`);
-    onEditFigure(syncedFigure);
+    // PlotContainer maintains its own state, so we can directly pass the figure
+    onEditFigure(activeFig);
   };
 
   const handleDownloadClick = () => {
@@ -60,14 +49,16 @@ const ExpandedPlotView = ({ activeFig, onClose, onEditFigure, onViewTable, theme
               icon={ShrinkIcon}
             />
           </div>
-          <div 
-            id={`expanded-plot-${activeFig.id}`} 
-            className="plot-content"
-            style={{ 
-              width: '100%', 
-              height: 'calc(100% - 40px)' 
-            }} 
-          />
+          <div className="plot-content" style={{ width: '100%', height: 'calc(100% - 40px)' }}>
+            <PlotContainer
+              figure={activeFig}
+              plotId={`expanded-plot-${activeFig.id}`}
+              themedLayout={themedLayout}
+              onInteraction={(interaction) => {
+                console.log(`Expanded plot ${activeFig.id} interaction:`, interaction);
+              }}
+            />
+          </div>
           <div className="figure-id-label">
             {activeFig.id}
           </div>

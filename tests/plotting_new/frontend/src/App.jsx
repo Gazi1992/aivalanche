@@ -22,7 +22,6 @@ import {
   updateFigureMetadata,
   syncFigureWithDOM
 } from './utils/figureManager.js';
-import { renderAllPlots } from './utils/plotRenderer.js';
 
 const API_BASE = 'http://localhost:8001';
 
@@ -154,12 +153,8 @@ function App() {
     };
   }, [theme]);
   
-  // Render plots when figures change
-  useEffect(() => {
-    if (config && localFigures) {
-      renderAllPlots(localFigures, themedLayout);
-    }
-  }, [config, localFigures, themedLayout]);
+  // Plots are now rendered by individual PlotContainer components
+  // No need for centralized rendering
   
   // Effect to resize plots when grid columns change
   useEffect(() => {
@@ -415,6 +410,7 @@ function App() {
           onEditFigure={handleEditFigure}
           onViewTable={handleViewTable}
           onExpandFigure={handleExpandFigure}
+          themedLayout={themedLayout}
         />
       </main>
       

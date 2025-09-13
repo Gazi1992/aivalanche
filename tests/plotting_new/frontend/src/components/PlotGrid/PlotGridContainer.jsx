@@ -1,8 +1,8 @@
 import React from 'react';
 import ColumnSelector from '../ColumnSelector.jsx';
 import PlotButton from '../PlotButton.jsx';
+import PlotContainer from '../PlotContainer/PlotContainer.jsx';
 import { EditIcon, TableIcon, ExpandIcon, DownloadIcon } from '../icons';
-import { syncFigureWithDOM } from '../../utils/figureManager';
 import { downloadPlotAsImage } from '../../utils/plotUtils';
 
 const PlotGridContainer = ({
@@ -15,7 +15,8 @@ const PlotGridContainer = ({
   plotContainerStyle,
   onEditFigure,
   onViewTable,
-  onExpandFigure
+  onExpandFigure,
+  themedLayout
 }) => {
   const gridContainerStyle = {
     flex: 1,
@@ -88,10 +89,16 @@ const PlotGridContainer = ({
                   icon={DownloadIcon}
                 />
               </div>
-              <div 
-                id={`plot-${fig.id}`} 
-                style={{ flex: '1 1 auto', minHeight: 0, width: '100%' }}
-              />
+              <div style={{ flex: '1 1 auto', minHeight: 0, width: '100%' }}>
+                <PlotContainer
+                  figure={fig}
+                  plotId={`plot-${fig.id}`}
+                  themedLayout={themedLayout}
+                  onInteraction={(interaction) => {
+                    console.log(`Plot ${fig.id} interaction:`, interaction);
+                  }}
+                />
+              </div>
               <div className="figure-id-label">{fig.id}</div>
             </div>
           ))}

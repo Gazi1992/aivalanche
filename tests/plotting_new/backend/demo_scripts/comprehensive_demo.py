@@ -98,5 +98,45 @@ register_plot(fig_bar, plot_id='bar_categorical',
               metadata={'title': 'Bar Chart with Categories',
                        'description': 'Quarterly sales comparison across product categories'})
 
+# 3. HEATMAP - Both axes categorical
+print("[STATUS:info] Creating heatmap with categorical axes...")
+# Categories for both axes
+days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+hours = ['Morning', 'Afternoon', 'Evening', 'Night']
+
+# Generate activity data (e.g., website traffic)
+np.random.seed(42)
+activity_data = np.random.randint(10, 100, size=(len(hours), len(days)))
+
+# Create heatmap
+fig_heatmap = go.Figure(data=go.Heatmap(
+    z=activity_data,
+    x=days,
+    y=hours,
+    colorscale='Viridis',
+    text=activity_data,
+    texttemplate='%{text}',
+    textfont={"size": 10},
+    colorbar=dict(title='Activity Level')
+))
+
+fig_heatmap.update_layout(
+    title='Weekly Activity Heatmap',
+    xaxis_title='Day of Week',
+    yaxis_title='Time of Day',
+    xaxis=dict(type='category'),
+    yaxis=dict(type='category'),
+    template='plotly_white'
+)
+
+register_plot(fig_heatmap, plot_id='heatmap_categorical',
+              metadata={'title': 'Activity Heatmap',
+                       'description': 'Weekly activity patterns with categorical axes',
+                       'appearance': {
+                           'legend': {
+                               'visible': False
+                           }
+                       }})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 2")
+print(f"[STATUS:info] Total plots created: 3")
