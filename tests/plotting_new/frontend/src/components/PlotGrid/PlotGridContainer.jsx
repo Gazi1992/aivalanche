@@ -22,7 +22,7 @@ const PlotGridContainer = ({
     flex: 1,
     overflowY: nRows > 2 ? 'auto' : 'hidden',
     overflowX: 'hidden',
-    padding: figureCount === 1 ? '20px' : '0 20px 20px 20px',
+    padding: 'var(--grid-container-padding)',  // Use CSS variable for padding
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column'

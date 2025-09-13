@@ -26,7 +26,10 @@
   /* Grid layout defaults */
   --grid-horizontal-spacing: 20px;
   --grid-vertical-spacing: 20px;
-  --column-selector-height: 40px;
+  --column-selector-height: 45px;
+  --column-selector-padding-horizontal: 20px;
+  --column-selector-margin-bottom: 0px;
+  --grid-container-padding: 20px;
   
   /* Plot layout variables */
   --plot-margin-left: 80px;

@@ -82,27 +82,42 @@ export const calculateGridDimensions = (figureCount, gridColumns, windowHeight) 
   
   // Get values from CSS variables
   const cs = getComputedStyle(document.body);
-  const mainPadding = parseInt(cs.getPropertyValue('--main-padding')?.replace('px', '') || '20');
-  const columnSelectorHeight = parseInt(cs.getPropertyValue('--column-selector-height')?.replace('px', '') || '40');
+  const columnSelectorHeight = parseInt(cs.getPropertyValue('--column-selector-height')?.replace('px', '') || '45');
+  const columnSelectorMarginBottom = parseInt(cs.getPropertyValue('--column-selector-margin-bottom')?.replace('px', '') || '0');
+  const gridContainerPadding = parseInt(cs.getPropertyValue('--grid-container-padding')?.replace('px', '') || '20');
   
   // Calculate plot height based on number of rows
   let plotHeight;
   if (figureCount === 1) {
-    // For single plot, use all available height (no column selector shown)
-    plotHeight = windowHeight - (mainPadding * 2);
+    // For single plot, use all available height minus grid container padding
+    // No column selector is shown for single plot
+    plotHeight = windowHeight - (gridContainerPadding * 2);
   } else {
-    // For multiple plots, account for column selector
-    const availableHeight = windowHeight - (mainPadding * 2) - columnSelectorHeight;
+    // For multiple plots, account for column selector height, its margin, and grid container padding
+    // Total column selector space = height + bottom margin
+    const totalColumnSelectorSpace = columnSelectorHeight + columnSelectorMarginBottom;
+    const availableHeight = windowHeight - totalColumnSelectorSpace - (gridContainerPadding * 2);
     
     if (nRows === 1) {
-      plotHeight = availableHeight;  // Use full available height for single row
+      // Single row uses full available height
+      plotHeight = availableHeight;
     } else if (nRows === 2) {
-      // Account for gap between rows (20px from grid gap)
+      // Two rows: split available height accounting for gap
       const gridGap = 20;
-      plotHeight = (availableHeight - gridGap) / 2;  // Split available height evenly
+      plotHeight = (availableHeight - gridGap) / 2;
     } else {
+      // More than 2 rows: fixed height with scrolling
       plotHeight = 350;
     }
+  }
+  
+  // Calculate total grid height for fixed layouts
+  let gridHeight = 'auto';
+  if (nRows === 1) {
+    gridHeight = `${plotHeight}px`;
+  } else if (nRows === 2) {
+    // For 2 rows: height of 2 plots + gap between them
+    gridHeight = `${plotHeight * 2 + 20}px`;
   }
   
   return {
@@ -114,7 +129,7 @@ export const calculateGridDimensions = (figureCount, gridColumns, windowHeight) 
       gridTemplateColumns: `repeat(${nCols}, 1fr)`,
       gap: '20px',
       width: '100%',
-      height: nRows <= 2 ? '100%' : 'auto',
+      height: gridHeight,
       alignContent: 'start',
     }
   };

@@ -188,8 +188,13 @@ fig_splom.update_layout(
     dragmode='select',
     hovermode='closest',
     height=600,
-    showlegend=False
+    showlegend=False,
+    margin=dict(l=100, r=20, t=60, b=80)  # Increased margins for axis labels
 )
+
+# Explicitly update axis properties to show labels
+fig_splom.update_xaxes(showticklabels=True)
+fig_splom.update_yaxes(showticklabels=True)
 
 register_plot(fig_splom, plot_id='scatter_matrix',
               metadata={'title': 'Scatter Matrix',
