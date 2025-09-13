@@ -27,6 +27,13 @@ const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
   const hasLegend = capabilities.hasLegend !== false;
   const hasData = figure?.data?.length > 0 && !capabilities.isParallelCoordinates && !capabilities.isScatterMatrix;
   
+  // Add axis type info to metadata for AxisSubsection
+  const enhancedMetadata = {
+    ...metadata,
+    xAxisType: figure?.xAxisType,
+    yAxisType: figure?.yAxisType
+  };
+  
   // Get subsection props from the hook
   const props = createSubsectionProps();
   
@@ -49,7 +56,7 @@ const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
             hasAxes={hasAxes}
             hasLegend={hasLegend}
             hasData={hasData}
-            metadata={metadata}
+            metadata={enhancedMetadata}
             titleState={props.titleState}
             xAxisState={props.xAxisState}
             yAxisState={props.yAxisState}

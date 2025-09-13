@@ -256,9 +256,27 @@ export const useFixedMetadata = (figure, isOpen, onUpdate) => {
         ticksVisible: app.axes.x.ticks.visible,
         setTicksVisible: (v) => updateValue('appearance.axes.x.ticks.visible', v),
         minValue: app.axes.x.range.min?.toString() || '',
-        setMinValue: (v) => updateValue('appearance.axes.x.range.min', v ? parseFloat(v) : null),
+        setMinValue: (v) => {
+          const newMin = v ? parseFloat(v) : null;
+          updateValue('appearance.axes.x.range.min', newMin);
+          // Only set autorange false if BOTH min and max are set
+          if (newMin !== null && app.axes.x.range.max !== null) {
+            updateValue('appearance.axes.x.range.autorange', false);
+          } else if (newMin === null && app.axes.x.range.max === null) {
+            updateValue('appearance.axes.x.range.autorange', true);
+          }
+        },
         maxValue: app.axes.x.range.max?.toString() || '',
-        setMaxValue: (v) => updateValue('appearance.axes.x.range.max', v ? parseFloat(v) : null),
+        setMaxValue: (v) => {
+          const newMax = v ? parseFloat(v) : null;
+          updateValue('appearance.axes.x.range.max', newMax);
+          // Only set autorange false if BOTH min and max are set
+          if (app.axes.x.range.min !== null && newMax !== null) {
+            updateValue('appearance.axes.x.range.autorange', false);
+          } else if (app.axes.x.range.min === null && newMax === null) {
+            updateValue('appearance.axes.x.range.autorange', true);
+          }
+        },
         inverted: app.axes.x.range.reversed,
         setInverted: (v) => updateValue('appearance.axes.x.range.reversed', v)
       },
@@ -276,9 +294,27 @@ export const useFixedMetadata = (figure, isOpen, onUpdate) => {
         ticksVisible: app.axes.y.ticks.visible,
         setTicksVisible: (v) => updateValue('appearance.axes.y.ticks.visible', v),
         minValue: app.axes.y.range.min?.toString() || '',
-        setMinValue: (v) => updateValue('appearance.axes.y.range.min', v ? parseFloat(v) : null),
+        setMinValue: (v) => {
+          const newMin = v ? parseFloat(v) : null;
+          updateValue('appearance.axes.y.range.min', newMin);
+          // Only set autorange false if BOTH min and max are set
+          if (newMin !== null && app.axes.y.range.max !== null) {
+            updateValue('appearance.axes.y.range.autorange', false);
+          } else if (newMin === null && app.axes.y.range.max === null) {
+            updateValue('appearance.axes.y.range.autorange', true);
+          }
+        },
         maxValue: app.axes.y.range.max?.toString() || '',
-        setMaxValue: (v) => updateValue('appearance.axes.y.range.max', v ? parseFloat(v) : null),
+        setMaxValue: (v) => {
+          const newMax = v ? parseFloat(v) : null;
+          updateValue('appearance.axes.y.range.max', newMax);
+          // Only set autorange false if BOTH min and max are set
+          if (app.axes.y.range.min !== null && newMax !== null) {
+            updateValue('appearance.axes.y.range.autorange', false);
+          } else if (app.axes.y.range.min === null && newMax === null) {
+            updateValue('appearance.axes.y.range.autorange', true);
+          }
+        },
         inverted: app.axes.y.range.reversed,
         setInverted: (v) => updateValue('appearance.axes.y.range.reversed', v)
       },

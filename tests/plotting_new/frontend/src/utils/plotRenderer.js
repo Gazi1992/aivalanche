@@ -24,17 +24,28 @@ export const getColorScale = () => {
  * Apply color scale to plot data
  */
 export const applyColorScale = (data, colorScale) => {
-  return data.map((trace, index) => ({
-    ...trace,
-    marker: {
-      ...trace.marker,
-      color: trace.marker?.color || colorScale[index % colorScale.length],
-    },
-    line: {
-      ...trace.line,
-      color: trace.line?.color || colorScale[index % colorScale.length],
-    },
-  }));
+  return data.map((trace, index) => {
+    const updatedTrace = { ...trace };
+    const defaultColor = colorScale[index % colorScale.length];
+    
+    // Only modify marker if it exists and doesn't have a color
+    if (trace.marker) {
+      updatedTrace.marker = {
+        ...trace.marker,
+        color: trace.marker.color || defaultColor
+      };
+    }
+    
+    // Only modify line if it exists and doesn't have a color
+    if (trace.line) {
+      updatedTrace.line = {
+        ...trace.line,
+        color: trace.line.color || defaultColor
+      };
+    }
+    
+    return updatedTrace;
+  });
 };
 
 /**
@@ -59,13 +70,16 @@ export const renderPlot = (figure, plotId, themedLayout) => {
   const plotDiv = document.getElementById(plotId);
   if (!plotDiv) return false;
 
-  const colorScale = getColorScale();
-  const layout = generateLayoutFromMetadata(figure, themedLayout);
-  const data = applyColorScale(generateDataFromMetadata(figure), colorScale);
+  // Apply metadata transformations to data (for legend visibility, colors, etc.)
+  // This returns new trace objects without modifying the original data values
+  const data = figure.metadata ? generateDataFromMetadata(figure) : figure.data;
+  
+  // Apply theme and metadata to layout only
+  const baseLayout = { ...figure.layout, ...themedLayout };
+  const layout = figure.metadata ? generateLayoutFromMetadata(figure, baseLayout) : baseLayout;
+  
   const config = getDefaultPlotConfig();
   
-
-  // Use Plotly.react for efficient updates, or newPlot if the div is empty
   if (plotDiv.children.length > 0) {
     Plotly.react(plotId, data, layout, config);
   } else {
@@ -111,10 +125,14 @@ export const renderExpandedPlot = (figure, overlayDivId, themedLayout) => {
   const overlayDiv = document.getElementById(overlayDivId);
   if (!overlayDiv || !figure) return;
 
-  const colorScale = getColorScale();
-  const layout = generateLayoutFromMetadata(figure, themedLayout);
-  const data = applyColorScale(generateDataFromMetadata(figure), colorScale);
-
+  // Apply metadata transformations to data (for legend visibility, colors, etc.)
+  // This returns new trace objects without modifying the original data values
+  const data = figure.metadata ? generateDataFromMetadata(figure) : figure.data;
+  
+  // Apply theme and metadata to layout only
+  const baseLayout = { ...figure.layout, ...themedLayout };
+  const layout = figure.metadata ? generateLayoutFromMetadata(figure, baseLayout) : baseLayout;
+  
   Plotly.newPlot(overlayDiv, data, layout, {
     displaylogo: false,
     displayModeBar: true,

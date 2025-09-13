@@ -38,13 +38,21 @@ export const createManagedFigure = (plotlyFigure, pythonMetadata = null, figureI
   
   // Return managed figure with embedded metadata
   // Use provided figureId first, then plotlyFigure.id, then generate one
-  return {
+  const figure = {
     id: figureId || plotlyFigure.id || `plot-${Date.now()}`,
     data: plotlyFigure.data || [],
     layout: plotlyFigure.layout || {},
     metadata: metadata,
     visibility: true
   };
+  
+  // Store axis type info at the figure level for easy access
+  if (pythonMetadata) {
+    figure.xAxisType = pythonMetadata.xAxisType;
+    figure.yAxisType = pythonMetadata.yAxisType;
+  }
+  
+  return figure;
 };
 
 /**
@@ -102,21 +110,30 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
   }
   
   // Check if axes are categorical (vs numeric)
-  const isCategoricalX = figure.metadata?.xAxisType === 'category' || 
+  // Check at figure level first (from Python metadata), then nested metadata
+  const isCategoricalX = figure.xAxisType === 'category' || 
+                         figure.metadata?.xAxisType === 'category' || 
                          figure.metadata?.xAxisCategorical === true;
-  const isCategoricalY = figure.metadata?.yAxisType === 'category' || 
+  const isCategoricalY = figure.yAxisType === 'category' ||
+                         figure.metadata?.yAxisType === 'category' || 
                          figure.metadata?.yAxisCategorical === true;
   
   // Apply X axis range (but not for categorical axes)
   if (!isCategoricalX) {
-    if (!m.axes.x.range.autorange && (m.axes.x.range.min !== null || m.axes.x.range.max !== null)) {
+    // Only set range if BOTH min and max are provided
+    if (!m.axes.x.range.autorange && m.axes.x.range.min !== null && m.axes.x.range.max !== null) {
       layout.xaxis.autorange = false;
       layout.xaxis.range = [m.axes.x.range.min, m.axes.x.range.max];
     } else if (m.axes.x.range.reversed) {
       layout.xaxis.autorange = 'reversed';
     } else {
+      // For partial ranges or no range, use autorange
       layout.xaxis.autorange = true;
     }
+  } else {
+    // For categorical axes, ensure autorange is true and don't set range
+    layout.xaxis.autorange = true;
+    delete layout.xaxis.range;  // Remove any range that might have been set
   }
   
   // Apply X axis scale (preserve categorical type)
@@ -164,14 +181,20 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
   
   // Apply Y axis range (but not for categorical axes)
   if (!isCategoricalY) {
-    if (!m.axes.y.range.autorange && (m.axes.y.range.min !== null || m.axes.y.range.max !== null)) {
+    // Only set range if BOTH min and max are provided
+    if (!m.axes.y.range.autorange && m.axes.y.range.min !== null && m.axes.y.range.max !== null) {
       layout.yaxis.autorange = false;
       layout.yaxis.range = [m.axes.y.range.min, m.axes.y.range.max];
     } else if (m.axes.y.range.reversed) {
       layout.yaxis.autorange = 'reversed';
     } else {
+      // For partial ranges or no range, use autorange
       layout.yaxis.autorange = true;
     }
+  } else {
+    // For categorical axes, ensure autorange is true and don't set range
+    layout.yaxis.autorange = true;
+    delete layout.yaxis.range;  // Remove any range that might have been set
   }
   
   // Apply Y axis scale (preserve categorical type)
@@ -361,12 +384,18 @@ export const syncFigureWithDOM = (figure, plotId) => {
 export const generateDataFromMetadata = (figure) => {
   const { data, metadata } = figure;
   
+  // If no data, return empty array
+  if (!data || !Array.isArray(data)) {
+    return [];
+  }
+  
   // Apply any data-specific transformations from metadata
   return data.map((trace, index) => {
-    const traceMetadata = metadata.data.traces[index];
-    const legendItem = metadata.appearance.legend.items[index];
+    // Get metadata items safely (they might not exist or array might be shorter)
+    const traceMetadata = metadata?.data?.traces?.[index];
+    const legendItem = metadata?.appearance?.legend?.items?.[index];
     
-    // Apply trace-specific metadata (color, visibility, etc.)
+    // Start with a copy of the original trace - preserving all original properties
     const updatedTrace = { ...trace };
     
     // Apply legend item visibility (whether to show in legend)
