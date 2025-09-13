@@ -96,15 +96,30 @@ This is a metadata-driven visualization application with Python execution and AI
 ### Frontend Structure
 
 - **App.jsx**: Main React application, manages state and API communication
+  - Currently configured to use port 8001 for backend API
 - **themes.css**: Centralized theming system with CSS variables
   - Plot margins: `--plot-margin-left/right/top/bottom/pad`
   - Grid spacing: `--grid-horizontal-spacing`, `--grid-vertical-spacing`
 - **components/EditPane/**: Interactive plot editing controls
   - Reads/writes directly to figure.metadata
   - All subsections mapped to metadata structure
+  - Grid controls apply to main grid, minor grid, and zero lines
 - **components/Sidebar/**: Chat interface and AI interaction
-- **utils/figureManager.js**: Core figure management with metadata
-- **utils/metadataStructure.js**: Fixed metadata structure definition
+- **components/PlotGrid/**: Plot container and grid management
+  - PlotGridContainer: Manages plot layout and interactions
+  - ExpandedPlotView: Full-screen plot view
+- **utils/**:
+  - **figureManager.js**: Core figure management with metadata
+    - Handles grid rendering with proper minor grid and zero line support
+  - **metadataStructure.js**: Fixed metadata structure definition
+  - **plotUtils.js**: Basic plot operations and resizing
+  - **plotRenderer.js**: Themed plot rendering
+  - **plotInteractions.js**: Unified plot interaction handling
+  - **plotExport.js**: Export functionality (PNG, SVG, CSV, JSON)
+  - **plotTheme.js**: Theme management and color schemes
+  - **plotLayout.js**: Grid layout calculations and responsive sizing
+  - **cssVariables.js**: CSS variable access utilities
+  - **index.js**: Central export point for all utilities
 
 ### Python Execution & Metadata
 
@@ -138,6 +153,9 @@ fig.update_layout(
 4. **Theme Integration**: Margins, colors, spacing from CSS variables
 5. **Hot Reload Active**: Both frontend and backend auto-reload on file changes
 6. **API Documentation**: Available at http://localhost:8000/docs when backend is running
+7. **Axis Type Detection**: Automatic detection of numeric vs categorical axes
+8. **Grid Consistency**: Grid colors apply to main grid, minor grid, and zero lines
+9. **Current Demo**: Single scatter plot to avoid Plotly DOM conflicts (multi-plot support pending)
 
 ### Default Plot Settings
 

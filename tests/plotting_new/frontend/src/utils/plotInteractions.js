@@ -1,6 +1,21 @@
 export function attachPlotInteractions(plotDiv) {
   if (!plotDiv) return;
 
+  // Check if this is a special plot type that shouldn't have custom interactions
+  const plotData = plotDiv._fullData;
+  
+  if (plotData && plotData.length > 0) {
+    const firstTrace = plotData[0];
+    const plotType = firstTrace.type;
+    
+    // Skip custom interactions only for plot types that have their own special interactions
+    // Scatter matrix (splom), parallel coordinates, and parallel categories have built-in interactions
+    if (plotType === 'splom' || plotType === 'parcoords' || plotType === 'parcats') {
+      console.log(`Skipping custom interactions for ${plotType} plot - has built-in interactions`);
+      return;
+    }
+  }
+
   plotDiv.addEventListener('contextmenu', e => e.preventDefault());
 
   if (!plotDiv.__scaleHandlerAttached) {
@@ -167,7 +182,6 @@ function findActiveAxes(layout, event, rect) {
   const relX = (event.clientX - rect.left) / rect.width;
   const relY = 1 - (event.clientY - rect.top) / rect.height;
   
-  
   const xAxes = Object.keys(layout).filter(k => k.startsWith('xaxis'));
   
   let activeX = 'xaxis';
@@ -191,7 +205,6 @@ function findActiveAxes(layout, event, rect) {
           relY >= yAxis.domain[0] && relY <= yAxis.domain[1]) {
         
         const area = (xAxis.domain[1] - xAxis.domain[0]) * (yAxis.domain[1] - yAxis.domain[0]);
-        
         
         if (area < smallestArea) {
           smallestArea = area;
@@ -227,7 +240,10 @@ function attachWheelHandler(plotDiv) {
     const xAxis = layout[activeX];
     const yAxis = layout[activeY];
     
-    if (!xAxis || !yAxis || !xAxis.range || !yAxis.range) return;
+    if (!xAxis || !yAxis || !xAxis.range || !yAxis.range) {
+      console.log('Axes missing or no range:', { activeX, activeY, xAxis, yAxis });
+      return;
+    }
     
     const relX = (event.clientX - rect.left) / rect.width;
     const relY = 1 - (event.clientY - rect.top) / rect.height;
