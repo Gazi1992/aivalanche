@@ -69,10 +69,12 @@ const TableView = ({ figure, isOpen, onClose }) => {
     }
     
     // Fallback to trace data if no dataframe available
-    if (figure.figure && figure.figure.data && figure.figure.data.length > 0) {
+    // Check both figure.figure.data and figure.data for compatibility
+    const figureData = (figure.figure && figure.figure.data) || figure.data;
+    if (figureData && figureData.length > 0) {
       // Combine all traces into a single table
       const allRows = [];
-      const traces = figure.figure.data;
+      const traces = figureData;
       
       // Decode binary data for all traces first
       const decodedTraces = traces.map(trace => ({
@@ -165,7 +167,7 @@ const TableView = ({ figure, isOpen, onClose }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${figure.title || 'plot'}_data.csv`;
+    a.download = `${figure.id || figure.metadata?.title || 'plot'}_data.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -187,7 +189,7 @@ const TableView = ({ figure, isOpen, onClose }) => {
       <div className="table-view-container" onClick={(e) => e.stopPropagation()}>
         <div className="table-view-header">
           <h3>
-            {figure.title || 'Plot Data'} 
+            {figure.metadata?.title || figure.id || 'Plot Data'} 
             {figure.id && <span style={{ opacity: 0.6, fontSize: '0.9em', marginLeft: '8px' }}>({figure.id})</span>}
           </h3>
           <div className="table-view-info">
