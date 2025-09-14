@@ -956,5 +956,562 @@ register_plot(fig_sankey, plot_id='sankey_diagram',
                        'description': 'Financial flow visualization from revenue to outcomes',
                        'plotType': 'sankey'})
 
+# 14. BOX PLOT - Statistical Distribution
+print("[STATUS:info] Creating box plot...")
+
+# Generate data for box plot
+np.random.seed(42)
+n_samples = 100
+groups = ['Group A', 'Group B', 'Group C', 'Group D', 'Group E']
+
+# Create data with different distributions for each group
+data_box = []
+for i, group in enumerate(groups):
+    # Each group has different mean and variance
+    mean = 50 + i * 10
+    std = 5 + i * 2
+    values = np.random.normal(mean, std, n_samples)
+    # Add some outliers
+    n_outliers = np.random.randint(3, 8)
+    outliers = np.random.uniform(mean - 4*std, mean + 4*std, n_outliers)
+    values = np.concatenate([values, outliers])
+    data_box.append(values)
+
+# Create box plot
+fig_box = go.Figure()
+
+colors_box = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6']
+for i, (group, values) in enumerate(zip(groups, data_box)):
+    fig_box.add_trace(go.Box(
+        y=values,
+        name=group,
+        marker_color=colors_box[i],
+        boxmean='sd',  # Show mean and standard deviation
+        jitter=0.3,
+        pointpos=-1.8,
+        marker=dict(
+            size=4,
+            line=dict(width=0.5)
+        )
+    ))
+
+fig_box.update_layout(
+    title='Statistical Distribution Comparison - Box Plot',
+    yaxis=dict(
+        title='Values',
+        showgrid=True,
+        gridcolor='lightgray',
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor='gray'
+    ),
+    xaxis=dict(
+        title='Groups',
+        showgrid=False
+    ),
+    template='plotly_white',
+    showlegend=False,
+    hovermode='x unified'
+)
+
+register_plot(fig_box, plot_id='box_plot',
+              metadata={'title': 'Box Plot',
+                       'description': 'Statistical distribution comparison across groups',
+                       'plotType': 'box'})
+
+# 15. VIOLIN PLOT - Distribution Shape Visualization
+print("[STATUS:info] Creating violin plot...")
+
+# Use similar data as box plot but with bimodal distributions for some groups
+data_violin = []
+for i, group in enumerate(groups):
+    if i % 2 == 0:
+        # Bimodal distribution for even groups
+        values1 = np.random.normal(50 + i * 5, 5, n_samples // 2)
+        values2 = np.random.normal(70 + i * 5, 5, n_samples // 2)
+        values = np.concatenate([values1, values2])
+    else:
+        # Single mode for odd groups
+        values = np.random.normal(60 + i * 8, 10, n_samples)
+    data_violin.append(values)
+
+# Create violin plot
+fig_violin = go.Figure()
+
+for i, (group, values) in enumerate(zip(groups, data_violin)):
+    fig_violin.add_trace(go.Violin(
+        y=values,
+        name=group,
+        box_visible=True,
+        meanline_visible=True,
+        fillcolor=colors_box[i],
+        opacity=0.6,
+        line_color='black',
+        points='all',
+        jitter=0.05,
+        scalemode='count',
+        pointpos=-0.5,
+        marker=dict(size=2)
+    ))
+
+fig_violin.update_layout(
+    title='Distribution Shape Analysis - Violin Plot',
+    yaxis=dict(
+        title='Values',
+        showgrid=True,
+        gridcolor='lightgray'
+    ),
+    xaxis=dict(
+        title='Groups',
+        showgrid=False
+    ),
+    template='plotly_white',
+    showlegend=False,
+    violinmode='group'
+)
+
+register_plot(fig_violin, plot_id='violin_plot',
+              metadata={'title': 'Violin Plot',
+                       'description': 'Distribution shape visualization with kernel density',
+                       'plotType': 'violin'})
+
+# 16. SUNBURST CHART - Hierarchical Data
+print("[STATUS:info] Creating sunburst chart...")
+
+# Create simpler hierarchical data for company structure
+labels_sun = [
+    "Company",
+    # Departments
+    "Engineering", "Sales", "Marketing", "Operations",
+    # Engineering teams
+    "Frontend", "Backend", "DevOps",
+    # Sales regions
+    "North", "South", "East", "West",
+    # Marketing divisions
+    "Digital", "Print", "Events",
+    # Operations units
+    "Logistics", "Quality", "Support"
+]
+
+parents_sun = [
+    "",
+    # Departments report to Company
+    "Company", "Company", "Company", "Company",
+    # Engineering teams
+    "Engineering", "Engineering", "Engineering",
+    # Sales regions
+    "Sales", "Sales", "Sales", "Sales",
+    # Marketing divisions
+    "Marketing", "Marketing", "Marketing",
+    # Operations units
+    "Operations", "Operations", "Operations"
+]
+
+values_sun = [
+    500,  # Total company size
+    180,  # Engineering
+    120,  # Sales
+    80,   # Marketing
+    120,  # Operations
+    80,   # Frontend
+    70,   # Backend
+    30,   # DevOps
+    40,   # North
+    35,   # South
+    25,   # East
+    20,   # West
+    40,   # Digital
+    25,   # Print
+    15,   # Events
+    50,   # Logistics
+    40,   # Quality
+    30    # Support
+]
+
+# Create sunburst chart
+fig_sunburst = go.Figure(go.Sunburst(
+    labels=labels_sun,
+    parents=parents_sun,
+    values=values_sun,
+    marker=dict(
+        colorscale='Viridis',
+        line=dict(width=2, color='white')
+    ),
+    hovertemplate='<b>%{label}</b><br>Employees: %{value}<br>Parent: %{parent}<extra></extra>',
+    textinfo="label+value"
+))
+
+fig_sunburst.update_layout(
+    title='Company Organization Structure - Sunburst Chart',
+    template='plotly_white',
+    margin=dict(t=60, l=0, r=0, b=0)
+)
+
+register_plot(fig_sunburst, plot_id='sunburst_chart',
+              metadata={'title': 'Sunburst Chart',
+                       'description': 'Hierarchical data visualization',
+                       'plotType': 'sunburst'})
+
+# 17. TREEMAP - Hierarchical Rectangles
+print("[STATUS:info] Creating treemap...")
+
+# Use similar hierarchical data
+fig_treemap = go.Figure(go.Treemap(
+    labels=labels_sun,
+    parents=parents_sun,
+    values=values_sun,
+    marker=dict(
+        colorscale='RdYlGn',
+        cmid=90,
+        line=dict(width=1, color='white')
+    ),
+    hovertemplate='<b>%{label}</b><br>Value: %{value}<br>Parent: %{parent}<br>Percentage: %{percentParent}<extra></extra>',
+    textinfo="label+value+percent parent",
+    textposition='middle center',
+    pathbar=dict(visible=True)
+))
+
+fig_treemap.update_layout(
+    title='Regional Sales Distribution - Treemap',
+    template='plotly_white',
+    margin=dict(t=60, l=0, r=0, b=0)
+)
+
+register_plot(fig_treemap, plot_id='treemap',
+              metadata={'title': 'Treemap',
+                       'description': 'Hierarchical data as nested rectangles',
+                       'plotType': 'treemap'})
+
+# 18. POLAR BAR CHART - Wind Rose Chart
+print("[STATUS:info] Creating polar bar chart...")
+
+# Create data for polar bar chart - Wind frequency by direction
+# Using 16 compass directions
+theta_bar = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+             'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+
+# Wind frequency data (percentage of time wind comes from each direction)
+np.random.seed(42)
+# Simulate prevailing winds from SW with realistic pattern
+wind_frequencies = [
+    5,   # N
+    6,   # NNE
+    7,   # NE
+    8,   # ENE
+    10,  # E
+    12,  # ESE
+    14,  # SE
+    16,  # SSE
+    18,  # S
+    22,  # SSW - Prevailing wind
+    25,  # SW - Prevailing wind
+    20,  # WSW
+    15,  # W
+    10,  # WNW
+    8,   # NW
+    6    # NNW
+]
+
+# Create polar bar chart
+fig_barpolar = go.Figure()
+
+# Add frequency bars with gradient coloring
+fig_barpolar.add_trace(go.Barpolar(
+    r=wind_frequencies,
+    theta=theta_bar,
+    name='Wind Frequency',
+    marker=dict(
+        color=wind_frequencies,
+        colorscale='Viridis',
+        cmin=0,
+        cmax=30,
+        showscale=True,
+        colorbar=dict(
+            title='Frequency<br>(%)',
+            thickness=15,
+            len=0.7,
+            x=1.15
+        ),
+        line=dict(color='white', width=1)
+    ),
+    hovertemplate='<b>Direction: %{theta}</b><br>Frequency: %{r}%<br>of time<extra></extra>'
+))
+
+fig_barpolar.update_layout(
+    title='Wind Rose - Wind Frequency by Direction',
+    template='plotly_white',
+    polar=dict(
+        radialaxis=dict(
+            visible=True,
+            range=[0, 50],
+            showticklabels=True,
+            ticks='outside',
+            ticksuffix='%',
+            angle=45,
+            tickfont=dict(size=10),
+            gridcolor='lightgray'
+        ),
+        angularaxis=dict(
+            direction='clockwise',
+            rotation=90,  # Start from North (top)
+            gridcolor='lightgray',
+            tickfont=dict(size=11)
+        ),
+        bgcolor='rgba(240, 240, 240, 0.1)'
+    ),
+    showlegend=True,
+    legend=dict(
+        yanchor="top",
+        y=0.99,
+        xanchor="left",
+        x=0.01
+    ),
+    height=None,
+    margin=dict(l=80, r=120, t=80, b=80)
+)
+
+register_plot(fig_barpolar, plot_id='barpolar',
+              metadata={'title': 'Polar Bar Chart',
+                       'description': 'Wind speed distribution by direction',
+                       'plotType': 'barpolar'})
+
+# 19. PARALLEL CATEGORIES - Categorical Flow
+print("[STATUS:info] Creating parallel categories plot...")
+
+# Create categorical data
+n_items_cat = 100
+np.random.seed(42)
+
+# Generate categorical data
+education = np.random.choice(['High School', 'Bachelor', 'Master', 'PhD'], n_items_cat, p=[0.3, 0.4, 0.2, 0.1])
+department = np.random.choice(['Engineering', 'Sales', 'Marketing', 'HR'], n_items_cat, p=[0.35, 0.25, 0.25, 0.15])
+satisfaction = np.random.choice(['Low', 'Medium', 'High', 'Very High'], n_items_cat, p=[0.15, 0.35, 0.35, 0.15])
+retention = np.random.choice(['Left', 'Stayed'], n_items_cat, p=[0.25, 0.75])
+
+# Create color mapping based on retention
+color_map_cat = {'Left': 0, 'Stayed': 1}
+colors_cat = [color_map_cat[r] for r in retention]
+
+# Create parallel categories plot
+fig_parcats = go.Figure(go.Parcats(
+    dimensions=[
+        dict(label='Education', values=education, categoryorder='array',
+             categoryarray=['High School', 'Bachelor', 'Master', 'PhD']),
+        dict(label='Department', values=department),
+        dict(label='Satisfaction', values=satisfaction, categoryorder='array',
+             categoryarray=['Low', 'Medium', 'High', 'Very High']),
+        dict(label='Retention', values=retention)
+    ],
+    line=dict(
+        color=colors_cat,
+        colorscale='RdYlGn',
+        showscale=True,
+        colorbar=dict(
+            title='Retention',
+            tickvals=[0, 1],
+            ticktext=['Left', 'Stayed']
+        )
+    ),
+    hoveron='color',
+    hoverinfo='count+probability',
+    arrangement='freeform'
+))
+
+fig_parcats.update_layout(
+    title='Employee Journey Analysis - Parallel Categories',
+    template='plotly_white',
+    margin=dict(l=60, r=100, t=60, b=60)
+)
+
+register_plot(fig_parcats, plot_id='parcats',
+              metadata={'title': 'Parallel Categories',
+                       'description': 'Categorical flow analysis across dimensions',
+                       'plotType': 'parcats'})
+
+# 20. 3D SCATTER PLOT
+print("[STATUS:info] Creating 3D scatter plot...")
+
+# Generate 3D data
+np.random.seed(42)
+n_points_3d = 200
+
+# Create clusters in 3D space
+cluster1_x = np.random.normal(0, 1, n_points_3d // 3)
+cluster1_y = np.random.normal(0, 1, n_points_3d // 3)
+cluster1_z = np.random.normal(0, 1, n_points_3d // 3)
+
+cluster2_x = np.random.normal(3, 1, n_points_3d // 3)
+cluster2_y = np.random.normal(3, 1, n_points_3d // 3)
+cluster2_z = np.random.normal(3, 1, n_points_3d // 3)
+
+cluster3_x = np.random.normal(1.5, 1, n_points_3d // 3)
+cluster3_y = np.random.normal(1.5, 1, n_points_3d // 3)
+cluster3_z = np.random.normal(6, 1, n_points_3d // 3)
+
+# Create 3D scatter plot
+fig_scatter3d = go.Figure()
+
+# Add clusters
+fig_scatter3d.add_trace(go.Scatter3d(
+    x=cluster1_x, y=cluster1_y, z=cluster1_z,
+    mode='markers',
+    name='Cluster 1',
+    marker=dict(
+        size=5,
+        color='#3498db',
+        opacity=0.8,
+        line=dict(width=0.5, color='white')
+    )
+))
+
+fig_scatter3d.add_trace(go.Scatter3d(
+    x=cluster2_x, y=cluster2_y, z=cluster2_z,
+    mode='markers',
+    name='Cluster 2',
+    marker=dict(
+        size=5,
+        color='#2ecc71',
+        opacity=0.8,
+        line=dict(width=0.5, color='white')
+    )
+))
+
+fig_scatter3d.add_trace(go.Scatter3d(
+    x=cluster3_x, y=cluster3_y, z=cluster3_z,
+    mode='markers',
+    name='Cluster 3',
+    marker=dict(
+        size=5,
+        color='#e74c3c',
+        opacity=0.8,
+        line=dict(width=0.5, color='white')
+    )
+))
+
+fig_scatter3d.update_layout(
+    title='3D Cluster Analysis',
+    scene=dict(
+        xaxis_title='X Dimension',
+        yaxis_title='Y Dimension',
+        zaxis_title='Z Dimension',
+        camera=dict(
+            eye=dict(x=1.5, y=1.5, z=1.5)
+        )
+    ),
+    template='plotly_white'
+)
+
+register_plot(fig_scatter3d, plot_id='scatter3d',
+              metadata={'title': '3D Scatter Plot',
+                       'description': 'Three-dimensional cluster visualization',
+                       'plotType': 'scatter3d'})
+
+# 21. 3D SURFACE PLOT
+print("[STATUS:info] Creating 3D surface plot...")
+
+# Create data for surface plot
+x_surf = np.linspace(-5, 5, 50)
+y_surf = np.linspace(-5, 5, 50)
+X_surf, Y_surf = np.meshgrid(x_surf, y_surf)
+
+# Create a interesting surface function
+Z_surf = np.sin(np.sqrt(X_surf**2 + Y_surf**2)) * np.exp(-0.1 * (X_surf**2 + Y_surf**2))
+
+# Create surface plot
+fig_surface = go.Figure(data=[go.Surface(
+    x=X_surf,
+    y=Y_surf,
+    z=Z_surf,
+    colorscale='Viridis',
+    showscale=True,
+    colorbar=dict(title='Z Value'),
+    contours=dict(
+        z=dict(
+            show=True,
+            usecolormap=True,
+            highlightcolor="limegreen",
+            project=dict(z=True)
+        )
+    )
+)])
+
+fig_surface.update_layout(
+    title='3D Surface Plot - Damped Radial Wave',
+    scene=dict(
+        xaxis_title='X',
+        yaxis_title='Y',
+        zaxis_title='Z',
+        camera=dict(
+            eye=dict(x=1.5, y=1.5, z=1.2)
+        )
+    ),
+    template='plotly_white'
+)
+
+register_plot(fig_surface, plot_id='surface3d',
+              metadata={'title': '3D Surface Plot',
+                       'description': 'Three-dimensional surface visualization',
+                       'plotType': 'surface'})
+
+# 22. 3D MESH PLOT
+print("[STATUS:info] Creating 3D mesh plot...")
+
+# Create vertices for a 3D shape (octahedron)
+vertices = np.array([
+    [1, 0, 0],
+    [-1, 0, 0],
+    [0, 1, 0],
+    [0, -1, 0],
+    [0, 0, 1],
+    [0, 0, -1]
+])
+
+# Define faces (triangles) of the octahedron
+faces = np.array([
+    [0, 2, 4],
+    [0, 4, 3],
+    [0, 3, 5],
+    [0, 5, 2],
+    [1, 2, 5],
+    [1, 5, 3],
+    [1, 3, 4],
+    [1, 4, 2]
+])
+
+# Create mesh plot
+fig_mesh = go.Figure(data=[go.Mesh3d(
+    x=vertices[:, 0],
+    y=vertices[:, 1],
+    z=vertices[:, 2],
+    i=faces[:, 0],
+    j=faces[:, 1],
+    k=faces[:, 2],
+    colorscale='Viridis',
+    intensity=vertices[:, 2],  # Color by z-coordinate
+    showscale=True,
+    colorbar=dict(title='Z Position'),
+    opacity=0.8,
+    hovertemplate='X: %{x}<br>Y: %{y}<br>Z: %{z}<extra></extra>'
+)])
+
+fig_mesh.update_layout(
+    title='3D Mesh Plot - Octahedron',
+    scene=dict(
+        xaxis_title='X',
+        yaxis_title='Y',
+        zaxis_title='Z',
+        camera=dict(
+            eye=dict(x=1.5, y=1.5, z=1.5)
+        ),
+        aspectmode='cube'
+    ),
+    template='plotly_white'
+)
+
+register_plot(fig_mesh, plot_id='mesh3d',
+              metadata={'title': '3D Mesh Plot',
+                       'description': 'Three-dimensional mesh visualization',
+                       'plotType': 'mesh3d'})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 13")
+print(f"[STATUS:info] Total plots created: 22")

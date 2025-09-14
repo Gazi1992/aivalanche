@@ -54,9 +54,16 @@ const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
     <>
       <div style={{ ...overlayStyle, left: isOpen ? 0 : '-500px' }}>
         <div style={headerStyle}>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-color)' }}>
-            Edit Plot
-          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-color)' }}>
+              Edit Plot
+            </h3>
+            {(figure?.plotId || figure?.id) && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-color-secondary)' }}>
+                ID: {figure.plotId || figure.id}
+              </span>
+            )}
+          </div>
           <button onClick={onClose} style={closeButtonStyle}>
             ×
           </button>

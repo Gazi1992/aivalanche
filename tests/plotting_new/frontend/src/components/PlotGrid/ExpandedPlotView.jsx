@@ -84,20 +84,21 @@ const ExpandedPlotView = ({ activeFig, onClose, onEditFigure, onViewTable, theme
               title="Download as PNG"
               icon={DownloadIcon}
             />
-            {/* Hide autoscale and legend toggle for PCP plots */}
-            {activeFig.metadata?.capabilities?.isParallelCoordinates !== true && (
-              <>
-                <PlotButton
-                  onClick={handleAutoscaleClick}
-                  title="Autoscale"
-                  icon={AutoscaleIcon}
-                />
-                <PlotButton
-                  onClick={handleLegendToggle}
-                  title="Toggle legend"
-                  icon={LegendToggleIcon}
-                />
-              </>
+            {/* Show autoscale button only for plots that support zoom/pan */}
+            {(activeFig.metadata?.capabilities?.supportsZoom || activeFig.metadata?.capabilities?.supportsPan) && (
+              <PlotButton
+                onClick={handleAutoscaleClick}
+                title="Autoscale"
+                icon={AutoscaleIcon}
+              />
+            )}
+            {/* Show legend toggle only for plots that have legend */}
+            {activeFig.metadata?.capabilities?.hasLegend && (
+              <PlotButton
+                onClick={handleLegendToggle}
+                title="Toggle legend"
+                icon={LegendToggleIcon}
+              />
             )}
             <PlotButton
               onClick={onClose}
