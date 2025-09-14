@@ -74,12 +74,6 @@ const PlotContainer = ({
       },
     };
 
-    // For 3D plots, configure the drag modes
-    if (is3D) {
-      layout.dragmode = 'turntable'; // or 'orbit' for different rotation style
-      config.showTips = false;
-    }
-
     // Clean up any existing plot
     if (plotInstanceRef.current) {
       Plotly.purge(plotDivRef.current);
@@ -223,70 +217,8 @@ const PlotContainer = ({
     plotDiv.addEventListener('wheel', handleWheel, { passive: false });
     interactionHandlersRef.current.wheel = handleWheel;
 
-    // For 3D plots, handle middle-click pan and disable right-click
+    // For 3D plots, don't attach any custom handlers - use Plotly's native interactions
     if (is3D) {
-      let isPanning = false;
-      let panStartX = 0;
-      let panStartY = 0;
-      let initialCamera = null;
-
-      const handleMouseDown = (e) => {
-        if (e.button === 1) { // Middle button
-          e.preventDefault();
-          isPanning = true;
-          panStartX = e.clientX;
-          panStartY = e.clientY;
-
-          // Store initial camera state
-          const layout = plotDiv._fullLayout;
-          initialCamera = layout.scene?.camera ? JSON.parse(JSON.stringify(layout.scene.camera)) : {
-            eye: { x: 1.25, y: 1.25, z: 1.25 },
-            center: { x: 0, y: 0, z: 0 },
-            up: { x: 0, y: 0, z: 1 }
-          };
-        } else if (e.button === 2) { // Right button - disable it
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      };
-
-      const handleMouseMove = (e) => {
-        if (!isPanning) return;
-
-        const dx = (e.clientX - panStartX) * 0.01;
-        const dy = (e.clientY - panStartY) * 0.01;
-
-        const newCamera = {
-          ...initialCamera,
-          center: {
-            x: (initialCamera.center?.x || 0) - dx,
-            y: (initialCamera.center?.y || 0) + dy,
-            z: initialCamera.center?.z || 0
-          }
-        };
-
-        Plotly.relayout(plotDiv, {
-          'scene.camera': newCamera
-        });
-      };
-
-      const handleMouseUp = (e) => {
-        if (e.button === 1) {
-          isPanning = false;
-        }
-      };
-
-      plotDiv.addEventListener('mousedown', handleMouseDown);
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-
-      interactionHandlersRef.current.mouse3D = {
-        down: handleMouseDown,
-        move: handleMouseMove,
-        up: handleMouseUp
-      };
-
-      // Don't attach other custom handlers for 3D plots
       return;
     }
 
@@ -526,13 +458,6 @@ const PlotContainer = ({
         }
         if (interactionHandlersRef.current.panDown) {
           plotDiv.removeEventListener('pointerdown', interactionHandlersRef.current.panDown);
-        }
-
-        // Remove 3D mouse handlers
-        if (interactionHandlersRef.current.mouse3D) {
-          plotDiv.removeEventListener('mousedown', interactionHandlersRef.current.mouse3D.down);
-          window.removeEventListener('mousemove', interactionHandlersRef.current.mouse3D.move);
-          window.removeEventListener('mouseup', interactionHandlersRef.current.mouse3D.up);
         }
 
         // Purge Plotly instance
