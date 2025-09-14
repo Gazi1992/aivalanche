@@ -17,9 +17,12 @@ import {
 const AppearanceSection = ({
   appearanceExpanded,
   setAppearanceExpanded,
+  hasTitle,
   hasAxes,
   hasLegend,
+  hasGrid,
   hasData,
+  plotCapabilities,
   metadata,
   titleState,
   xAxisState,
@@ -68,17 +71,19 @@ const AppearanceSection = ({
       
       {appearanceExpanded && (
         <div style={sectionContentStyle}>
-          <TitleSubsection 
-            titleExpanded={titleState.expanded}
-            setTitleExpanded={titleState.setExpanded}
-            titleVisible={titleState.visible}
-            setTitleVisible={titleState.setVisible}
-            titleText={titleState.text}
-            setTitleText={titleState.setText}
-            titleAlignment={titleState.alignment}
-            setTitleAlignment={titleState.setAlignment}
-            onBlur={onTextBlur}
-          />
+          {hasTitle && (
+            <TitleSubsection
+              titleExpanded={titleState.expanded}
+              setTitleExpanded={titleState.setExpanded}
+              titleVisible={titleState.visible}
+              setTitleVisible={titleState.setVisible}
+              titleText={titleState.text}
+              setTitleText={titleState.setText}
+              titleAlignment={titleState.alignment}
+              setTitleAlignment={titleState.setAlignment}
+              onBlur={onTextBlur}
+            />
+          )}
 
           {hasAxes && (
             <>
@@ -116,30 +121,32 @@ const AppearanceSection = ({
                 setYAxisTicksVisible={yAxisState.setTicksVisible}
                 onBlur={onTextBlur}
               />
-
-              <GridSubsection
-                gridExpanded={gridState.expanded}
-                setGridExpanded={gridState.setExpanded}
-                xGridVisible={gridState.xGridVisible}
-                setXGridVisible={gridState.setXGridVisible}
-                yGridVisible={gridState.yGridVisible}
-                setYGridVisible={gridState.setYGridVisible}
-                xMinorGridVisible={gridState.xMinorGridVisible}
-                setXMinorGridVisible={gridState.setXMinorGridVisible}
-                yMinorGridVisible={gridState.yMinorGridVisible}
-                setYMinorGridVisible={gridState.setYMinorGridVisible}
-                gridColor={gridState.gridColor}
-                setGridColor={gridState.setGridColor}
-                figureBackgroundColor={backgroundState.figureBackgroundColor}
-                setFigureBackgroundColor={backgroundState.setFigureBackgroundColor}
-                figureBorderColor={backgroundState.figureBorderColor}
-                setFigureBorderColor={backgroundState.setFigureBorderColor}
-                plotBackgroundColor={backgroundState.plotBackgroundColor}
-                setPlotBackgroundColor={backgroundState.setPlotBackgroundColor}
-                plotBorderColor={backgroundState.plotBorderColor}
-                setPlotBorderColor={backgroundState.setPlotBorderColor}
-              />
             </>
+          )}
+
+          {hasGrid && (
+            <GridSubsection
+              gridExpanded={gridState.expanded}
+              setGridExpanded={gridState.setExpanded}
+              xGridVisible={gridState.xGridVisible}
+              setXGridVisible={gridState.setXGridVisible}
+              yGridVisible={gridState.yGridVisible}
+              setYGridVisible={gridState.setYGridVisible}
+              xMinorGridVisible={gridState.xMinorGridVisible}
+              setXMinorGridVisible={gridState.setXMinorGridVisible}
+              yMinorGridVisible={gridState.yMinorGridVisible}
+              setYMinorGridVisible={gridState.setYMinorGridVisible}
+              gridColor={gridState.gridColor}
+              setGridColor={gridState.setGridColor}
+              figureBackgroundColor={backgroundState.figureBackgroundColor}
+              setFigureBackgroundColor={backgroundState.setFigureBackgroundColor}
+              figureBorderColor={backgroundState.figureBorderColor}
+              setFigureBorderColor={backgroundState.setFigureBorderColor}
+              plotBackgroundColor={backgroundState.plotBackgroundColor}
+              setPlotBackgroundColor={backgroundState.setPlotBackgroundColor}
+              plotBorderColor={backgroundState.plotBorderColor}
+              setPlotBorderColor={backgroundState.setPlotBorderColor}
+            />
           )}
 
           {hasLegend && (
@@ -202,7 +209,7 @@ const AppearanceSection = ({
             setLegendItalic={textState.setLegendItalic}
             legendTextColor={textState.legendTextColor}
             setLegendTextColor={textState.setLegendTextColor}
-            hasLegend={textState.hasLegend}
+            plotCapabilities={plotCapabilities}
           />
         </div>
       )}

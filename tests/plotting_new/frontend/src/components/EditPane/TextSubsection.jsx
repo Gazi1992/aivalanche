@@ -11,8 +11,8 @@ import {
   toggleButtonStyle
 } from './styles';
 
-const TextSubsection = ({ 
-  textExpanded, 
+const TextSubsection = ({
+  textExpanded,
   setTextExpanded,
   titleFontSize,
   setTitleFontSize,
@@ -42,7 +42,7 @@ const TextSubsection = ({
   setLegendItalic,
   legendTextColor,
   setLegendTextColor,
-  hasLegend
+  plotCapabilities = {}
 }) => {
   const textItemStyle = {
     display: 'grid',
@@ -82,8 +82,9 @@ const TextSubsection = ({
       
       {textExpanded && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {/* Title */}
-          <div style={textItemStyle}>
+          {/* Title - Only show if plot has title capability */}
+          {plotCapabilities.hasTitle && (
+            <div style={textItemStyle}>
             <label style={textLabelStyle}>Title</label>
             <input
               type="number"
@@ -112,10 +113,12 @@ const TextSubsection = ({
               onChange={(e) => setTitleColor(e.target.value)}
               title="Title color"
             />
-          </div>
+            </div>
+          )}
 
-          {/* Axis Labels */}
-          <div style={textItemStyle}>
+          {/* Axis Labels - Only show if plot has axis labels */}
+          {plotCapabilities.hasAxisLabels && (
+            <div style={textItemStyle}>
             <label style={textLabelStyle}>Axis Labels</label>
             <input
               type="number"
@@ -144,10 +147,12 @@ const TextSubsection = ({
               onChange={(e) => setAxisLabelColor(e.target.value)}
               title="Axis label color"
             />
-          </div>
+            </div>
+          )}
 
-          {/* Axis Ticks */}
-          <div style={{
+          {/* Axis Ticks - Only show if plot has axis ticks */}
+          {plotCapabilities.hasAxisTicks && (
+            <div style={{
             display: 'grid',
             gridTemplateColumns: '100px 60px 10px 30px',
             gap: '8px',
@@ -170,10 +175,11 @@ const TextSubsection = ({
               onChange={(e) => setAxisTickColor(e.target.value)}
               title="Axis tick color"
             />
-          </div>
+            </div>
+          )}
 
-          {/* Legend (conditional) */}
-          {hasLegend && (
+          {/* Legend - Only show if plot has legend */}
+          {plotCapabilities.hasLegend && (
             <div style={textItemStyle}>
               <label style={textLabelStyle}>Legend</label>
               <input
@@ -202,6 +208,56 @@ const TextSubsection = ({
                 color={legendTextColor || '#000000'}
                 onChange={(e) => setLegendTextColor(e.target.value)}
                 title="Legend text color"
+              />
+            </div>
+          )}
+
+          {/* Data Labels - For plots like pie, sankey */}
+          {plotCapabilities.hasDataLabels && (
+            <div style={textItemStyle}>
+              <label style={textLabelStyle}>Data Labels</label>
+              <input
+                type="number"
+                value={10}
+                style={{ ...inputStyle, width: '60px' }}
+                min="8"
+                max="36"
+                disabled
+              />
+              <div></div>
+              <ToggleButton active={false} disabled>B</ToggleButton>
+              <ToggleButton active={false} disabled><i>I</i></ToggleButton>
+              <ColorPickerIcon
+                icon={FillIcon}
+                color={'#444444'}
+                onChange={() => {}}
+                title="Data label color"
+                disabled
+              />
+            </div>
+          )}
+
+          {/* Node Labels - For Sankey diagrams */}
+          {plotCapabilities.hasNodeLabels && (
+            <div style={textItemStyle}>
+              <label style={textLabelStyle}>Node Labels</label>
+              <input
+                type="number"
+                value={12}
+                style={{ ...inputStyle, width: '60px' }}
+                min="8"
+                max="36"
+                disabled
+              />
+              <div></div>
+              <ToggleButton active={false} disabled>B</ToggleButton>
+              <ToggleButton active={false} disabled><i>I</i></ToggleButton>
+              <ColorPickerIcon
+                icon={FillIcon}
+                color={'#444444'}
+                onChange={() => {}}
+                title="Node label color"
+                disabled
               />
             </div>
           )}

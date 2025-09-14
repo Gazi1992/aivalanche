@@ -1,10 +1,12 @@
 /**
  * Fixed Metadata Structure for Plot Configuration
- * 
+ *
  * This defines the complete, immutable structure of plot metadata.
  * Every plot MUST have this exact structure with all properties defined.
  * Python scripts and UI updates can only modify VALUES, not the structure itself.
  */
+
+import { getPlotCapabilities } from './plotCapabilities';
 
 /**
  * Get CSS variable value or default
@@ -195,6 +197,18 @@ export const createMetadataStructure = () => ({
         color: '#444444'
       },
       legend: {
+        fontSize: 12,
+        color: '#444444',
+        bold: false,
+        italic: false
+      },
+      dataLabels: {
+        fontSize: 10,
+        color: '#444444',
+        bold: false,
+        italic: false
+      },
+      nodeLabels: {
         fontSize: 12,
         color: '#444444',
         bold: false,
@@ -416,44 +430,7 @@ const extractTraceColor = (trace) => {
  * Determine plot capabilities based on type
  */
 const determineCapabilities = (plotType) => {
-  const base = {
-    hasAxes: true,
-    hasLegend: true,
-    hasGrid: true,
-    has3D: false,
-    isPolar: false,
-    isParallelCoordinates: false,
-    isScatterMatrix: false,
-    isHeatmap: false
-  };
-  
-  switch (plotType) {
-    case 'pie':
-    case 'sunburst':
-    case 'treemap':
-      return { ...base, hasAxes: false, hasGrid: false };
-      
-    case 'parcoords':
-      return { ...base, hasAxes: false, hasGrid: false, hasLegend: false, isParallelCoordinates: true };
-      
-    case 'splom':
-      return { ...base, hasAxes: false, hasGrid: false, hasLegend: false, isScatterMatrix: true };
-      
-    case 'scatterpolar':
-    case 'barpolar':
-      return { ...base, hasAxes: false, isPolar: true };
-      
-    case 'scatter3d':
-    case 'surface':
-    case 'mesh3d':
-      return { ...base, has3D: true };
-      
-    case 'heatmap':
-      return { ...base, isHeatmap: true };
-      
-    default:
-      return base;
-  }
+  return getPlotCapabilities(plotType);
 };
 
 /**

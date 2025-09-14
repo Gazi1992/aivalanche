@@ -6,6 +6,7 @@
  */
 
 import { createMetadataStructure, initializeFromFigure, updateMetadataValues } from './metadataStructure';
+import { detectPlotType, getPlotCapabilities } from './plotCapabilities';
 
 /**
  * Create a managed figure with embedded metadata
@@ -16,7 +17,13 @@ import { createMetadataStructure, initializeFromFigure, updateMetadataValues } f
 export const createManagedFigure = (plotlyFigure, pythonMetadata = null, figureId = null) => {
   // Initialize metadata from the Plotly figure
   let metadata = initializeFromFigure(plotlyFigure);
-  
+
+  // Detect plot type and set capabilities
+  const plotType = pythonMetadata?.plotType || detectPlotType(plotlyFigure);
+  const capabilities = getPlotCapabilities(plotType);
+  metadata.plotType = plotType;
+  metadata.capabilities = capabilities;
+
   // If Python provided metadata, update specific values
   if (pythonMetadata) {
     const flattenMetadata = (obj, prefix = '') => {

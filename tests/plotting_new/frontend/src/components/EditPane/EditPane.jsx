@@ -1,12 +1,13 @@
 import React from 'react';
 import { useFixedMetadata } from './useFixedMetadata';
 import AppearanceSection from './AppearanceSection';
-import { 
-  overlayStyle, 
-  headerStyle, 
+import { detectPlotType, getPlotCapabilities } from '../../utils/plotCapabilities';
+import {
+  overlayStyle,
+  headerStyle,
   contentStyle,
   closeButtonStyle,
-  backdropStyle 
+  backdropStyle
 } from './styles';
 
 const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
@@ -22,16 +23,23 @@ const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
     updateTraceProperty
   } = useFixedMetadata(figure, isOpen, onUpdate);
   
-  // Determine plot capabilities
-  const hasAxes = capabilities.hasAxes !== false;
-  const hasLegend = capabilities.hasLegend !== false;
-  const hasData = figure?.data?.length > 0 && !capabilities.isParallelCoordinates && !capabilities.isScatterMatrix;
+  // Detect plot type and get comprehensive capabilities
+  const plotType = detectPlotType(figure);
+  const plotCapabilities = getPlotCapabilities(plotType);
+
+  // Use the comprehensive capabilities
+  const hasTitle = plotCapabilities.hasTitle;
+  const hasAxes = plotCapabilities.hasAxes;
+  const hasLegend = plotCapabilities.hasLegend;
+  const hasGrid = plotCapabilities.hasGrid;
+  const hasData = figure?.data?.length > 0 && !plotCapabilities.isParallelCoordinates && !plotCapabilities.isScatterMatrix;
   
-  // Add axis type info to metadata for AxisSubsection
+  // Add axis type info and capabilities to metadata
   const enhancedMetadata = {
     ...metadata,
     xAxisType: figure?.xAxisType,
-    yAxisType: figure?.yAxisType
+    yAxisType: figure?.yAxisType,
+    plotCapabilities
   };
   
   // Get subsection props from the hook
@@ -53,9 +61,12 @@ const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
           <AppearanceSection
             appearanceExpanded={expansions.appearance}
             setAppearanceExpanded={() => toggleExpansion('appearance')}
+            hasTitle={hasTitle}
             hasAxes={hasAxes}
             hasLegend={hasLegend}
+            hasGrid={hasGrid}
             hasData={hasData}
+            plotCapabilities={plotCapabilities}
             metadata={enhancedMetadata}
             titleState={props.titleState}
             xAxisState={props.xAxisState}
