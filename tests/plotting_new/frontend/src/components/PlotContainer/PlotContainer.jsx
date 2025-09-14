@@ -55,12 +55,18 @@ const PlotContainer = ({
 
     const data = getIsolatedData();
     const layout = getIsolatedLayout();
-    
+
+    // Check if this is a 3D plot
+    const is3D = layout.scene || (data && data[0] &&
+                 (data[0].type === 'scatter3d' ||
+                  data[0].type === 'surface' ||
+                  data[0].type === 'mesh3d'));
+
     const config = {
       displaylogo: false,
       displayModeBar: false,
       responsive: true,
-      scrollZoom: false,
+      scrollZoom: is3D, // Enable scroll zoom for 3D plots
       edits: {
         legendPosition: true,
         titleText: false,
@@ -337,6 +343,8 @@ const PlotContainer = ({
     // Middle-click drag for panning
     let panStartX = 0, panStartY = 0;
     let panInitRanges = {};
+    let panInitCamera = null;
+    let is3DPlot = false;
 
     const handlePanMove = (mvEvt) => {
       if ((mvEvt.buttons & 4) === 0) return;
@@ -347,12 +355,23 @@ const PlotContainer = ({
 
       const update = {};
 
-      if (isSplom) {
+      if (is3DPlot && panInitCamera) {
+        // For 3D plots, pan by adjusting camera center
+        const sensitivity = 0.01;
+        update['scene.camera'] = {
+          ...panInitCamera,
+          center: {
+            x: (panInitCamera.center?.x || 0) - dx * sensitivity,
+            y: (panInitCamera.center?.y || 0) + dy * sensitivity,
+            z: panInitCamera.center?.z || 0
+          }
+        };
+      } else if (isSplom) {
         // For SPLOM, pan all visible axes
         Object.keys(panInitRanges).forEach(axisName => {
           const initRange = panInitRanges[axisName];
           const isX = axisName.startsWith('xaxis');
-          
+
           if (isX) {
             const xScale = (initRange[1] - initRange[0]) / rect.width;
             const xOffset = dx * xScale;
@@ -364,7 +383,7 @@ const PlotContainer = ({
           }
         });
       } else {
-        // Regular plot
+        // Regular 2D plot
         if (panInitRanges.xaxis && panInitRanges.yaxis) {
           const xScale = (panInitRanges.xaxis[1] - panInitRanges.xaxis[0]) / rect.width;
           const yScale = (panInitRanges.yaxis[1] - panInitRanges.yaxis[0]) / rect.height;
@@ -375,7 +394,7 @@ const PlotContainer = ({
           update['yaxis.range'] = [panInitRanges.yaxis[0] - yOffset, panInitRanges.yaxis[1] - yOffset];
         }
       }
-      
+
       if (Object.keys(update).length > 0) {
         Plotly.relayout(plotDiv, update);
       }
@@ -396,25 +415,42 @@ const PlotContainer = ({
       panStartX = pdEvt.clientX;
       panStartY = pdEvt.clientY;
       panInitRanges = {};
+      panInitCamera = null;
 
-      if (isSplom) {
+      // Check if this is a 3D plot
+      is3DPlot = layout.scene || (figure.data && figure.data[0] &&
+                  (figure.data[0].type === 'scatter3d' ||
+                   figure.data[0].type === 'surface' ||
+                   figure.data[0].type === 'mesh3d'));
+
+      if (is3DPlot) {
+        // Store camera position for 3D plot
+        panInitCamera = layout.scene?.camera ? JSON.parse(JSON.stringify(layout.scene.camera)) : {
+          eye: { x: 1.25, y: 1.25, z: 1.25 },
+          center: { x: 0, y: 0, z: 0 },
+          up: { x: 0, y: 0, z: 1 }
+        };
+        window.addEventListener('pointermove', handlePanMove);
+        window.addEventListener('pointerup', handlePanUp);
+      } else if (isSplom) {
         // Store all axis ranges for SPLOM
         Object.keys(layout).forEach(key => {
           if ((key.startsWith('xaxis') || key.startsWith('yaxis')) && layout[key].range) {
             panInitRanges[key] = [...layout[key].range];
           }
         });
+        if (Object.keys(panInitRanges).length > 0) {
+          window.addEventListener('pointermove', handlePanMove);
+          window.addEventListener('pointerup', handlePanUp);
+        }
       } else {
-        // Regular plot
+        // Regular 2D plot
         if (layout.xaxis && layout.yaxis && layout.xaxis.range && layout.yaxis.range) {
           panInitRanges.xaxis = [...layout.xaxis.range];
           panInitRanges.yaxis = [...layout.yaxis.range];
+          window.addEventListener('pointermove', handlePanMove);
+          window.addEventListener('pointerup', handlePanUp);
         }
-      }
-      
-      if (Object.keys(panInitRanges).length > 0) {
-        window.addEventListener('pointermove', handlePanMove);
-        window.addEventListener('pointerup', handlePanUp);
       }
     };
 
