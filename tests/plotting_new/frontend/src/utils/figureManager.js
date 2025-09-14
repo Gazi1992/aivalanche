@@ -43,6 +43,7 @@ export const createManagedFigure = (plotlyFigure, pythonMetadata = null, figureI
     data: plotlyFigure.data || [],
     layout: plotlyFigure.layout || {},
     metadata: metadata,
+    originalMetadata: JSON.parse(JSON.stringify(metadata)), // Store original for reset
     visibility: true
   };
   

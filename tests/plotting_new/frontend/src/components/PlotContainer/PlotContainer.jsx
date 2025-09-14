@@ -190,6 +190,7 @@ const PlotContainer = ({
     // Right-click drag for scaling
     let scaleStartX = 0, scaleStartY = 0;
     let scaleInitRanges = {};
+    let scaleStartRelX = 0, scaleStartRelY = 0;
     
     const handleScaleMove = (moveEvt) => {
       if (moveEvt.buttons !== 2) return;
@@ -208,14 +209,36 @@ const PlotContainer = ({
       const update = {};
       
       if (isSplom) {
-        // For SPLOM, scale all visible axes
+        // For SPLOM, only scale axes in same row/column based on starting position
+        const layout = plotDiv._fullLayout;
+        
         Object.keys(scaleInitRanges).forEach(axisName => {
+          const axis = layout[axisName];
+          if (!axis || !axis.domain) return;
+          
           const initRange = scaleInitRanges[axisName];
-          const center = (initRange[0] + initRange[1]) / 2;
           const isX = axisName.startsWith('xaxis');
-          const factor = isX ? fx : fy;
-          const half = (initRange[1] - initRange[0]) / 2 * factor;
-          update[`${axisName}.range`] = [center - half, center + half];
+          
+          // Check if this axis should be scaled based on initial mouse position
+          let shouldScale = false;
+          if (isX) {
+            // X-axis: scale if mouse started in this column
+            if (scaleStartRelX >= axis.domain[0] && scaleStartRelX <= axis.domain[1]) {
+              shouldScale = true;
+            }
+          } else {
+            // Y-axis: scale if mouse started in this row
+            if (scaleStartRelY >= axis.domain[0] && scaleStartRelY <= axis.domain[1]) {
+              shouldScale = true;
+            }
+          }
+          
+          if (shouldScale) {
+            const center = (initRange[0] + initRange[1]) / 2;
+            const factor = isX ? fx : fy;
+            const half = (initRange[1] - initRange[0]) / 2 * factor;
+            update[`${axisName}.range`] = [center - half, center + half];
+          }
         });
       } else {
         // Regular plot
@@ -247,8 +270,11 @@ const PlotContainer = ({
       const layout = plotDiv._fullLayout;
       if (!layout) return;
       
+      const rect = plotDiv.getBoundingClientRect();
       scaleStartX = downEvt.clientX;
       scaleStartY = downEvt.clientY;
+      scaleStartRelX = (downEvt.clientX - rect.left) / rect.width;
+      scaleStartRelY = 1 - (downEvt.clientY - rect.top) / rect.height;
       scaleInitRanges = {};
       
       if (isSplom) {

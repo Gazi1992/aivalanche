@@ -387,7 +387,6 @@ fig_pcp = go.Figure(data=
             )
         ),
         labelside='bottom',  # Move labels to bottom
-        labelangle=0,  # Keep labels horizontal
         dimensions=[
             dict(
                 range=[0, 1],

@@ -1,11 +1,11 @@
 import React from 'react';
 import PlotButton from '../PlotButton';
 import PlotContainer from '../PlotContainer/PlotContainer.jsx';
-import { EditIcon, TableIcon, DownloadIcon, ShrinkIcon } from '../icons';
+import { EditIcon, TableIcon, DownloadIcon, ResetIcon, ShrinkIcon } from '../icons';
 import { downloadPlotAsImage } from '../../utils/plotUtils';
 import './ExpandedPlotView.css';
 
-const ExpandedPlotView = ({ activeFig, onClose, onEditFigure, onViewTable, themedLayout }) => {
+const ExpandedPlotView = ({ activeFig, onClose, onEditFigure, onViewTable, onResetFigure, themedLayout }) => {
   if (!activeFig) return null;
 
   const handleEditClick = () => {
@@ -42,6 +42,11 @@ const ExpandedPlotView = ({ activeFig, onClose, onEditFigure, onViewTable, theme
               onClick={handleDownloadClick}
               title="Download as PNG"
               icon={DownloadIcon}
+            />
+            <PlotButton
+              onClick={() => onResetFigure(activeFig)}
+              title="Reset to original"
+              icon={ResetIcon}
             />
             <PlotButton
               onClick={onClose}

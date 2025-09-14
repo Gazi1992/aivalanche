@@ -308,6 +308,22 @@ function App() {
     );
     setLocalFigures(updatedFigures);
   };
+
+  // Reset figure to original state
+  const handleResetFigure = (figure) => {
+    if (!figure.originalMetadata) {
+      console.warn('No original metadata found for figure:', figure.id);
+      return;
+    }
+    
+    // Create a reset figure with original metadata
+    const resetFigure = {
+      ...figure,
+      metadata: JSON.parse(JSON.stringify(figure.originalMetadata))
+    };
+    
+    handleUpdateFigure(resetFigure);
+  };
   
   // App styles
   const appStyle = {
@@ -410,6 +426,7 @@ function App() {
           onEditFigure={handleEditFigure}
           onViewTable={handleViewTable}
           onExpandFigure={handleExpandFigure}
+          onResetFigure={handleResetFigure}
           themedLayout={themedLayout}
         />
       </main>
@@ -432,6 +449,7 @@ function App() {
         onClose={handleCloseExpandedView}
         onEditFigure={handleEditFigure}
         onViewTable={handleViewTable}
+        onResetFigure={handleResetFigure}
         themedLayout={themedLayout}
       />
     </div>

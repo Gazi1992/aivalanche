@@ -2,7 +2,7 @@ import React from 'react';
 import ColumnSelector from '../ColumnSelector.jsx';
 import PlotButton from '../PlotButton.jsx';
 import PlotContainer from '../PlotContainer/PlotContainer.jsx';
-import { EditIcon, TableIcon, ExpandIcon, DownloadIcon } from '../icons';
+import { EditIcon, TableIcon, ExpandIcon, DownloadIcon, ResetIcon } from '../icons';
 import { downloadPlotAsImage } from '../../utils/plotUtils';
 
 const PlotGridContainer = ({
@@ -16,6 +16,7 @@ const PlotGridContainer = ({
   onEditFigure,
   onViewTable,
   onExpandFigure,
+  onResetFigure,
   themedLayout
 }) => {
   const gridContainerStyle = {
@@ -76,6 +77,16 @@ const PlotGridContainer = ({
                   title="View data"
                   icon={TableIcon}
                 />
+                <PlotButton
+                  onClick={() => handleDownloadClick(fig)}
+                  title="Download as PNG"
+                  icon={DownloadIcon}
+                />
+                <PlotButton
+                  onClick={() => onResetFigure(fig)}
+                  title="Reset to original"
+                  icon={ResetIcon}
+                />
                 {figures.length > 1 && (
                   <PlotButton
                     onClick={() => onExpandFigure(fig)}
@@ -83,11 +94,6 @@ const PlotGridContainer = ({
                     icon={ExpandIcon}
                   />
                 )}
-                <PlotButton
-                  onClick={() => handleDownloadClick(fig)}
-                  title="Download as PNG"
-                  icon={DownloadIcon}
-                />
               </div>
               <div style={{ flex: '1 1 auto', minHeight: 0, width: '100%' }}>
                 <PlotContainer
