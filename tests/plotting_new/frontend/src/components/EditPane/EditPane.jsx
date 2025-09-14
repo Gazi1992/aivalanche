@@ -11,6 +11,11 @@ import {
 } from './styles';
 
 const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
+  // Early return if no figure
+  if (!figure) {
+    return null;
+  }
+
   const {
     metadata,
     expansions,
@@ -22,7 +27,7 @@ const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
     updateLegendItem,
     updateTraceProperty
   } = useFixedMetadata(figure, isOpen, onUpdate);
-  
+
   // Detect plot type and get comprehensive capabilities
   const plotType = detectPlotType(figure);
   const plotCapabilities = getPlotCapabilities(plotType);

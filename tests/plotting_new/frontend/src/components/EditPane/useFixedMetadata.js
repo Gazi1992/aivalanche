@@ -74,6 +74,21 @@ export const useFixedMetadata = (figure, isOpen, onUpdate) => {
   const updateTimer = useRef(null);
   const isInitialMount = useRef(true);
   const lastFigureId = useRef(null);
+
+  // Early return with default values if no figure
+  if (!figure) {
+    return {
+      metadata: state.metadata,
+      expansions: state.expansions,
+      capabilities: state.metadata?.capabilities || {},
+      toggleExpansion: () => {},
+      resetAppearance: () => {},
+      handleBlur: () => {},
+      createSubsectionProps: () => ({}),
+      updateLegendItem: () => {},
+      updateTraceProperty: () => {}
+    };
+  }
   
   // Initialize metadata when EditPane opens
   useEffect(() => {

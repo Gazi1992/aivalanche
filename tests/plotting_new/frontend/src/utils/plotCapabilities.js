@@ -14,6 +14,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: false,
@@ -30,6 +31,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: false,
@@ -46,6 +48,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: false,
@@ -62,6 +65,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: false, // Has colorbar instead
     hasAxes: true,
     hasGrid: false, // Grid doesn't make sense for heatmap
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: false,
@@ -79,6 +83,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: false,
@@ -95,6 +100,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: false,
@@ -112,6 +118,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: false,
     hasGrid: false,
+    hasPlotArea: false, // Pie doesn't have distinct plot area
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -128,6 +135,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: false,
     hasGrid: false,
+    hasPlotArea: false,
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -144,6 +152,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: false,
     hasGrid: false,
+    hasPlotArea: false,
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -160,6 +169,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: false,
     hasGrid: false,
+    hasPlotArea: false,
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -177,6 +187,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: false, // Has polar axes, not cartesian
     hasGrid: true, // Polar grid
+    hasPlotArea: true, // Has polar plot area
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -194,6 +205,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: false,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -212,6 +224,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: false, // PCP doesn't use standard legend
     hasAxes: false, // Has its own axis system
     hasGrid: false,
+    hasPlotArea: true,
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -230,6 +243,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: false,
     hasAxes: false,
     hasGrid: false,
+    hasPlotArea: true,
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -247,13 +261,14 @@ export const PLOT_CAPABILITIES = {
     hasTitle: true,
     hasLegend: false, // SPLOM doesn't use standard legend
     hasAxes: false, // Has matrix of axes
-    hasGrid: false, // Each subplot has its own grid
+    hasGrid: true, // SPLOM should have grid controls for all subplots
+    hasPlotArea: true, // SPLOM has a plot area
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
     hasMatrixAxes: true,
-    hasAxisLabels: true,
-    hasAxisTicks: true,
+    hasAxisLabels: false, // SPLOM axis labels are handled differently
+    hasAxisTicks: false, // SPLOM axis ticks are handled differently
     hasDataLabels: false,
     supportsPan: false, // Individual subplots might support it
     supportsZoom: false,
@@ -266,6 +281,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: false, // Sankey doesn't use standard legend
     hasAxes: false,
     hasGrid: false,
+    hasPlotArea: false, // Sankey doesn't have distinct plot area
     hasXAxis: false,
     hasYAxis: false,
     hasZAxis: false,
@@ -285,6 +301,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: true,
@@ -302,6 +319,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: false, // Has colorbar
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: true,
@@ -320,6 +338,7 @@ export const PLOT_CAPABILITIES = {
     hasLegend: true,
     hasAxes: true,
     hasGrid: true,
+    hasPlotArea: true,
     hasXAxis: true,
     hasYAxis: true,
     hasZAxis: true,
@@ -349,6 +368,11 @@ export function getPlotCapabilities(plotType) {
  * @returns {string} Detected plot type
  */
 export function detectPlotType(figure) {
+  // Null check
+  if (!figure) {
+    return 'scatter';
+  }
+
   // First check if metadata explicitly specifies plot type
   if (figure.metadata?.plotType) {
     return figure.metadata.plotType;

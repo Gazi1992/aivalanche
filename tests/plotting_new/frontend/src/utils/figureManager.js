@@ -227,7 +227,173 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
     gridcolor: m.axes.y.grid.color || 'rgba(128, 128, 128, 0.1)',  // Use main grid color
     gridwidth: 1
   };
-  
+
+  // Special handling for SPLOM - apply grid and font settings to all axes
+  const isSplom = figure.data && figure.data[0] && figure.data[0].type === 'splom';
+  if (isSplom) {
+    // First, ensure all axes exist in the layout
+    // SPLOM creates multiple axes (xaxis, xaxis2, xaxis3, etc.)
+    // We need to find the highest numbered axis to iterate through all
+    let maxAxisNum = 1;
+    Object.keys(layout).forEach(key => {
+      const match = key.match(/^[xy]axis(\d*)$/);
+      if (match) {
+        const num = match[1] ? parseInt(match[1]) : 1;
+        maxAxisNum = Math.max(maxAxisNum, num);
+      }
+    });
+
+    // Apply settings to all axes
+    for (let i = 1; i <= maxAxisNum; i++) {
+      const xKey = i === 1 ? 'xaxis' : `xaxis${i}`;
+      const yKey = i === 1 ? 'yaxis' : `yaxis${i}`;
+
+      // Apply to X axes
+      if (!layout[xKey]) {
+        layout[xKey] = {};
+      }
+
+      // Grid settings
+      layout[xKey].showgrid = m.axes.x.grid.visible;
+      if (m.axes.x.grid.visible) {
+        layout[xKey].gridcolor = m.axes.x.grid.color || m.grid.x.color;
+        layout[xKey].gridwidth = m.axes.x.grid.width || 1;
+      }
+      layout[xKey].zerolinecolor = m.axes.x.grid.color || m.grid.x.color || 'rgba(128, 128, 128, 0.2)';
+      layout[xKey].zerolinewidth = m.axes.x.grid.width || 1;
+
+      // Minor grid
+      layout[xKey].minor = {
+        showgrid: m.axes.x.minorGrid ? m.axes.x.minorGrid.visible : false,
+        gridcolor: m.axes.x.grid.color || m.grid.x.color || 'rgba(128, 128, 128, 0.1)',
+        gridwidth: 1
+      };
+
+      // Tick font settings
+      layout[xKey].tickfont = {
+        size: m.text?.axisTick?.fontSize || 11,
+        color: m.text?.axisTick?.color || '#444444'
+      };
+
+      // Title font settings (ensure title object exists)
+      if (!layout[xKey].title) {
+        layout[xKey].title = {};
+      }
+      layout[xKey].title.font = {
+        size: m.text?.axisLabel?.fontSize || 14,
+        color: m.text?.axisLabel?.color || '#444444',
+        weight: m.text?.axisLabel?.bold ? 'bold' : 'normal',
+        style: m.text?.axisLabel?.italic ? 'italic' : 'normal'
+      };
+
+      // Apply to Y axes
+      if (!layout[yKey]) {
+        layout[yKey] = {};
+      }
+
+      // Grid settings
+      layout[yKey].showgrid = m.axes.y.grid.visible;
+      if (m.axes.y.grid.visible) {
+        layout[yKey].gridcolor = m.axes.y.grid.color || m.grid.y.color;
+        layout[yKey].gridwidth = m.axes.y.grid.width || 1;
+      }
+      layout[yKey].zerolinecolor = m.axes.y.grid.color || m.grid.y.color || 'rgba(128, 128, 128, 0.2)';
+      layout[yKey].zerolinewidth = m.axes.y.grid.width || 1;
+
+      // Minor grid
+      layout[yKey].minor = {
+        showgrid: m.axes.y.minorGrid ? m.axes.y.minorGrid.visible : false,
+        gridcolor: m.axes.y.grid.color || m.grid.y.color || 'rgba(128, 128, 128, 0.1)',
+        gridwidth: 1
+      };
+
+      // Tick font settings
+      layout[yKey].tickfont = {
+        size: m.text?.axisTick?.fontSize || 11,
+        color: m.text?.axisTick?.color || '#444444'
+      };
+
+      // Title font settings (ensure title object exists)
+      if (!layout[yKey].title) {
+        layout[yKey].title = {};
+      }
+      layout[yKey].title.font = {
+        size: m.text?.axisLabel?.fontSize || 14,
+        color: m.text?.axisLabel?.color || '#444444',
+        weight: m.text?.axisLabel?.bold ? 'bold' : 'normal',
+        style: m.text?.axisLabel?.italic ? 'italic' : 'normal'
+      };
+    }
+  }
+
+  // Special handling for polar plots (scatterpolar, barpolar)
+  const isPolar = figure.data && figure.data[0] &&
+                  (figure.data[0].type === 'scatterpolar' || figure.data[0].type === 'barpolar');
+  if (isPolar) {
+    // Initialize polar layout if not present
+    if (!layout.polar) {
+      layout.polar = {};
+    }
+
+    // Apply radial axis grid settings
+    if (!layout.polar.radialaxis) {
+      layout.polar.radialaxis = {};
+    }
+    layout.polar.radialaxis.showgrid = m.axes.x.grid.visible || m.grid.x.visible;
+    if (m.axes.x.grid.visible || m.grid.x.visible) {
+      layout.polar.radialaxis.gridcolor = m.axes.x.grid.color || m.grid.x.color || 'rgba(128, 128, 128, 0.2)';
+      layout.polar.radialaxis.gridwidth = m.axes.x.grid.width || 1;
+    }
+
+    // Apply angular axis grid settings
+    if (!layout.polar.angularaxis) {
+      layout.polar.angularaxis = {};
+    }
+    layout.polar.angularaxis.showgrid = m.axes.x.grid.visible || m.grid.x.visible;
+    if (m.axes.x.grid.visible || m.grid.x.visible) {
+      layout.polar.angularaxis.gridcolor = m.axes.x.grid.color || m.grid.x.color || 'rgba(128, 128, 128, 0.2)';
+      layout.polar.angularaxis.gridwidth = m.axes.x.grid.width || 1;
+    }
+
+    // Apply text font settings to polar axes
+    // For polar plots, angular axis labels ARE the tick labels (categories around the circle)
+    // So axis label font should control the angular tick labels
+
+    // Angular axis tick labels (these are the category labels around the circle)
+    // These should be controlled by axis label font settings
+    layout.polar.angularaxis.tickfont = {
+      size: m.text?.axisLabel?.fontSize || 14,
+      color: m.text?.axisLabel?.color || '#444444',
+      family: m.text?.axisLabel?.family,
+      weight: m.text?.axisLabel?.bold ? 'bold' : 'normal',
+      style: m.text?.axisLabel?.italic ? 'italic' : 'normal'
+    };
+
+    // Radial axis tick labels (the numeric values along the radius)
+    // These should be controlled by axis tick font settings
+    layout.polar.radialaxis.tickfont = {
+      size: m.text?.axisTick?.fontSize || 11,
+      color: m.text?.axisTick?.color || '#444444'
+    };
+
+    // Radial axis title (if provided)
+    if (m.axes.x.label.visible && m.axes.x.label.text) {
+      layout.polar.radialaxis.title = {
+        text: m.axes.x.label.text,
+        font: {
+          size: m.text?.axisLabel?.fontSize || 14,
+          color: m.text?.axisLabel?.color || '#444444',
+          family: m.text?.axisLabel?.family,
+          weight: m.text?.axisLabel?.bold ? 'bold' : 'normal',
+          style: m.text?.axisLabel?.italic ? 'italic' : 'normal'
+        }
+      };
+    }
+
+    // Apply background color to polar subplot
+    layout.polar.bgcolor = m.background.plot.color;
+  }
+
   // Apply legend from metadata
   layout.showlegend = m.legend.visible;
   if (m.legend.visible) {

@@ -124,30 +124,31 @@ const AppearanceSection = ({
             </>
           )}
 
-          {hasGrid && (
-            <GridSubsection
-              gridExpanded={gridState.expanded}
-              setGridExpanded={gridState.setExpanded}
-              xGridVisible={gridState.xGridVisible}
-              setXGridVisible={gridState.setXGridVisible}
-              yGridVisible={gridState.yGridVisible}
-              setYGridVisible={gridState.setYGridVisible}
-              xMinorGridVisible={gridState.xMinorGridVisible}
-              setXMinorGridVisible={gridState.setXMinorGridVisible}
-              yMinorGridVisible={gridState.yMinorGridVisible}
-              setYMinorGridVisible={gridState.setYMinorGridVisible}
-              gridColor={gridState.gridColor}
-              setGridColor={gridState.setGridColor}
-              figureBackgroundColor={backgroundState.figureBackgroundColor}
-              setFigureBackgroundColor={backgroundState.setFigureBackgroundColor}
-              figureBorderColor={backgroundState.figureBorderColor}
-              setFigureBorderColor={backgroundState.setFigureBorderColor}
-              plotBackgroundColor={backgroundState.plotBackgroundColor}
-              setPlotBackgroundColor={backgroundState.setPlotBackgroundColor}
-              plotBorderColor={backgroundState.plotBorderColor}
-              setPlotBorderColor={backgroundState.setPlotBorderColor}
-            />
-          )}
+          {/* Always show GridSubsection (for backgrounds), but pass hasGrid and hasPlotArea to conditionally show controls */}
+          <GridSubsection
+            gridExpanded={gridState.expanded}
+            setGridExpanded={gridState.setExpanded}
+            hasGrid={hasGrid}
+            hasPlotArea={plotCapabilities.hasPlotArea}
+            xGridVisible={gridState.xGridVisible}
+            setXGridVisible={gridState.setXGridVisible}
+            yGridVisible={gridState.yGridVisible}
+            setYGridVisible={gridState.setYGridVisible}
+            xMinorGridVisible={gridState.xMinorGridVisible}
+            setXMinorGridVisible={gridState.setXMinorGridVisible}
+            yMinorGridVisible={gridState.yMinorGridVisible}
+            setYMinorGridVisible={gridState.setYMinorGridVisible}
+            gridColor={gridState.gridColor}
+            setGridColor={gridState.setGridColor}
+            figureBackgroundColor={backgroundState.figureBackgroundColor}
+            setFigureBackgroundColor={backgroundState.setFigureBackgroundColor}
+            figureBorderColor={backgroundState.figureBorderColor}
+            setFigureBorderColor={backgroundState.setFigureBorderColor}
+            plotBackgroundColor={backgroundState.plotBackgroundColor}
+            setPlotBackgroundColor={backgroundState.setPlotBackgroundColor}
+            plotBorderColor={backgroundState.plotBorderColor}
+            setPlotBorderColor={backgroundState.setPlotBorderColor}
+          />
 
           {hasLegend && (
             <LegendSubsection
