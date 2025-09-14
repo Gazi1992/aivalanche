@@ -104,8 +104,12 @@ const PlotContainer = ({
       isSplom = firstTrace.type === 'splom';
     }
 
-    // Track if right-click is from middle-click simulation (for 3D plots)
-    let isSimulatedRightClick = false;
+    // Check if this is a 3D plot
+    const layout = plotDiv._fullLayout;
+    const is3D = layout && (layout.scene || (figure.data && figure.data[0] &&
+                 (figure.data[0].type === 'scatter3d' ||
+                  figure.data[0].type === 'surface' ||
+                  figure.data[0].type === 'mesh3d')));
 
     // Prevent context menu
     const handleContextMenu = (e) => e.preventDefault();
@@ -213,6 +217,46 @@ const PlotContainer = ({
     plotDiv.addEventListener('wheel', handleWheel, { passive: false });
     interactionHandlersRef.current.wheel = handleWheel;
 
+    // For 3D plots, we want middle-click to act as right-click for panning
+    if (is3D) {
+      const handleMiddleClick = (e) => {
+        if (e.button === 1) { // Middle button
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Create and dispatch a right-click event
+          const rightClickEvent = new MouseEvent('mousedown', {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            button: 2,
+            buttons: 2,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            screenX: e.screenX,
+            screenY: e.screenY
+          });
+
+          // Temporarily remove our handlers to let Plotly handle it
+          plotDiv.removeEventListener('mousedown', handleMiddleClick);
+
+          // Dispatch the event
+          plotDiv.dispatchEvent(rightClickEvent);
+
+          // Re-add our handler after a short delay
+          setTimeout(() => {
+            plotDiv.addEventListener('mousedown', handleMiddleClick);
+          }, 10);
+        }
+      };
+
+      plotDiv.addEventListener('mousedown', handleMiddleClick);
+      interactionHandlersRef.current.middleClick = handleMiddleClick;
+
+      // Don't attach other custom handlers for 3D plots
+      return;
+    }
+
     // Right-click drag for scaling (only for 2D plots)
     let scaleStartX = 0, scaleStartY = 0;
     let scaleInitRanges = {};
@@ -220,14 +264,6 @@ const PlotContainer = ({
 
     const handleScaleMove = (moveEvt) => {
       if (moveEvt.buttons !== 2) return;
-
-      // Skip for 3D plots
-      const layout = plotDiv._fullLayout;
-      const is3D = layout && (layout.scene || (figure.data && figure.data[0] &&
-                   (figure.data[0].type === 'scatter3d' ||
-                    figure.data[0].type === 'surface' ||
-                    figure.data[0].type === 'mesh3d')));
-      if (is3D) return;
       
       const rect = plotDiv.getBoundingClientRect();
       const dx = moveEvt.clientX - scaleStartX;
@@ -299,27 +335,6 @@ const PlotContainer = ({
 
     const handleScaleDown = (downEvt) => {
       if (downEvt.button !== 2) return;
-
-      // Skip right-click for 3D plots unless it's our simulated one
-      const layout = plotDiv._fullLayout;
-      if (!layout) return;
-
-      const is3D = layout.scene || (figure.data && figure.data[0] &&
-                   (figure.data[0].type === 'scatter3d' ||
-                    figure.data[0].type === 'surface' ||
-                    figure.data[0].type === 'mesh3d'));
-      if (is3D && !isSimulatedRightClick) {
-        downEvt.preventDefault();
-        downEvt.stopPropagation();
-        return;
-      }
-
-      // If it's a simulated right-click for 3D, let it pass through to Plotly
-      if (is3D && isSimulatedRightClick) {
-        isSimulatedRightClick = false; // Reset flag
-        return; // Let Plotly handle it
-      }
-
       downEvt.preventDefault();
       
       const rect = plotDiv.getBoundingClientRect();
@@ -411,30 +426,6 @@ const PlotContainer = ({
 
       const layout = plotDiv._fullLayout;
       if (!layout) return;
-
-      // Check if this is a 3D plot
-      const is3D = layout.scene || (figure.data && figure.data[0] &&
-                  (figure.data[0].type === 'scatter3d' ||
-                   figure.data[0].type === 'surface' ||
-                   figure.data[0].type === 'mesh3d'));
-
-      if (is3D) {
-        // For 3D plots, convert middle-click to right-click for Plotly's native pan
-        isSimulatedRightClick = true; // Set flag before dispatching
-        const event = new MouseEvent('mousedown', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          button: 2, // Right button
-          buttons: 2, // Right button pressed
-          clientX: pdEvt.clientX,
-          clientY: pdEvt.clientY,
-          screenX: pdEvt.screenX,
-          screenY: pdEvt.screenY
-        });
-        plotDiv.dispatchEvent(event);
-        return;
-      }
 
       panStartX = pdEvt.clientX;
       panStartY = pdEvt.clientY;
