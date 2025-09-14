@@ -23,7 +23,7 @@ import {
   syncFigureWithDOM
 } from './utils/figureManager.js';
 
-const API_BASE = 'http://localhost:8001';
+const API_BASE = 'http://localhost:8000';
 
 function App() {
   // Core state
