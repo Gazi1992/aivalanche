@@ -95,7 +95,7 @@ const PlotContainer = ({
     if (!plotDivRef.current) return;
 
     const plotDiv = plotDivRef.current;
-    
+
     // Check if this is a special plot type
     const plotData = plotDiv._fullData;
     let isSplom = false;
@@ -103,7 +103,10 @@ const PlotContainer = ({
       const firstTrace = plotData[0];
       isSplom = firstTrace.type === 'splom';
     }
-    
+
+    // Track if right-click is from middle-click simulation (for 3D plots)
+    let isSimulatedRightClick = false;
+
     // Prevent context menu
     const handleContextMenu = (e) => e.preventDefault();
     plotDiv.addEventListener('contextmenu', handleContextMenu);
@@ -297,7 +300,7 @@ const PlotContainer = ({
     const handleScaleDown = (downEvt) => {
       if (downEvt.button !== 2) return;
 
-      // Always skip right-click for 3D plots - we use middle-click instead
+      // Skip right-click for 3D plots unless it's our simulated one
       const layout = plotDiv._fullLayout;
       if (!layout) return;
 
@@ -305,10 +308,16 @@ const PlotContainer = ({
                    (figure.data[0].type === 'scatter3d' ||
                     figure.data[0].type === 'surface' ||
                     figure.data[0].type === 'mesh3d'));
-      if (is3D) {
+      if (is3D && !isSimulatedRightClick) {
         downEvt.preventDefault();
         downEvt.stopPropagation();
         return;
+      }
+
+      // If it's a simulated right-click for 3D, let it pass through to Plotly
+      if (is3D && isSimulatedRightClick) {
+        isSimulatedRightClick = false; // Reset flag
+        return; // Let Plotly handle it
       }
 
       downEvt.preventDefault();
@@ -411,6 +420,7 @@ const PlotContainer = ({
 
       if (is3D) {
         // For 3D plots, convert middle-click to right-click for Plotly's native pan
+        isSimulatedRightClick = true; // Set flag before dispatching
         const event = new MouseEvent('mousedown', {
           bubbles: true,
           cancelable: true,
