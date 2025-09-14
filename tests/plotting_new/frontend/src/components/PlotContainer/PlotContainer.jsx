@@ -74,6 +74,12 @@ const PlotContainer = ({
       },
     };
 
+    // For 3D plots, configure the drag modes
+    if (is3D) {
+      layout.dragmode = 'turntable'; // or 'orbit' for different rotation style
+      config.showTips = false;
+    }
+
     // Clean up any existing plot
     if (plotInstanceRef.current) {
       Plotly.purge(plotDivRef.current);
@@ -217,41 +223,68 @@ const PlotContainer = ({
     plotDiv.addEventListener('wheel', handleWheel, { passive: false });
     interactionHandlersRef.current.wheel = handleWheel;
 
-    // For 3D plots, we want middle-click to act as right-click for panning
+    // For 3D plots, handle middle-click pan and disable right-click
     if (is3D) {
-      const handleMiddleClick = (e) => {
+      let isPanning = false;
+      let panStartX = 0;
+      let panStartY = 0;
+      let initialCamera = null;
+
+      const handleMouseDown = (e) => {
         if (e.button === 1) { // Middle button
           e.preventDefault();
+          isPanning = true;
+          panStartX = e.clientX;
+          panStartY = e.clientY;
+
+          // Store initial camera state
+          const layout = plotDiv._fullLayout;
+          initialCamera = layout.scene?.camera ? JSON.parse(JSON.stringify(layout.scene.camera)) : {
+            eye: { x: 1.25, y: 1.25, z: 1.25 },
+            center: { x: 0, y: 0, z: 0 },
+            up: { x: 0, y: 0, z: 1 }
+          };
+        } else if (e.button === 2) { // Right button - disable it
+          e.preventDefault();
           e.stopPropagation();
-
-          // Create and dispatch a right-click event
-          const rightClickEvent = new MouseEvent('mousedown', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            button: 2,
-            buttons: 2,
-            clientX: e.clientX,
-            clientY: e.clientY,
-            screenX: e.screenX,
-            screenY: e.screenY
-          });
-
-          // Temporarily remove our handlers to let Plotly handle it
-          plotDiv.removeEventListener('mousedown', handleMiddleClick);
-
-          // Dispatch the event
-          plotDiv.dispatchEvent(rightClickEvent);
-
-          // Re-add our handler after a short delay
-          setTimeout(() => {
-            plotDiv.addEventListener('mousedown', handleMiddleClick);
-          }, 10);
         }
       };
 
-      plotDiv.addEventListener('mousedown', handleMiddleClick);
-      interactionHandlersRef.current.middleClick = handleMiddleClick;
+      const handleMouseMove = (e) => {
+        if (!isPanning) return;
+
+        const dx = (e.clientX - panStartX) * 0.01;
+        const dy = (e.clientY - panStartY) * 0.01;
+
+        const newCamera = {
+          ...initialCamera,
+          center: {
+            x: (initialCamera.center?.x || 0) - dx,
+            y: (initialCamera.center?.y || 0) + dy,
+            z: initialCamera.center?.z || 0
+          }
+        };
+
+        Plotly.relayout(plotDiv, {
+          'scene.camera': newCamera
+        });
+      };
+
+      const handleMouseUp = (e) => {
+        if (e.button === 1) {
+          isPanning = false;
+        }
+      };
+
+      plotDiv.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+
+      interactionHandlersRef.current.mouse3D = {
+        down: handleMouseDown,
+        move: handleMouseMove,
+        up: handleMouseUp
+      };
 
       // Don't attach other custom handlers for 3D plots
       return;
@@ -482,15 +515,26 @@ const PlotContainer = ({
       const plotDiv = plotDivRef.current;
       if (plotDiv) {
         // Remove all event listeners
-        Object.values(interactionHandlersRef.current).forEach(handler => {
-          if (handler) {
-            plotDiv.removeEventListener('contextmenu', interactionHandlersRef.current.contextMenu);
-            plotDiv.removeEventListener('wheel', interactionHandlersRef.current.wheel);
-            plotDiv.removeEventListener('pointerdown', interactionHandlersRef.current.scaleDown);
-            plotDiv.removeEventListener('pointerdown', interactionHandlersRef.current.panDown);
-          }
-        });
-        
+        if (interactionHandlersRef.current.contextMenu) {
+          plotDiv.removeEventListener('contextmenu', interactionHandlersRef.current.contextMenu);
+        }
+        if (interactionHandlersRef.current.wheel) {
+          plotDiv.removeEventListener('wheel', interactionHandlersRef.current.wheel);
+        }
+        if (interactionHandlersRef.current.scaleDown) {
+          plotDiv.removeEventListener('pointerdown', interactionHandlersRef.current.scaleDown);
+        }
+        if (interactionHandlersRef.current.panDown) {
+          plotDiv.removeEventListener('pointerdown', interactionHandlersRef.current.panDown);
+        }
+
+        // Remove 3D mouse handlers
+        if (interactionHandlersRef.current.mouse3D) {
+          plotDiv.removeEventListener('mousedown', interactionHandlersRef.current.mouse3D.down);
+          window.removeEventListener('mousemove', interactionHandlersRef.current.mouse3D.move);
+          window.removeEventListener('mouseup', interactionHandlersRef.current.mouse3D.up);
+        }
+
         // Purge Plotly instance
         if (plotInstanceRef.current) {
           Plotly.purge(plotDiv);
