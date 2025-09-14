@@ -111,11 +111,14 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
   
   // Check if axes are categorical (vs numeric)
   // Check at figure level first (from Python metadata), then nested metadata
-  const isCategoricalX = figure.xAxisType === 'category' || 
-                         figure.metadata?.xAxisType === 'category' || 
+  // Priority: axisTypes > xAxisType > xAxisCategorical
+  const isCategoricalX = figure.metadata?.axisTypes?.x === 'category' ||
+                         figure.xAxisType === 'category' ||
+                         figure.metadata?.xAxisType === 'category' ||
                          figure.metadata?.xAxisCategorical === true;
-  const isCategoricalY = figure.yAxisType === 'category' ||
-                         figure.metadata?.yAxisType === 'category' || 
+  const isCategoricalY = figure.metadata?.axisTypes?.y === 'category' ||
+                         figure.yAxisType === 'category' ||
+                         figure.metadata?.yAxisType === 'category' ||
                          figure.metadata?.yAxisCategorical === true;
   
   // Apply X axis range (but not for categorical axes)
@@ -332,10 +335,13 @@ export const syncFigureWithDOM = (figure, plotId) => {
   let updates = {};
   
   // Check if axes are categorical
-  const isCategoricalX = figure.metadata?.xAxisType === 'category' || 
+  // Priority: axisTypes > xAxisType > xAxisCategorical > automatic detection
+  const isCategoricalX = figure.metadata?.axisTypes?.x === 'category' ||
+                         figure.metadata?.xAxisType === 'category' ||
                          figure.metadata?.xAxisCategorical === true ||
                          fullLayout.xaxis?.type === 'category';
-  const isCategoricalY = figure.metadata?.yAxisType === 'category' || 
+  const isCategoricalY = figure.metadata?.axisTypes?.y === 'category' ||
+                         figure.metadata?.yAxisType === 'category' ||
                          figure.metadata?.yAxisCategorical === true ||
                          fullLayout.yaxis?.type === 'category';
   

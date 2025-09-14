@@ -86,6 +86,11 @@ export const renderPlot = (figure, plotId, themedLayout) => {
     Plotly.newPlot(plotId, data, layout, config);
   }
 
+  // Store metadata on the plot div for interaction handlers
+  if (figure.metadata) {
+    plotDiv.metadata = figure.metadata;
+  }
+
   // Attach unified plot interactions
   attachPlotInteractions(plotDiv);
   
@@ -165,6 +170,11 @@ export const renderExpandedPlot = (figure, overlayDivId, themedLayout) => {
     scrollZoom: false,
     edits: { legendPosition: true },
   });
+
+  // Store metadata on the overlay div for interaction handlers
+  if (figure.metadata) {
+    overlayDiv.metadata = figure.metadata;
+  }
 
   // Attach unified plot interactions to overlay
   attachPlotInteractions(overlayDiv);

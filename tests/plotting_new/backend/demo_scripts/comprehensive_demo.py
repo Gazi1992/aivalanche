@@ -49,9 +49,11 @@ fig_scatter.update_layout(
     hovermode='x unified',
     template='plotly_white'
 )
-register_plot(fig_scatter, plot_id='scatter_scientific', 
-              metadata={'title': 'Scatter Plot with Fitted Model', 
-                       'description': 'Comparison of experimental measurements with theoretical predictions'})
+register_plot(fig_scatter, plot_id='scatter_scientific',
+              metadata={'title': 'Scatter Plot with Fitted Model',
+                       'description': 'Comparison of experimental measurements with theoretical predictions',
+                       'plotType': 'scatter',
+                       'axisTypes': {'x': 'numeric', 'y': 'numeric'}})
 
 # 2. BAR CHART - Categorical Data
 print("[STATUS:info] Creating bar chart with categorical data...")
@@ -96,7 +98,8 @@ fig_bar.update_layout(
 
 register_plot(fig_bar, plot_id='bar_categorical',
               metadata={'title': 'Bar Chart with Categories',
-                       'description': 'Quarterly sales comparison across product categories'})
+                       'description': 'Quarterly sales comparison across product categories',
+                       'axisTypes': {'x': 'category', 'y': 'numeric'}})
 
 # 3. HEATMAP - Both axes categorical
 print("[STATUS:info] Creating heatmap with categorical axes...")
@@ -132,6 +135,7 @@ fig_heatmap.update_layout(
 register_plot(fig_heatmap, plot_id='heatmap_categorical',
               metadata={'title': 'Activity Heatmap',
                        'description': 'Weekly activity patterns with categorical axes',
+                       'axisTypes': {'x': 'category', 'y': 'category'},
                        'appearance': {
                            'legend': {
                                'visible': False
@@ -747,5 +751,210 @@ register_plot(fig_hbar, plot_id='horizontal_bar',
               metadata={'title': 'Horizontal Bar Chart',
                        'description': 'Department performance metrics with thresholds'})
 
+# 11. PIE CHART - Market Share Distribution
+print("[STATUS:info] Creating pie chart...")
+
+# Create data for pie chart
+companies = ['Company A', 'Company B', 'Company C', 'Company D', 'Company E', 'Others']
+market_share = [28.5, 22.3, 18.7, 14.2, 9.8, 6.5]
+colors_pie = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6', '#95a5a6']
+
+# Create pie chart
+fig_pie = go.Figure(data=[go.Pie(
+    labels=companies,
+    values=market_share,
+    hole=0.3,  # Create a donut chart
+    marker=dict(
+        colors=colors_pie,
+        line=dict(color='white', width=2)
+    ),
+    textfont=dict(size=12),
+    textposition='auto',
+    textinfo='label+percent',
+    hovertemplate='<b>%{label}</b><br>Market Share: %{value}%<br>Percentage: %{percent}<extra></extra>',
+    pull=[0.1 if i == 0 else 0 for i in range(len(companies))]  # Pull out the largest slice
+)])
+
+# Add center text for donut
+fig_pie.add_annotation(
+    text='Market<br>Share',
+    x=0.5, y=0.5,
+    font=dict(size=14, color='gray'),
+    showarrow=False
+)
+
+fig_pie.update_layout(
+    title='Market Share Distribution - Q4 2024',
+    template='plotly_white',
+    showlegend=True,
+    legend=dict(
+        yanchor="middle",
+        y=0.5,
+        xanchor="left",
+        x=1.05
+    ),
+    margin=dict(l=20, r=150, t=60, b=20),
+    dragmode='pan',  # Enable pan mode
+    # Enable scroll zoom
+    xaxis=dict(fixedrange=False),
+    yaxis=dict(fixedrange=False)
+)
+
+register_plot(fig_pie, plot_id='pie_chart',
+              metadata={'title': 'Pie Chart',
+                       'description': 'Market share distribution visualization',
+                       'plotType': 'pie'})
+
+# 12. RADAR CHART - Multi-attribute Comparison
+print("[STATUS:info] Creating radar chart...")
+
+# Create data for radar chart
+categories_radar = ['Speed', 'Reliability', 'Comfort', 'Safety', 'Fuel Economy', 'Technology', 'Design']
+n_categories = len(categories_radar)
+
+# Data for multiple products
+product_a = [85, 90, 75, 95, 70, 80, 88]
+product_b = [70, 85, 90, 80, 85, 75, 82]
+product_c = [95, 75, 80, 85, 60, 95, 90]
+
+# Create radar chart
+fig_radar = go.Figure()
+
+# Add traces for each product
+fig_radar.add_trace(go.Scatterpolar(
+    r=product_a,
+    theta=categories_radar,
+    fill='toself',
+    name='Product A',
+    line=dict(color='#3498db', width=2),
+    fillcolor='rgba(52, 152, 219, 0.2)',
+    hovertemplate='%{theta}: %{r}<extra></extra>'
+))
+
+fig_radar.add_trace(go.Scatterpolar(
+    r=product_b,
+    theta=categories_radar,
+    fill='toself',
+    name='Product B',
+    line=dict(color='#2ecc71', width=2),
+    fillcolor='rgba(46, 204, 113, 0.2)',
+    hovertemplate='%{theta}: %{r}<extra></extra>'
+))
+
+fig_radar.add_trace(go.Scatterpolar(
+    r=product_c,
+    theta=categories_radar,
+    fill='toself',
+    name='Product C',
+    line=dict(color='#e74c3c', width=2),
+    fillcolor='rgba(231, 76, 60, 0.2)',
+    hovertemplate='%{theta}: %{r}<extra></extra>'
+))
+
+fig_radar.update_layout(
+    title='Product Comparison - Radar Chart',
+    polar=dict(
+        radialaxis=dict(
+            visible=True,
+            range=[0, 100],
+            showticklabels=True,
+            ticks='outside',
+            gridcolor='lightgray',
+            gridwidth=1,
+            linecolor='gray',
+            linewidth=1
+        ),
+        angularaxis=dict(
+            gridcolor='lightgray',
+            gridwidth=1,
+            linecolor='gray',
+            linewidth=1
+        )
+    ),
+    template='plotly_white',
+    showlegend=True,
+    legend=dict(
+        yanchor="top",
+        y=1,
+        xanchor="left",
+        x=1.05
+    ),
+    margin=dict(l=80, r=150, t=80, b=80),
+    dragmode='pan'  # Enable pan mode for radar chart
+)
+
+register_plot(fig_radar, plot_id='radar_chart',
+              metadata={'title': 'Radar Chart',
+                       'description': 'Multi-dimensional product comparison',
+                       'plotType': 'scatterpolar'})
+
+# 13. SANKEY DIAGRAM - Flow Visualization
+print("[STATUS:info] Creating Sankey diagram...")
+
+# Create data for Sankey diagram
+# Define nodes
+labels = [
+    # Sources (0-2)
+    'Revenue Stream A', 'Revenue Stream B', 'Revenue Stream C',
+    # First level distribution (3-5)
+    'Operations', 'Marketing', 'R&D',
+    # Second level distribution (6-10)
+    'Salaries', 'Equipment', 'Advertising', 'Digital', 'Research', 'Development',
+    # Final outcomes (11-13)
+    'Profit', 'Reinvestment', 'Reserves'
+]
+
+# Define colors for nodes
+node_colors = [
+    '#3498db', '#3498db', '#3498db',  # Revenue streams (blue)
+    '#2ecc71', '#f39c12', '#e74c3c',  # Departments (green, orange, red)
+    '#95a5a6', '#95a5a6', '#95a5a6', '#95a5a6', '#95a5a6', '#95a5a6',  # Subcategories (gray)
+    '#9b59b6', '#1abc9c', '#34495e'  # Outcomes (purple, turquoise, dark gray)
+]
+
+# Define links (source, target, value)
+source = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 8, 9, 10, 11, 10, 11]
+target = [3, 4, 3, 5, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 13, 13, 12, 12]
+values = [30, 20, 25, 15, 35, 25, 25, 30, 20, 20, 30, 30, 15, 20, 10, 15, 15, 20, 10, 15]
+
+# Create link colors (semi-transparent versions of source node colors)
+link_colors = ['rgba(52, 152, 219, 0.3)' if s < 3 else
+               'rgba(46, 204, 113, 0.3)' if s < 6 else
+               'rgba(243, 156, 18, 0.3)' if s < 8 else
+               'rgba(231, 76, 60, 0.3)'
+               for s in source]
+
+# Create Sankey diagram
+fig_sankey = go.Figure(data=[go.Sankey(
+    node=dict(
+        pad=15,
+        thickness=20,
+        line=dict(color='white', width=0.5),
+        label=labels,
+        color=node_colors,
+        hovertemplate='%{label}<br>Total: %{value}<extra></extra>'
+    ),
+    link=dict(
+        source=source,
+        target=target,
+        value=values,
+        color=link_colors,
+        hovertemplate='%{source.label} → %{target.label}<br>Value: %{value}<extra></extra>'
+    )
+)])
+
+fig_sankey.update_layout(
+    title='Financial Flow Analysis - Sankey Diagram',
+    template='plotly_white',
+    font=dict(size=11),
+    # Don't set fixed height - let container determine it
+    margin=dict(l=20, r=20, t=60, b=20)
+)
+
+register_plot(fig_sankey, plot_id='sankey_diagram',
+              metadata={'title': 'Sankey Diagram',
+                       'description': 'Financial flow visualization from revenue to outcomes',
+                       'plotType': 'sankey'})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 10")
+print(f"[STATUS:info] Total plots created: 13")

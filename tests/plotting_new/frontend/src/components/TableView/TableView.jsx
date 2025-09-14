@@ -93,28 +93,41 @@ const TableView = ({ figure, isOpen, onClose }) => {
       decodedTraces.forEach(trace => {
         const xLen = trace.x ? trace.x.length : 0;
         const yLen = trace.y ? trace.y.length : 0;
-        maxLength = Math.max(maxLength, xLen, yLen);
+
+        // Handle special plot types
+        let specialLen = 0;
+        if (trace.type === 'pie' && trace.labels) {
+          specialLen = trace.labels.length;
+        } else if (trace.type === 'scatterpolar' && trace.r) {
+          specialLen = trace.r.length;
+        } else if (trace.type === 'sankey') {
+          const nodeLen = trace.node && trace.node.label ? trace.node.label.length : 0;
+          const linkLen = trace.link && trace.link.source ? trace.link.source.length : 0;
+          specialLen = Math.max(nodeLen, linkLen);
+        }
+
+        maxLength = Math.max(maxLength, xLen, yLen, specialLen);
       });
       
       // Build combined rows
       for (let i = 0; i < maxLength; i++) {
         const row = { index: i + 1 };
-        
+
         decodedTraces.forEach((trace, traceIndex) => {
           const traceName = trace.name || `Trace ${traceIndex + 1}`;
-          
+
           if (trace.x && i < trace.x.length) {
             row[`${traceName}_X`] = trace.x[i];
           }
-          
+
           if (trace.y && i < trace.y.length) {
             row[`${traceName}_Y`] = trace.y[i];
           }
-          
+
           if (trace.z && i < trace.z.length) {
             row[`${traceName}_Z`] = trace.z[i];
           }
-          
+
           // Handle pie charts
           if (trace.type === 'pie' && trace.labels && trace.values) {
             if (i < trace.labels.length) {
@@ -122,8 +135,26 @@ const TableView = ({ figure, isOpen, onClose }) => {
               row[`${traceName}_Value`] = trace.values[i];
             }
           }
+
+          // Handle radar/polar charts
+          if (trace.type === 'scatterpolar' && trace.r && trace.theta) {
+            if (i < trace.r.length) {
+              row[`${traceName}_Category`] = trace.theta[i];
+              row[`${traceName}_Value`] = trace.r[i];
+            }
+          }
+
+          // Handle Sankey diagrams - create a more readable format
+          if (trace.type === 'sankey') {
+            // For Sankey, we'll create a different row structure
+            if (trace.link && i < trace.link.source.length) {
+              row['Flow_Source'] = trace.node.label[trace.link.source[i]];
+              row['Flow_Target'] = trace.node.label[trace.link.target[i]];
+              row['Flow_Value'] = trace.link.value[i];
+            }
+          }
         });
-        
+
         allRows.push(row);
       }
       
