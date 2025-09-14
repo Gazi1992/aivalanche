@@ -625,5 +625,127 @@ register_plot(fig_area, plot_id='filled_area',
               metadata={'title': 'Filled Area Plot',
                        'description': 'Signal comparison with confidence bands and difference highlighting'})
 
+# 9. FUNNEL PLOT - Sales/Conversion Pipeline
+print("[STATUS:info] Creating funnel plot...")
+
+# Create data for funnel plot
+stages = ['Website Visits', 'Sign-ups', 'Trial Users', 'Paid Customers', 'Premium Users']
+values = [15000, 7500, 3200, 1800, 450]
+conversion_rates = [f"{(values[i+1]/values[i]*100):.1f}%" for i in range(len(values)-1)]
+
+# Create the funnel plot
+fig_funnel = go.Figure(go.Funnel(
+    y=stages,
+    x=values,
+    textposition="inside",
+    textinfo="value+percent initial",
+    opacity=0.85,
+    marker=dict(
+        color=['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6'],
+        line=dict(width=2, color='white')
+    ),
+    connector=dict(
+        line=dict(color='gray', dash='dot', width=2)
+    )
+))
+
+# Add annotations for conversion rates
+annotations = []
+for i, rate in enumerate(conversion_rates):
+    annotations.append(
+        dict(
+            x=1.15,  # Position to the right of the funnel
+            y=i + 0.5,  # Between stages
+            text=f"→ {rate}",
+            showarrow=False,
+            font=dict(size=11, color='gray'),
+            xref='paper',
+            yref='y'
+        )
+    )
+
+fig_funnel.update_layout(
+    title='Sales Funnel Analysis',
+    template='plotly_white',
+    showlegend=False,
+    annotations=annotations,
+    margin=dict(l=120, r=100, t=60, b=60),
+    yaxis=dict(
+        showticklabels=True,
+        side='left'
+    )
+)
+
+register_plot(fig_funnel, plot_id='funnel',
+              metadata={'title': 'Funnel Plot',
+                       'description': 'Sales pipeline conversion analysis'})
+
+# 10. HORIZONTAL BAR CHART - Performance Metrics
+print("[STATUS:info] Creating horizontal bar chart...")
+
+# Create data for horizontal bar chart
+np.random.seed(42)
+departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'R&D', 'Customer Support']
+performance_scores = np.random.uniform(65, 95, len(departments))
+sorted_indices = np.argsort(performance_scores)
+departments_sorted = [departments[i] for i in sorted_indices]
+scores_sorted = performance_scores[sorted_indices]
+
+# Define colors based on performance thresholds
+colors = ['#e74c3c' if score < 70 else '#f39c12' if score < 80 else '#2ecc71' for score in scores_sorted]
+
+# Create horizontal bar chart
+fig_hbar = go.Figure()
+
+# Add the bars
+fig_hbar.add_trace(go.Bar(
+    x=scores_sorted,
+    y=departments_sorted,
+    orientation='h',
+    marker=dict(
+        color=colors,
+        line=dict(color='rgba(50, 50, 50, 0.2)', width=1)
+    ),
+    text=[f'{score:.1f}%' for score in scores_sorted],
+    textposition='outside',
+    textfont=dict(size=10),
+    name='Performance Score',
+    hovertemplate='<b>%{y}</b><br>Performance: %{x:.1f}%<extra></extra>'
+))
+
+# Add threshold lines
+fig_hbar.add_vline(x=70, line_dash="dash", line_color="red", opacity=0.3,
+                   annotation_text="Min Acceptable", annotation_position="top")
+fig_hbar.add_vline(x=80, line_dash="dash", line_color="orange", opacity=0.3,
+                   annotation_text="Target", annotation_position="top")
+fig_hbar.add_vline(x=90, line_dash="dash", line_color="green", opacity=0.3,
+                   annotation_text="Excellent", annotation_position="top")
+
+# Update layout
+fig_hbar.update_layout(
+    title='Department Performance Dashboard',
+    xaxis=dict(
+        title='Performance Score (%)',
+        range=[0, 105],
+        showgrid=True,
+        gridcolor='lightgray',
+        dtick=10
+    ),
+    yaxis=dict(
+        title='',
+        showgrid=False,
+        automargin=True
+    ),
+    template='plotly_white',
+    showlegend=False,
+    height=None,  # Use container height
+    margin=dict(l=150, r=80, t=60, b=60),
+    bargap=0.2
+)
+
+register_plot(fig_hbar, plot_id='horizontal_bar',
+              metadata={'title': 'Horizontal Bar Chart',
+                       'description': 'Department performance metrics with thresholds'})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 8")
+print(f"[STATUS:info] Total plots created: 10")
