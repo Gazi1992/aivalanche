@@ -132,7 +132,7 @@ export const PLOT_CAPABILITIES = {
 
   sunburst: {
     hasTitle: true,
-    hasLegend: true,
+    hasLegend: false, // Sunburst doesn't use traditional legend
     hasAxes: false,
     hasGrid: false,
     hasPlotArea: false,
@@ -149,7 +149,7 @@ export const PLOT_CAPABILITIES = {
 
   treemap: {
     hasTitle: true,
-    hasLegend: true,
+    hasLegend: false, // Treemap doesn't use traditional legend
     hasAxes: false,
     hasGrid: false,
     hasPlotArea: false,
@@ -311,7 +311,8 @@ export const PLOT_CAPABILITIES = {
     supportsPan: true,
     supportsZoom: true,
     supportsHover: true,
-    supportsRotation: true
+    supportsRotation: true,
+    is3D: true
   },
 
   surface: {
@@ -330,7 +331,8 @@ export const PLOT_CAPABILITIES = {
     supportsPan: true,
     supportsZoom: true,
     supportsHover: true,
-    supportsRotation: true
+    supportsRotation: true,
+    is3D: true
   },
 
   mesh3d: {
@@ -348,7 +350,8 @@ export const PLOT_CAPABILITIES = {
     supportsPan: true,
     supportsZoom: true,
     supportsHover: true,
-    supportsRotation: true
+    supportsRotation: true,
+    is3D: true
   }
 };
 

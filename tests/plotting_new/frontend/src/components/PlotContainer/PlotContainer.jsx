@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import Plotly from 'plotly.js-dist-min';
+import PlotButton from '../PlotButton';
+import { EditIcon, TableIcon, ExpandIcon, ShrinkIcon, DownloadIcon, AutoscaleIcon, LegendToggleIcon } from '../icons';
 import { generateLayoutFromMetadata, generateDataFromMetadata } from '../../utils/figureManager';
+import { downloadPlotAsImage } from '../../utils/plotUtils';
 
 /**
  * Isolated Plot Container Component
@@ -8,13 +11,19 @@ import { generateLayoutFromMetadata, generateDataFromMetadata } from '../../util
  * - Deep-cloned data and layout
  * - Event handlers
  * - Plotly instance management
+ * - Plot control buttons
  * - No shared state or references
  */
-const PlotContainer = ({ 
-  figure, 
-  plotId, 
+const PlotContainer = ({
+  figure,
+  plotId,
   themedLayout,
-  onInteraction 
+  onInteraction,
+  onEdit,
+  onViewTable,
+  onExpand,
+  isExpanded = false,
+  showExpandButton = true
 }) => {
   const plotDivRef = useRef(null);
   const plotInstanceRef = useRef(null);
@@ -94,14 +103,22 @@ const PlotContainer = ({
     plotDiv.addEventListener('contextmenu', handleContextMenu);
     interactionHandlersRef.current.contextMenu = handleContextMenu;
 
-    // Custom wheel handler for zoom
+    // Custom wheel handler for zoom (only for 2D plots)
     const handleWheel = (event) => {
-      if (event.shiftKey) return;
-      event.preventDefault();
-      
-      const rect = plotDiv.getBoundingClientRect();
       const layout = plotDiv._fullLayout;
       if (!layout) return;
+
+      // Skip custom handling for 3D plots - let Plotly handle it natively
+      const is3D = layout.scene || (figure.data && figure.data[0] &&
+                   (figure.data[0].type === 'scatter3d' ||
+                    figure.data[0].type === 'surface' ||
+                    figure.data[0].type === 'mesh3d'));
+      if (is3D) return;
+
+      if (event.shiftKey) return;
+      event.preventDefault();
+
+      const rect = plotDiv.getBoundingClientRect();
 
       // Reduced zoom sensitivity for smoother scrolling
       const delta = event.deltaY > 0 ? -0.05 : 0.05;
@@ -187,13 +204,21 @@ const PlotContainer = ({
     plotDiv.addEventListener('wheel', handleWheel, { passive: false });
     interactionHandlersRef.current.wheel = handleWheel;
 
-    // Right-click drag for scaling
+    // Right-click drag for scaling (only for 2D plots)
     let scaleStartX = 0, scaleStartY = 0;
     let scaleInitRanges = {};
     let scaleStartRelX = 0, scaleStartRelY = 0;
-    
+
     const handleScaleMove = (moveEvt) => {
       if (moveEvt.buttons !== 2) return;
+
+      // Skip for 3D plots
+      const layout = plotDiv._fullLayout;
+      const is3D = layout && (layout.scene || (figure.data && figure.data[0] &&
+                   (figure.data[0].type === 'scatter3d' ||
+                    figure.data[0].type === 'surface' ||
+                    figure.data[0].type === 'mesh3d')));
+      if (is3D) return;
       
       const rect = plotDiv.getBoundingClientRect();
       const dx = moveEvt.clientX - scaleStartX;
@@ -265,10 +290,18 @@ const PlotContainer = ({
 
     const handleScaleDown = (downEvt) => {
       if (downEvt.button !== 2) return;
-      downEvt.preventDefault();
-      
+
+      // Skip for 3D plots
       const layout = plotDiv._fullLayout;
       if (!layout) return;
+
+      const is3D = layout.scene || (figure.data && figure.data[0] &&
+                   (figure.data[0].type === 'scatter3d' ||
+                    figure.data[0].type === 'surface' ||
+                    figure.data[0].type === 'mesh3d'));
+      if (is3D) return;
+
+      downEvt.preventDefault();
       
       const rect = plotDiv.getBoundingClientRect();
       scaleStartX = downEvt.clientX;
@@ -307,13 +340,13 @@ const PlotContainer = ({
 
     const handlePanMove = (mvEvt) => {
       if ((mvEvt.buttons & 4) === 0) return;
-      
+
       const rect = plotDiv.getBoundingClientRect();
       const dx = mvEvt.clientX - panStartX;
       const dy = mvEvt.clientY - panStartY;
-      
+
       const update = {};
-      
+
       if (isSplom) {
         // For SPLOM, pan all visible axes
         Object.keys(panInitRanges).forEach(axisName => {
@@ -356,14 +389,14 @@ const PlotContainer = ({
     const handlePanDown = (pdEvt) => {
       if (pdEvt.button !== 1) return;
       pdEvt.preventDefault();
-      
+
       const layout = plotDiv._fullLayout;
       if (!layout) return;
-      
+
       panStartX = pdEvt.clientX;
       panStartY = pdEvt.clientY;
       panInitRanges = {};
-      
+
       if (isSplom) {
         // Store all axis ranges for SPLOM
         Object.keys(layout).forEach(key => {
@@ -448,16 +481,156 @@ const PlotContainer = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Button handlers
+  const handleDownloadClick = () => {
+    downloadPlotAsImage(plotId, {
+      filename: figure.id || 'plot'
+    });
+  };
+
+  const handleAutoscaleClick = () => {
+    const plotDiv = plotDivRef.current;
+    if (plotDiv && plotDiv._fullLayout) {
+      const layout = plotDiv._fullLayout;
+      const update = {};
+
+      // Check if it's a 3D plot
+      const is3D = capabilities.is3D || layout.scene;
+
+      if (is3D) {
+        // For 3D plots, reset the camera to default view
+        update['scene.camera'] = {
+          eye: { x: 1.25, y: 1.25, z: 1.25 },
+          center: { x: 0, y: 0, z: 0 },
+          up: { x: 0, y: 0, z: 1 }
+        };
+        // Also reset axis ranges
+        update['scene.xaxis.autorange'] = true;
+        update['scene.yaxis.autorange'] = true;
+        update['scene.zaxis.autorange'] = true;
+      } else {
+        // Check if it's a SPLOM by looking for multiple axes
+        const isSplom = Object.keys(layout).filter(key =>
+          key.startsWith('xaxis') || key.startsWith('yaxis')
+        ).length > 2;
+
+        if (isSplom) {
+          // For SPLOM, autoscale all axes
+          Object.keys(layout).forEach(key => {
+            if (key.startsWith('xaxis') || key.startsWith('yaxis')) {
+              update[`${key}.autorange`] = true;
+            }
+          });
+        } else {
+          // Regular 2D plot
+          update['xaxis.autorange'] = true;
+          update['yaxis.autorange'] = true;
+        }
+      }
+
+      Plotly.relayout(plotDiv, update);
+    }
+  };
+
+  const handleLegendToggle = () => {
+    const plotDiv = plotDivRef.current;
+    if (plotDiv && plotDiv._fullLayout) {
+      const currentVisibility = plotDiv._fullLayout.showlegend;
+      Plotly.relayout(plotDiv, {
+        showlegend: !currentVisibility
+      });
+    }
+  };
+
+  // Get plot capabilities
+  const capabilities = figure?.metadata?.capabilities || {};
+  const hasLegend = capabilities.hasLegend;
+  const supportsZoomPan = capabilities.supportsZoom || capabilities.supportsPan;
+
   return (
-    <div 
-      ref={plotDivRef}
-      id={plotId}
-      style={{ 
-        width: '100%', 
-        height: '100%',
-        position: 'relative'
-      }}
-    />
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Plot buttons */}
+      <div className="plot-buttons" style={{
+        display: 'flex',
+        gap: '4px',
+        padding: '4px',
+        flexShrink: 0
+      }}>
+        <PlotButton
+          onClick={onEdit}
+          title="Edit plot"
+          icon={EditIcon}
+        />
+        <PlotButton
+          onClick={onViewTable}
+          title="View data table"
+          icon={TableIcon}
+        />
+        <PlotButton
+          onClick={handleDownloadClick}
+          title="Download as PNG"
+          icon={DownloadIcon}
+        />
+        {/* Show autoscale button only for plots that support zoom/pan */}
+        {supportsZoomPan && (
+          <PlotButton
+            onClick={handleAutoscaleClick}
+            title="Autoscale"
+            icon={AutoscaleIcon}
+          />
+        )}
+        {/* Show legend toggle only for plots that have legend */}
+        {hasLegend && (
+          <PlotButton
+            onClick={handleLegendToggle}
+            title="Toggle legend"
+            icon={LegendToggleIcon}
+          />
+        )}
+        {/* Show expand/shrink button */}
+        {isExpanded ? (
+          <PlotButton
+            onClick={onExpand}
+            title="Shrink plot"
+            icon={ShrinkIcon}
+          />
+        ) : (
+          showExpandButton && (
+            <PlotButton
+              onClick={onExpand}
+              title="Expand plot"
+              icon={ExpandIcon}
+            />
+          )
+        )}
+      </div>
+
+      {/* Plot div */}
+      <div
+        ref={plotDivRef}
+        id={plotId}
+        style={{
+          width: '100%',
+          flex: '1 1 auto',
+          position: 'relative',
+          minHeight: 0
+        }}
+      />
+
+      {/* Figure ID label */}
+      <div className="figure-id-label" style={{
+        position: 'absolute',
+        bottom: '4px',
+        right: '4px',
+        fontSize: '0.75rem',
+        color: 'var(--text-color-secondary)',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        padding: '2px 6px',
+        borderRadius: '2px'
+      }}>
+        {figure.id}
+      </div>
+    </div>
   );
 };
 

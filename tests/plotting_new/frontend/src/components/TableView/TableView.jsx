@@ -100,10 +100,30 @@ const TableView = ({ figure, isOpen, onClose }) => {
           specialLen = trace.labels.length;
         } else if (trace.type === 'scatterpolar' && trace.r) {
           specialLen = trace.r.length;
+        } else if (trace.type === 'barpolar' && trace.r) {
+          specialLen = trace.r.length;
         } else if (trace.type === 'sankey') {
           const nodeLen = trace.node && trace.node.label ? trace.node.label.length : 0;
           const linkLen = trace.link && trace.link.source ? trace.link.source.length : 0;
           specialLen = Math.max(nodeLen, linkLen);
+        } else if (trace.type === 'sunburst' && trace.labels) {
+          specialLen = trace.labels.length;
+        } else if (trace.type === 'treemap' && trace.labels) {
+          specialLen = trace.labels.length;
+        } else if (trace.type === 'parcats' && trace.dimensions) {
+          // For parcats, get max length from dimensions
+          trace.dimensions.forEach(dim => {
+            if (dim.values) {
+              specialLen = Math.max(specialLen, dim.values.length);
+            }
+          });
+        } else if (trace.type === 'parcoords' && trace.dimensions) {
+          // For parcoords, get max length from dimensions
+          trace.dimensions.forEach(dim => {
+            if (dim.values) {
+              specialLen = Math.max(specialLen, dim.values.length);
+            }
+          });
         }
 
         maxLength = Math.max(maxLength, xLen, yLen, specialLen);
@@ -152,6 +172,52 @@ const TableView = ({ figure, isOpen, onClose }) => {
               row['Flow_Target'] = trace.node.label[trace.link.target[i]];
               row['Flow_Value'] = trace.link.value[i];
             }
+          }
+
+          // Handle Sunburst charts
+          if (trace.type === 'sunburst' && trace.labels && trace.parents && trace.values) {
+            if (i < trace.labels.length) {
+              row[`${traceName}_Label`] = trace.labels[i];
+              row[`${traceName}_Parent`] = trace.parents[i] || 'Root';
+              row[`${traceName}_Value`] = trace.values[i];
+            }
+          }
+
+          // Handle Treemap charts
+          if (trace.type === 'treemap' && trace.labels && trace.parents && trace.values) {
+            if (i < trace.labels.length) {
+              row[`${traceName}_Label`] = trace.labels[i];
+              row[`${traceName}_Parent`] = trace.parents[i] || 'Root';
+              row[`${traceName}_Value`] = trace.values[i];
+            }
+          }
+
+          // Handle Bar Polar charts
+          if (trace.type === 'barpolar' && trace.r && trace.theta) {
+            if (i < trace.r.length) {
+              row[`${traceName}_Direction`] = trace.theta[i];
+              row[`${traceName}_Value`] = trace.r[i];
+            }
+          }
+
+          // Handle Parallel Categories
+          if (trace.type === 'parcats' && trace.dimensions) {
+            // For parcats, show dimension values
+            trace.dimensions.forEach((dim, dimIndex) => {
+              if (dim.values && i < dim.values.length) {
+                row[`${dim.label || `Dimension_${dimIndex}`}`] = dim.values[i];
+              }
+            });
+          }
+
+          // Handle Parallel Coordinates
+          if (trace.type === 'parcoords' && trace.dimensions) {
+            // For parcoords, show dimension values
+            trace.dimensions.forEach((dim) => {
+              if (dim.values && i < dim.values.length) {
+                row[`${dim.label}`] = dim.values[i];
+              }
+            });
           }
         });
 

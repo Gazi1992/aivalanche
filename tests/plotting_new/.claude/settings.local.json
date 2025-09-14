@@ -13,7 +13,11 @@
       "Bash(find:*)",
       "Bash(git commit:*)",
       "WebFetch(domain:plotly.com)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(tasklist)",
+      "Read(//c/**)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

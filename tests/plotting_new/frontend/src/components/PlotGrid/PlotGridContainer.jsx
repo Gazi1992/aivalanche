@@ -1,10 +1,6 @@
 import React from 'react';
-import Plotly from 'plotly.js-dist-min';
 import ColumnSelector from '../ColumnSelector.jsx';
-import PlotButton from '../PlotButton.jsx';
 import PlotContainer from '../PlotContainer/PlotContainer.jsx';
-import { EditIcon, TableIcon, ExpandIcon, DownloadIcon, AutoscaleIcon, LegendToggleIcon } from '../icons';
-import { downloadPlotAsImage } from '../../utils/plotUtils';
 
 const PlotGridContainer = ({
   figures,
@@ -39,57 +35,6 @@ const PlotGridContainer = ({
     borderStyle: 'solid'
   });
 
-  const handleEditClick = (fig) => {
-    // Don't sync with DOM on edit click - use the figure's stored metadata
-    // This avoids cross-contamination issues when multiple plots are present
-    onEditFigure(fig);
-  };
-
-  const handleDownloadClick = (fig) => {
-    downloadPlotAsImage(`plot-${fig.id}`, {
-      filename: fig.id || 'plot'
-    });
-  };
-
-  const handleAutoscaleClick = (fig) => {
-    // Autoscale the plot by resetting axis ranges
-    const plotDiv = document.getElementById(`plot-${fig.id}`);
-    if (plotDiv && plotDiv._fullLayout) {
-      const layout = plotDiv._fullLayout;
-      const update = {};
-      
-      // Check if it's a SPLOM by looking for multiple axes
-      const isSplom = Object.keys(layout).filter(key => 
-        key.startsWith('xaxis') || key.startsWith('yaxis')
-      ).length > 2;
-      
-      if (isSplom) {
-        // For SPLOM, autoscale all axes
-        Object.keys(layout).forEach(key => {
-          if (key.startsWith('xaxis') || key.startsWith('yaxis')) {
-            update[`${key}.autorange`] = true;
-          }
-        });
-      } else {
-        // Regular plot
-        update['xaxis.autorange'] = true;
-        update['yaxis.autorange'] = true;
-      }
-      
-      Plotly.relayout(plotDiv, update);
-    }
-  };
-
-  const handleLegendToggle = (fig) => {
-    // Toggle legend visibility
-    const plotDiv = document.getElementById(`plot-${fig.id}`);
-    if (plotDiv && plotDiv._fullLayout) {
-      const currentVisibility = plotDiv._fullLayout.showlegend;
-      Plotly.relayout(plotDiv, {
-        showlegend: !currentVisibility
-      });
-    }
-  };
 
   return (
     <>
@@ -101,62 +46,24 @@ const PlotGridContainer = ({
       <div className="grid-container" style={gridContainerStyle}>
         <div style={gridStyle}>
           {figures.map(fig => (
-            <div 
-              key={fig.id} 
-              className="plot-container" 
+            <div
+              key={fig.id}
+              className="plot-container"
               style={getFigureContainerStyle(fig)}
             >
-              <div className="plot-buttons">
-                <PlotButton
-                  onClick={() => handleEditClick(fig)}
-                  title="Edit plot"
-                  icon={EditIcon}
-                />
-                <PlotButton
-                  onClick={() => onViewTable(fig)}
-                  title="View data"
-                  icon={TableIcon}
-                />
-                <PlotButton
-                  onClick={() => handleDownloadClick(fig)}
-                  title="Download as PNG"
-                  icon={DownloadIcon}
-                />
-                {/* Show autoscale button only for plots that support zoom/pan */}
-                {(fig.metadata?.capabilities?.supportsZoom || fig.metadata?.capabilities?.supportsPan) && (
-                  <PlotButton
-                    onClick={() => handleAutoscaleClick(fig)}
-                    title="Autoscale"
-                    icon={AutoscaleIcon}
-                  />
-                )}
-                {/* Show legend toggle only for plots that have legend */}
-                {fig.metadata?.capabilities?.hasLegend && (
-                  <PlotButton
-                    onClick={() => handleLegendToggle(fig)}
-                    title="Toggle legend"
-                    icon={LegendToggleIcon}
-                  />
-                )}
-                {figures.length > 1 && (
-                  <PlotButton
-                    onClick={() => onExpandFigure(fig)}
-                    title="Expand plot"
-                    icon={ExpandIcon}
-                  />
-                )}
-              </div>
-              <div style={{ flex: '1 1 auto', minHeight: 0, width: '100%' }}>
-                <PlotContainer
-                  figure={fig}
-                  plotId={`plot-${fig.id}`}
-                  themedLayout={themedLayout}
-                  onInteraction={(interaction) => {
-                    console.log(`Plot ${fig.id} interaction:`, interaction);
-                  }}
-                />
-              </div>
-              <div className="figure-id-label">{fig.id}</div>
+              <PlotContainer
+                figure={fig}
+                plotId={`plot-${fig.id}`}
+                themedLayout={themedLayout}
+                onEdit={() => onEditFigure(fig)}
+                onViewTable={() => onViewTable(fig)}
+                onExpand={() => onExpandFigure(fig)}
+                isExpanded={false}
+                showExpandButton={figures.length > 1}
+                onInteraction={(interaction) => {
+                  console.log(`Plot ${fig.id} interaction:`, interaction);
+                }}
+              />
             </div>
           ))}
         </div>
