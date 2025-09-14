@@ -24,3 +24,5 @@ export { default as DownloadIcon } from './DownloadIcon';
 export { default as UserIcon } from './UserIcon';
 export { default as ResetIcon } from './ResetIcon';
 export { default as ShrinkIcon } from './ShrinkIcon';
+export { default as AutoscaleIcon } from './AutoscaleIcon';
+export { default as LegendToggleIcon } from './LegendToggleIcon';

@@ -1,8 +1,9 @@
 import React from 'react';
+import Plotly from 'plotly.js-dist-min';
 import ColumnSelector from '../ColumnSelector.jsx';
 import PlotButton from '../PlotButton.jsx';
 import PlotContainer from '../PlotContainer/PlotContainer.jsx';
-import { EditIcon, TableIcon, ExpandIcon, DownloadIcon, ResetIcon } from '../icons';
+import { EditIcon, TableIcon, ExpandIcon, DownloadIcon, AutoscaleIcon, LegendToggleIcon } from '../icons';
 import { downloadPlotAsImage } from '../../utils/plotUtils';
 
 const PlotGridContainer = ({
@@ -16,7 +17,6 @@ const PlotGridContainer = ({
   onEditFigure,
   onViewTable,
   onExpandFigure,
-  onResetFigure,
   themedLayout
 }) => {
   const gridContainerStyle = {
@@ -51,6 +51,46 @@ const PlotGridContainer = ({
     });
   };
 
+  const handleAutoscaleClick = (fig) => {
+    // Autoscale the plot by resetting axis ranges
+    const plotDiv = document.getElementById(`plot-${fig.id}`);
+    if (plotDiv && plotDiv._fullLayout) {
+      const layout = plotDiv._fullLayout;
+      const update = {};
+      
+      // Check if it's a SPLOM by looking for multiple axes
+      const isSplom = Object.keys(layout).filter(key => 
+        key.startsWith('xaxis') || key.startsWith('yaxis')
+      ).length > 2;
+      
+      if (isSplom) {
+        // For SPLOM, autoscale all axes
+        Object.keys(layout).forEach(key => {
+          if (key.startsWith('xaxis') || key.startsWith('yaxis')) {
+            update[`${key}.autorange`] = true;
+          }
+        });
+      } else {
+        // Regular plot
+        update['xaxis.autorange'] = true;
+        update['yaxis.autorange'] = true;
+      }
+      
+      Plotly.relayout(plotDiv, update);
+    }
+  };
+
+  const handleLegendToggle = (fig) => {
+    // Toggle legend visibility
+    const plotDiv = document.getElementById(`plot-${fig.id}`);
+    if (plotDiv && plotDiv._fullLayout) {
+      const currentVisibility = plotDiv._fullLayout.showlegend;
+      Plotly.relayout(plotDiv, {
+        showlegend: !currentVisibility
+      });
+    }
+  };
+
   return (
     <>
       <ColumnSelector
@@ -82,11 +122,21 @@ const PlotGridContainer = ({
                   title="Download as PNG"
                   icon={DownloadIcon}
                 />
-                <PlotButton
-                  onClick={() => onResetFigure(fig)}
-                  title="Reset to original"
-                  icon={ResetIcon}
-                />
+                {/* Hide autoscale and legend toggle for PCP plots */}
+                {fig.metadata?.capabilities?.isParallelCoordinates !== true && (
+                  <>
+                    <PlotButton
+                      onClick={() => handleAutoscaleClick(fig)}
+                      title="Autoscale"
+                      icon={AutoscaleIcon}
+                    />
+                    <PlotButton
+                      onClick={() => handleLegendToggle(fig)}
+                      title="Toggle legend"
+                      icon={LegendToggleIcon}
+                    />
+                  </>
+                )}
                 {figures.length > 1 && (
                   <PlotButton
                     onClick={() => onExpandFigure(fig)}

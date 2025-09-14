@@ -391,37 +391,27 @@ fig_pcp = go.Figure(data=
             dict(
                 range=[0, 1],
                 label='Price',
-                values=features_normalized[:, 0],
-                tickvals=[0, 0.25, 0.5, 0.75, 1],
-                ticktext=['Low', '', 'Med', '', 'High']
+                values=features_normalized[:, 0]
             ),
             dict(
                 range=[0, 1],
                 label='Quality',
-                values=features_normalized[:, 1],
-                tickvals=[0, 0.5, 1],
-                ticktext=['Poor', 'Average', 'Excellent']
+                values=features_normalized[:, 1]
             ),
             dict(
                 range=[0, 1],
                 label='Satisfaction',
-                values=features_normalized[:, 2],
-                tickvals=[0, 0.5, 1],
-                ticktext=['Low', 'Medium', 'High']
+                values=features_normalized[:, 2]
             ),
             dict(
                 range=[0, 1],
                 label='Sales Volume',
-                values=features_normalized[:, 3],
-                tickvals=[0, 0.5, 1],
-                ticktext=['Low', 'Medium', 'High']
+                values=features_normalized[:, 3]
             ),
             dict(
                 range=[0, 1],
                 label='Return Rate',
-                values=features_normalized[:, 4],
-                tickvals=[0, 0.5, 1],
-                ticktext=['Low', 'Medium', 'High']
+                values=features_normalized[:, 4]
             )
         ]
     )
@@ -438,5 +428,202 @@ register_plot(fig_pcp, plot_id='parallel_coordinates',
               metadata={'title': 'Parallel Coordinates Plot',
                        'description': 'Multi-dimensional product comparison across categories'})
 
+# 8. FILLED AREA PLOT - Showing area between curves
+print("[STATUS:info] Creating filled area plot...")
+
+# Generate data for area plot
+np.random.seed(42)
+x = np.linspace(0, 10, 100)
+
+# Create base signal
+base_signal = np.sin(x) + 0.5 * np.sin(3 * x)
+
+# Create upper and lower bounds (confidence interval style)
+confidence_band = 0.3 + 0.2 * np.sin(2 * x)
+upper_bound = base_signal + confidence_band
+lower_bound = base_signal - confidence_band
+
+# Create another pair of curves for comparison
+comparison_signal = np.cos(x) + 0.3 * np.cos(4 * x) - 0.5
+comparison_upper = comparison_signal + 0.2
+comparison_lower = comparison_signal - 0.2
+
+# Create the filled area plot
+fig_area = go.Figure()
+
+# Add the main confidence band (blue)
+fig_area.add_trace(go.Scatter(
+    x=x,
+    y=upper_bound,
+    mode='lines',
+    name='Upper Bound',
+    line=dict(color='rgba(31, 119, 180, 0.3)', width=1),
+    showlegend=False
+))
+
+fig_area.add_trace(go.Scatter(
+    x=x,
+    y=lower_bound,
+    mode='lines',
+    name='Lower Bound',
+    line=dict(color='rgba(31, 119, 180, 0.3)', width=1),
+    fill='tonexty',
+    fillcolor='rgba(31, 119, 180, 0.2)',
+    showlegend=False
+))
+
+# Add the main signal line
+fig_area.add_trace(go.Scatter(
+    x=x,
+    y=base_signal,
+    mode='lines',
+    name='Primary Signal',
+    line=dict(color='rgb(31, 119, 180)', width=2)
+))
+
+# Add comparison band (orange)
+fig_area.add_trace(go.Scatter(
+    x=x,
+    y=comparison_upper,
+    mode='lines',
+    name='Comparison Upper',
+    line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+    showlegend=False
+))
+
+fig_area.add_trace(go.Scatter(
+    x=x,
+    y=comparison_lower,
+    mode='lines',
+    name='Comparison Lower',
+    line=dict(color='rgba(255, 127, 14, 0.3)', width=1),
+    fill='tonexty',
+    fillcolor='rgba(255, 127, 14, 0.2)',
+    showlegend=False
+))
+
+# Add the comparison signal line
+fig_area.add_trace(go.Scatter(
+    x=x,
+    y=comparison_signal,
+    mode='lines',
+    name='Comparison Signal',
+    line=dict(color='rgb(255, 127, 14)', width=2)
+))
+
+# Add areas where primary > comparison (green fill)
+mask_positive = base_signal > comparison_signal
+x_positive = x[mask_positive]
+
+if len(x_positive) > 0:
+    # For each continuous segment where primary > comparison
+    segments = []
+    start_idx = None
+    
+    for i, is_positive in enumerate(mask_positive):
+        if is_positive and start_idx is None:
+            start_idx = i
+        elif not is_positive and start_idx is not None:
+            segments.append((start_idx, i))
+            start_idx = None
+    if start_idx is not None:
+        segments.append((start_idx, len(mask_positive)))
+    
+    for seg_start, seg_end in segments:
+        x_seg = x[seg_start:seg_end]
+        y1_seg = base_signal[seg_start:seg_end]
+        y2_seg = comparison_signal[seg_start:seg_end]
+        
+        fig_area.add_trace(go.Scatter(
+            x=np.concatenate([x_seg, x_seg[::-1]]),
+            y=np.concatenate([y1_seg, y2_seg[::-1]]),
+            fill='toself',
+            fillcolor='rgba(44, 160, 44, 0.15)',
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+
+# Add areas where comparison > primary (red fill)
+mask_negative = comparison_signal > base_signal
+if mask_negative.any():
+    segments = []
+    start_idx = None
+    
+    for i, is_negative in enumerate(mask_negative):
+        if is_negative and start_idx is None:
+            start_idx = i
+        elif not is_negative and start_idx is not None:
+            segments.append((start_idx, i))
+            start_idx = None
+    if start_idx is not None:
+        segments.append((start_idx, len(mask_negative)))
+    
+    for seg_start, seg_end in segments:
+        x_seg = x[seg_start:seg_end]
+        y1_seg = comparison_signal[seg_start:seg_end]
+        y2_seg = base_signal[seg_start:seg_end]
+        
+        fig_area.add_trace(go.Scatter(
+            x=np.concatenate([x_seg, x_seg[::-1]]),
+            y=np.concatenate([y1_seg, y2_seg[::-1]]),
+            fill='toself',
+            fillcolor='rgba(214, 39, 40, 0.15)',
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+
+# Add zero line for reference
+fig_area.add_hline(y=0, line_dash="dot", line_color="gray", opacity=0.5)
+
+fig_area.update_layout(
+    title='Signal Analysis with Confidence Bands and Difference Areas',
+    xaxis=dict(
+        title='Time',
+        showgrid=True,
+        gridcolor='lightgray'
+    ),
+    yaxis=dict(
+        title='Amplitude',
+        showgrid=True,
+        gridcolor='lightgray',
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor='gray'
+    ),
+    template='plotly_white',
+    hovermode='x unified',
+    showlegend=True,
+    legend=dict(
+        yanchor="top",
+        y=0.99,
+        xanchor="left",
+        x=0.01
+    ),
+    annotations=[
+        dict(
+            x=2.5,
+            y=1.8,
+            text="Primary > Comparison",
+            showarrow=False,
+            font=dict(size=10, color='green'),
+            opacity=0.7
+        ),
+        dict(
+            x=7.5,
+            y=-1.8,
+            text="Comparison > Primary",
+            showarrow=False,
+            font=dict(size=10, color='red'),
+            opacity=0.7
+        )
+    ]
+)
+
+register_plot(fig_area, plot_id='filled_area',
+              metadata={'title': 'Filled Area Plot',
+                       'description': 'Signal comparison with confidence bands and difference highlighting'})
+
 print("[STATUS:success] Demo plots generated successfully!")
-print(f"[STATUS:info] Total plots created: 7")
+print(f"[STATUS:info] Total plots created: 8")
