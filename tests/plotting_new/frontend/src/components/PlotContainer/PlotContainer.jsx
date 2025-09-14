@@ -297,7 +297,7 @@ const PlotContainer = ({
     const handleScaleDown = (downEvt) => {
       if (downEvt.button !== 2) return;
 
-      // Skip for 3D plots
+      // Always skip right-click for 3D plots - we use middle-click instead
       const layout = plotDiv._fullLayout;
       if (!layout) return;
 
@@ -305,7 +305,11 @@ const PlotContainer = ({
                    (figure.data[0].type === 'scatter3d' ||
                     figure.data[0].type === 'surface' ||
                     figure.data[0].type === 'mesh3d'));
-      if (is3D) return;
+      if (is3D) {
+        downEvt.preventDefault();
+        downEvt.stopPropagation();
+        return;
+      }
 
       downEvt.preventDefault();
       
@@ -343,8 +347,6 @@ const PlotContainer = ({
     // Middle-click drag for panning
     let panStartX = 0, panStartY = 0;
     let panInitRanges = {};
-    let panInitCamera = null;
-    let is3DPlot = false;
 
     const handlePanMove = (mvEvt) => {
       if ((mvEvt.buttons & 4) === 0) return;
@@ -355,18 +357,7 @@ const PlotContainer = ({
 
       const update = {};
 
-      if (is3DPlot && panInitCamera) {
-        // For 3D plots, pan by adjusting camera center
-        const sensitivity = 0.01;
-        update['scene.camera'] = {
-          ...panInitCamera,
-          center: {
-            x: (panInitCamera.center?.x || 0) - dx * sensitivity,
-            y: (panInitCamera.center?.y || 0) + dy * sensitivity,
-            z: panInitCamera.center?.z || 0
-          }
-        };
-      } else if (isSplom) {
+      if (isSplom) {
         // For SPLOM, pan all visible axes
         Object.keys(panInitRanges).forEach(axisName => {
           const initRange = panInitRanges[axisName];
@@ -412,27 +403,34 @@ const PlotContainer = ({
       const layout = plotDiv._fullLayout;
       if (!layout) return;
 
-      panStartX = pdEvt.clientX;
-      panStartY = pdEvt.clientY;
-      panInitRanges = {};
-      panInitCamera = null;
-
       // Check if this is a 3D plot
-      is3DPlot = layout.scene || (figure.data && figure.data[0] &&
+      const is3D = layout.scene || (figure.data && figure.data[0] &&
                   (figure.data[0].type === 'scatter3d' ||
                    figure.data[0].type === 'surface' ||
                    figure.data[0].type === 'mesh3d'));
 
-      if (is3DPlot) {
-        // Store camera position for 3D plot
-        panInitCamera = layout.scene?.camera ? JSON.parse(JSON.stringify(layout.scene.camera)) : {
-          eye: { x: 1.25, y: 1.25, z: 1.25 },
-          center: { x: 0, y: 0, z: 0 },
-          up: { x: 0, y: 0, z: 1 }
-        };
-        window.addEventListener('pointermove', handlePanMove);
-        window.addEventListener('pointerup', handlePanUp);
-      } else if (isSplom) {
+      if (is3D) {
+        // For 3D plots, convert middle-click to right-click for Plotly's native pan
+        const event = new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          button: 2, // Right button
+          buttons: 2, // Right button pressed
+          clientX: pdEvt.clientX,
+          clientY: pdEvt.clientY,
+          screenX: pdEvt.screenX,
+          screenY: pdEvt.screenY
+        });
+        plotDiv.dispatchEvent(event);
+        return;
+      }
+
+      panStartX = pdEvt.clientX;
+      panStartY = pdEvt.clientY;
+      panInitRanges = {};
+
+      if (isSplom) {
         // Store all axis ranges for SPLOM
         Object.keys(layout).forEach(key => {
           if ((key.startsWith('xaxis') || key.startsWith('yaxis')) && layout[key].range) {
