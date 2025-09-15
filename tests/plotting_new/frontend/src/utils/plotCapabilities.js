@@ -352,6 +352,29 @@ export const PLOT_CAPABILITIES = {
     supportsHover: true,
     supportsRotation: true,
     is3D: true
+  },
+
+  // Unknown/Custom plot type - minimal UI, just display
+  unknown: {
+    hasTitle: false,
+    hasLegend: false,
+    hasAxes: false,
+    hasGrid: false,
+    hasPlotArea: false,
+    hasXAxis: false,
+    hasYAxis: false,
+    hasZAxis: false,
+    hasAxisLabels: false,
+    hasAxisTicks: false,
+    hasDataLabels: false,
+    supportsPan: false,
+    supportsZoom: false,
+    supportsHover: true,  // Keep Plotly's default hover
+    supportsRotation: false,
+    is3D: false,
+    noEditPane: true,  // Special flag to hide edit pane completely
+    supportsExpand: true,  // Can still be expanded
+    supportsDownload: true  // Can still be downloaded
   }
 };
 

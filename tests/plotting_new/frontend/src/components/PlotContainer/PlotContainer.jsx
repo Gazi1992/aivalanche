@@ -550,6 +550,7 @@ const PlotContainer = ({
   const capabilities = figure?.metadata?.capabilities || {};
   const hasLegend = capabilities.hasLegend;
   const supportsZoomPan = capabilities.supportsZoom || capabilities.supportsPan;
+  const noEditPane = capabilities.noEditPane;
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -560,11 +561,14 @@ const PlotContainer = ({
         padding: '4px',
         flexShrink: 0
       }}>
-        <PlotButton
-          onClick={onEdit}
-          title="Edit plot"
-          icon={EditIcon}
-        />
+        {/* Show edit button only if EditPane is available */}
+        {!noEditPane && (
+          <PlotButton
+            onClick={onEdit}
+            title="Edit plot"
+            icon={EditIcon}
+          />
+        )}
         <PlotButton
           onClick={onViewTable}
           title="View data table"

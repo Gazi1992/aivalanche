@@ -32,6 +32,11 @@ const EditPane = ({ isOpen, onClose, figure, onUpdate }) => {
   const plotType = detectPlotType(figure);
   const plotCapabilities = getPlotCapabilities(plotType);
 
+  // Check if EditPane should be hidden for this plot type
+  if (plotCapabilities.noEditPane) {
+    return null;
+  }
+
   // Use the comprehensive capabilities
   const hasTitle = plotCapabilities.hasTitle;
   const hasAxes = plotCapabilities.hasAxes;
