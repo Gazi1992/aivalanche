@@ -222,13 +222,13 @@ const PlotContainer = ({
       return;
     }
 
-    // Right-click drag for scaling (only for 2D plots)
+    // Middle-click drag for scaling (only for 2D plots)
     let scaleStartX = 0, scaleStartY = 0;
     let scaleInitRanges = {};
     let scaleStartRelX = 0, scaleStartRelY = 0;
 
     const handleScaleMove = (moveEvt) => {
-      if (moveEvt.buttons !== 2) return;
+      if ((moveEvt.buttons & 4) === 0) return; // Check for middle button
       
       const rect = plotDiv.getBoundingClientRect();
       const dx = moveEvt.clientX - scaleStartX;
@@ -299,7 +299,7 @@ const PlotContainer = ({
     };
 
     const handleScaleDown = (downEvt) => {
-      if (downEvt.button !== 2) return;
+      if (downEvt.button !== 1) return; // Middle button
       downEvt.preventDefault();
       
       const rect = plotDiv.getBoundingClientRect();
@@ -333,12 +333,12 @@ const PlotContainer = ({
     plotDiv.addEventListener('pointerdown', handleScaleDown);
     interactionHandlersRef.current.scaleDown = handleScaleDown;
 
-    // Middle-click drag for panning
+    // Right-click drag for panning
     let panStartX = 0, panStartY = 0;
     let panInitRanges = {};
 
     const handlePanMove = (mvEvt) => {
-      if ((mvEvt.buttons & 4) === 0) return;
+      if (mvEvt.buttons !== 2) return; // Right button
 
       const rect = plotDiv.getBoundingClientRect();
       const dx = mvEvt.clientX - panStartX;
@@ -386,7 +386,7 @@ const PlotContainer = ({
     };
 
     const handlePanDown = (pdEvt) => {
-      if (pdEvt.button !== 1) return;
+      if (pdEvt.button !== 2) return; // Right button
       pdEvt.preventDefault();
 
       const layout = plotDiv._fullLayout;
