@@ -6,7 +6,15 @@ import SuggestedActions from './SuggestedActions';
 import MessageList from './MessageList';
 import './ChatAssistant.css';
 
-const ChatAssistant = ({ onConfigUpdate, onDataLoad, onClearPlots, onLoadDemo, isLoadingConfig }) => {
+const ChatAssistant = ({
+  onConfigUpdate,
+  onDataLoad,
+  onClearPlots,
+  onLoadDemo,
+  onLoadScatterDemo,
+  onLoadLineDemo,
+  isLoadingConfig
+}) => {
   const [messages, setMessages] = useState([
     {
       id: 1,

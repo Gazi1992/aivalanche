@@ -300,33 +300,85 @@ const PlotContainer = ({
 
     const handleScaleDown = (downEvt) => {
       if (downEvt.button !== 1) return; // Middle button
-      downEvt.preventDefault();
-      
+      downEvt.preventDefault(); // Always prevent Plotly's default middle-click behavior
+
+      // Get the CURRENT layout, not the captured one
+      const currentLayout = plotDiv._fullLayout;
+      if (!currentLayout) return;
+
       const rect = plotDiv.getBoundingClientRect();
       scaleStartX = downEvt.clientX;
       scaleStartY = downEvt.clientY;
       scaleStartRelX = (downEvt.clientX - rect.left) / rect.width;
       scaleStartRelY = 1 - (downEvt.clientY - rect.top) / rect.height;
       scaleInitRanges = {};
-      
+
+      let hasMoved = false;
+      const moveThreshold = 3; // pixels
+
       if (isSplom) {
         // Store all axis ranges for SPLOM
-        Object.keys(layout).forEach(key => {
-          if ((key.startsWith('xaxis') || key.startsWith('yaxis')) && layout[key].range) {
-            scaleInitRanges[key] = [...layout[key].range];
+        Object.keys(currentLayout).forEach(key => {
+          if ((key.startsWith('xaxis') || key.startsWith('yaxis')) && currentLayout[key].range) {
+            scaleInitRanges[key] = [...currentLayout[key].range];
           }
         });
       } else {
-        // Regular plot
-        if (layout.xaxis && layout.yaxis && layout.xaxis.range && layout.yaxis.range) {
-          scaleInitRanges.xaxis = [...layout.xaxis.range];
-          scaleInitRanges.yaxis = [...layout.yaxis.range];
+        // Regular plot - use current ranges
+        if (currentLayout.xaxis && currentLayout.yaxis && currentLayout.xaxis.range && currentLayout.yaxis.range) {
+          scaleInitRanges.xaxis = [...currentLayout.xaxis.range];
+          scaleInitRanges.yaxis = [...currentLayout.yaxis.range];
         }
       }
-      
+
+      // Modified move handler that tracks movement
+      const handleScaleMoveTracked = (moveEvt) => {
+        if ((moveEvt.buttons & 4) === 0) return; // Check for middle button
+
+        const dx = moveEvt.clientX - scaleStartX;
+        const dy = moveEvt.clientY - scaleStartY;
+
+        // Check if moved beyond threshold
+        if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
+          hasMoved = true;
+          handleScaleMove(moveEvt);
+        }
+      };
+
+      // Modified up handler that resets axes if no movement
+      const handleScaleUpTracked = () => {
+        window.removeEventListener('pointermove', handleScaleMoveTracked);
+        window.removeEventListener('pointerup', handleScaleUpTracked);
+
+        // If user didn't move, reset axes (our own implementation)
+        if (!hasMoved) {
+          const update = {};
+
+          // Get current layout for proper reset
+          const resetLayout = plotDiv._fullLayout;
+
+          if (isSplom) {
+            // Reset all axes for SPLOM
+            Object.keys(resetLayout).forEach(key => {
+              if (key.startsWith('xaxis') || key.startsWith('yaxis')) {
+                update[`${key}.autorange`] = true;
+              }
+            });
+          } else {
+            // Reset axes for regular plot
+            update['xaxis.autorange'] = true;
+            update['yaxis.autorange'] = true;
+          }
+
+          if (Object.keys(update).length > 0) {
+            Plotly.relayout(plotDiv, update);
+          }
+        }
+      };
+
       if (Object.keys(scaleInitRanges).length > 0) {
-        window.addEventListener('pointermove', handleScaleMove);
-        window.addEventListener('pointerup', handleScaleUp);
+        window.addEventListener('pointermove', handleScaleMoveTracked);
+        window.addEventListener('pointerup', handleScaleUpTracked);
       }
     };
 

@@ -266,7 +266,7 @@ function App() {
         session_id: "demo",
         script_name: "comprehensive_demo"
       });
-      
+
       const result = response.data;
       if (result.success && result.plots) {
         const dashboard = {
@@ -277,7 +277,7 @@ function App() {
           app_title: "Demo Visualizations",
           theme: "light"
         };
-        
+
         setConfig(dashboard);
         setLocalFigures(dashboard.figures);
         console.log('Python demo loaded with', dashboard.figures.length, 'figures');
@@ -287,6 +287,294 @@ function App() {
       }
     } catch (err) {
       console.error("Error loading demo plots:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load scatter plots demo
+  const loadScatterDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "scatter_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Scatter Plots Showcase",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Scatter plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Scatter demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading scatter plots demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load line plots demo
+  const loadLineDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "line_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Line Plots Showcase",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Line plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Line demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading line plots demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load bar plots demo
+  const loadBarDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "bar_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Bar Charts Showcase",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Bar plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Bar demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading bar plots demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load heatmap plots demo
+  const loadHeatmapDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "heatmap_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Heatmaps & 2D Density Showcase",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Heatmap plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Heatmap demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading heatmap plots demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load pie charts demo
+  const loadPieDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "pie_charts_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Pie Charts & Proportional Visualizations",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Pie charts demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Pie demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading pie charts demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load statistical plots demo
+  const loadStatisticalDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "statistical_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Statistical Plots & Distributions",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Statistical plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Statistical demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading statistical plots demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load 3D plots demo
+  const load3DDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "3d_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "3D Visualizations",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('3D plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("3D demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading 3D plots demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load financial plots demo
+  const loadFinancialDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "financial_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Financial Charts & Technical Indicators",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Financial plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Financial demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading financial plots demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load specialty plots demo
+  const loadSpecialtyDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "specialty_plots_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Specialty Plots (PCP, Radar, Network & More)",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Specialty plots demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Specialty demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading specialty plots demo:", err);
     } finally {
       setIsLoadingConfig(false);
     }
@@ -361,6 +649,10 @@ function App() {
           onConfigUpdate={handleConfigUpdateFromChat}
           onClearPlots={clearPlots}
           onLoadDemo={loadDemoPlots}
+          onLoadScatterDemo={loadScatterDemo}
+          onLoadLineDemo={loadLineDemo}
+          onLoadBarDemo={loadBarDemo}
+          onLoadHeatmapDemo={loadHeatmapDemo}
           isLoadingConfig={isLoadingConfig}
           showBackButton={true}
         />
@@ -373,6 +665,15 @@ function App() {
         <main style={welcomeMainStyle}>
           <WelcomeScreen
             onLoadDemo={loadDemoPlots}
+            onLoadScatterDemo={loadScatterDemo}
+            onLoadLineDemo={loadLineDemo}
+            onLoadBarDemo={loadBarDemo}
+            onLoadHeatmapDemo={loadHeatmapDemo}
+            onLoadPieDemo={loadPieDemo}
+            onLoadStatisticalDemo={loadStatisticalDemo}
+            onLoad3DDemo={load3DDemo}
+            onLoadFinancialDemo={loadFinancialDemo}
+            onLoadSpecialtyDemo={loadSpecialtyDemo}
             isLoadingConfig={isLoadingConfig}
           />
         </main>
@@ -395,6 +696,8 @@ function App() {
         onConfigUpdate={handleConfigUpdateFromChat}
         onClearPlots={clearPlots}
         onLoadDemo={loadDemoPlots}
+        onLoadScatterDemo={loadScatterDemo}
+        onLoadLineDemo={loadLineDemo}
         isLoadingConfig={isLoadingConfig}
         showBackButton={true}
       />

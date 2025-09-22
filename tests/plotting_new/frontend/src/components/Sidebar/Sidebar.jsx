@@ -5,8 +5,8 @@ import ChatAssistant from '../Chat/ChatAssistant.jsx';
 import { Logo } from '../icons';
 import './Sidebar.css';
 
-const Sidebar = ({ 
-  theme, 
+const Sidebar = ({
+  theme,
   toggleTheme,
   sidebarWidth,
   sidebarExpanded,
@@ -17,6 +17,8 @@ const Sidebar = ({
   onConfigUpdate,
   onClearPlots,
   onLoadDemo,
+  onLoadScatterDemo,
+  onLoadLineDemo,
   isLoadingConfig,
   showBackButton = false
 }) => {
@@ -49,11 +51,13 @@ const Sidebar = ({
       </div>
 
       <div className="sidebar-content">
-        <ChatAssistant 
+        <ChatAssistant
           onConfigUpdate={onConfigUpdate}
           onDataLoad={(data) => console.log('Data loaded:', data)}
           onClearPlots={onClearPlots}
           onLoadDemo={onLoadDemo}
+          onLoadScatterDemo={onLoadScatterDemo}
+          onLoadLineDemo={onLoadLineDemo}
           isLoadingConfig={isLoadingConfig}
         />
       </div>
