@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 // Components
 import Sidebar from './components/Sidebar/Sidebar.jsx';
@@ -26,6 +27,8 @@ import {
 const API_BASE = 'http://localhost:8000';
 
 function App() {
+  const navigate = useNavigate();
+
   // Core state
   const [config, setConfig] = useState(null);
   const [theme, setTheme] = useState('light');
@@ -346,7 +349,7 @@ function App() {
   if (!config) {
     return (
       <div style={appStyle}>
-        <Sidebar 
+        <Sidebar
           theme={theme}
           toggleTheme={toggleTheme}
           sidebarWidth={sidebarWidth}
@@ -359,6 +362,7 @@ function App() {
           onClearPlots={clearPlots}
           onLoadDemo={loadDemoPlots}
           isLoadingConfig={isLoadingConfig}
+          showBackButton={true}
         />
         
         <SidebarButton 
@@ -367,7 +371,7 @@ function App() {
         />
         
         <main style={welcomeMainStyle}>
-          <WelcomeScreen 
+          <WelcomeScreen
             onLoadDemo={loadDemoPlots}
             isLoadingConfig={isLoadingConfig}
           />
@@ -379,7 +383,7 @@ function App() {
   // Main app with plots
   return (
     <div style={appStyle}>
-      <Sidebar 
+      <Sidebar
         theme={theme}
         toggleTheme={toggleTheme}
         sidebarWidth={sidebarWidth}
@@ -392,6 +396,7 @@ function App() {
         onClearPlots={clearPlots}
         onLoadDemo={loadDemoPlots}
         isLoadingConfig={isLoadingConfig}
+        showBackButton={true}
       />
       
       <SidebarButton 

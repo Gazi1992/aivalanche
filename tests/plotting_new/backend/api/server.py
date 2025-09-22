@@ -40,6 +40,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from backend.core.data_handler import load_dataset, available_datasets
 from backend.core.ai.ai_service import AIService
 from backend.core.data.data_analyzer import DataAnalyzer
+from backend.core.sessions_db import sessions_db
 
 
 # ----------------------------------------------------------------------------
@@ -387,9 +388,6 @@ class PythonExecuteRequest(BaseModel):
     code: str
     session_id: Optional[str] = None
 
-class SessionCreateRequest(BaseModel):
-    session_id: Optional[str] = None
-
 @app.post("/api/python/execute")
 async def execute_python(request: PythonExecuteRequest) -> Dict[str, Any]:
     """Execute Python code and return results including any generated plots."""
@@ -411,51 +409,63 @@ async def execute_python(request: PythonExecuteRequest) -> Dict[str, Any]:
         logging.error(f"Error executing Python code: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/session/create")
-async def create_session(request: SessionCreateRequest) -> Dict[str, str]:
-    """Create a new Python execution session."""
-    try:
-        session_id = execution_service.create_session(request.session_id)
-        return {"session_id": session_id, "status": "created"}
-    except Exception as e:
-        logging.error(f"Error creating session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/api/python/session/{session_id}")
-async def delete_session(session_id: str) -> Dict[str, str]:
-    """Delete a Python execution session."""
-    try:
-        success = execution_service.delete_session(session_id)
-        if success:
-            return {"session_id": session_id, "status": "deleted"}
-        else:
-            raise HTTPException(status_code=404, detail="Session not found")
-    except Exception as e:
-        logging.error(f"Error deleting session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# ---------------------------------------------------------------------------
+# Sessions Management Endpoints
+# ---------------------------------------------------------------------------
 
-@app.get("/api/session/{session_id}/variables")
-async def get_session_variables(session_id: str) -> Dict[str, Any]:
-    """Get variables defined in a session."""
-    try:
-        session = execution_service.get_session(session_id)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
-            
-        return {
-            "session_id": session_id,
-            "variables": session.get_variables(),
-            "datasets": list(session.datasets.keys()),
-            "plot_count": len(session.plot_registry.figures)
-        }
-    except Exception as e:
-        logging.error(f"Error getting session variables: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+class SessionCreate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+class SessionUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 @app.get("/api/sessions")
-async def list_sessions() -> Dict[str, List[str]]:
-    """List all active sessions."""
-    return {"sessions": execution_service.list_sessions()}
+async def list_sessions():
+    """List all sessions from the file-based database."""
+    sessions = sessions_db.list_sessions()
+    return {"sessions": sessions}
+
+@app.post("/api/sessions")
+async def create_session(request: SessionCreate):
+    """Create a new session."""
+    session = sessions_db.create_session(
+        name=request.name,
+        description=request.description
+    )
+    return session
+
+@app.get("/api/sessions/{session_id}")
+async def get_session(session_id: str):
+    """Get a specific session."""
+    session = sessions_db.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session
+
+@app.put("/api/sessions/{session_id}")
+async def update_session(session_id: str, request: SessionUpdate):
+    """Update session metadata."""
+    updates = {}
+    if request.name is not None:
+        updates["name"] = request.name
+    if request.description is not None:
+        updates["description"] = request.description
+
+    session = sessions_db.update_session(session_id, updates)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session
+
+@app.delete("/api/sessions/{session_id}")
+async def delete_session(session_id: str):
+    """Delete a session."""
+    success = sessions_db.delete_session(session_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"message": "Session deleted successfully"}
 
 class DemoRequest(BaseModel):
     session_id: str = "default"

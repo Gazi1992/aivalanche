@@ -34,6 +34,39 @@
   min-width: 0;
 }
 
+.sidebar-back-button {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sidebar-back-button:hover {
+  background: var(--hover-bg);
+  opacity: 1;
+  transform: translateX(-2px);
+}
+
+.sidebar-back-button:active {
+  transform: translateX(0);
+}
+
+.sidebar.collapsed .sidebar-back-button {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
 .sidebar-title {
   font-size: 1.1em;
   font-weight: 600;

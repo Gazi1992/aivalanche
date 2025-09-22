@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle.jsx';
 import ChatAssistant from '../Chat/ChatAssistant.jsx';
 import { Logo } from '../icons';
@@ -16,18 +17,29 @@ const Sidebar = ({
   onConfigUpdate,
   onClearPlots,
   onLoadDemo,
-  isLoadingConfig
+  isLoadingConfig,
+  showBackButton = false
 }) => {
   const sidebarRef = useRef(null);
+  const navigate = useNavigate();
 
   return (
-    <aside 
+    <aside
       ref={sidebarRef}
       className={`sidebar ${!sidebarExpanded ? 'collapsed' : ''} ${sidebarHidden ? 'hidden' : ''}`}
       style={{ width: `${sidebarWidth}px` }}
     >
       <div className="sidebar-header">
         <div className="sidebar-brand">
+          {showBackButton && (
+            <button
+              className="sidebar-back-button"
+              onClick={() => navigate('/sessions')}
+              title="Back to Sessions"
+            >
+              ←
+            </button>
+          )}
           <Logo size={40} />
           <span className="sidebar-title">
             aivalanche

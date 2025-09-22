@@ -1,0 +1,12 @@
+{
+  "sessions": [
+    {
+      "id": "dece8191",
+      "name": "New Session 1",
+      "description": "Click to edit description",
+      "created_at": "2025-09-22T16:06:49.334719",
+      "last_modified": "2025-09-22T16:06:49.334719",
+      "status": "active"
+    }
+  ]
+}
