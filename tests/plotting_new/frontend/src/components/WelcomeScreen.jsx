@@ -5,7 +5,7 @@ const WelcomeScreen = ({
   onLoadDemo,
   onLoadEngineeringDemo, onLoadBusinessDemo, onLoadFinancialMarketsDemo,
   onLoadScientificDemo, onLoadManufacturingDemo, onLoadHealthcareDemo,
-  onLoadGeospatialDemo, onLoadNetworkDemo,
+  onLoadGeospatialDemo, onLoadNetworkDemo, onLoadAnimationsDemo,
   isLoadingConfig
 }) => {
   const welcomeStyle = {
@@ -290,6 +290,32 @@ const WelcomeScreen = ({
               }}
             >
               🌐 Network & IT
+            </button>
+
+            <button
+              onClick={onLoadAnimationsDemo}
+              style={{
+                ...demoButtonStyle,
+                backgroundColor: '#e91e63',
+                minWidth: '180px',
+                opacity: isLoadingConfig ? 0.6 : 1,
+                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
+              }}
+              disabled={isLoadingConfig}
+              onMouseEnter={(e) => {
+                if (!isLoadingConfig) {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoadingConfig) {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                }
+              }}
+            >
+              ✨ Plotly Animations
             </button>
           </div>
 

@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import Plotly from 'plotly.js-dist-min';
 import PlotButton from '../PlotButton';
-import { EditIcon, TableIcon, ExpandIcon, ShrinkIcon, DownloadIcon, AutoscaleIcon, LegendToggleIcon } from '../icons';
+import { EditIcon, TableIcon, ExpandIcon, ShrinkIcon, DownloadIcon, AutoscaleIcon, LegendToggleIcon, PlayIcon, PauseIcon, GifIcon, SliderIcon } from '../icons';
 import { generateLayoutFromMetadata, generateDataFromMetadata } from '../../utils/figureManager';
 import { downloadPlotAsImage } from '../../utils/plotUtils';
+import { exportStaticFramesAsGIF, downloadGIF } from '../../utils/gifExport';
 
 /**
  * Isolated Plot Container Component
@@ -28,6 +29,12 @@ const PlotContainer = ({
   const plotDivRef = useRef(null);
   const plotInstanceRef = useRef(null);
   const interactionHandlersRef = useRef({});
+  const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
+  const isAnimationPlayingRef = useRef(false);
+  const [showSlider, setShowSlider] = useState(false);
+
+  // Check if this is an animation (either has frames or marked as animation in metadata)
+  const isAnimation = (figure?.frames && figure.frames.length > 0) || figure?.metadata?.isAnimation;
 
   // Deep clone the themed layout to prevent shared reference issues
   const getIsolatedLayout = useCallback(() => {
@@ -49,12 +56,116 @@ const PlotContainer = ({
     return JSON.parse(JSON.stringify(data));
   }, [figure]);
 
+  // Animation control functions
+  const handlePlayAnimation = useCallback(() => {
+    if (!plotDivRef.current || !isAnimation) return;
+
+    console.log('Starting animation playback');
+    setIsAnimationPlaying(true);
+    isAnimationPlayingRef.current = true;
+
+    // Function to continuously loop the animation
+    const startContinuousAnimation = () => {
+      if (!plotDivRef.current || !isAnimationPlayingRef.current) {
+        console.log('Animation stopped or div not available');
+        return;
+      }
+
+      // Get all frame names or indices
+      const frameNames = figure.frames.map((frame, i) => {
+        if (typeof frame === 'object' && frame.name) {
+          return frame.name;
+        }
+        return i;
+      });
+
+      console.log('Animating frames:', frameNames);
+      Plotly.animate(plotDivRef.current, frameNames, {
+        frame: {
+          duration: 100,
+          redraw: true
+        },
+        transition: {
+          duration: 0
+        },
+        fromcurrent: false, // Start from beginning of sequence
+        mode: 'immediate',
+        direction: 'forward'
+      }).then(() => {
+        // When animation completes, restart if still playing
+        console.log('Animation cycle complete, playing:', isAnimationPlayingRef.current);
+        if (isAnimationPlayingRef.current && plotDivRef.current) {
+          console.log('Restarting animation loop');
+          startContinuousAnimation();
+        }
+      }).catch(error => {
+        console.error('Animation error:', error);
+        setIsAnimationPlaying(false);
+        isAnimationPlayingRef.current = false;
+      });
+    };
+
+    startContinuousAnimation();
+  }, [isAnimation, figure.frames]);
+
+  const handlePauseAnimation = useCallback(() => {
+    if (!plotDivRef.current || !isAnimation) return;
+
+    console.log('Pausing animation');
+    setIsAnimationPlaying(false);
+    isAnimationPlayingRef.current = false;
+
+    // Pause by calling animate with null frames and 0 duration
+    Plotly.animate(plotDivRef.current, [null], {
+      frame: {
+        duration: 0,
+        redraw: false
+      },
+      mode: 'immediate'
+    });
+  }, [isAnimation]);
+
   // Initialize plot
   const initializePlot = useCallback(() => {
     if (!plotDivRef.current) return;
 
     const data = getIsolatedData();
-    const layout = getIsolatedLayout();
+    let layout = getIsolatedLayout();
+
+    // Handle animation controls if this is an animation
+    if (figure.frames && figure.frames.length > 0) {
+      console.log(`Plot ${plotId}: Has ${figure.frames.length} frames`);
+      console.log(`Plot ${plotId}: Slider visible: ${showSlider}`);
+
+      // Always remove updatemenus (play/pause buttons)
+      layout = {
+        ...layout,
+        updatemenus: undefined  // Remove play/pause buttons
+      };
+
+      // Add or remove slider based on state
+      if (showSlider) {
+        // Create slider configuration
+        layout.sliders = [{
+          steps: figure.frames.map((frame, i) => ({
+            args: [[frame.name || i], {
+              frame: { duration: 100, redraw: true },
+              mode: 'immediate'
+            }],
+            label: frame.name || `${i}`,
+            method: 'animate'
+          })),
+          active: 0,
+          y: -0.15,
+          len: 0.9,
+          x: 0.05,
+          xanchor: 'left',
+          pad: { t: 50, b: 10 }
+        }];
+      } else {
+        layout.sliders = undefined;
+      }
+    }
 
     // Check if this is a 3D plot
     const is3D = layout.scene || (data && data[0] &&
@@ -82,13 +193,38 @@ const PlotContainer = ({
     // Create new plot with isolated data
     Plotly.newPlot(plotDivRef.current, data, layout, config)
       .then(() => {
+        // If the figure has frames (animation), add them
+        if (figure.frames && figure.frames.length > 0) {
+          console.log(`Plot ${plotId}: Adding ${figure.frames.length} animation frames`);
+          // Deep clone frames to ensure isolation
+          const isolatedFrames = JSON.parse(JSON.stringify(figure.frames));
+
+          return Plotly.addFrames(plotDivRef.current, isolatedFrames).then(() => {
+            const plotDiv = plotDivRef.current;
+            // Set up animation event listeners for looping
+            plotDiv.on('plotly_animationinterrupted', () => {
+              setIsAnimationPlaying(false);
+            });
+
+            plotDiv.on('plotly_animated', () => {
+              // Animation completed - loop if still playing
+              if (isAnimationPlaying) {
+                setTimeout(() => {
+                  handlePlayAnimation();
+                }, 100);
+              }
+            });
+          });
+        }
+      })
+      .then(() => {
         plotInstanceRef.current = plotDivRef.current;
         attachIsolatedInteractions();
       })
       .catch(error => {
         console.error(`Error creating plot ${plotId}:`, error);
       });
-  }, [plotId, getIsolatedData, getIsolatedLayout]);
+  }, [plotId, getIsolatedData, getIsolatedLayout, figure, isAnimationPlaying, handlePlayAnimation, showSlider]);
 
   // Attach isolated interaction handlers
   const attachIsolatedInteractions = useCallback(() => {
@@ -525,6 +661,13 @@ const PlotContainer = ({
     updatePlot();
   }, [figure, themedLayout]);
 
+  // Re-render plot when slider visibility changes
+  useEffect(() => {
+    if (isAnimation && plotDivRef.current) {
+      initializePlot();
+    }
+  }, [showSlider]);
+
   // Handle resize
   useEffect(() => {
     const handleResize = () => {
@@ -542,6 +685,36 @@ const PlotContainer = ({
     downloadPlotAsImage(plotId, {
       filename: figure.id || 'plot'
     });
+  };
+
+  const handleSliderToggle = () => {
+    setShowSlider(prev => !prev);
+  };
+
+  const handleGifExport = async () => {
+    if (!plotDivRef.current || !isAnimation) return;
+
+    // Show loading state (could add a loading indicator)
+    console.log('Starting GIF export...');
+
+    try {
+      const blob = await exportStaticFramesAsGIF(plotDivRef.current, figure, {
+        width: 640,
+        height: 480,
+        fps: 10,
+        quality: 10,
+        onProgress: (progress) => {
+          console.log(`GIF export progress: ${(progress * 100).toFixed(0)}%`);
+        }
+      });
+
+      // Download the GIF
+      downloadGIF(blob, `${figure.id || 'animation'}.gif`);
+      console.log('GIF export complete!');
+    } catch (error) {
+      console.error('Failed to export GIF:', error);
+      alert('Failed to export animation as GIF. Please try again.');
+    }
   };
 
   const handleAutoscaleClick = () => {
@@ -613,6 +786,34 @@ const PlotContainer = ({
         padding: '4px',
         flexShrink: 0
       }}>
+        {/* Animation controls first if this is an animation */}
+        {isAnimation && (
+          <>
+            <PlotButton
+              onClick={isAnimationPlaying ? handlePauseAnimation : handlePlayAnimation}
+              title={isAnimationPlaying ? "Pause animation" : "Play animation"}
+              icon={isAnimationPlaying ? PauseIcon : PlayIcon}
+            />
+            <PlotButton
+              onClick={handleGifExport}
+              title="Export as GIF"
+              icon={GifIcon}
+            />
+            <PlotButton
+              onClick={handleSliderToggle}
+              title={showSlider ? "Hide slider" : "Show slider"}
+              icon={SliderIcon}
+              style={showSlider ? { backgroundColor: 'var(--primary-color)', color: 'white' } : {}}
+            />
+            <div style={{
+              width: '1px',
+              height: '20px',
+              backgroundColor: 'var(--border-color)',
+              margin: '0 4px',
+              alignSelf: 'center'
+            }} />
+          </>
+        )}
         {/* Show edit button only if EditPane is available */}
         {!noEditPane && (
           <PlotButton

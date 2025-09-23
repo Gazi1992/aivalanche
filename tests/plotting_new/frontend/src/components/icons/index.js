@@ -26,3 +26,8 @@ export { default as ResetIcon } from './ResetIcon';
 export { default as ShrinkIcon } from './ShrinkIcon';
 export { default as AutoscaleIcon } from './AutoscaleIcon';
 export { default as LegendToggleIcon } from './LegendToggleIcon';
+export { default as PlayIcon } from './PlayIcon';
+export { default as PauseIcon } from './PauseIcon';
+export { default as RestartIcon } from './RestartIcon';
+export { default as GifIcon } from './GifIcon';
+export { default as SliderIcon } from './SliderIcon';

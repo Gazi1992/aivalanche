@@ -43,10 +43,20 @@ class PlotRegistry:
         # Convert figure to dict for analysis
         fig_dict = json.loads(fig.to_json())
         layout = fig_dict.get('layout', {})
-        
+
         # Initialize metadata if not provided
         if metadata is None:
             metadata = {}
+
+        # Check if this is an animation (has frames)
+        is_animation = False
+        if hasattr(fig, 'frames') and fig.frames:
+            is_animation = True
+            metadata['isAnimation'] = True
+            metadata['frameCount'] = len(fig.frames)
+            # Include frames in the figure dict
+            fig_dict['frames'] = json.loads(fig.to_json())['frames']
+            logger.info(f"Detected animation with {len(fig.frames)} frames")
             
         # Auto-detect axis types and plot characteristics
         # Note: axis type is 'numeric' or 'category' (not 'linear' which is a scale)

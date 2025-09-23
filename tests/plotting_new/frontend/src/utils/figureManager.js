@@ -49,6 +49,7 @@ export const createManagedFigure = (plotlyFigure, pythonMetadata = null, figureI
     id: figureId || plotlyFigure.id || `plot-${Date.now()}`,
     data: plotlyFigure.data || [],
     layout: plotlyFigure.layout || {},
+    frames: plotlyFigure.frames || null,  // Preserve frames for animations
     metadata: metadata,
     visibility: true
   };

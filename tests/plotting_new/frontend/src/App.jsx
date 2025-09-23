@@ -836,6 +836,79 @@ function App() {
     }
   };
   
+  // Load animation demo
+  const loadAnimationsDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        script_name: 'plotly_animations_demo'
+      });
+      const result = response.data;
+
+      if (result.success && result.plots) {
+        // Process all figures with metadata (animations are just figures with frames)
+        const processedFigures = result.plots.map(fig => {
+          return createManagedFigure(fig.figure, fig.metadata, fig.id);
+        });
+
+        const dashboard = {
+          figures: processedFigures,
+          app_title: "Plotly Animations Demo",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(processedFigures);
+
+        console.log('Animation demo loaded with', processedFigures.length, 'animated figures');
+      } else {
+        throw new Error("Animation demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading animations demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load mixed plots and animations demo
+  const loadMixedDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        script_name: 'mixed_plots_animations_demo'
+      });
+      const result = response.data;
+
+      if (result.success && result.plots) {
+        // Process all figures with metadata
+        const processedFigures = result.plots.map(fig => {
+          return createManagedFigure(fig.figure, fig.metadata, fig.id);
+        });
+
+        const dashboard = {
+          figures: processedFigures,
+          app_title: "Mixed Plots & Animations",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(processedFigures);
+
+        // Count animations
+        const animationCount = processedFigures.filter(f => f.frames && f.frames.length > 0).length;
+        const staticCount = processedFigures.length - animationCount;
+        console.log(`Mixed demo loaded: ${staticCount} static plots and ${animationCount} animations`);
+      } else {
+        throw new Error("Mixed demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading mixed demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
   // Clear plots
   const clearPlots = () => {
     setConfig(null);
@@ -929,6 +1002,7 @@ function App() {
             onLoadHealthcareDemo={loadHealthcareDemo}
             onLoadGeospatialDemo={loadGeospatialDemo}
             onLoadNetworkDemo={loadNetworkDemo}
+            onLoadAnimationsDemo={loadAnimationsDemo}
             isLoadingConfig={isLoadingConfig}
           />
         </main>

@@ -513,6 +513,69 @@ async def execute_demo_script(request: DemoRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 # ---------------------------------------------------------------------------
+# Plot Guidelines API
+# ---------------------------------------------------------------------------
+
+@app.get("/api/plot-guidelines/{plot_type}")
+async def get_plot_guide(plot_type: str, include_general: bool = True):
+    """Get comprehensive guidelines for creating a specific plot type."""
+    try:
+        import sys
+        from pathlib import Path
+        # Add parent directory to path to find core module
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from core.plot_guidelines import get_plot_guidelines
+        guidelines = get_plot_guidelines(plot_type, include_general)
+        return guidelines
+    except Exception as e:
+        logging.error(f"Error getting plot guidelines: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/plot-guidelines")
+async def list_plot_types():
+    """Get list of all available plot types with descriptions."""
+    try:
+        import sys
+        from pathlib import Path
+        # Add parent directory to path to find core module
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from core.plot_guidelines import get_all_plot_types
+        plot_types = get_all_plot_types()
+        return {"plot_types": plot_types}
+    except Exception as e:
+        logging.error(f"Error listing plot types: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+class PlotRecommendationRequest(BaseModel):
+    num_variables: int
+    variable_types: List[str]
+    relationship_type: Optional[str] = None
+    data_size: Optional[int] = 100
+
+@app.post("/api/plot-recommendations")
+async def get_recommendations(request: PlotRecommendationRequest):
+    """Get plot type recommendations based on data characteristics."""
+    try:
+        import sys
+        from pathlib import Path
+        # Add parent directory to path to find core module
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from core.plot_guidelines import get_plot_recommendation
+
+        data_characteristics = {
+            'num_variables': request.num_variables,
+            'variable_types': request.variable_types,
+            'relationship_type': request.relationship_type,
+            'data_size': request.data_size
+        }
+
+        recommendations = get_plot_recommendation(data_characteristics)
+        return recommendations
+    except Exception as e:
+        logging.error(f"Error getting plot recommendations: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
