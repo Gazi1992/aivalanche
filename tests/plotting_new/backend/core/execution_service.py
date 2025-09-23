@@ -21,6 +21,7 @@ from datetime import datetime
 import logging
 from pathlib import Path
 from scipy import stats
+from .plot_types import get_plot_capabilities, is_plot_editable
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +33,41 @@ class PlotRegistry:
         self.figures: Dict[str, Dict[str, Any]] = {}
         self.counter = 0
         
-    def register(self, fig: go.Figure, plot_id: Optional[str] = None, 
+    def register(self, fig: Any, plot_id: Optional[str] = None,
                  editable_properties: Optional[List[str]] = None,
                  metadata: Optional[Dict[str, Any]] = None) -> str:
-        """Register a Plotly figure with metadata for edit pane integration."""
+        """Register a Plotly figure or D3 config with metadata for edit pane integration."""
         if plot_id is None:
             plot_id = f"plot_{self.counter}"
             self.counter += 1
             
-        # Convert figure to dict for analysis
+        # Check if this is a D3 visualization
+        if isinstance(fig, dict) and fig.get('type') == 'd3':
+            # Handle D3 visualization
+            logger.info(f"Registering D3 visualization: {plot_id}")
+
+            # Get capabilities for D3 plots
+            capabilities = get_plot_capabilities('d3')
+
+            # Initialize metadata if not provided
+            if metadata is None:
+                metadata = {}
+
+            # Add capabilities to metadata
+            metadata['plot_type'] = 'd3'
+            metadata['capabilities'] = capabilities
+            metadata['isEditable'] = capabilities.get('is_editable', False)
+
+            self.figures[plot_id] = {
+                'id': plot_id,
+                'type': 'd3',
+                'd3Config': fig.get('d3Config', {}),
+                'metadata': metadata
+            }
+
+            return plot_id
+
+        # Convert Plotly figure to dict for analysis
         fig_dict = json.loads(fig.to_json())
         layout = fig_dict.get('layout', {})
 
@@ -169,9 +196,14 @@ class PlotRegistry:
             # Log final Y axis type after detection
             logger.info(f"Plot {plot_id}: Final Y axis type after detection = {y_axis_type}")
             
-            # Store plot type
+            # Store plot type and capabilities
             metadata['plot_type'] = plot_type
-            
+
+            # Get capabilities for this plot type
+            capabilities = get_plot_capabilities(plot_type)
+            metadata['capabilities'] = capabilities
+            metadata['isEditable'] = capabilities.get('is_editable', True)
+
             # Special handling for plots without traditional axes
             if plot_type in ['pie', 'sunburst', 'treemap', 'indicator', 'icicle']:
                 metadata['hasAxes'] = False
@@ -279,9 +311,18 @@ class ExecutionSession:
             self.datasets[file_path.stem] = df
             return df
             
-        def register_plot(fig: go.Figure, **kwargs) -> str:
-            """Register a plot with the plot registry."""
+        def register_plot(fig: Any, **kwargs) -> str:
+            """Register a plot (Plotly or D3) with the plot registry."""
             return self.plot_registry.register(fig, **kwargs)
+
+        def register_d3(d3_config: Dict, viz_id: str, metadata: Optional[Dict] = None) -> str:
+            """Register a D3 visualization with the plot registry."""
+            d3_figure = {
+                'type': 'd3',
+                'd3Config': d3_config,
+                'metadata': metadata or {}
+            }
+            return self.plot_registry.register(d3_figure, plot_id=viz_id, metadata=metadata)
             
         def quick_plot(df: pd.DataFrame, x: str, y: str, 
                       plot_type: str = 'scatter', **kwargs) -> go.Figure:
@@ -321,24 +362,39 @@ class ExecutionSession:
             else:
                 raise ValueError(f"Unknown outlier method: {method}")
         
+        # Import D3 helpers
+        from .d3_helpers import (
+            create_d3_viz, d3_force_graph, d3_hierarchy, d3_custom, d3_animation,
+            register_d3_visualization
+        )
+
         # Create namespace with all available tools
         namespace = {
             # Data libraries
             'pd': pd,
             'np': np,
-            
+
             # Plotting libraries
             'go': go,
             'px': px,
             'make_subplots': make_subplots,
-            
+
             # Helper functions
             'load_data': load_data,
             'register_plot': register_plot,
+            'register_d3': register_d3,
             'quick_plot': quick_plot,
             'show_stats': show_stats,
             'find_outliers': find_outliers,
-            
+
+            # D3 visualization helpers
+            'create_d3_viz': create_d3_viz,
+            'd3_force_graph': d3_force_graph,
+            'd3_hierarchy': d3_hierarchy,
+            'd3_custom': d3_custom,
+            'd3_animation': d3_animation,
+            'register_d3_visualization': register_d3_visualization,
+
             # Session data
             'datasets': self.datasets,
             

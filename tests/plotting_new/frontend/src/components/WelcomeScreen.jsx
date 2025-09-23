@@ -1,51 +1,96 @@
 import React from 'react';
 import './WelcomeScreen.css';
+import './WelcomeScreen/WelcomeScreen.css';
 
 const WelcomeScreen = ({
   onLoadDemo,
   onLoadEngineeringDemo, onLoadBusinessDemo, onLoadFinancialMarketsDemo,
   onLoadScientificDemo, onLoadManufacturingDemo, onLoadHealthcareDemo,
-  onLoadGeospatialDemo, onLoadNetworkDemo, onLoadAnimationsDemo,
+  onLoadGeospatialDemo, onLoadNetworkDemo, onLoadAnimationsDemo, onLoadD3Demo,
+  onLoadD3AnimationsDemo,
   isLoadingConfig
 }) => {
-  const welcomeStyle = {
-    textAlign: 'center',
-    padding: '60px',
-    maxWidth: '600px',
+  const containerStyle = {
+    display: 'flex',
+    gap: '40px',
+    padding: '40px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+  };
+
+  const contentStyle = {
+    flex: '1',
+    paddingRight: '20px',
   };
 
   const welcomeTitleStyle = {
-    fontSize: '2.5rem',
-    marginBottom: '20px',
+    fontSize: '2.8rem',
+    marginBottom: '24px',
     color: 'var(--text-color)',
+    fontWeight: '600',
   };
 
   const welcomeSubtitleStyle = {
-    fontSize: '1.2rem',
+    fontSize: '1.15rem',
     color: 'var(--text-secondary)',
     lineHeight: '1.6',
-    marginBottom: '40px',
+    marginBottom: '32px',
   };
 
   const welcomeInstructionsStyle = {
-    fontSize: '1rem',
+    fontSize: '0.95rem',
     color: 'var(--text-secondary)',
     backgroundColor: 'var(--card-background-color)',
-    padding: '20px',
-    borderRadius: '8px',
+    padding: '24px',
+    borderRadius: '12px',
     border: '1px solid var(--border-color)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+  };
+
+  const demoPanelStyle = {
+    width: '280px',
+    backgroundColor: 'var(--card-background-color)',
+    padding: '24px',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+  };
+
+  const demoPanelTitleStyle = {
+    fontSize: '1.2rem',
+    fontWeight: '600',
+    marginBottom: '20px',
+    color: 'var(--text-color)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
   };
 
   const demoButtonStyle = {
-    padding: '12px 24px',
-    fontSize: '1rem',
+    padding: '10px 16px',
+    fontSize: '0.95rem',
     backgroundColor: 'var(--primary-color)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    width: '100%',
+    textAlign: 'left',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '8px',
+  };
+
+  const demoCategoryStyle = {
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: 'var(--text-secondary)',
+    marginTop: '16px',
+    marginBottom: '8px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
   };
 
   return (
@@ -61,291 +106,145 @@ const WelcomeScreen = ({
         </div>
       )}
       
-      <div style={welcomeStyle}>
-        <h1 style={welcomeTitleStyle}>📊 Visualization Demo Hub</h1>
-        <p style={welcomeSubtitleStyle}>
-          Choose a demo below to explore different visualization types, or upload your data and chat with the AI assistant to create custom visualizations.
-        </p>
-        <div style={welcomeInstructionsStyle}>
-          <p style={{marginBottom: '10px'}}>
-            <strong>Getting Started:</strong>
+      <div style={containerStyle}>
+        <div style={contentStyle}>
+          <h1 style={welcomeTitleStyle}>📊 Visualization Demo Hub</h1>
+          <p style={welcomeSubtitleStyle}>
+            Create stunning data visualizations with our AI-powered platform. Upload your data and use natural language to generate interactive charts, or explore our demo collection.
           </p>
-          <ol style={{textAlign: 'left', margin: '0', paddingLeft: '20px'}}>
-            <li>Upload a data file using the 📎 button in the chat</li>
-            <li>Ask the AI to create visualizations</li>
-            <li>Customize and refine your plots interactively</li>
-          </ol>
+
+          <div style={welcomeInstructionsStyle}>
+            <h3 style={{marginTop: '0', marginBottom: '16px', fontSize: '1.1rem', fontWeight: '600'}}>
+              🚀 Getting Started
+            </h3>
+            <ol style={{margin: '0', paddingLeft: '24px', lineHeight: '1.8'}}>
+              <li>Upload a data file using the 📎 button in the chat</li>
+              <li>Ask the AI to create visualizations in natural language</li>
+              <li>Customize and refine your plots interactively</li>
+              <li>Export your visualizations in multiple formats</li>
+            </ol>
+          </div>
+
+          <div style={{marginTop: '32px', padding: '24px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px'}}>
+            <h3 style={{marginTop: '0', marginBottom: '16px', fontSize: '1.1rem', fontWeight: '600'}}>
+              💡 Pro Tips
+            </h3>
+            <ul style={{margin: '0', paddingLeft: '24px', lineHeight: '1.8', fontSize: '0.95rem', color: 'var(--text-secondary)'}}>
+              <li>Use specific chart types in your requests (e.g., "Create a scatter plot")</li>
+              <li>Mention the columns you want to visualize</li>
+              <li>Ask for specific customizations like colors, labels, or themes</li>
+              <li>Try animation demos for dynamic data visualization</li>
+            </ul>
+          </div>
         </div>
-        <div style={{marginTop: '40px'}}>
-          <p style={{marginBottom: '20px', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-color)'}}>
-            🎯 Real-World Demo Categories:
-          </p>
 
-          <div style={{display: 'flex', gap: '15px', justifyContent: 'center'}}>
-            <button
-              onClick={onLoadEngineeringDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#3182ce',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              ⚙️ Engineering
-            </button>
-
-            <button
-              onClick={onLoadBusinessDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#48bb78',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              💼 Business
-            </button>
-
-            <button
-              onClick={onLoadFinancialMarketsDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#27ae60',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              💹 Finance
-            </button>
-
-            <button
-              onClick={onLoadScientificDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#9b59b6',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              🔬 Scientific
-            </button>
+        <div style={demoPanelStyle}>
+          <div style={demoPanelTitleStyle}>
+            <span>🎯</span>
+            <span>Demo Gallery</span>
           </div>
 
-          <div style={{display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '15px'}}>
-            <button
-              onClick={onLoadManufacturingDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#ed8936',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              🏭 Manufacturing
-            </button>
+          <div className="demo-category">Industry Demos</div>
 
-            <button
-              onClick={onLoadHealthcareDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#e74c3c',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              🏥 Healthcare
-            </button>
+          <button
+            className="demo-button"
+            onClick={onLoadEngineeringDemo}
+            disabled={isLoadingConfig}
+          >
+            ⚙️ Engineering
+          </button>
 
-            <button
-              onClick={onLoadGeospatialDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#16a085',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              🌍 Geospatial
-            </button>
+          <button
+            className="demo-button"
+            onClick={onLoadBusinessDemo}
+            disabled={isLoadingConfig}
+          >
+            💼 Business
+          </button>
 
-            <button
-              onClick={onLoadNetworkDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#667eea',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              🌐 Network & IT
-            </button>
+          <button
+            className="demo-button"
+            onClick={onLoadFinancialMarketsDemo}
+            disabled={isLoadingConfig}
+          >
+            💹 Finance
+          </button>
 
-            <button
-              onClick={onLoadAnimationsDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#e91e63',
-                minWidth: '180px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              ✨ Plotly Animations
-            </button>
-          </div>
+          <button
+            className="demo-button"
+            onClick={onLoadScientificDemo}
+            disabled={isLoadingConfig}
+          >
+            🔬 Scientific
+          </button>
 
-          <div style={{display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px'}}>
-            <button
-              onClick={onLoadDemo}
-              style={{
-                ...demoButtonStyle,
-                backgroundColor: '#718096',
-                minWidth: '360px',
-                opacity: isLoadingConfig ? 0.6 : 1,
-                cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-              }}
-              disabled={isLoadingConfig}
-              onMouseEnter={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoadingConfig) {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                }
-              }}
-            >
-              📊 Classic Demo (All Plot Types)
-            </button>
-          </div>
+          <button
+            className="demo-button"
+            onClick={onLoadManufacturingDemo}
+            disabled={isLoadingConfig}
+          >
+            🏭 Manufacturing
+          </button>
+
+          <button
+            className="demo-button"
+            onClick={onLoadHealthcareDemo}
+            disabled={isLoadingConfig}
+          >
+            🏥 Healthcare
+          </button>
+
+          <button
+            className="demo-button"
+            onClick={onLoadGeospatialDemo}
+            disabled={isLoadingConfig}
+          >
+            🌍 Geospatial
+          </button>
+
+          <button
+            className="demo-button"
+            onClick={onLoadNetworkDemo}
+            disabled={isLoadingConfig}
+          >
+            🌐 Network & IT
+          </button>
+
+          <div className="demo-category">Interactive Demos</div>
+
+          <button
+            className="demo-button"
+            onClick={onLoadAnimationsDemo}
+            disabled={isLoadingConfig}
+          >
+            ✨ Plotly Animations
+          </button>
+
+          <button
+            className="demo-button"
+            onClick={onLoadD3Demo}
+            disabled={isLoadingConfig}
+          >
+            🎨 D3 Visualizations
+          </button>
+
+          <button
+            className="demo-button"
+            onClick={onLoadD3AnimationsDemo}
+            disabled={isLoadingConfig}
+          >
+            🎬 D3 Animations
+          </button>
+
+          <div className="demo-category">Complete Collection</div>
+
+          <button
+            className="demo-button"
+            onClick={onLoadDemo}
+            disabled={isLoadingConfig}
+          >
+            📊 All Plot Types
+          </button>
         </div>
       </div>
     </>

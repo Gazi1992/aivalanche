@@ -1,0 +1,9 @@
+/* Plot button separator - only visible on hover */
+.plot-button-separator {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.plot-container:hover .plot-button-separator {
+  opacity: 1;
+}

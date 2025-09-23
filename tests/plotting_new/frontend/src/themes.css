@@ -50,13 +50,13 @@
 [data-theme='light'] {
   --background-color: #F5F7FA;
   --text-color: #2D3748;
-  --primary-color: #FF6B35;
-  --primary-hover-color: #E55A2B;
+  --primary-color: #8b92e8;
+  --primary-hover-color: #7981db;
   --card-background-color: #FFFFFF;
   --border-color: #E2E8F0;
   --header-bg: #FFFFFF;
   --sidebar-bg: #FFFFFF;
-  --button-bg: #FF6B35;
+  --button-bg: #8b92e8;
   --button-text: #FFFFFF;
   --plot-bg: #FFFFFF;
   --plot-paper-bg: #FFFFFF;
@@ -66,7 +66,7 @@
   --legend-border: rgba(226, 232, 240, 0.8);
   --legend-text: #444444;
   --shadow-color: rgba(0, 0, 0, 0.08);
-  --color-data-1: #FF6B35;
+  --color-data-1: #8b92e8;
   --color-data-2: #4FD1C7;
   --color-data-3: #63B3ED;
   --color-data-4: #F6E05E;
@@ -80,14 +80,14 @@
   
   /* Chat Assistant specific colors */
   --bg-primary: #FFFFFF;
-  --bg-secondary: #F8F9FA;
+  --bg-secondary: #f7f8fc;
   --bg-tertiary: #F1F3F5;
   --text-primary: #2D3748;
   --text-secondary: #718096;
   --text-tertiary: #A0AEC0;
-  --color-primary: #FF6B35;
-  --color-primary-dark: #E55A2B;
-  --color-primary-rgb: 255, 107, 53;
+  --color-primary: #8b92e8;
+  --color-primary-dark: #7981db;
+  --color-primary-rgb: 139, 146, 232;
   --color-success: #48BB78;
   
   /* Python executor styles */

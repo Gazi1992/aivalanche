@@ -5,6 +5,7 @@ import { EditIcon, TableIcon, ExpandIcon, ShrinkIcon, DownloadIcon, AutoscaleIco
 import { generateLayoutFromMetadata, generateDataFromMetadata } from '../../utils/figureManager';
 import { downloadPlotAsImage } from '../../utils/plotUtils';
 import { exportStaticFramesAsGIF, downloadGIF } from '../../utils/gifExport';
+import './PlotContainer.css';
 
 /**
  * Isolated Plot Container Component
@@ -805,7 +806,7 @@ const PlotContainer = ({
               icon={SliderIcon}
               style={showSlider ? { backgroundColor: 'var(--primary-color)', color: 'white' } : {}}
             />
-            <div style={{
+            <div className="plot-button-separator" style={{
               width: '1px',
               height: '20px',
               backgroundColor: 'var(--border-color)',

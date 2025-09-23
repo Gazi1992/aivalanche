@@ -6,45 +6,7 @@ including best practices, metadata structure, and examples.
 """
 
 from typing import Dict, Any, Optional
-from enum import Enum
-
-class PlotType(Enum):
-    """Enumeration of supported plot types"""
-    SCATTER = "scatter"
-    LINE = "line"
-    BAR = "bar"
-    HISTOGRAM = "histogram"
-    BOX = "box"
-    VIOLIN = "violin"
-    HEATMAP = "heatmap"
-    CONTOUR = "contour"
-    PIE = "pie"
-    DONUT = "donut"
-    SUNBURST = "sunburst"
-    TREEMAP = "treemap"
-    FUNNEL = "funnel"
-    WATERFALL = "waterfall"
-    CANDLESTICK = "candlestick"
-    OHLC = "ohlc"
-    SCATTER_3D = "scatter_3d"
-    SURFACE_3D = "surface_3d"
-    MESH_3D = "mesh_3d"
-    LINE_3D = "line_3d"
-    BUBBLE = "bubble"
-    SANKEY = "sankey"
-    PARALLEL_COORDINATES = "parallel_coordinates"
-    PARALLEL_CATEGORIES = "parallel_categories"
-    RADAR = "radar"
-    POLAR_SCATTER = "polar_scatter"
-    POLAR_BAR = "polar_bar"
-    CHOROPLETH = "choropleth"
-    SCATTER_GEO = "scatter_geo"
-    DENSITY_MAPBOX = "density_mapbox"
-    SCATTER_MAPBOX = "scatter_mapbox"
-    INDICATOR = "indicator"
-    GAUGE = "gauge"
-    BULLET = "bullet"
-    TABLE = "table"
+from .plot_types import PLOT_TYPES, get_plot_capabilities, get_all_plot_types
 
 
 # General guidelines that apply to all plot types

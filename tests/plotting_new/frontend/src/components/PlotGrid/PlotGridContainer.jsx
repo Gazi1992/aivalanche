@@ -1,6 +1,7 @@
 import React from 'react';
 import ColumnSelector from '../ColumnSelector.jsx';
 import PlotContainer from '../PlotContainer/PlotContainer.jsx';
+import D3Container from '../D3Container/D3Container.jsx';
 
 const PlotGridContainer = ({
   figures,
@@ -51,19 +52,34 @@ const PlotGridContainer = ({
               className="plot-container"
               style={getFigureContainerStyle(fig)}
             >
-              <PlotContainer
-                figure={fig}
-                plotId={`plot-${fig.id}`}
-                themedLayout={themedLayout}
-                onEdit={() => onEditFigure(fig)}
-                onViewTable={() => onViewTable(fig)}
-                onExpand={() => onExpandFigure(fig)}
-                isExpanded={false}
-                showExpandButton={figures.length > 1}
-                onInteraction={(interaction) => {
-                  console.log(`Plot ${fig.id} interaction:`, interaction);
-                }}
-              />
+              {fig.type === 'd3' ? (
+                <D3Container
+                  figure={fig}
+                  vizId={`d3-${fig.id}`}
+                  onEdit={fig.metadata?.isEditable !== false ? (() => onEditFigure(fig)) : null}
+                  onViewTable={() => onViewTable(fig)}
+                  onExpand={() => onExpandFigure(fig)}
+                  isExpanded={false}
+                  showExpandButton={figures.length > 1}
+                  onInteraction={(interaction) => {
+                    console.log(`D3 ${fig.id} interaction:`, interaction);
+                  }}
+                />
+              ) : (
+                <PlotContainer
+                  figure={fig}
+                  plotId={`plot-${fig.id}`}
+                  themedLayout={themedLayout}
+                  onEdit={fig.metadata?.isEditable !== false ? (() => onEditFigure(fig)) : null}
+                  onViewTable={() => onViewTable(fig)}
+                  onExpand={() => onExpandFigure(fig)}
+                  isExpanded={false}
+                  showExpandButton={figures.length > 1}
+                  onInteraction={(interaction) => {
+                    console.log(`Plot ${fig.id} interaction:`, interaction);
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>

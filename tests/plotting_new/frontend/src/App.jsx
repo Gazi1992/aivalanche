@@ -909,6 +909,76 @@ function App() {
     }
   };
 
+  // Load D3 visualizations demo
+  const loadD3Demo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        script_name: 'd3_visualizations_demo'
+      });
+      const result = response.data;
+
+      if (result.success && result.plots) {
+        // Process D3 figures - they already have the right structure
+        const processedFigures = result.plots.map((fig, index) => ({
+          ...fig,
+          id: fig.id || `d3_${index}`
+        }));
+
+        const dashboard = {
+          title: 'D3 Interactive Visualizations',
+          plots: processedFigures
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(processedFigures);
+
+        console.log('D3 demo loaded with', processedFigures.length, 'visualizations');
+      } else {
+        throw new Error("D3 demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading D3 demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load D3 data animations demo
+  const loadD3AnimationsDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        script_name: 'd3_data_animations_demo'
+      });
+      const result = response.data;
+
+      if (result.success && result.plots) {
+        // Process D3 animation figures
+        const processedFigures = result.plots.map((fig, index) => ({
+          ...fig,
+          id: fig.id || `d3_anim_${index}`
+        }));
+
+        const dashboard = {
+          title: 'D3 Data Animations',
+          plots: processedFigures
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(processedFigures);
+
+        console.log('D3 animations demo loaded with', processedFigures.length, 'animations');
+      } else {
+        throw new Error("D3 animations demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading D3 animations demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
   // Clear plots
   const clearPlots = () => {
     setConfig(null);
@@ -1003,6 +1073,8 @@ function App() {
             onLoadGeospatialDemo={loadGeospatialDemo}
             onLoadNetworkDemo={loadNetworkDemo}
             onLoadAnimationsDemo={loadAnimationsDemo}
+            onLoadD3Demo={loadD3Demo}
+            onLoadD3AnimationsDemo={loadD3AnimationsDemo}
             isLoadingConfig={isLoadingConfig}
           />
         </main>
