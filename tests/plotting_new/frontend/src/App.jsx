@@ -579,6 +579,262 @@ function App() {
       setIsLoadingConfig(false);
     }
   };
+
+  // Load Engineering Analysis demo
+  const loadEngineeringDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "engineering_analysis_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Engineering Analysis",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Engineering demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Engineering demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading engineering demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load Business Metrics demo
+  const loadBusinessDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "business_metrics_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Business Metrics & KPIs",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Business demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Business demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading business demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load Financial Markets demo
+  const loadFinancialMarketsDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "financial_markets_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Financial Markets Analysis",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Financial markets demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Financial markets demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading financial markets demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load Scientific Research demo
+  const loadScientificDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "scientific_research_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Scientific Research Visualizations",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Scientific demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Scientific demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading scientific demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load Manufacturing Quality demo
+  const loadManufacturingDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "manufacturing_quality_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Manufacturing & Quality Control",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Manufacturing demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Manufacturing demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading manufacturing demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load Healthcare Analytics demo
+  const loadHealthcareDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "healthcare_analytics_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Healthcare Analytics",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Healthcare demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Healthcare demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading healthcare demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load Geospatial Data demo
+  const loadGeospatialDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "geospatial_data_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Geospatial Data Analysis",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Geospatial demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Geospatial demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading geospatial demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
+
+  // Load Network & Systems demo
+  const loadNetworkDemo = async () => {
+    try {
+      setIsLoadingConfig(true);
+      const response = await axios.post(`${API_BASE}/api/python/demo`, {
+        session_id: "demo",
+        script_name: "network_systems_demo"
+      });
+
+      const result = response.data;
+      if (result.success && result.plots) {
+        const dashboard = {
+          figures: result.plots.map(plot => {
+            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+          }),
+          app_title: "Network & Systems Monitoring",
+          theme: "light"
+        };
+
+        setConfig(dashboard);
+        setLocalFigures(dashboard.figures);
+        console.log('Network demo loaded with', dashboard.figures.length, 'figures');
+      } else {
+        throw new Error("Network demo execution failed: " + (result.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error loading network demo:", err);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
   
   // Clear plots
   const clearPlots = () => {
@@ -665,15 +921,14 @@ function App() {
         <main style={welcomeMainStyle}>
           <WelcomeScreen
             onLoadDemo={loadDemoPlots}
-            onLoadScatterDemo={loadScatterDemo}
-            onLoadLineDemo={loadLineDemo}
-            onLoadBarDemo={loadBarDemo}
-            onLoadHeatmapDemo={loadHeatmapDemo}
-            onLoadPieDemo={loadPieDemo}
-            onLoadStatisticalDemo={loadStatisticalDemo}
-            onLoad3DDemo={load3DDemo}
-            onLoadFinancialDemo={loadFinancialDemo}
-            onLoadSpecialtyDemo={loadSpecialtyDemo}
+            onLoadEngineeringDemo={loadEngineeringDemo}
+            onLoadBusinessDemo={loadBusinessDemo}
+            onLoadFinancialMarketsDemo={loadFinancialMarketsDemo}
+            onLoadScientificDemo={loadScientificDemo}
+            onLoadManufacturingDemo={loadManufacturingDemo}
+            onLoadHealthcareDemo={loadHealthcareDemo}
+            onLoadGeospatialDemo={loadGeospatialDemo}
+            onLoadNetworkDemo={loadNetworkDemo}
             isLoadingConfig={isLoadingConfig}
           />
         </main>
