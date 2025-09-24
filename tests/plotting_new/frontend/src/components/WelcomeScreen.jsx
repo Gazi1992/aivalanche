@@ -4,37 +4,71 @@ import './WelcomeScreen/WelcomeScreen.css';
 
 const WelcomeScreen = ({
   onLoadDemo,
-  onLoadEngineeringDemo, onLoadBusinessDemo, onLoadFinancialMarketsDemo,
-  onLoadScientificDemo, onLoadManufacturingDemo, onLoadHealthcareDemo,
-  onLoadGeospatialDemo, onLoadNetworkDemo, onLoadAnimationsDemo, onLoadD3Demo,
-  onLoadD3AnimationsDemo,
   isLoadingConfig
 }) => {
-  const containerStyle = {
-    display: 'flex',
-    gap: '40px',
-    padding: '40px',
-    maxWidth: '1200px',
-    margin: '0 auto',
-  };
+  const [hoveredCategory, setHoveredCategory] = React.useState(null);
+  const [demoCategories, setDemoCategories] = React.useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = React.useState(true);
 
-  const contentStyle = {
-    flex: '1',
-    paddingRight: '20px',
+  // Fetch demo categories from backend
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/demo-categories');
+        const data = await response.json();
+        setDemoCategories(data.categories || []);
+      } catch (error) {
+        console.error('Failed to load demo categories:', error);
+        // Show empty state if API fails
+        setDemoCategories([]);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Show loading state while fetching categories
+  if (isLoadingCategories) {
+    return (
+      <div style={{
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="loading-spinner"></div>
+          <div style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>
+            Loading demo categories...
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const containerStyle = {
+    padding: '10px',
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
   };
 
   const welcomeTitleStyle = {
-    fontSize: '2.8rem',
-    marginBottom: '24px',
+    fontSize: '1.8rem',
+    marginBottom: '8px',
     color: 'var(--text-color)',
     fontWeight: '600',
+    textAlign: 'center',
   };
 
   const welcomeSubtitleStyle = {
-    fontSize: '1.15rem',
+    fontSize: '1.1rem',
     color: 'var(--text-secondary)',
-    lineHeight: '1.6',
-    marginBottom: '32px',
+    lineHeight: '1.3',
+    marginBottom: '12px',
+    textAlign: 'center',
   };
 
   const welcomeInstructionsStyle = {
@@ -107,144 +141,168 @@ const WelcomeScreen = ({
       )}
       
       <div style={containerStyle}>
-        <div style={contentStyle}>
-          <h1 style={welcomeTitleStyle}>📊 Visualization Demo Hub</h1>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flex: 1
+        }}>
+          <h1 style={welcomeTitleStyle}>📊 Visualization Demo Gallery</h1>
           <p style={welcomeSubtitleStyle}>
-            Create stunning data visualizations with our AI-powered platform. Upload your data and use natural language to generate interactive charts, or explore our demo collection.
+            Explore real-world data visualizations. Click any category to load demo.
           </p>
 
-          <div style={welcomeInstructionsStyle}>
-            <h3 style={{marginTop: '0', marginBottom: '16px', fontSize: '1.1rem', fontWeight: '600'}}>
-              🚀 Getting Started
-            </h3>
-            <ol style={{margin: '0', paddingLeft: '24px', lineHeight: '1.8'}}>
-              <li>Upload a data file using the 📎 button in the chat</li>
-              <li>Ask the AI to create visualizations in natural language</li>
-              <li>Customize and refine your plots interactively</li>
-              <li>Export your visualizations in multiple formats</li>
-            </ol>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(260px, 1fr))',
+            gap: '12px',
+            marginTop: '20px',
+            width: '100%',
+            maxWidth: '1400px'
+          }}>
+            {demoCategories.map(category => (
+            <div
+              key={category.id}
+              style={{
+                backgroundColor: 'var(--card-background-color)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                padding: '12px',
+                cursor: isLoadingConfig ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s ease',
+                opacity: isLoadingConfig ? 0.6 : 1,
+                position: 'relative',
+                overflow: 'hidden',
+                height: '140px',
+                minHeight: '140px',
+                minWidth: '260px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoadingConfig) {
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)';
+                  e.currentTarget.style.borderColor = category.color;
+                  setHoveredCategory(category.id);
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+                setHoveredCategory(null);
+              }}
+            >
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '2px',
+                backgroundColor: category.color,
+                opacity: 0.8
+              }} />
+
+              {/* Card header - centered and disappears on hover */}
+              {hoveredCategory !== category.id && (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  gap: '8px',
+                  transition: 'opacity 0.3s ease',
+                  animation: hoveredCategory === category.id ? 'fadeOut 0.3s ease' : 'fadeIn 0.3s ease'
+                }}>
+                  <div style={{
+                    fontSize: '2rem',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    {category.name.split(' ')[0]}
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <h3 style={{
+                      fontSize: '1.15rem',
+                      margin: 0,
+                      color: 'var(--text-color)',
+                      fontWeight: '600',
+                      lineHeight: '1.2'
+                    }}>
+                      {category.name.split(' ').slice(1).join(' ') || category.name.split(' ')[0].substring(2)}
+                    </h3>
+
+                    <p style={{
+                      fontSize: '0.9rem',
+                      color: 'var(--text-secondary)',
+                      margin: '2px 0 0 0',
+                      lineHeight: '1.2'
+                    }}>
+                      {category.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Subcategory list - appears inside card on hover */}
+              {hoveredCategory === category.id && category.demos.length > 0 && (
+                <div style={{
+                  animation: 'fadeIn 0.3s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  width: '100%'
+                }}>
+                  {category.demos.map((demo, index) => (
+                    <div
+                      key={demo.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onLoadDemo(demo.id);
+                      }}
+                      style={{
+                        padding: '6px 8px',
+                        marginBottom: index < category.demos.length - 1 ? '4px' : 0,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        backgroundColor: 'rgba(0,0,0,0.03)',
+                        transition: 'all 0.2s',
+                        borderLeft: `3px solid ${category.color}`,
+                        marginLeft: '4px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(139, 146, 232, 0.15)';
+                        e.currentTarget.style.transform = 'translateX(4px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.03)';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '0.95rem',
+                        fontWeight: '500',
+                        color: 'var(--text-color)',
+                        marginBottom: '1px'
+                      }}>
+                        {demo.name}
+                      </div>
+                      <div style={{
+                        fontSize: '0.8rem',
+                        color: 'var(--text-secondary)',
+                        lineHeight: '1.2'
+                      }}>
+                        {demo.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            ))}
           </div>
-
-          <div style={{marginTop: '32px', padding: '24px', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px'}}>
-            <h3 style={{marginTop: '0', marginBottom: '16px', fontSize: '1.1rem', fontWeight: '600'}}>
-              💡 Pro Tips
-            </h3>
-            <ul style={{margin: '0', paddingLeft: '24px', lineHeight: '1.8', fontSize: '0.95rem', color: 'var(--text-secondary)'}}>
-              <li>Use specific chart types in your requests (e.g., "Create a scatter plot")</li>
-              <li>Mention the columns you want to visualize</li>
-              <li>Ask for specific customizations like colors, labels, or themes</li>
-              <li>Try animation demos for dynamic data visualization</li>
-            </ul>
-          </div>
-        </div>
-
-        <div style={demoPanelStyle}>
-          <div style={demoPanelTitleStyle}>
-            <span>🎯</span>
-            <span>Demo Gallery</span>
-          </div>
-
-          <div className="demo-category">Industry Demos</div>
-
-          <button
-            className="demo-button"
-            onClick={onLoadEngineeringDemo}
-            disabled={isLoadingConfig}
-          >
-            ⚙️ Engineering
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadBusinessDemo}
-            disabled={isLoadingConfig}
-          >
-            💼 Business
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadFinancialMarketsDemo}
-            disabled={isLoadingConfig}
-          >
-            💹 Finance
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadScientificDemo}
-            disabled={isLoadingConfig}
-          >
-            🔬 Scientific
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadManufacturingDemo}
-            disabled={isLoadingConfig}
-          >
-            🏭 Manufacturing
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadHealthcareDemo}
-            disabled={isLoadingConfig}
-          >
-            🏥 Healthcare
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadGeospatialDemo}
-            disabled={isLoadingConfig}
-          >
-            🌍 Geospatial
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadNetworkDemo}
-            disabled={isLoadingConfig}
-          >
-            🌐 Network & IT
-          </button>
-
-          <div className="demo-category">Interactive Demos</div>
-
-          <button
-            className="demo-button"
-            onClick={onLoadAnimationsDemo}
-            disabled={isLoadingConfig}
-          >
-            ✨ Plotly Animations
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadD3Demo}
-            disabled={isLoadingConfig}
-          >
-            🎨 D3 Visualizations
-          </button>
-
-          <button
-            className="demo-button"
-            onClick={onLoadD3AnimationsDemo}
-            disabled={isLoadingConfig}
-          >
-            🎬 D3 Animations
-          </button>
-
-          <div className="demo-category">Complete Collection</div>
-
-          <button
-            className="demo-button"
-            onClick={onLoadDemo}
-            disabled={isLoadingConfig}
-          >
-            📊 All Plot Types
-          </button>
         </div>
       </div>
     </>

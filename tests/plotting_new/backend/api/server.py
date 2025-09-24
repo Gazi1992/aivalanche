@@ -471,6 +471,81 @@ class DemoRequest(BaseModel):
     session_id: str = "default"
     script_name: str = "comprehensive_demo"
 
+@app.get("/api/demo-categories")
+async def get_demo_categories() -> Dict[str, Any]:
+    """Get all demo categories and their demos from demo_index."""
+    try:
+        # Import the demo index
+        import sys
+        from pathlib import Path
+        demo_scripts_path = Path(__file__).parent.parent / 'demo_scripts'
+        sys.path.insert(0, str(demo_scripts_path))
+
+        from demo_index import DEMO_CATEGORIES
+
+        # Transform the data for frontend consumption
+        categories = []
+        for cat_id, category in DEMO_CATEGORIES.items():
+            # Only include categories that have demos or are in the old directory
+            demos = []
+            for demo_id, demo_info in category.get('demos', {}).items():
+                demos.append({
+                    'id': demo_info['file'].replace('.py', ''),
+                    'name': demo_info['name'],
+                    'description': demo_info['description']
+                })
+
+            # Check for old demos if this category has no demos
+            if not demos and cat_id in ['healthcare', 'urban', 'energy', 'sports', 'science', 'social', 'history']:
+                # Map to old demo files
+                old_demo_map = {
+                    'healthcare': 'old/healthcare_analytics_demo',
+                    'urban': 'old/geospatial_data_demo',
+                    'energy': 'old/engineering_analysis_demo',
+                    'sports': 'old/pie_charts_demo',
+                    'science': 'old/scientific_research_demo',
+                    'social': 'old/bar_plots_demo',
+                    'history': 'old/line_plots_demo'
+                }
+                if cat_id in old_demo_map:
+                    demos.append({
+                        'id': old_demo_map[cat_id],
+                        'name': category['name'].split(' & ')[0],
+                        'description': category['description']
+                    })
+
+            # Add animations category special handling
+            if cat_id == 'geospatial':  # Rename this to animations in frontend
+                continue  # Skip geospatial for now
+
+            categories.append({
+                'id': cat_id,
+                'name': category['name'],
+                'description': category['description'],
+                'icon': category['icon'],
+                'color': category['color'],
+                'demos': demos
+            })
+
+        # Add animations category manually
+        categories.append({
+            'id': 'animation',
+            'name': '✨ Animations',
+            'description': 'Dynamic visualizations',
+            'icon': '✨',
+            'color': '#E91E63',
+            'demos': [
+                { 'id': 'old/plotly_animations_demo', 'name': 'Plotly Animations', 'description': 'Animated charts' },
+                { 'id': 'old/d3_animations_demo', 'name': 'D3 Animations', 'description': 'Interactive D3 visuals' }
+            ]
+        })
+
+        return {"categories": categories}
+
+    except Exception as e:
+        logging.error(f"Error getting demo categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/python/demo")
 async def execute_demo_script(request: DemoRequest) -> Dict[str, Any]:
     """Execute a demo script with status updates."""
@@ -478,9 +553,23 @@ async def execute_demo_script(request: DemoRequest) -> Dict[str, Any]:
     from pathlib import Path
     
     try:
-        # Load the demo script
+        logging.info(f"Loading demo script: {request.script_name}")
+
+        # Load the demo script - handle both old and new paths
         demo_path = Path(__file__).parent.parent / 'demo_scripts' / f'{request.script_name}.py'
-        with open(demo_path, 'r') as f:
+
+        logging.info(f"Looking for demo at: {demo_path}")
+
+        if not demo_path.exists():
+            # Try without .py extension (in case it was already included)
+            demo_path = Path(__file__).parent.parent / 'demo_scripts' / request.script_name
+
+        if not demo_path.exists():
+            logging.error(f"Demo script not found at: {demo_path}")
+            raise FileNotFoundError(f"Demo script not found: {request.script_name}")
+
+        logging.info(f"Found demo script at: {demo_path}")
+        with open(demo_path, 'r', encoding='utf-8') as f:
             code = f.read()
         
         # Execute the code

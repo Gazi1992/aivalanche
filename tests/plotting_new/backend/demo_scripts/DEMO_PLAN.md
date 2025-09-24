@@ -5,18 +5,21 @@ This document outlines the comprehensive demo collection for showcasing real-wor
 
 ## Demo Categories & Examples
 
-### 1. 🌍 CLIMATE & ENVIRONMENT
+### 1. 🌍 CLIMATE & ENVIRONMENT ✅
 **Purpose**: Show environmental data visualization capabilities
+**Status**: COMPLETED - Using real NASA GISTEMP and NOAA data
 
-#### Global Temperature Anomaly (1880-2024)
-- **Plotly Contour Plot**: Temperature gradients across latitudes/time
-- **Plotly Animated Heatmap**: Regional temperature changes over time
-- **Data**: NASA GISTEMP or NOAA climate data
+#### Global Temperature Anomaly (1880-2024) - `temperature_anomaly.py`
+- **Plotly Contour Plot**: Temperature gradients across latitudes/time with Arctic amplification
+- **Plotly Animated Choropleth Map**: Global temperature changes by country (replaces regional heatmap)
+- **Plotly Line Plot**: Temperature trend with 5-year moving average and baseline annotation
+- **Plotly Violin Plot**: Temperature distribution by decade showing warming progression
+- **Data**: Real NASA GISTEMP data (stored locally in `nasa_temperature_data.csv`)
 
-#### Climate Variables Analysis
-- **Plotly Parallel Coordinates (PCP)**: Relationships between CO2, temperature, sea level, ice coverage
-- **D3 Interactive Globe**: Temperature anomalies with rotation and zoom
-- **Data**: Multiple climate indicators from IPCC reports
+#### Climate Variables Analysis - `climate_variables.py`
+- **Plotly Parallel Coordinates (PCP)**: Relationships between CO2, temperature, sea level, ice coverage, ocean heat (axis labels on bottom)
+- **Plotly SPLOM**: Scatterplot matrix showing all pairwise relationships with correlation coefficients
+- **Data**: Real NOAA CO2 data (`noaa_co2_data.txt`), NASA sea level data (`sea_level_data.csv`), NASA temperature data
 
 ### 2. 🚀 SPACE & ASTRONOMY
 **Purpose**: Demonstrate 3D capabilities and physics simulations

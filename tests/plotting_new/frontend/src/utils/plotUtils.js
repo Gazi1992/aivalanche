@@ -10,7 +10,7 @@ import Plotly from 'plotly.js-dist-min';
  */
 export const resizePlotsWithDelay = (figures, delay = 100) => {
   if (!figures || figures.length === 0) return;
-  
+
   const timer = setTimeout(() => {
     figures.forEach(fig => {
       if (fig && fig.id) {
@@ -22,7 +22,7 @@ export const resizePlotsWithDelay = (figures, delay = 100) => {
       }
     });
   }, delay);
-  
+
   return () => clearTimeout(timer);
 };
 

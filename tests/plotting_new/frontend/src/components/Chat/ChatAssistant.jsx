@@ -9,10 +9,6 @@ import './ChatAssistant.css';
 const ChatAssistant = ({
   onConfigUpdate,
   onDataLoad,
-  onClearPlots,
-  onLoadDemo,
-  onLoadScatterDemo,
-  onLoadLineDemo,
   isLoadingConfig
 }) => {
   const [messages, setMessages] = useState([
@@ -118,8 +114,7 @@ const ChatAssistant = ({
         
         botMessage.suggestions = [
           { text: "Modify plots", action: "modify" },
-          { text: "Add more data", action: "upload" },
-          { text: "Clear plots", action: "clear" }
+          { text: "Add more data", action: "upload" }
         ];
         
         // Add execution output if available
@@ -362,37 +357,6 @@ const ChatAssistant = ({
         </div>
       )}
       
-      {/* Quick Actions Bar */}
-      <div className="quick-actions-bar">
-        {onLoadDemo && (
-          <button 
-            className="quick-action-button"
-            onClick={onLoadDemo}
-            disabled={isLoadingConfig}
-            title="Load demo plots with sample data"
-            style={{
-              opacity: isLoadingConfig ? 0.5 : 1,
-              cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {isLoadingConfig ? '⏳ Loading...' : '📊 Demo Plots'}
-          </button>
-        )}
-        {onClearPlots && (
-          <button 
-            className="quick-action-button"
-            onClick={onClearPlots}
-            disabled={isLoadingConfig}
-            title="Clear all plots"
-            style={{
-              opacity: isLoadingConfig ? 0.5 : 1,
-              cursor: isLoadingConfig ? 'not-allowed' : 'pointer'
-            }}
-          >
-            🗑️ Clear Plots
-          </button>
-        )}
-      </div>
       
       <div className="chat-input-container">
         <button 

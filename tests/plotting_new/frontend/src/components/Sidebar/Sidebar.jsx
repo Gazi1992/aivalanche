@@ -15,10 +15,6 @@ const Sidebar = ({
   appTitle,
   currentConfig,
   onConfigUpdate,
-  onClearPlots,
-  onLoadDemo,
-  onLoadScatterDemo,
-  onLoadLineDemo,
   isLoadingConfig,
   showBackButton = false
 }) => {
@@ -54,10 +50,6 @@ const Sidebar = ({
         <ChatAssistant
           onConfigUpdate={onConfigUpdate}
           onDataLoad={(data) => console.log('Data loaded:', data)}
-          onClearPlots={onClearPlots}
-          onLoadDemo={onLoadDemo}
-          onLoadScatterDemo={onLoadScatterDemo}
-          onLoadLineDemo={onLoadLineDemo}
           isLoadingConfig={isLoadingConfig}
         />
       </div>

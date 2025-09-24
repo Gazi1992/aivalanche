@@ -1,5 +1,5 @@
 import React from 'react';
-import ColumnSelector from '../ColumnSelector.jsx';
+import PlotsHeader from '../PlotsHeader.jsx';
 import PlotContainer from '../PlotContainer/PlotContainer.jsx';
 import D3Container from '../D3Container/D3Container.jsx';
 
@@ -14,6 +14,8 @@ const PlotGridContainer = ({
   onEditFigure,
   onViewTable,
   onExpandFigure,
+  onClearPlots,
+  onRefreshPlots,
   themedLayout
 }) => {
   const gridContainerStyle = {
@@ -39,10 +41,12 @@ const PlotGridContainer = ({
 
   return (
     <>
-      <ColumnSelector
+      <PlotsHeader
         columns={gridColumns}
         onColumnChange={setGridColumns}
         figureCount={figureCount}
+        onClearPlots={onClearPlots}
+        onRefreshPlots={onRefreshPlots}
       />
       <div className="grid-container" style={gridContainerStyle}>
         <div style={gridStyle}>

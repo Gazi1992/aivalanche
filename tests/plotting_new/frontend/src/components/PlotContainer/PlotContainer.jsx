@@ -194,6 +194,135 @@ const PlotContainer = ({
     // Create new plot with isolated data
     Plotly.newPlot(plotDivRef.current, data, layout, config)
       .then(() => {
+        // Special handling for SPLOM to ensure axis labels are visible
+        if (data && data[0] && data[0].type === 'splom') {
+          const plotDiv = plotDivRef.current;
+          const dimensions = data[0].dimensions || [];
+          const showupperhalf = data[0].showupperhalf !== false; // Default is true
+
+          // For SPLOM, ensure grid is visible on all subplots
+          // and axis labels are properly displayed
+          const fullLayout = plotDiv._fullLayout;
+          const updateObj = {};
+
+          // Find all x and y axes
+          const xAxes = [];
+          const yAxes = [];
+          Object.keys(fullLayout).forEach(key => {
+            if (key.match(/^xaxis\d*$/)) {
+              xAxes.push(key);
+            } else if (key.match(/^yaxis\d*$/)) {
+              yAxes.push(key);
+            }
+          });
+
+          // Get text styles and border color from metadata
+          const axisLabelStyles = figure.metadata?.appearance?.text?.axisLabel || {};
+          const axisTickStyles = figure.metadata?.appearance?.text?.axisTick || {};
+          const borderColor = figure.metadata?.appearance?.background?.plot?.borderColor || 'rgba(128, 128, 128, 0.3)';
+
+          // For SPLOM, determine which axes are on the bottom row and left column
+          const numDimensions = dimensions.length;
+
+          // Enable grid for all axes and ensure consistent styling from metadata
+          [...xAxes, ...yAxes].forEach(axisKey => {
+            updateObj[`${axisKey}.showgrid`] = true;
+            updateObj[`${axisKey}.gridcolor`] = 'rgba(128, 128, 128, 0.2)';
+
+            // Add plot box (axis lines) for each subplot using metadata border color
+            updateObj[`${axisKey}.showline`] = true;
+            updateObj[`${axisKey}.linecolor`] = borderColor;
+            updateObj[`${axisKey}.linewidth`] = 1;
+            updateObj[`${axisKey}.mirror`] = true;  // Show lines on all four sides but no ticks on mirror
+            updateObj[`${axisKey}.zeroline`] = false;  // Hide zero lines
+
+            // Determine if this axis should show ticks
+            // For SPLOM lower triangle:
+            // - Bottom row x-axes: xaxis, xaxis2, xaxis3, etc. (first few)
+            // - Left column y-axes: need to identify which ones are on the left
+            let showTicks = false;
+
+            if (axisKey.startsWith('xaxis')) {
+              // Extract axis number (empty string for 'xaxis' means 1)
+              const axisNum = axisKey === 'xaxis' ? 1 : parseInt(axisKey.replace('xaxis', ''));
+              // Bottom row x-axes are the first numDimensions-1 axes for lower triangle
+              showTicks = axisNum <= numDimensions - 1;
+            } else if (axisKey.startsWith('yaxis')) {
+              // For lower triangle SPLOM, left column y-axes follow a specific pattern
+              // yaxis is for row 2, yaxis2 for row 3, etc.
+              const axisNum = axisKey === 'yaxis' ? 1 : parseInt(axisKey.replace('yaxis', ''));
+              // In lower triangle, the left column axes are: yaxis, yaxis2, yaxis3, etc. (consecutive)
+              showTicks = axisNum <= numDimensions - 1;
+            }
+
+            if (showTicks) {
+              updateObj[`${axisKey}.ticks`] = 'outside';
+              updateObj[`${axisKey}.showticklabels`] = true;
+            } else {
+              updateObj[`${axisKey}.ticks`] = '';
+              updateObj[`${axisKey}.showticklabels`] = false;
+            }
+
+            // Apply consistent font styles from metadata to all axes
+            // Axis label font
+            updateObj[`${axisKey}.title.font.size`] = axisLabelStyles.fontSize || 14;
+            updateObj[`${axisKey}.title.font.color`] = axisLabelStyles.color || '#444444';
+            if (axisLabelStyles.bold !== undefined) {
+              updateObj[`${axisKey}.title.font.weight`] = axisLabelStyles.bold ? 'bold' : 'normal';
+            }
+            if (axisLabelStyles.italic !== undefined) {
+              updateObj[`${axisKey}.title.font.style`] = axisLabelStyles.italic ? 'italic' : 'normal';
+            }
+
+            // Axis tick font
+            updateObj[`${axisKey}.tickfont.size`] = axisTickStyles.fontSize || 11;
+            updateObj[`${axisKey}.tickfont.color`] = axisTickStyles.color || '#444444';
+          });
+
+          // For lower triangle SPLOM, ensure the bottom-left subplot has its x-axis label
+          // The first x-axis often corresponds to the bottom-left plot
+          if (!showupperhalf && xAxes.length > 0 && dimensions.length > 0) {
+            // The bottom-left plot typically uses xaxis (not xaxis2, etc)
+            updateObj['xaxis.title.text'] = dimensions[0].label;
+            updateObj['xaxis.title.standoff'] = 15;
+          }
+
+          // Add spacing between subplots
+          updateObj['xaxis.domain'] = updateObj['xaxis.domain'] || [0, 1];
+          updateObj['yaxis.domain'] = updateObj['yaxis.domain'] || [0, 1];
+
+          // Apply spacing to all subplot domains
+          const spacing = 0.02; // 2% spacing between subplots
+          xAxes.forEach(xKey => {
+            const currentDomain = fullLayout[xKey]?.domain;
+            if (currentDomain) {
+              const domainWidth = currentDomain[1] - currentDomain[0];
+              updateObj[`${xKey}.domain`] = [
+                currentDomain[0] + spacing/2,
+                currentDomain[1] - spacing/2
+              ];
+            }
+          });
+
+          yAxes.forEach(yKey => {
+            const currentDomain = fullLayout[yKey]?.domain;
+            if (currentDomain) {
+              const domainHeight = currentDomain[1] - currentDomain[0];
+              updateObj[`${yKey}.domain`] = [
+                currentDomain[0] + spacing/2,
+                currentDomain[1] - spacing/2
+              ];
+            }
+          });
+
+          // Apply the updates if any
+          if (Object.keys(updateObj).length > 0) {
+            Plotly.relayout(plotDiv, updateObj).catch(err => {
+              console.log('SPLOM update failed:', err);
+            });
+          }
+        }
+
         // If the figure has frames (animation), add them
         if (figure.frames && figure.frames.length > 0) {
           console.log(`Plot ${plotId}: Adding ${figure.frames.length} animation frames`);

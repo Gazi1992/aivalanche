@@ -1,0 +1,60 @@
+/* Import the column selector styles */
+@import './ColumnSelector.css';
+
+/* Container for action buttons */
+.plot-action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Common styles for action buttons */
+.clear-plots-btn,
+.refresh-plots-btn {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--text-color);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Clear button hover state */
+.clear-plots-btn:hover {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: rgba(255, 59, 48, 0.3);
+  color: #ff3b30;
+}
+
+/* Refresh button hover state */
+.refresh-plots-btn:hover {
+  background: rgba(52, 199, 89, 0.15);
+  border-color: rgba(52, 199, 89, 0.3);
+  color: #34c759;
+}
+
+/* Active state for both buttons */
+.clear-plots-btn:active,
+.refresh-plots-btn:active {
+  transform: scale(0.95);
+}
+
+/* Focus state for both buttons */
+.clear-plots-btn:focus,
+.refresh-plots-btn:focus {
+  outline: none;
+}
+
+.clear-plots-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+}
+
+.refresh-plots-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2);
+}

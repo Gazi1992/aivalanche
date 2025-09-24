@@ -232,27 +232,38 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
   // Special handling for SPLOM - apply grid and font settings to all axes
   const isSplom = figure.data && figure.data[0] && figure.data[0].type === 'splom';
   if (isSplom) {
-    // First, ensure all axes exist in the layout
-    // SPLOM creates multiple axes (xaxis, xaxis2, xaxis3, etc.)
-    // We need to find the highest numbered axis to iterate through all
-    let maxAxisNum = 1;
+    // Get the number of dimensions to determine grid size
+    const dimensions = figure.data[0].dimensions || [];
+    const numDimensions = dimensions.length;
+
+    // SPLOM creates a grid of subplots. When showupperhalf=false,
+    // we have a lower triangular matrix of plots
+    // We need to ensure axes exist for all subplots and are configured properly
+    let maxAxisNum = numDimensions * numDimensions;
+
+    // Find the highest numbered axis that actually exists
+    let actualMaxAxis = 1;
     Object.keys(layout).forEach(key => {
       const match = key.match(/^[xy]axis(\d*)$/);
       if (match) {
         const num = match[1] ? parseInt(match[1]) : 1;
-        maxAxisNum = Math.max(maxAxisNum, num);
+        actualMaxAxis = Math.max(actualMaxAxis, num);
       }
     });
 
-    // Apply settings to all axes
+    // Use the actual max axis found in the layout
+    maxAxisNum = actualMaxAxis;
+
+    // Apply settings to all axes that exist
     for (let i = 1; i <= maxAxisNum; i++) {
       const xKey = i === 1 ? 'xaxis' : `xaxis${i}`;
       const yKey = i === 1 ? 'yaxis' : `yaxis${i}`;
 
-      // Apply to X axes
-      if (!layout[xKey]) {
-        layout[xKey] = {};
-      }
+      // Apply to X axes if they exist
+      if (layout[xKey] || i <= maxAxisNum) {
+        if (!layout[xKey]) {
+          layout[xKey] = {};
+        }
 
       // Grid settings
       layout[xKey].showgrid = m.axes.x.grid.visible;
@@ -325,6 +336,20 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
         style: m.text?.axisLabel?.italic ? 'italic' : 'normal'
       };
     }
+    }
+
+    // For SPLOM, ensure adequate margins for axis labels
+    // and set specific properties to ensure labels are visible
+    if (!layout.margin) {
+      layout.margin = {};
+    }
+    layout.margin.l = Math.max(layout.margin.l || 60, 100);  // More space for left labels
+    layout.margin.b = Math.max(layout.margin.b || 60, 100);  // More space for bottom labels
+
+    // Set a height if not specified to ensure proper aspect ratio
+    if (!layout.height) {
+      layout.height = 800;
+    }
   }
 
   // Special handling for polar plots (scatterpolar, barpolar)
@@ -396,8 +421,12 @@ export const generateLayoutFromMetadata = (figure, themeLayout = {}) => {
   }
 
   // Apply legend from metadata
-  layout.showlegend = m.legend.visible;
-  if (m.legend.visible) {
+  // Hide legend if there's only one trace (or no traces)
+  const traceCount = figure.data ? figure.data.length : 0;
+  const shouldShowLegend = m.legend.visible && traceCount > 1;
+
+  layout.showlegend = shouldShowLegend;
+  if (shouldShowLegend) {
     layout.legend = {
       // Position inside the plot
       x: m.legend.position?.x ?? 0.02,

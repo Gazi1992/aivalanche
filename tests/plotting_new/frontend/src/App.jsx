@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -259,12 +259,16 @@ function App() {
   };
   
   // Load demo plots
-  const loadDemoPlots = async () => {
+  const loadDemoPlots = async (scriptName) => {
     try {
       setIsLoadingConfig(true);
+      // Use provided script name or default to comprehensive_demo
+      const script = scriptName || "comprehensive_demo";
+      console.log('Loading demo script:', script);
+
       const response = await axios.post(`${API_BASE}/api/python/demo`, {
         session_id: "demo",
-        script_name: "comprehensive_demo"
+        script_name: script
       });
 
       const result = response.data;
@@ -984,7 +988,25 @@ function App() {
     setConfig(null);
     setLocalFigures(null);
   };
-  
+
+  // Refresh plots - force re-render to fix any rendering glitches
+  const refreshPlots = useCallback(() => {
+    if (!localFigures || localFigures.length === 0) return;
+
+    // Force a re-render by temporarily clearing and restoring figures
+    const currentFigures = [...localFigures];
+    setLocalFigures([]);
+
+    // Use requestAnimationFrame to ensure DOM has updated before restoring
+    requestAnimationFrame(() => {
+      setLocalFigures(currentFigures);
+      // Optionally resize plots after they're restored
+      setTimeout(() => {
+        resizePlotsWithDelay(currentFigures, 100);
+      }, 100);
+    });
+  }, [localFigures]);
+
   // Update figure after edit
   const handleUpdateFigure = (updatedFigure) => {
     console.log('Updating figure:', {
@@ -1046,12 +1068,6 @@ function App() {
           appTitle="Data Visualization Studio"
           currentConfig={config}
           onConfigUpdate={handleConfigUpdateFromChat}
-          onClearPlots={clearPlots}
-          onLoadDemo={loadDemoPlots}
-          onLoadScatterDemo={loadScatterDemo}
-          onLoadLineDemo={loadLineDemo}
-          onLoadBarDemo={loadBarDemo}
-          onLoadHeatmapDemo={loadHeatmapDemo}
           isLoadingConfig={isLoadingConfig}
           showBackButton={true}
         />
@@ -1095,10 +1111,6 @@ function App() {
         appTitle={config?.app_title || "Data Visualization Studio"}
         currentConfig={config}
         onConfigUpdate={handleConfigUpdateFromChat}
-        onClearPlots={clearPlots}
-        onLoadDemo={loadDemoPlots}
-        onLoadScatterDemo={loadScatterDemo}
-        onLoadLineDemo={loadLineDemo}
         isLoadingConfig={isLoadingConfig}
         showBackButton={true}
       />
@@ -1120,6 +1132,8 @@ function App() {
           onEditFigure={handleEditFigure}
           onViewTable={handleViewTable}
           onExpandFigure={handleExpandFigure}
+          onClearPlots={clearPlots}
+          onRefreshPlots={refreshPlots}
           themedLayout={themedLayout}
         />
       </main>
