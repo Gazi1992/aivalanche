@@ -233,26 +233,29 @@ const PlotContainer = ({
             updateObj[`${axisKey}.showline`] = true;
             updateObj[`${axisKey}.linecolor`] = borderColor;
             updateObj[`${axisKey}.linewidth`] = 1;
-            updateObj[`${axisKey}.mirror`] = true;  // Show lines on all four sides but no ticks on mirror
+            updateObj[`${axisKey}.mirror`] = true;  // Show lines on all four sides but NO ticks on mirror
             updateObj[`${axisKey}.zeroline`] = false;  // Hide zero lines
 
             // Determine if this axis should show ticks
             // For SPLOM lower triangle:
-            // - Bottom row x-axes: xaxis, xaxis2, xaxis3, etc. (first few)
-            // - Left column y-axes: need to identify which ones are on the left
+            // - Bottom row x-axes: xaxis, xaxis2, xaxis3, xaxis4 (first n-1 for n dimensions)
+            // - Left column y-axes: specific pattern based on triangular structure
             let showTicks = false;
 
             if (axisKey.startsWith('xaxis')) {
               // Extract axis number (empty string for 'xaxis' means 1)
               const axisNum = axisKey === 'xaxis' ? 1 : parseInt(axisKey.replace('xaxis', ''));
-              // Bottom row x-axes are the first numDimensions-1 axes for lower triangle
-              showTicks = axisNum <= numDimensions - 1;
+              // For lower triangle: show ticks on bottom row
+              // Bottom row x-axes are the first (numDimensions-1) axes
+              showTicks = axisNum < numDimensions;
             } else if (axisKey.startsWith('yaxis')) {
-              // For lower triangle SPLOM, left column y-axes follow a specific pattern
-              // yaxis is for row 2, yaxis2 for row 3, etc.
+              // Extract axis number
               const axisNum = axisKey === 'yaxis' ? 1 : parseInt(axisKey.replace('yaxis', ''));
-              // In lower triangle, the left column axes are: yaxis, yaxis2, yaxis3, etc. (consecutive)
-              showTicks = axisNum <= numDimensions - 1;
+
+              // For SPLOM lower triangle, just show ticks for ALL y-axes
+              // Let Plotly handle which ones are actually on the left
+              // This is simpler and should work
+              showTicks = true;
             }
 
             if (showTicks) {
@@ -288,15 +291,10 @@ const PlotContainer = ({
           }
 
           // Add spacing between subplots
-          updateObj['xaxis.domain'] = updateObj['xaxis.domain'] || [0, 1];
-          updateObj['yaxis.domain'] = updateObj['yaxis.domain'] || [0, 1];
-
-          // Apply spacing to all subplot domains
           const spacing = 0.02; // 2% spacing between subplots
           xAxes.forEach(xKey => {
             const currentDomain = fullLayout[xKey]?.domain;
             if (currentDomain) {
-              const domainWidth = currentDomain[1] - currentDomain[0];
               updateObj[`${xKey}.domain`] = [
                 currentDomain[0] + spacing/2,
                 currentDomain[1] - spacing/2
@@ -307,7 +305,6 @@ const PlotContainer = ({
           yAxes.forEach(yKey => {
             const currentDomain = fullLayout[yKey]?.domain;
             if (currentDomain) {
-              const domainHeight = currentDomain[1] - currentDomain[0];
               updateObj[`${yKey}.domain`] = [
                 currentDomain[0] + spacing/2,
                 currentDomain[1] - spacing/2
