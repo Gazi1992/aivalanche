@@ -1,212 +1,169 @@
 """
-🚀 Solar System Orbital Simulation
-Interactive D3 visualization with realistic orbital mechanics
+Solar System Animation
+Interactive animated visualization of the solar system
 """
 
-import json
-
-# Planetary data with realistic orbital parameters
-planets = [
-    {"name": "Mercury", "radius": 4, "distance": 40, "period": 0.24, "color": "#8C7853"},
-    {"name": "Venus", "radius": 7, "distance": 70, "period": 0.62, "color": "#FFC649"},
-    {"name": "Earth", "radius": 7, "distance": 100, "period": 1.0, "color": "#4A90E2"},
-    {"name": "Mars", "radius": 5, "distance": 140, "period": 1.88, "color": "#CD5C5C"},
-    {"name": "Jupiter", "radius": 15, "distance": 220, "period": 11.86, "color": "#DAA520"},
-    {"name": "Saturn", "radius": 12, "distance": 300, "period": 29.46, "color": "#F4E4C1"},
-]
-
-# D3 code for solar system animation
+# Solar System Animation D3 Code
 solar_system_code = """
-// Solar System Animation with Realistic Orbits
+// Solar System Animation with orbiting planets
 const centerX = width / 2;
 const centerY = height / 2;
-const scale = Math.min(width, height) / 700;
+// Scale to fit the container properly - Neptune's orbit is 350, so we need at least 700 + padding
+const maxOrbitRadius = 350;
+const padding = 20; // Leave some padding around the edges
+const scale = Math.min(width - padding * 2, height - padding * 2) / (maxOrbitRadius * 2 + 40);
 
-// Create gradient for sun
-const sunGradient = svg.append("defs")
-    .append("radialGradient")
-    .attr("id", "sun-gradient");
+// Planet data with orbital parameters
+const planets = [
+    {name: 'Mercury', radius: 3, orbitRadius: 50, color: '#8C7853', period: 2000},
+    {name: 'Venus', radius: 5, orbitRadius: 75, color: '#FFC649', period: 3000},
+    {name: 'Earth', radius: 5, orbitRadius: 100, color: '#4169E1', period: 4000},
+    {name: 'Mars', radius: 4, orbitRadius: 130, color: '#CD5C5C', period: 5000},
+    {name: 'Jupiter', radius: 12, orbitRadius: 200, color: '#DAA520', period: 8000},
+    {name: 'Saturn', radius: 10, orbitRadius: 250, color: '#F4A460', period: 10000},
+    {name: 'Uranus', radius: 7, orbitRadius: 300, color: '#4FD0E0', period: 12000},
+    {name: 'Neptune', radius: 7, orbitRadius: 350, color: '#4169FF', period: 14000}
+];
 
-sunGradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", "#FFF5B4");
+// Clear SVG
+svg.selectAll('*').remove();
 
-sunGradient.append("stop")
-    .attr("offset", "50%")
-    .attr("stop-color", "#FFEE00");
+// Create background
+svg.append('rect')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('fill', '#000014');
 
-sunGradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", "#FF9900");
+// Add stars
+const stars = d3.range(200).map(() => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    r: Math.random() * 2
+}));
+
+svg.selectAll('.star')
+    .data(stars)
+    .enter().append('circle')
+    .attr('class', 'star')
+    .attr('cx', d => d.x)
+    .attr('cy', d => d.y)
+    .attr('r', d => d.r)
+    .attr('fill', 'white')
+    .attr('opacity', d => 0.3 + Math.random() * 0.7);
+
+// Create group for solar system
+const solarSystem = svg.append('g')
+    .attr('transform', `translate(${centerX}, ${centerY}) scale(${scale})`);
+
+// Draw orbits
+const orbits = solarSystem.selectAll('.orbit')
+    .data(planets)
+    .enter().append('circle')
+    .attr('class', 'orbit')
+    .attr('cx', 0)
+    .attr('cy', 0)
+    .attr('r', d => d.orbitRadius)
+    .attr('fill', 'none')
+    .attr('stroke', 'rgba(255, 255, 255, 0.2)')
+    .attr('stroke-width', 0.5);
+
+// Draw Sun
+const sun = solarSystem.append('circle')
+    .attr('cx', 0)
+    .attr('cy', 0)
+    .attr('r', 15)
+    .attr('fill', '#FDB813')
+    .attr('filter', 'url(#glow)');
 
 // Add glow effect for sun
-const filter = svg.append("defs")
-    .append("filter")
-    .attr("id", "glow");
-
-filter.append("feGaussianBlur")
-    .attr("stdDeviation", "4")
-    .attr("result", "coloredBlur");
-
-const feMerge = filter.append("feMerge");
-feMerge.append("feMergeNode").attr("in", "coloredBlur");
-feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-// Draw orbital paths
-const orbits = svg.append("g").attr("class", "orbits");
-
-data.forEach(planet => {
-    orbits.append("circle")
-        .attr("cx", centerX)
-        .attr("cy", centerY)
-        .attr("r", planet.distance * scale)
-        .attr("fill", "none")
-        .attr("stroke", "#333")
-        .attr("stroke-width", 0.5)
-        .attr("stroke-dasharray", "2,2")
-        .attr("opacity", 0.3);
-});
-
-// Draw sun
-const sun = svg.append("circle")
-    .attr("cx", centerX)
-    .attr("cy", centerY)
-    .attr("r", 20 * scale)
-    .attr("fill", "url(#sun-gradient)")
-    .style("filter", "url(#glow)");
+const defs = svg.append('defs');
+const filter = defs.append('filter')
+    .attr('id', 'glow');
+filter.append('feGaussianBlur')
+    .attr('stdDeviation', '3')
+    .attr('result', 'coloredBlur');
+const feMerge = filter.append('feMerge');
+feMerge.append('feMergeNode')
+    .attr('in', 'coloredBlur');
+feMerge.append('feMergeNode')
+    .attr('in', 'SourceGraphic');
 
 // Create planet groups
-const planetGroups = svg.append("g").attr("class", "planets");
-
-const planets = planetGroups.selectAll(".planet")
-    .data(data)
-    .enter().append("g")
-    .attr("class", "planet");
+const planetGroups = solarSystem.selectAll('.planet-group')
+    .data(planets)
+    .enter().append('g')
+    .attr('class', 'planet-group');
 
 // Add planets
-planets.append("circle")
-    .attr("r", d => d.radius * scale)
-    .attr("fill", d => d.color)
-    .attr("stroke", "#000")
-    .attr("stroke-width", 0.5);
+const planetCircles = planetGroups.append('circle')
+    .attr('class', 'planet')
+    .attr('r', d => d.radius)
+    .attr('fill', d => d.color)
+    .attr('cx', d => d.orbitRadius)
+    .attr('cy', 0);
 
 // Add planet labels
-planets.append("text")
-    .attr("dy", d => d.radius * scale + 12)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "10px")
-    .attr("fill", "#666")
+const labels = planetGroups.append('text')
+    .attr('class', 'planet-label')
+    .attr('x', d => d.orbitRadius)
+    .attr('y', d => -d.radius - 5)
+    .attr('text-anchor', 'middle')
+    .attr('fill', 'white')
+    .attr('font-size', '10px')
+    .attr('opacity', 0.8)
     .text(d => d.name);
 
-// Tooltip for planet info
-const tooltip = d3.select("body").append("div")
-    .attr("class", "d3-tooltip")
-    .style("position", "absolute")
-    .style("padding", "10px")
-    .style("background", "rgba(0,0,0,0.8)")
-    .style("color", "white")
-    .style("border-radius", "5px")
-    .style("pointer-events", "none")
-    .style("opacity", 0);
-
-planets.on("mouseover", function(event, d) {
-    tooltip.transition().duration(200).style("opacity", .9);
-    tooltip.html(`<strong>${d.name}</strong><br/>
-                  Orbital Period: ${d.period} Earth years<br/>
-                  Distance: ${d.distance} AU (scaled)`)
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 10) + "px");
-})
-.on("mouseout", function() {
-    tooltip.transition().duration(500).style("opacity", 0);
-});
-
 // Animation variables
-let animationSpeed = 1;
-let startTime = Date.now();
 let animationId = null;
+let isPaused = false;
+let startTime = Date.now();
 
-// Update planet positions
-function updatePlanets() {
-    const elapsed = (Date.now() - startTime) * 0.001 * animationSpeed;
+// Animation function
+function animate() {
+    if (!isPaused) {
+        const elapsed = Date.now() - startTime;
 
-    planets.attr("transform", d => {
-        const angle = (elapsed / d.period) * Math.PI * 2;
-        const x = centerX + Math.cos(angle) * d.distance * scale;
-        const y = centerY + Math.sin(angle) * d.distance * scale;
-        return `translate(${x}, ${y})`;
-    });
+        planetGroups.attr('transform', d => {
+            const angle = (elapsed / d.period) * 2 * Math.PI;
+            return `rotate(${angle * 180 / Math.PI})`;
+        });
 
-    animationId = requestAnimationFrame(updatePlanets);
+        // Keep labels upright
+        labels.attr('transform', d => {
+            const angle = (elapsed / d.period) * 2 * Math.PI;
+            return `rotate(${-angle * 180 / Math.PI})`;
+        });
+
+        animationId = requestAnimationFrame(animate);
+    }
 }
 
-// Speed control
-const speedControl = svg.append("g")
-    .attr("transform", `translate(20, ${height - 40})`);
-
-speedControl.append("text")
-    .attr("font-size", "12px")
-    .attr("fill", "#666")
-    .text("Speed:");
-
-const speeds = [0.1, 0.5, 1, 2, 5, 10];
-speeds.forEach((speed, i) => {
-    speedControl.append("text")
-        .attr("x", 50 + i * 30)
-        .attr("font-size", "12px")
-        .attr("fill", speed === 1 ? "#4A90E2" : "#666")
-        .attr("cursor", "pointer")
-        .text(`${speed}x`)
-        .on("click", function() {
-            animationSpeed = speed;
-            speedControl.selectAll("text").attr("fill", "#666");
-            d3.select(this).attr("fill", "#4A90E2");
-        });
-});
-
-// Add title
-svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", 30)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "20px")
-    .attr("font-weight", "bold")
-    .attr("fill", "#333")
-    .text("☀️ Solar System Orbital Mechanics");
-
 // Start animation
-updatePlanets();
+animate();
 
-// Return control object
+// Return control interface
 return {
     play: () => {
-        if (!animationId) {
-            startTime = Date.now();
-            updatePlanets();
-        }
+        isPaused = false;
+        animate();
     },
     pause: () => {
+        isPaused = true;
         if (animationId) {
             cancelAnimationFrame(animationId);
-            animationId = null;
         }
     },
     stop: () => {
+        isPaused = true;
         if (animationId) {
             cancelAnimationFrame(animationId);
-            animationId = null;
         }
-        // Clean up tooltip
-        if (tooltip) {
-            tooltip.remove();
-        }
+        startTime = Date.now();
+        planetGroups.attr('transform', 'rotate(0)');
     }
 };
 """
 
-solar_viz = d3_animation(solar_system_code, planets, auto_play=True)
-register_d3_visualization(
-    solar_viz,
-    "solar_system",
-    metadata={'title': '🚀 Solar System Simulation'}
-)
+# Create and register the solar system animation
+solar_system = d3_animation(solar_system_code, data=None, auto_play=True)
+register_d3_visualization(solar_system, 'solar_system_animation')

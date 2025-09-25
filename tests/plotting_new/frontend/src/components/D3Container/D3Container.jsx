@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
+import * as topojson from 'topojson-client';
 import PlotButton from '../PlotButton';
 import {
   EditIcon,
@@ -90,11 +91,11 @@ const D3Container = ({
       if (config.code) {
         // The code should directly return the control object, not wrapped in IIFE
         const executeD3 = new Function(
-          'svg', 'data', 'width', 'height', 'd3',
+          'svg', 'data', 'width', 'height', 'd3', 'topojson',
           config.code
         );
 
-        const result = executeD3(svg, data, width, height, d3);
+        const result = executeD3(svg, data, width, height, d3, topojson);
 
         // Store animation controls if returned
         console.log('D3 execution result:', result, 'Type:', typeof result);
@@ -308,11 +309,11 @@ const D3Container = ({
       if (config.code) {
         // The code should directly return the control object, not wrapped in IIFE
         const executeD3 = new Function(
-          'svg', 'data', 'width', 'height', 'd3',
+          'svg', 'data', 'width', 'height', 'd3', 'topojson',
           config.code
         );
 
-        const result = executeD3(svg, data, width, height, d3);
+        const result = executeD3(svg, data, width, height, d3, topojson);
 
         // Store animation controls if returned
         console.log('D3 execution result:', result, 'Type:', typeof result);
@@ -576,10 +577,7 @@ const D3Container = ({
         right: '4px',
         display: 'flex',
         gap: '4px',
-        zIndex: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        padding: '4px',
-        borderRadius: '4px'
+        zIndex: 10
       }}>
         {/* Animation controls (if this is an animation) */}
         {isAnimation && (

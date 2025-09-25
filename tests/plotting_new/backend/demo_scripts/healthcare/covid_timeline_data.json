@@ -1,0 +1,463 @@
+{
+  "description": "COVID-19 pandemic timeline data based on real reported first cases",
+  "source": "WHO, CDC, and various health organizations",
+  "reference_date": "2019-12-01",
+  "countries": [
+    {
+      "name": "China",
+      "iso_code": 156,
+      "coords": [104.2, 35.9],
+      "first_case_date": "2019-12-01",
+      "days_from_reference": 0,
+      "population": 1439323776,
+      "notes": "Origin of the pandemic in Wuhan, Hubei Province"
+    },
+    {
+      "name": "Thailand",
+      "iso_code": 764,
+      "coords": [100.9925, 15.8700],
+      "first_case_date": "2020-01-13",
+      "days_from_reference": 43,
+      "population": 69799978,
+      "notes": "First confirmed case outside China"
+    },
+    {
+      "name": "Japan",
+      "iso_code": 392,
+      "coords": [138.2529, 36.2048],
+      "first_case_date": "2020-01-16",
+      "days_from_reference": 46,
+      "population": 126476461
+    },
+    {
+      "name": "South Korea",
+      "iso_code": 410,
+      "coords": [127.7669, 35.9078],
+      "first_case_date": "2020-01-20",
+      "days_from_reference": 50,
+      "population": 51269185
+    },
+    {
+      "name": "United States",
+      "iso_code": 840,
+      "coords": [-95.7129, 37.0902],
+      "first_case_date": "2020-01-21",
+      "days_from_reference": 51,
+      "population": 331002651,
+      "notes": "First case in Washington state"
+    },
+    {
+      "name": "Singapore",
+      "iso_code": 702,
+      "coords": [103.8198, 1.3521],
+      "first_case_date": "2020-01-23",
+      "days_from_reference": 53,
+      "population": 5850342
+    },
+    {
+      "name": "France",
+      "iso_code": 250,
+      "coords": [2.2137, 46.2276],
+      "first_case_date": "2020-01-24",
+      "days_from_reference": 54,
+      "population": 65273511,
+      "notes": "First cases in Europe"
+    },
+    {
+      "name": "Nepal",
+      "iso_code": 524,
+      "coords": [84.1240, 28.3949],
+      "first_case_date": "2020-01-24",
+      "days_from_reference": 54,
+      "population": 29136808
+    },
+    {
+      "name": "Australia",
+      "iso_code": 36,
+      "coords": [133.7751, -25.2744],
+      "first_case_date": "2020-01-25",
+      "days_from_reference": 55,
+      "population": 25499884
+    },
+    {
+      "name": "Malaysia",
+      "iso_code": 458,
+      "coords": [101.9758, 4.2105],
+      "first_case_date": "2020-01-25",
+      "days_from_reference": 55,
+      "population": 32365999
+    },
+    {
+      "name": "Canada",
+      "iso_code": 124,
+      "coords": [-106.3468, 56.1304],
+      "first_case_date": "2020-01-25",
+      "days_from_reference": 55,
+      "population": 37742154
+    },
+    {
+      "name": "Germany",
+      "iso_code": 276,
+      "coords": [10.4515, 51.1657],
+      "first_case_date": "2020-01-27",
+      "days_from_reference": 57,
+      "population": 83783942
+    },
+    {
+      "name": "Finland",
+      "iso_code": 246,
+      "coords": [25.7482, 61.9241],
+      "first_case_date": "2020-01-29",
+      "days_from_reference": 59,
+      "population": 5540720
+    },
+    {
+      "name": "United Arab Emirates",
+      "iso_code": 784,
+      "coords": [53.8478, 23.4241],
+      "first_case_date": "2020-01-29",
+      "days_from_reference": 59,
+      "population": 9890402
+    },
+    {
+      "name": "Italy",
+      "iso_code": 380,
+      "coords": [12.5674, 41.8719],
+      "first_case_date": "2020-01-31",
+      "days_from_reference": 61,
+      "population": 60461826,
+      "notes": "First major outbreak in Europe"
+    },
+    {
+      "name": "Spain",
+      "iso_code": 724,
+      "coords": [-3.7492, 40.4637],
+      "first_case_date": "2020-01-31",
+      "days_from_reference": 61,
+      "population": 46754778
+    },
+    {
+      "name": "Sweden",
+      "iso_code": 752,
+      "coords": [18.6435, 60.1282],
+      "first_case_date": "2020-01-31",
+      "days_from_reference": 61,
+      "population": 10099265
+    },
+    {
+      "name": "United Kingdom",
+      "iso_code": 826,
+      "coords": [-3.4360, 55.3781],
+      "first_case_date": "2020-01-31",
+      "days_from_reference": 61,
+      "population": 67886011
+    },
+    {
+      "name": "Russia",
+      "iso_code": 643,
+      "coords": [105.3188, 61.5240],
+      "first_case_date": "2020-01-31",
+      "days_from_reference": 61,
+      "population": 145934462
+    },
+    {
+      "name": "India",
+      "iso_code": 356,
+      "coords": [78.9629, 20.5937],
+      "first_case_date": "2020-01-30",
+      "days_from_reference": 60,
+      "population": 1380004385
+    },
+    {
+      "name": "Philippines",
+      "iso_code": 608,
+      "coords": [121.7740, 12.8797],
+      "first_case_date": "2020-01-30",
+      "days_from_reference": 60,
+      "population": 109581078
+    },
+    {
+      "name": "Belgium",
+      "iso_code": 56,
+      "coords": [4.4699, 50.5039],
+      "first_case_date": "2020-02-04",
+      "days_from_reference": 65,
+      "population": 11589623
+    },
+    {
+      "name": "Egypt",
+      "iso_code": 818,
+      "coords": [30.8025, 26.8206],
+      "first_case_date": "2020-02-14",
+      "days_from_reference": 75,
+      "population": 102334404
+    },
+    {
+      "name": "Iran",
+      "iso_code": 364,
+      "coords": [53.6880, 32.4279],
+      "first_case_date": "2020-02-19",
+      "days_from_reference": 80,
+      "population": 83992949,
+      "notes": "Major early outbreak"
+    },
+    {
+      "name": "Israel",
+      "iso_code": 376,
+      "coords": [34.8516, 31.0461],
+      "first_case_date": "2020-02-21",
+      "days_from_reference": 82,
+      "population": 8655535
+    },
+    {
+      "name": "Lebanon",
+      "iso_code": 422,
+      "coords": [35.8623, 33.8547],
+      "first_case_date": "2020-02-21",
+      "days_from_reference": 82,
+      "population": 6825445
+    },
+    {
+      "name": "Iraq",
+      "iso_code": 368,
+      "coords": [43.6793, 33.2232],
+      "first_case_date": "2020-02-24",
+      "days_from_reference": 85,
+      "population": 40222493
+    },
+    {
+      "name": "Kuwait",
+      "iso_code": 414,
+      "coords": [47.4818, 29.3117],
+      "first_case_date": "2020-02-24",
+      "days_from_reference": 85,
+      "population": 4270571
+    },
+    {
+      "name": "Bahrain",
+      "iso_code": 48,
+      "coords": [50.6377, 25.9304],
+      "first_case_date": "2020-02-24",
+      "days_from_reference": 85,
+      "population": 1701575
+    },
+    {
+      "name": "Austria",
+      "iso_code": 40,
+      "coords": [14.5501, 47.5162],
+      "first_case_date": "2020-02-25",
+      "days_from_reference": 86,
+      "population": 9006398
+    },
+    {
+      "name": "Switzerland",
+      "iso_code": 756,
+      "coords": [8.2275, 46.8182],
+      "first_case_date": "2020-02-25",
+      "days_from_reference": 86,
+      "population": 8654622
+    },
+    {
+      "name": "Croatia",
+      "iso_code": 191,
+      "coords": [15.2000, 45.1000],
+      "first_case_date": "2020-02-25",
+      "days_from_reference": 86,
+      "population": 4105267
+    },
+    {
+      "name": "Brazil",
+      "iso_code": 76,
+      "coords": [-51.9253, -14.2350],
+      "first_case_date": "2020-02-26",
+      "days_from_reference": 87,
+      "population": 212559417,
+      "notes": "First case in South America"
+    },
+    {
+      "name": "Greece",
+      "iso_code": 300,
+      "coords": [21.8243, 39.0742],
+      "first_case_date": "2020-02-26",
+      "days_from_reference": 87,
+      "population": 10423054
+    },
+    {
+      "name": "Norway",
+      "iso_code": 578,
+      "coords": [8.4689, 60.4720],
+      "first_case_date": "2020-02-26",
+      "days_from_reference": 87,
+      "population": 5421241
+    },
+    {
+      "name": "Pakistan",
+      "iso_code": 586,
+      "coords": [69.3451, 30.3753],
+      "first_case_date": "2020-02-26",
+      "days_from_reference": 87,
+      "population": 220892340
+    },
+    {
+      "name": "Denmark",
+      "iso_code": 208,
+      "coords": [9.5018, 56.2639],
+      "first_case_date": "2020-02-27",
+      "days_from_reference": 88,
+      "population": 5792202
+    },
+    {
+      "name": "Netherlands",
+      "iso_code": 528,
+      "coords": [5.2913, 52.1326],
+      "first_case_date": "2020-02-27",
+      "days_from_reference": 88,
+      "population": 17134872
+    },
+    {
+      "name": "Nigeria",
+      "iso_code": 566,
+      "coords": [8.6753, 9.0820],
+      "first_case_date": "2020-02-27",
+      "days_from_reference": 88,
+      "population": 206139589,
+      "notes": "First case in sub-Saharan Africa"
+    },
+    {
+      "name": "New Zealand",
+      "iso_code": 554,
+      "coords": [174.8860, -40.9006],
+      "first_case_date": "2020-02-28",
+      "days_from_reference": 89,
+      "population": 4822233
+    },
+    {
+      "name": "Mexico",
+      "iso_code": 484,
+      "coords": [-102.5528, 23.6345],
+      "first_case_date": "2020-02-28",
+      "days_from_reference": 89,
+      "population": 128932753
+    },
+    {
+      "name": "Iceland",
+      "iso_code": 352,
+      "coords": [-19.0208, 64.9631],
+      "first_case_date": "2020-02-28",
+      "days_from_reference": 89,
+      "population": 341243
+    },
+    {
+      "name": "Ireland",
+      "iso_code": 372,
+      "coords": [-8.2439, 53.4129],
+      "first_case_date": "2020-02-29",
+      "days_from_reference": 90,
+      "population": 4937786
+    },
+    {
+      "name": "Czech Republic",
+      "iso_code": 203,
+      "coords": [15.4730, 49.8175],
+      "first_case_date": "2020-03-01",
+      "days_from_reference": 91,
+      "population": 10708981
+    },
+    {
+      "name": "Argentina",
+      "iso_code": 32,
+      "coords": [-63.6167, -38.4161],
+      "first_case_date": "2020-03-03",
+      "days_from_reference": 93,
+      "population": 45195774
+    },
+    {
+      "name": "Chile",
+      "iso_code": 152,
+      "coords": [-71.5430, -35.6751],
+      "first_case_date": "2020-03-03",
+      "days_from_reference": 93,
+      "population": 19116201
+    },
+    {
+      "name": "Poland",
+      "iso_code": 616,
+      "coords": [19.1451, 51.9194],
+      "first_case_date": "2020-03-04",
+      "days_from_reference": 94,
+      "population": 37846611
+    },
+    {
+      "name": "South Africa",
+      "iso_code": 710,
+      "coords": [22.9375, -30.5595],
+      "first_case_date": "2020-03-05",
+      "days_from_reference": 95,
+      "population": 59308690
+    },
+    {
+      "name": "Portugal",
+      "iso_code": 620,
+      "coords": [-8.2245, 39.3999],
+      "first_case_date": "2020-03-02",
+      "days_from_reference": 92,
+      "population": 10196709
+    },
+    {
+      "name": "Peru",
+      "iso_code": 604,
+      "coords": [-75.0152, -9.1900],
+      "first_case_date": "2020-03-06",
+      "days_from_reference": 96,
+      "population": 32971854
+    },
+    {
+      "name": "Colombia",
+      "iso_code": 170,
+      "coords": [-74.2973, 4.5709],
+      "first_case_date": "2020-03-06",
+      "days_from_reference": 96,
+      "population": 50882891
+    },
+    {
+      "name": "Turkey",
+      "iso_code": 792,
+      "coords": [35.2433, 38.9637],
+      "first_case_date": "2020-03-11",
+      "days_from_reference": 101,
+      "population": 84339067
+    }
+  ],
+  "milestones": [
+    {
+      "date": "2019-12-31",
+      "event": "WHO China Country Office informed of pneumonia cases in Wuhan",
+      "type": "discovery"
+    },
+    {
+      "date": "2020-01-07",
+      "event": "Chinese authorities identify new type of coronavirus",
+      "type": "discovery"
+    },
+    {
+      "date": "2020-01-13",
+      "event": "First case outside China reported in Thailand",
+      "type": "spread"
+    },
+    {
+      "date": "2020-01-30",
+      "event": "WHO declares Public Health Emergency of International Concern",
+      "type": "declaration"
+    },
+    {
+      "date": "2020-02-11",
+      "event": "WHO names the disease COVID-19",
+      "type": "naming"
+    },
+    {
+      "date": "2020-03-11",
+      "event": "WHO declares COVID-19 a pandemic",
+      "type": "declaration"
+    }
+  ]
+}

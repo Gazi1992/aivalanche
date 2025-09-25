@@ -1,6 +1,5 @@
 .d3-container {
-  background: var(--card-background-color);
-  border: 1px solid var(--border-color);
+  /* No background for D3 container to allow transparent visualizations */
   border-radius: 8px;
   overflow: hidden;
 }
@@ -9,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  /* Remove padding to allow full-bleed visualizations */
 }
 
 /* D3 specific styles */
@@ -58,12 +57,12 @@
   pointer-events: none;
 }
 
-/* Treemap specific */
-.d3-container rect {
+/* Treemap specific - only apply to treemap rects, not background */
+.d3-container .treemap-rect {
   cursor: pointer;
 }
 
-.d3-container rect:hover {
+.d3-container .treemap-rect:hover {
   opacity: 0.8;
 }
 
@@ -93,5 +92,10 @@
 }
 
 .d3-container:hover .plot-button-separator {
+  opacity: 1;
+}
+
+/* Make D3 container plot buttons visible on hover */
+.d3-container:hover .plot-button {
   opacity: 1;
 }

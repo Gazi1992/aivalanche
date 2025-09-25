@@ -31,6 +31,11 @@ DEMO_CATEGORIES = {
                 'file': 'space/solar_system.py',
                 'name': 'Solar System Simulation',
                 'description': 'Interactive D3 orbital mechanics visualization'
+            },
+            'cosmic_phenomena': {
+                'file': 'space/cosmic_phenomena.py',
+                'name': 'Cosmic Phenomena',
+                'description': 'Black hole accretion disk, pulsar lighthouse, cosmic rays, and dark matter evidence'
             }
         }
     },
@@ -43,7 +48,12 @@ DEMO_CATEGORIES = {
             'portfolio_risk': {
                 'file': 'finance/portfolio_risk.py',
                 'name': 'Portfolio Risk Analysis',
-                'description': 'Violin and box plots for return distributions'
+                'description': 'Violin plots, box plots, and correlation heatmap for asset returns'
+            },
+            'market_crash': {
+                'file': 'finance/market_crash.py',
+                'name': '2008 Financial Crisis',
+                'description': 'Market crash timeline, systemic risk heatmap, and losses waterfall'
             }
         }
     },
@@ -52,7 +62,18 @@ DEMO_CATEGORIES = {
         'description': 'Medical data and health analytics',
         'icon': '🧬',
         'color': '#C62828',
-        'demos': {}
+        'demos': {
+            'clinical_trials': {
+                'file': 'healthcare/clinical_trials.py',
+                'name': 'Clinical Trial Analysis',
+                'description': 'Patient flow sankey diagram, survival curves, and biomarker heatmap'
+            },
+            'covid_spread': {
+                'file': 'healthcare/covid_spread.py',
+                'name': 'COVID-19 Pandemic Visualizations',
+                'description': 'Regional impact heatmap, animated world map spread, and wave comparison'
+            }
+        }
     },
     'urban': {
         'name': '🏙️ Urban & Transportation',

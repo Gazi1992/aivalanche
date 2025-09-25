@@ -1,6 +1,6 @@
 """
-💹 Portfolio Risk Analysis
-Comprehensive risk visualization using statistical plots
+Portfolio Risk Analysis
+Visualizing return distributions and risk metrics across asset classes
 """
 
 import plotly.graph_objects as go
@@ -8,141 +8,206 @@ from plotly.subplots import make_subplots
 import numpy as np
 import pandas as pd
 
-# Generate realistic portfolio data
+# === Generate realistic portfolio data ===
 np.random.seed(42)
 
 # Asset classes and their characteristics
 asset_classes = {
     'Stocks': {'mean': 0.08, 'std': 0.16, 'skew': -0.5},
-    'Bonds': {'mean': 0.04, 'std': 0.05, 'skew': 0.1},
+    'Bonds': {'mean': 0.04, 'std': 0.05, 'skew': 0.2},
     'Real Estate': {'mean': 0.06, 'std': 0.12, 'skew': -0.3},
-    'Commodities': {'mean': 0.05, 'std': 0.20, 'skew': 0.2},
-    'Crypto': {'mean': 0.15, 'std': 0.40, 'skew': -0.8},
-    'Cash': {'mean': 0.02, 'std': 0.01, 'skew': 0.0}
+    'Commodities': {'mean': 0.05, 'std': 0.20, 'skew': 0.8},
+    'Crypto': {'mean': 0.15, 'std': 0.50, 'skew': 1.2},
 }
 
-# Generate returns data
-returns_data = []
+# Generate returns for each asset class (annual returns)
+n_years = 10
+n_samples = 1000
+
+returns_data = {}
 for asset, params in asset_classes.items():
-    # Generate returns with specified characteristics
-    base_returns = np.random.normal(params['mean'], params['std'], 1000)
-    # Add skewness
-    if params['skew'] != 0:
-        base_returns = base_returns + params['skew'] * np.abs(base_returns) * np.random.choice([-1, 1], 1000, p=[0.3, 0.7])
+    # Generate returns with skewness
+    base_returns = np.random.normal(params['mean'], params['std'], n_samples)
+    # Add skewness by mixing with exponential distribution
+    if params['skew'] > 0:
+        skewed = np.random.exponential(params['std'], n_samples) * params['skew']
+        returns = base_returns + skewed - np.mean(skewed)
+    else:
+        skewed = -np.random.exponential(params['std'], n_samples) * abs(params['skew'])
+        returns = base_returns + skewed - np.mean(skewed)
 
-    for i, ret in enumerate(base_returns):
-        returns_data.append({
-            'Asset': asset,
-            'Return': ret,
-            'Quarter': f"Q{(i % 4) + 1}",
-            'Year': 2020 + (i // 250)
-        })
+    returns_data[asset] = returns
 
-df_returns = pd.DataFrame(returns_data)
-
-# === Plot 1: Violin Plots - Return Distributions ===
+# === Visualization 1: Violin Plots - Return Distributions ===
 fig1 = go.Figure()
 
-# Add violin plot for each asset class
-for i, asset in enumerate(asset_classes.keys()):
-    asset_data = df_returns[df_returns['Asset'] == asset]['Return']
+colors = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6']
 
+for i, (asset, returns) in enumerate(returns_data.items()):
     fig1.add_trace(go.Violin(
-        y=asset_data,
-        x=[asset] * len(asset_data),
+        y=returns * 100,  # Convert to percentage
         name=asset,
         box_visible=True,
         meanline_visible=True,
-        fillcolor=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'][i],
+        fillcolor=colors[i],
         opacity=0.7,
-        line_color='rgba(0,0,0,0.5)',
+        line_color=colors[i],
+        hovertemplate='<b>%{fullData.name}</b><br>Return: %{y:.2f}%<extra></extra>'
     ))
 
 fig1.update_layout(
     title={
-        'text': "📊 Asset Class Return Distributions",
+        'text': 'Annual Return Distributions by Asset Class',
         'x': 0.5,
         'xanchor': 'center'
     },
-    yaxis_title="Annual Return",
-    xaxis_title="Asset Class",
+    yaxis=dict(
+        title='Annual Return (%)',
+        zeroline=True,
+        zerolinecolor='rgba(128,128,128,0.2)',
+        gridcolor='rgba(128,128,128,0.1)'
+    ),
+    xaxis=dict(title='Asset Class'),
     showlegend=False,
-    violinmode='group',
-    height=500,
-    yaxis=dict(tickformat='.0%', zeroline=True, zerolinewidth=2, zerolinecolor='gray')
+    hovermode='closest'
 )
-
-# Add risk levels
-fig1.add_hline(y=0, line_dash="dash", line_color="gray", annotation_text="Zero Return")
-fig1.add_hline(y=0.10, line_dash="dot", line_color="green", annotation_text="Target: 10%")
 
 register_plot(
     fig1,
     plot_id='return_distributions',
-    metadata={'title': 'Asset Return Distributions'}
+    metadata={
+        'appearance': {
+            'title': {'text': 'Portfolio Return Analysis'}
+        }
+    }
 )
 
-# === Plot 2: Box Plots - Quarterly Performance by Sector ===
-# Generate sector data
+# === Visualization 2: Box Plots - Quarterly Performance by Sector ===
+# Generate quarterly data for different sectors
 sectors = ['Technology', 'Healthcare', 'Finance', 'Energy', 'Consumer', 'Industrial']
-quarters = ['Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023']
+quarters = ['Q1', 'Q2', 'Q3', 'Q4']
 
-sector_data = []
+quarterly_data = []
 for sector in sectors:
+    base_return = np.random.uniform(0.02, 0.08)
+    volatility = np.random.uniform(0.03, 0.08)
     for quarter in quarters:
-        # Different sectors have different seasonal patterns
-        base_return = np.random.normal(0.03, 0.08, 50)
-        if sector == 'Technology':
-            base_return += 0.02  # Tech outperformance
-        elif sector == 'Energy' and 'Q3' in quarter:
-            base_return += 0.03  # Summer driving season
+        # Add seasonal effects
+        seasonal_adj = {'Q1': -0.01, 'Q2': 0.01, 'Q3': -0.005, 'Q4': 0.015}
+        returns = np.random.normal(
+            base_return + seasonal_adj[quarter],
+            volatility,
+            100
+        )
+        for r in returns:
+            quarterly_data.append({
+                'Sector': sector,
+                'Quarter': quarter,
+                'Return': r * 100
+            })
 
-        sector_data.extend([{
-            'Sector': sector,
-            'Quarter': quarter,
-            'Return': ret
-        } for ret in base_return])
-
-df_sectors = pd.DataFrame(sector_data)
+df_quarterly = pd.DataFrame(quarterly_data)
 
 fig2 = go.Figure()
 
-colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33']
+colors_sectors = {
+    'Technology': '#00bcd4',
+    'Healthcare': '#4caf50',
+    'Finance': '#ff9800',
+    'Energy': '#f44336',
+    'Consumer': '#9c27b0',
+    'Industrial': '#607d8b'
+}
 
-for i, sector in enumerate(sectors):
-    sector_df = df_sectors[df_sectors['Sector'] == sector]
-
+for sector in sectors:
+    sector_data = df_quarterly[df_quarterly['Sector'] == sector]
     fig2.add_trace(go.Box(
-        y=sector_df['Return'],
-        x=sector_df['Quarter'],
+        x=sector_data['Quarter'],
+        y=sector_data['Return'],
         name=sector,
-        marker_color=colors[i],
-        boxmean='sd',  # Show mean and standard deviation
-        whiskerwidth=0.2,
+        marker_color=colors_sectors[sector],
+        boxmean='sd'  # Show mean and standard deviation
     ))
 
 fig2.update_layout(
     title={
-        'text': "📈 Quarterly Earnings by Sector",
+        'text': 'Quarterly Returns by Sector',
         'x': 0.5,
         'xanchor': 'center'
     },
-    yaxis_title="Quarterly Return",
-    xaxis_title="Quarter",
+    xaxis=dict(title='Quarter'),
+    yaxis=dict(
+        title='Quarterly Return (%)',
+        zeroline=True,
+        zerolinecolor='rgba(128,128,128,0.2)'
+    ),
     boxmode='group',
-    height=500,
-    yaxis=dict(tickformat='.1%'),
+    showlegend=True,
     legend=dict(
         orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
+        yanchor="top",
+        y=0.98,
+        xanchor="left",
+        x=0.02,
+        bgcolor="rgba(255, 255, 255, 0.8)",
+        bordercolor="rgba(0, 0, 0, 0.2)",
+        borderwidth=1
     )
 )
 
 register_plot(
     fig2,
-    plot_id='sector_performance',
-    metadata={'title': 'Sector Performance Analysis'}
+    plot_id='quarterly_performance',
+    metadata={
+        'appearance': {
+            'title': {'text': 'Sector Performance Analysis'}
+        }
+    }
+)
+
+# === Visualization 3: Correlation Heatmap ===
+# Create correlation matrix for assets
+assets = list(asset_classes.keys())
+n_assets = len(assets)
+
+# Define realistic correlations
+correlation_matrix = np.array([
+    [1.00, 0.35, 0.45, 0.25, 0.65],  # Stocks
+    [0.35, 1.00, 0.30, -0.15, 0.10],  # Bonds
+    [0.45, 0.30, 1.00, 0.20, 0.25],   # Real Estate
+    [0.25, -0.15, 0.20, 1.00, 0.30],  # Commodities
+    [0.65, 0.10, 0.25, 0.30, 1.00],   # Crypto
+])
+
+fig3 = go.Figure(data=go.Heatmap(
+    z=correlation_matrix,
+    x=assets,
+    y=assets,
+    colorscale='RdBu',
+    zmid=0,
+    text=np.round(correlation_matrix, 2),
+    texttemplate='%{text}',
+    textfont={"size": 10},
+    colorbar=dict(title='Correlation'),
+    hovertemplate='%{x} vs %{y}<br>Correlation: %{z:.3f}<extra></extra>'
+))
+
+fig3.update_layout(
+    title={
+        'text': 'Asset Correlation Matrix',
+        'x': 0.5,
+        'xanchor': 'center'
+    },
+    xaxis=dict(title='', side='bottom'),
+    yaxis=dict(title='', autorange='reversed')
+)
+
+register_plot(
+    fig3,
+    plot_id='correlation_matrix',
+    metadata={
+        'appearance': {
+            'title': {'text': 'Portfolio Correlation Analysis'}
+        }
+    }
 )
