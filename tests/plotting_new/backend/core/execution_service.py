@@ -285,7 +285,14 @@ class ExecutionSession:
         
     def _create_namespace(self) -> Dict[str, Any]:
         """Create the execution namespace with pre-imported libraries and helpers."""
-        
+
+        # Add backend to path so demos can import from core
+        import sys
+        from pathlib import Path
+        backend_path = Path(__file__).parent.parent
+        if str(backend_path) not in sys.path:
+            sys.path.insert(0, str(backend_path))
+
         # Helper functions that will be available in the execution environment
         def load_data(path: str, **kwargs) -> pd.DataFrame:
             """Load data from file path."""

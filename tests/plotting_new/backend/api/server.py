@@ -475,11 +475,19 @@ class DemoRequest(BaseModel):
 async def get_demo_categories() -> Dict[str, Any]:
     """Get all demo categories and their demos from demo_index."""
     try:
-        # Import the demo index
+        # Import the demo index with forced reload to prevent caching
         import sys
+        import importlib
         from pathlib import Path
         demo_scripts_path = Path(__file__).parent.parent / 'demo_scripts'
         sys.path.insert(0, str(demo_scripts_path))
+
+        # Force reload the module to get fresh data
+        if 'demo_index' in sys.modules:
+            importlib.reload(sys.modules['demo_index'])
+        else:
+            import demo_index
+            importlib.reload(demo_index)
 
         from demo_index import DEMO_CATEGORIES
 
@@ -669,4 +677,3 @@ async def get_recommendations(request: PlotRecommendationRequest):
 # ---------------------------------------------------------------------------
 
 
- 

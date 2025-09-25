@@ -89,9 +89,11 @@ export const calculateGridDimensions = (figureCount, gridColumns, windowHeight) 
   // Calculate plot height based on number of rows
   let plotHeight;
   if (figureCount === 1) {
-    // For single plot, use all available height minus grid container padding
-    // No column selector is shown for single plot
-    plotHeight = windowHeight - (gridContainerPadding * 2);
+    // For single plot, account for PlotsHeader and grid container padding
+    // PlotsHeader is always shown (contains Clear and Refresh buttons)
+    const plotsHeaderHeight = columnSelectorHeight; // Use same height as column selector
+    const totalOffsets = plotsHeaderHeight + (gridContainerPadding * 2);
+    plotHeight = windowHeight - totalOffsets;
   } else {
     // For multiple plots, account for column selector height, its margin, and grid container padding
     // Total column selector space = height + bottom margin

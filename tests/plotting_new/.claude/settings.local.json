@@ -21,7 +21,12 @@
       "Bash(npm install)",
       "Bash(npm install:*)",
       "Bash(cat:*)",
-      "Bash(for demo in \"pie_charts_demo\" \"statistical_plots_demo\" \"3d_plots_demo\")"
+      "Bash(for demo in \"pie_charts_demo\" \"statistical_plots_demo\" \"3d_plots_demo\")",
+      "Bash(awk:*)",
+      "Read(//c//**)",
+      "Bash(time curl:*)",
+      "Bash(timeout:*)",
+      "WebFetch(domain:www.d3indepth.com)"
     ],
     "deny": [],
     "ask": []

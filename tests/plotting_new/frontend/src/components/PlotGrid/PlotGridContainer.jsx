@@ -28,15 +28,31 @@ const PlotGridContainer = ({
     flexDirection: 'column'
   };
 
-  const getFigureContainerStyle = (fig) => ({
-    ...plotContainerStyle,
-    backgroundColor: fig.metadata?.appearance?.background?.figure?.color || 'transparent',
-    borderColor: fig.metadata?.appearance?.background?.figure?.borderColor || 'transparent',
-    borderWidth: (fig.metadata?.appearance?.background?.figure?.borderColor &&
-      fig.metadata?.appearance?.background?.figure?.borderColor !== 'transparent' &&
-      fig.metadata?.appearance?.background?.figure?.borderColor !== 'rgba(0,0,0,0)') ? '1px' : '0',
-    borderStyle: 'solid'
-  });
+  const getFigureContainerStyle = (fig) => {
+    // For D3 visualizations, don't apply background color from plotContainerStyle
+    if (fig.type === 'd3') {
+      return {
+        ...plotContainerStyle,
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        borderWidth: '0',
+        borderStyle: 'solid',
+        boxShadow: 'none'
+        // Keep the original padding from plotContainerStyle
+      };
+    }
+
+    // For regular plots, apply normal styling
+    return {
+      ...plotContainerStyle,
+      backgroundColor: fig.metadata?.appearance?.background?.figure?.color || 'transparent',
+      borderColor: fig.metadata?.appearance?.background?.figure?.borderColor || 'transparent',
+      borderWidth: (fig.metadata?.appearance?.background?.figure?.borderColor &&
+        fig.metadata?.appearance?.background?.figure?.borderColor !== 'transparent' &&
+        fig.metadata?.appearance?.background?.figure?.borderColor !== 'rgba(0,0,0,0)') ? '1px' : '0',
+      borderStyle: 'solid'
+    };
+  };
 
 
   return (

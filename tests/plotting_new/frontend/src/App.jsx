@@ -275,8 +275,19 @@ function App() {
       if (result.success && result.plots) {
         const dashboard = {
           figures: result.plots.map(plot => {
-            // Pass the plot ID as a separate parameter to preserve it
-            return createManagedFigure(plot.figure, plot.metadata, plot.id);
+            // Check if this is a D3 plot or regular Plotly plot
+            if (plot.type === 'd3') {
+              // D3 plots have different structure
+              return {
+                id: plot.id,
+                type: 'd3',
+                d3Config: plot.d3Config,
+                metadata: plot.metadata || {}
+              };
+            } else {
+              // Regular Plotly plots
+              return createManagedFigure(plot.figure, plot.metadata, plot.id);
+            }
           }),
           app_title: "Demo Visualizations",
           theme: "light"
